@@ -18,7 +18,6 @@ func init() {
 
 type opensuseOSAnalyzer struct{}
 
-// TODO : need investigation
 func (a opensuseOSAnalyzer) Analyze(fileMap extractor.FileMap) (analyzer.OS, error) {
 	for _, filename := range a.RequiredFiles() {
 		file, ok := fileMap[filename]
@@ -53,7 +52,6 @@ func (a opensuseOSAnalyzer) Analyze(fileMap extractor.FileMap) (analyzer.OS, err
 
 func (a opensuseOSAnalyzer) RequiredFiles() []string {
 	return []string{
-		"usr/lib/os-release",
 		"etc/os-release",
 	}
 }

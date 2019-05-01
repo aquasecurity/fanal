@@ -2,9 +2,11 @@ package extractor
 
 import (
 	"archive/tar"
+	"bytes"
 	"compress/gzip"
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
@@ -18,7 +20,7 @@ import (
 	"github.com/knqyf263/fanal/cache"
 	"github.com/knqyf263/fanal/token"
 	"github.com/knqyf263/nested"
-	digest "github.com/opencontainers/go-digest"
+	"github.com/opencontainers/go-digest"
 	"golang.org/x/xerrors"
 )
 
@@ -239,11 +241,62 @@ func (d DockerExtractor) ExtractFromFile(ctx context.Context, r io.ReadCloser, f
 
 	return applyLayers(manifests[0].Layers, filesInLayers, opqInLayers)
 }
+
+func (d DockerExtractor) SearchSymFiles(layer io.Reader, filenames []string) (map[string]string, error) {
+	// key : TargetFilename, value : Linked Filename
+	symbolicHash := make(map[string]string)
+	tr := tar.NewReader(layer)
+	for {
+		hdr, err := tr.Next()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return map[string]string{}, ErrCouldNotExtract
+		}
+		filePath := hdr.Name
+		filePath = filepath.Clean(filePath)
+		fileName := filepath.Base(filePath)
+
+		if opq == fileName {
+			continue
+		}
+
+		extract := false
+		for _, s := range filenames {
+			if s == filePath || strings.HasPrefix(fileName, wh) {
+				extract = true
+				break
+			}
+		}
+
+		if !extract {
+			continue
+		}
+		// Add linked files
+		if hdr.Typeflag == tar.TypeSymlink {
+			symPath := filepath.Join(filepath.Dir(filePath), hdr.Linkname)
+			symbolicHash[filePath] = symPath
+		} else {
+			symbolicHash[filePath] = filePath
+		}
+	}
+
+	return symbolicHash, nil
+}
+
 func (d DockerExtractor) ExtractFiles(layer io.Reader, filenames []string) (FileMap, opqDirs, error) {
 	data := make(map[string][]byte)
 	opqDirs := opqDirs{}
 
-	tr := tar.NewReader(layer)
+	var layerBuf bytes.Buffer
+	clonedLayer := io.TeeReader(layer, &layerBuf)
+	symFileHash, err := d.SearchSymFiles(clonedLayer, filenames)
+	if err != nil {
+		return data, nil, err
+	}
+
+	tr := tar.NewReader(&layerBuf)
 	for {
 		hdr, err := tr.Next()
 		if err == io.EOF {
@@ -256,7 +309,6 @@ func (d DockerExtractor) ExtractFiles(layer io.Reader, filenames []string) (File
 		filePath := hdr.Name
 		filePath = filepath.Clean(filePath)
 		fileName := filepath.Base(filePath)
-
 		// e.g. etc/.wh..wh..opq
 		if opq == fileName {
 			opqDirs = append(opqDirs, filepath.Dir(filePath))
@@ -265,8 +317,10 @@ func (d DockerExtractor) ExtractFiles(layer io.Reader, filenames []string) (File
 
 		// Determine if we should extract the element
 		extract := false
-		for _, s := range filenames {
-			if s == filePath || s == fileName || strings.HasPrefix(fileName, wh) {
+		var targetPath string
+		for target, linked := range symFileHash {
+			if linked == filePath || strings.HasPrefix(fileName, wh) {
+				targetPath = target
 				extract = true
 				break
 			}
@@ -276,16 +330,24 @@ func (d DockerExtractor) ExtractFiles(layer io.Reader, filenames []string) (File
 			continue
 		}
 
+		if hdr.Typeflag == tar.TypeSymlink {
+			return data, nil, xerrors.New(
+				fmt.Sprintf("Currently not support 3 or more recursive symbolic link : %s => %s => %s",
+					targetPath, filePath, hdr.Linkname,
+				),
+			)
+		}
+
 		// Extract the element
-		if hdr.Typeflag == tar.TypeSymlink || hdr.Typeflag == tar.TypeLink || hdr.Typeflag == tar.TypeReg {
+		if hdr.Typeflag == tar.TypeLink || hdr.Typeflag == tar.TypeReg {
 			d, err := ioutil.ReadAll(tr)
 			if err != nil {
 				return nil, nil, xerrors.Errorf("failed to read file: %w", err)
 			}
-			data[filePath] = d
+			data[targetPath] = d
 		}
+
 	}
 
 	return data, opqDirs, nil
-
 }
