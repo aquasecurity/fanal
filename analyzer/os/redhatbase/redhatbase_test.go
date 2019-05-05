@@ -1,4 +1,4 @@
-package debianbase
+package redhatbase
 
 import (
 	"reflect"
@@ -16,24 +16,24 @@ func TestAnalyze(t *testing.T) {
 		os      analyzer.OS
 		wantErr error
 	}{
-		"Debian9": {
-			path: "./testdata/debian_9",
-			os:   analyzer.OS{Family: os.Debian, Name: "9.8"},
+		"CentOS": {
+			path: "./testdata/centos",
+			os:   analyzer.OS{Family: os.CentOS, Name: "7.6.1810"},
 		},
-		"DebianSid": {
-			path: "./testdata/debian_sid",
-			os:   analyzer.OS{Family: os.Debian, Name: "buster/sid"},
+		"Fedora29": {
+			path: "./testdata/fedora_29",
+			os:   analyzer.OS{Family: os.Fedora, Name: "29"},
 		},
-		"Ubuntu18": {
-			path: "./testdata/ubuntu_18",
-			os:   analyzer.OS{Family: os.Ubuntu, Name: "18.04"},
+		"Fedora31": {
+			path: "./testdata/fedora_31",
+			os:   analyzer.OS{Family: os.Fedora, Name: "31"},
 		},
 		"Invalid": {
-			path:    "./testdata/not_debianbase",
+			path:    "./testdata/not_redhatbase",
 			wantErr: os.AnalyzeOSError,
 		},
 	}
-	a := debianbaseOSAnalyzer{}
+	a := redhatOSAnalyzer{}
 	for i, v := range tests {
 		fileMap, err := os.GetFileMap(v.path)
 		if err != nil {
