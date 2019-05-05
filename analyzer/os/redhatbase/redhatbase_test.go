@@ -28,6 +28,14 @@ func TestAnalyze(t *testing.T) {
 			path: "./testdata/fedora_31",
 			os:   analyzer.OS{Family: os.Fedora, Name: "31"},
 		},
+		"Oracle7": {
+			path: "./testdata/oracle_7",
+			os:   analyzer.OS{Family: os.Oracle, Name: "7.6"},
+		},
+		"Redhat6": {
+			path: "./testdata/redhat_6",
+			os:   analyzer.OS{Family: os.RedHat, Name: "6.2"},
+		},
 		"Invalid": {
 			path:    "./testdata/not_redhatbase",
 			wantErr: os.AnalyzeOSError,
