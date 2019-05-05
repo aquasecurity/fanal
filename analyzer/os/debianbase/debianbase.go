@@ -3,8 +3,9 @@ package debianbase
 import (
 	"bufio"
 	"bytes"
-	"errors"
 	"strings"
+
+	"golang.org/x/xerrors"
 
 	"github.com/knqyf263/fanal/analyzer/os"
 
@@ -45,7 +46,7 @@ func (a debianbaseOSAnalyzer) Analyze(fileMap extractor.FileMap) (analyzer.OS, e
 			return analyzer.OS{Family: os.Debian, Name: line}, nil
 		}
 	}
-	return analyzer.OS{}, errors.New("debianbase: Not match")
+	return analyzer.OS{}, xerrors.Errorf("debianbase: %w", os.AnalyzeOSError)
 }
 
 func (a debianbaseOSAnalyzer) RequiredFiles() []string {
