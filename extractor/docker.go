@@ -109,7 +109,7 @@ func (d DockerExtractor) createRegistryClient(ctx context.Context, domain string
 	}
 	auth, err := repoutils.GetAuthConfig(d.Option.UserName, d.Option.Password, authDomain)
 	if err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("failed to get auth config: %w", err)
 	}
 	auth = token.GetToken(ctx, auth, d.Option.Credential)
 	// Prevent non-ssl unless explicitly forced
@@ -131,12 +131,12 @@ func (d DockerExtractor) createRegistryClient(ctx context.Context, domain string
 func (d DockerExtractor) SaveLocalImage(ctx context.Context, imageName string) (io.ReadCloser, error) {
 	cli, err := client.NewClientWithOpts(client.FromEnv)
 	if err != nil {
-		return nil, xerrors.Errorf("error in docker NewClient")
+		return nil, xerrors.New("error in docker NewClient")
 	}
 
 	r, err := cli.ImageSave(ctx, []string{imageName})
 	if err != nil {
-		return nil, xerrors.Errorf("error in docker image save")
+		return nil, xerrors.New("error in docker image save")
 	}
 	return r, nil
 }
