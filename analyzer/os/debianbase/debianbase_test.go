@@ -34,22 +34,22 @@ func TestAnalyze(t *testing.T) {
 		},
 	}
 	a := debianbaseOSAnalyzer{}
-	for i, v := range tests {
+	for testname, v := range tests {
 		fileMap, err := os.GetFileMap(v.path)
 		if err != nil {
-			t.Errorf("%s : catch the error : %v", i, err)
+			t.Errorf("%s : catch the error : %v", testname, err)
 		}
 		osInfo, err := a.Analyze(fileMap)
 		if v.wantErr != nil {
 			if err == nil {
-				t.Errorf("%s : expected error but no error", i)
+				t.Errorf("%s : expected error but no error", testname)
 			}
 			if !xerrors.Is(err, v.wantErr) {
-				t.Errorf("[%s]\nexpected : %v\nactual : %v", i, v.wantErr, err)
+				t.Errorf("[%s]\nexpected : %v\nactual : %v", testname, v.wantErr, err)
 			}
 		}
 		if !reflect.DeepEqual(v.os, osInfo) {
-			t.Errorf("[%s]\nexpected : %v\nactual : %v", i, v.os, osInfo)
+			t.Errorf("[%s]\nexpected : %v\nactual : %v", testname, v.os, osInfo)
 		}
 	}
 }
