@@ -92,9 +92,19 @@ func RequiredFilenames() []string {
 
 func Analyze(ctx context.Context, imageName string) (filesMap extractor.FileMap, err error) {
 	e := extractor.NewDockerExtractor(extractor.DockerOption{Timeout: 600 * time.Second})
-	filesMap, err = e.Extract(ctx, imageName, RequiredFilenames())
+	r, err := e.SaveLocalImage(ctx, imageName)
 	if err != nil {
-		return nil, errors.Wrap(err, "Failed to extract files")
+		// when no docker daemon is installed or no image exists in the local machine
+		filesMap, err = e.Extract(ctx, imageName, RequiredFilenames())
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to extract files")
+		}
+		return filesMap, nil
+	}
+
+	filesMap, err = e.ExtractFromFile(ctx, r, RequiredFilenames())
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to extract files from saved tar")
 	}
 	return filesMap, nil
 }
@@ -103,7 +113,7 @@ func AnalyzeFromFile(ctx context.Context, r io.ReadCloser) (filesMap extractor.F
 	e := extractor.NewDockerExtractor(extractor.DockerOption{})
 	filesMap, err = e.ExtractFromFile(ctx, r, RequiredFilenames())
 	if err != nil {
-		return nil, errors.Wrap(err, "Failed to extract files")
+		return nil, errors.Wrap(err, "failed to extract files from tar")
 	}
 	return filesMap, nil
 }

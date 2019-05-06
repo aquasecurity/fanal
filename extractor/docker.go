@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/docker/distribution/manifest/schema2"
+	"github.com/docker/docker/client"
 	"github.com/genuinetools/reg/registry"
 	"github.com/genuinetools/reg/repoutils"
 	"github.com/knqyf263/fanal/cache"
@@ -125,6 +126,19 @@ func (d DockerExtractor) createRegistryClient(ctx context.Context, domain string
 		NonSSL:   d.Option.NonSSL,
 		Timeout:  d.Option.Timeout,
 	})
+}
+
+func (d DockerExtractor) SaveLocalImage(ctx context.Context, imageName string) (io.ReadCloser, error) {
+	cli, err := client.NewClientWithOpts(client.FromEnv)
+	if err != nil {
+		return nil, xerrors.Errorf("error in docker NewClient")
+	}
+
+	r, err := cli.ImageSave(ctx, []string{imageName})
+	if err != nil {
+		return nil, xerrors.Errorf("error in docker image save")
+	}
+	return r, nil
 }
 
 func (d DockerExtractor) Extract(ctx context.Context, imageName string, filenames []string) (FileMap, error) {
