@@ -15,9 +15,10 @@ import (
 )
 
 var (
-	osAnalyzers  []OSAnalyzer
-	pkgAnalyzers []PkgAnalyzer
-	libAnalyzers []LibraryAnalyzer
+	osAnalyzers      []OSAnalyzer
+	pkgAnalyzers     []PkgAnalyzer
+	libAnalyzers     []LibraryAnalyzer
+	commandAnalyzers []CommandAnalyzer
 
 	// ErrUnknownOS occurs when unknown OS is analyzed.
 	ErrUnknownOS = xerrors.New("Unknown OS")
@@ -32,6 +33,11 @@ type OSAnalyzer interface {
 
 type PkgAnalyzer interface {
 	Analyze(extractor.FileMap) ([]Package, error)
+	RequiredFiles() []string
+}
+
+type CommandAnalyzer interface {
+	Analyze(OS, extractor.FileMap) ([]Package, error)
 	RequiredFiles() []string
 }
 
@@ -72,6 +78,10 @@ func RegisterOSAnalyzer(analyzer OSAnalyzer) {
 
 func RegisterPkgAnalyzer(analyzer PkgAnalyzer) {
 	pkgAnalyzers = append(pkgAnalyzers, analyzer)
+}
+
+func RegisterCommandAnalyzer(analyzer CommandAnalyzer) {
+	commandAnalyzers = append(commandAnalyzers, analyzer)
 }
 
 func RegisterLibraryAnalyzer(analyzer LibraryAnalyzer) {
@@ -149,6 +159,17 @@ func GetPackages(filesMap extractor.FileMap) ([]Package, error) {
 		return pkgs, nil
 	}
 	return nil, ErrUnknownOS
+}
+
+func GetPackagesFromCommands(targetOS OS, filesMap extractor.FileMap) ([]Package, error) {
+	for _, analyzer := range commandAnalyzers {
+		pkgs, err := analyzer.Analyze(targetOS, filesMap)
+		if err != nil {
+			continue
+		}
+		return pkgs, nil
+	}
+	return nil, nil
 }
 
 func CheckPackage(pkg *Package) bool {

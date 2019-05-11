@@ -38,8 +38,13 @@ type manifest struct {
 	Layers   []string `json:"Layers"`
 }
 
-type config struct {
-	History []History
+type Config struct {
+	ContainerConfig containerConfig `json:"container_config"`
+	History         []History
+}
+
+type containerConfig struct {
+	Env []string
 }
 
 type History struct {
@@ -181,12 +186,6 @@ func (d DockerExtractor) Extract(ctx context.Context, imageName string, filename
 		return nil, xerrors.New("invalid manifest")
 	}
 
-	var config config
-	rc, err := r.DownloadLayer(ctx, image.Path, m.Manifest.Config.Digest)
-	if err = json.NewDecoder(rc).Decode(&config); err != nil {
-		return nil, xerrors.Errorf("failed to decode config JSON: %w", err)
-	}
-
 	ch := make(chan layer)
 	errCh := make(chan error)
 	layerIDs := []string{}
@@ -241,13 +240,17 @@ func (d DockerExtractor) Extract(ctx context.Context, imageName string, filename
 		return nil, xerrors.Errorf("failed to apply layers: %w", err)
 	}
 
-	historyByte, err := json.Marshal(config.History)
+	rc, err := r.DownloadLayer(ctx, image.Path, m.Manifest.Config.Digest)
 	if err != nil {
-		return nil, xerrors.Errorf("failed to marshal config JSON: %w", err)
+		return nil, xerrors.Errorf("error in layer download: %w", err)
+	}
+	config, err := ioutil.ReadAll(rc)
+	if err != nil {
+		return nil, xerrors.Errorf("failed to decode config JSON: %w", err)
 	}
 
 	// special file for command analyzer
-	fileMap["/command"] = historyByte
+	fileMap["/config"] = config
 
 	return fileMap, nil
 }
@@ -299,18 +302,8 @@ func (d DockerExtractor) ExtractFromFile(ctx context.Context, r io.Reader, filen
 		return nil, err
 	}
 
-	var config config
-	configJSON := tmpJSONs[manifests[0].Config]
-	if err = json.Unmarshal(configJSON, &config); err != nil {
-		return nil, xerrors.Errorf("failed to unmarshal config JSON in the image: %w", err)
-	}
-	historyByte, err := json.Marshal(config.History)
-	if err != nil {
-		return nil, xerrors.Errorf("failed to marshal config JSON in the image: %w", err)
-	}
-
 	// special file for command analyzer
-	fileMap["/command"] = historyByte
+	fileMap["/config"] = tmpJSONs[manifests[0].Config]
 
 	return fileMap, nil
 }
