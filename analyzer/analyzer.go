@@ -92,7 +92,7 @@ func RequiredFilenames() []string {
 	return filenames
 }
 
-func Analyze(ctx context.Context, imageName string, opts ...types.DockerOption) (filesMap extractor.FileMap, err error) {
+func Analyze(ctx context.Context, imageName string, opts ...types.DockerOption) (fileMap extractor.FileMap, err error) {
 	// default docker option
 	opt := types.DockerOption{
 		Timeout: 600 * time.Second,
@@ -105,27 +105,27 @@ func Analyze(ctx context.Context, imageName string, opts ...types.DockerOption) 
 	r, err := e.SaveLocalImage(ctx, imageName)
 	if err != nil {
 		// when no docker daemon is installed or no image exists in the local machine
-		filesMap, err = e.Extract(ctx, imageName, RequiredFilenames())
+		fileMap, err = e.Extract(ctx, imageName, RequiredFilenames())
 		if err != nil {
 			return nil, xerrors.Errorf("failed to extract files: %w", err)
 		}
-		return filesMap, nil
+		return fileMap, nil
 	}
 
-	filesMap, err = e.ExtractFromFile(ctx, r, RequiredFilenames())
+	fileMap, err = e.ExtractFromFile(ctx, r, RequiredFilenames())
 	if err != nil {
 		return nil, xerrors.Errorf("failed to extract files from saved tar: %w", err)
 	}
-	return filesMap, nil
+	return fileMap, nil
 }
 
-func AnalyzeFromFile(ctx context.Context, r io.ReadCloser) (filesMap extractor.FileMap, err error) {
+func AnalyzeFromFile(ctx context.Context, r io.ReadCloser) (fileMap extractor.FileMap, err error) {
 	e := docker.NewDockerExtractor(types.DockerOption{})
-	filesMap, err = e.ExtractFromFile(ctx, r, RequiredFilenames())
+	fileMap, err = e.ExtractFromFile(ctx, r, RequiredFilenames())
 	if err != nil {
 		return nil, xerrors.Errorf("failed to extract files from tar: %w", err)
 	}
-	return filesMap, nil
+	return fileMap, nil
 }
 
 func GetOS(filesMap extractor.FileMap) (OS, error) {
