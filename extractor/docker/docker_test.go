@@ -1,7 +1,6 @@
 package docker
 
 import (
-	"fmt"
 	"os"
 	"path"
 	"reflect"
@@ -66,7 +65,6 @@ func TestExtractFromFile(t *testing.T) {
 
 			d := DockerExtractor{}
 			fm, err := d.ExtractFromFile(nil, f, v.filenames)
-			fmt.Println(string(fm["/config"]))
 			if v.err != err {
 				t.Errorf("err: got %v, want %v", v.err, err)
 			}

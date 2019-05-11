@@ -240,6 +240,7 @@ func (d DockerExtractor) Extract(ctx context.Context, imageName string, filename
 		return nil, xerrors.Errorf("failed to apply layers: %w", err)
 	}
 
+	// download config file
 	rc, err := r.DownloadLayer(ctx, image.Path, m.Manifest.Config.Digest)
 	if err != nil {
 		return nil, xerrors.Errorf("error in layer download: %w", err)

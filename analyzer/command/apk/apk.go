@@ -69,6 +69,8 @@ func (a alpineCmdAnalyzer) fetchApkIndexArchive(targetOS analyzer.OS) (err error
 	if apkIndexArchive != nil {
 		return nil
 	}
+
+	// 3.9.3 => 3.9
 	osVer := targetOS.Name
 	if strings.Count(osVer, ".") > 1 {
 		osVer = osVer[:strings.LastIndex(osVer, ".")]
