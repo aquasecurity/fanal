@@ -3,6 +3,7 @@ package apk
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"sort"
 	"strings"
@@ -25,8 +26,25 @@ func init() {
 
 type alpineCmdAnalyzer struct{}
 
+type apkIndex struct {
+	Package map[string]archive
+	Provide provide
+}
+
 type archive struct {
-	Origin   string
+	Origin       string
+	Versions     version
+	Dependencies []string
+	Provides     []string
+}
+
+type provide struct {
+	SO      map[string]pkg // package which provides the shared object
+	Package map[string]pkg // package which provides the package
+}
+
+type pkg struct {
+	Package  string
 	Versions version
 }
 
@@ -37,7 +55,7 @@ const (
 )
 
 var (
-	apkIndexArchive map[string]archive
+	apkIndexArchive *apkIndex
 )
 
 func (a alpineCmdAnalyzer) Analyze(targetOS analyzer.OS, fileMap extractor.FileMap) (pkgs []analyzer.Package, err error) {
@@ -46,6 +64,7 @@ func (a alpineCmdAnalyzer) Analyze(targetOS analyzer.OS, fileMap extractor.FileM
 	}
 
 	if err := a.fetchApkIndexArchive(targetOS); err != nil {
+		log.Println(err)
 		return nil, err
 	}
 
@@ -83,7 +102,8 @@ func (a alpineCmdAnalyzer) fetchApkIndexArchive(targetOS analyzer.OS) (err error
 	}
 	defer resp.Body.Close()
 
-	if err = json.NewDecoder(resp.Body).Decode(&apkIndexArchive); err != nil {
+	apkIndexArchive = &apkIndex{}
+	if err = json.NewDecoder(resp.Body).Decode(apkIndexArchive); err != nil {
 		return xerrors.Errorf("failed to decode APKINDEX JSON: %w", err)
 	}
 
@@ -97,16 +117,23 @@ func (a alpineCmdAnalyzer) parseConfig(config docker.Config) (packages []analyze
 		envs["$"+env[:index]] = env[index+1:]
 	}
 
+	uniqPkgs := map[string]analyzer.Package{}
 	for _, history := range config.History {
 		pkgs := a.parseCommand(history.CreatedBy, envs)
-		pkgs = a.guessVersion(pkgs, history.Created)
-		packages = append(packages, pkgs...)
+		pkgs = a.resolveDependencies(pkgs)
+		results := a.guessVersion(pkgs, history.Created)
+		for _, result := range results {
+			uniqPkgs[result.Name] = result
+		}
+	}
+	for _, pkg := range uniqPkgs {
+		packages = append(packages, pkg)
 	}
 
 	return packages
 }
 
-func (a alpineCmdAnalyzer) parseCommand(command string, envs map[string]string) (pkgs []analyzer.Package) {
+func (a alpineCmdAnalyzer) parseCommand(command string, envs map[string]string) (pkgs []string) {
 	if strings.Contains(command, "#(nop)") {
 		return nil
 	}
@@ -132,19 +159,59 @@ func (a alpineCmdAnalyzer) parseCommand(command string, envs map[string]string) 
 			} else if add {
 				if strings.HasPrefix(field, "$") {
 					for _, pkg := range strings.Fields(envs[field]) {
-						pkgs = append(pkgs, analyzer.Package{
-							Name: pkg,
-						})
+						pkgs = append(pkgs, pkg)
 					}
 					continue
 				}
-				pkgs = append(pkgs, analyzer.Package{
-					Name: field,
-				})
+				pkgs = append(pkgs, field)
 			}
 		}
 	}
 	return pkgs
+}
+func (a alpineCmdAnalyzer) resolveDependencies(originalPkgs []string) (pkgs []string) {
+	uniqPkgs := map[string]struct{}{}
+	for _, pkgName := range originalPkgs {
+		if _, ok := uniqPkgs[pkgName]; ok {
+			continue
+		}
+		for _, p := range a.resolveDependency(pkgName) {
+			uniqPkgs[p] = struct{}{}
+		}
+	}
+	for pkg := range uniqPkgs {
+		pkgs = append(pkgs, pkg)
+	}
+	return pkgs
+}
+
+func (a alpineCmdAnalyzer) resolveDependency(pkgName string) (pkgNames []string) {
+	pkg, ok := apkIndexArchive.Package[pkgName]
+	if !ok {
+		return nil
+	}
+	pkgNames = append(pkgNames, pkgName)
+	for _, dependency := range pkg.Dependencies {
+		// sqlite-libs=3.26.0-r3 => sqlite-libs
+		if strings.Contains(dependency, "=") {
+			dependency = dependency[:strings.Index(dependency, "=")]
+		}
+
+		if strings.HasPrefix(dependency, "so:") {
+			soProvidePkg := apkIndexArchive.Provide.SO[dependency[3:]].Package
+			pkgNames = append(pkgNames, a.resolveDependency(soProvidePkg)...)
+			continue
+		} else if strings.HasPrefix(dependency, "pc:") || strings.HasPrefix(dependency, "cmd:") {
+			continue
+		}
+		pkgProvidePkg, ok := apkIndexArchive.Provide.Package[dependency]
+		if ok {
+			pkgNames = append(pkgNames, a.resolveDependency(pkgProvidePkg.Package)...)
+			continue
+		}
+		pkgNames = append(pkgNames, a.resolveDependency(dependency)...)
+	}
+	return pkgNames
 }
 
 type historyVersion struct {
@@ -152,9 +219,9 @@ type historyVersion struct {
 	BuiltAt int
 }
 
-func (a alpineCmdAnalyzer) guessVersion(originalPkgs []analyzer.Package, createdAt time.Time) (pkgs []analyzer.Package) {
+func (a alpineCmdAnalyzer) guessVersion(originalPkgs []string, createdAt time.Time) (pkgs []analyzer.Package) {
 	for _, pkg := range originalPkgs {
-		archive, ok := apkIndexArchive[pkg.Name]
+		archive, ok := apkIndexArchive.Package[pkg]
 		if !ok {
 			continue
 		}
@@ -184,12 +251,12 @@ func (a alpineCmdAnalyzer) guessVersion(originalPkgs []analyzer.Package, created
 		}
 
 		pkgs = append(pkgs, analyzer.Package{
-			Name:    pkg.Name,
+			Name:    pkg,
 			Version: candidateVersion,
 		})
 
 		// Add origin package name
-		if archive.Origin != "" && archive.Origin != pkg.Name {
+		if archive.Origin != "" && archive.Origin != pkg {
 			pkgs = append(pkgs, analyzer.Package{
 				Name:    archive.Origin,
 				Version: candidateVersion,
