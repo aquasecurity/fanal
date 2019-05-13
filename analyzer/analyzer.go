@@ -54,11 +54,12 @@ type OS struct {
 }
 
 type Package struct {
-	Name    string
-	Version string
-	Release string
-	Epoch   int
-	Type    string
+	Name       string
+	Version    string
+	Release    string
+	Epoch      int
+	SrcName    string
+	SrcVersion string
 }
 
 var (
