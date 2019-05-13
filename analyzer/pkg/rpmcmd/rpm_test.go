@@ -5,6 +5,8 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/kylelemons/godebug/pretty"
+
 	"github.com/knqyf263/fanal/analyzer"
 )
 
@@ -55,11 +57,11 @@ func TestParseRpmInfo(t *testing.T) {
 				{Name: "keyutils-libs", Version: "1.5.10", Release: "6.fc28", Epoch: 0, SrcName: "keyutils", SrcVersion: "1.5.10", SrcRelease: "6.fc28", SrcEpoch: 0},
 				{Name: "glib2", Version: "2.56.1", Release: "4.fc28", Epoch: 0, SrcName: "glib2", SrcVersion: "2.56.1", SrcRelease: "4.fc28", SrcEpoch: 0},
 				{Name: "systemd-libs", Version: "238", Release: "9.git0e0aa59.fc28", Epoch: 0, SrcName: "systemd", SrcVersion: "238", SrcRelease: "9.git0e0aa59.fc28", SrcEpoch: 0},
-				{Name: "dbus-libs", Version: "1.12.10", Release: "1.fc28", Epoch: 1, SrcName: "dbus", SrcVersion: "1.12.10", SrcRelease: "1.fc28", SrcEpoch: 0},
+				{Name: "dbus-libs", Version: "1.12.10", Release: "1.fc28", Epoch: 1, SrcName: "dbus", SrcVersion: "1.12.10", SrcRelease: "1.fc28", SrcEpoch: 1},
 				{Name: "libtasn1", Version: "4.13", Release: "2.fc28", Epoch: 0, SrcName: "libtasn1", SrcVersion: "4.13", SrcRelease: "2.fc28", SrcEpoch: 0},
 				{Name: "ca-certificates", Version: "2018.2.24", Release: "1.0.fc28", Epoch: 0, SrcName: "ca-certificates", SrcVersion: "2018.2.24", SrcRelease: "1.0.fc28", SrcEpoch: 0},
 				{Name: "libarchive", Version: "3.3.1", Release: "4.fc28", Epoch: 0, SrcName: "libarchive", SrcVersion: "3.3.1", SrcRelease: "4.fc28", SrcEpoch: 0},
-				{Name: "openssl", Version: "1.1.0h", Release: "3.fc28", Epoch: 1, SrcName: "openssl", SrcVersion: "1.1.0h", SrcRelease: "3.fc28", SrcEpoch: 0},
+				{Name: "openssl", Version: "1.1.0h", Release: "3.fc28", Epoch: 1, SrcName: "openssl", SrcVersion: "1.1.0h", SrcRelease: "3.fc28", SrcEpoch: 1},
 				{Name: "libusbx", Version: "1.0.22", Release: "1.fc28", Epoch: 0, SrcName: "libusbx", SrcVersion: "1.0.22", SrcRelease: "1.fc28", SrcEpoch: 0},
 				{Name: "libsemanage", Version: "2.8", Release: "2.fc28", Epoch: 0, SrcName: "libsemanage", SrcVersion: "2.8", SrcRelease: "2.fc28", SrcEpoch: 0},
 				{Name: "libutempter", Version: "1.1.6", Release: "14.fc28", Epoch: 0, SrcName: "libutempter", SrcVersion: "1.1.6", SrcRelease: "14.fc28", SrcEpoch: 0},
@@ -106,7 +108,7 @@ func TestParseRpmInfo(t *testing.T) {
 				{Name: "deltarpm", Version: "3.6", Release: "25.fc28", Epoch: 0, SrcName: "deltarpm", SrcVersion: "3.6", SrcRelease: "25.fc28", SrcEpoch: 0},
 				{Name: "sssd-client", Version: "1.16.3", Release: "2.fc28", Epoch: 0, SrcName: "sssd", SrcVersion: "1.16.3", SrcRelease: "2.fc28", SrcEpoch: 0},
 				{Name: "cracklib-dicts", Version: "2.9.6", Release: "13.fc28", Epoch: 0, SrcName: "cracklib", SrcVersion: "2.9.6", SrcRelease: "13.fc28", SrcEpoch: 0},
-				{Name: "tar", Version: "1.30", Release: "3.fc28", Epoch: 2, SrcName: "tar", SrcVersion: "1.30", SrcRelease: "3.fc28", SrcEpoch: 0},
+				{Name: "tar", Version: "1.30", Release: "3.fc28", Epoch: 2, SrcName: "tar", SrcVersion: "1.30", SrcRelease: "3.fc28", SrcEpoch: 2},
 				{Name: "diffutils", Version: "3.6", Release: "4.fc28", Epoch: 0, SrcName: "diffutils", SrcVersion: "3.6", SrcRelease: "4.fc28", SrcEpoch: 0},
 				{Name: "langpacks-en", Version: "1.0", Release: "12.fc28", Epoch: 0, SrcName: "langpacks", SrcVersion: "1.0", SrcRelease: "12.fc28", SrcEpoch: 0},
 				{Name: "gpg-pubkey", Version: "9db62fb1", Release: "59920156", Epoch: 0, SrcName: "", SrcVersion: "", SrcRelease: "", SrcEpoch: 0},
@@ -134,7 +136,7 @@ func TestParseRpmInfo(t *testing.T) {
 				{Name: "libattr", Version: "2.4.48", Release: "3.fc28", Epoch: 0, SrcName: "attr", SrcVersion: "2.4.48", SrcRelease: "3.fc28", SrcEpoch: 0},
 				{Name: "coreutils-single", Version: "8.29", Release: "7.fc28", Epoch: 0, SrcName: "coreutils", SrcVersion: "8.29", SrcRelease: "7.fc28", SrcEpoch: 0},
 				{Name: "libblkid", Version: "2.32.1", Release: "1.fc28", Epoch: 0, SrcName: "util-linux", SrcVersion: "2.32.1", SrcRelease: "1.fc28", SrcEpoch: 0},
-				{Name: "gmp", Version: "6.1.2", Release: "7.fc28", Epoch: 1, SrcName: "gmp", SrcVersion: "6.1.2", SrcRelease: "7.fc28", SrcEpoch: 0},
+				{Name: "gmp", Version: "6.1.2", Release: "7.fc28", Epoch: 1, SrcName: "gmp", SrcVersion: "6.1.2", SrcRelease: "7.fc28", SrcEpoch: 1},
 				{Name: "libunistring", Version: "0.9.10", Release: "1.fc28", Epoch: 0, SrcName: "libunistring", SrcVersion: "0.9.10", SrcRelease: "1.fc28", SrcEpoch: 0},
 				{Name: "sqlite-libs", Version: "3.22.0", Release: "4.fc28", Epoch: 0, SrcName: "sqlite", SrcVersion: "3.22.0", SrcRelease: "4.fc28", SrcEpoch: 0},
 				{Name: "audit-libs", Version: "2.8.4", Release: "2.fc28", Epoch: 0, SrcName: "audit", SrcVersion: "2.8.4", SrcRelease: "2.fc28", SrcEpoch: 0},
@@ -143,13 +145,13 @@ func TestParseRpmInfo(t *testing.T) {
 				{Name: "pcre", Version: "8.42", Release: "3.fc28", Epoch: 0, SrcName: "pcre", SrcVersion: "8.42", SrcRelease: "3.fc28", SrcEpoch: 0},
 				{Name: "grep", Version: "3.1", Release: "5.fc28", Epoch: 0, SrcName: "grep", SrcVersion: "3.1", SrcRelease: "5.fc28", SrcEpoch: 0},
 				{Name: "crypto-policies", Version: "20180425", Release: "5.git6ad4018.fc28", Epoch: 0, SrcName: "crypto-policies", SrcVersion: "20180425", SrcRelease: "5.git6ad4018.fc28", SrcEpoch: 0},
-				{Name: "gdbm-libs", Version: "1.14.1", Release: "4.fc28", Epoch: 1, SrcName: "gdbm", SrcVersion: "1.14.1", SrcRelease: "4.fc28", SrcEpoch: 0},
+				{Name: "gdbm-libs", Version: "1.14.1", Release: "4.fc28", Epoch: 1, SrcName: "gdbm", SrcVersion: "1.14.1", SrcRelease: "4.fc28", SrcEpoch: 1},
 				{Name: "p11-kit-trust", Version: "0.23.12", Release: "1.fc28", Epoch: 0, SrcName: "p11-kit", SrcVersion: "0.23.12", SrcRelease: "1.fc28", SrcEpoch: 0},
-				{Name: "openssl-libs", Version: "1.1.0h", Release: "3.fc28", Epoch: 1, SrcName: "openssl", SrcVersion: "1.1.0h", SrcRelease: "3.fc28", SrcEpoch: 0},
+				{Name: "openssl-libs", Version: "1.1.0h", Release: "3.fc28", Epoch: 1, SrcName: "openssl", SrcVersion: "1.1.0h", SrcRelease: "3.fc28", SrcEpoch: 1},
 				{Name: "ima-evm-utils", Version: "1.1", Release: "2.fc28", Epoch: 0, SrcName: "ima-evm-utils", SrcVersion: "1.1", SrcRelease: "2.fc28", SrcEpoch: 0},
-				{Name: "gdbm", Version: "1.14.1", Release: "4.fc28", Epoch: 1, SrcName: "gdbm", SrcVersion: "1.14.1", SrcRelease: "4.fc28", SrcEpoch: 0},
+				{Name: "gdbm", Version: "1.14.1", Release: "4.fc28", Epoch: 1, SrcName: "gdbm", SrcVersion: "1.14.1", SrcRelease: "4.fc28", SrcEpoch: 1},
 				{Name: "gobject-introspection", Version: "1.56.1", Release: "1.fc28", Epoch: 0, SrcName: "gobject-introspection", SrcVersion: "1.56.1", SrcRelease: "1.fc28", SrcEpoch: 0},
-				{Name: "shadow-utils", Version: "4.6", Release: "1.fc28", Epoch: 2, SrcName: "shadow-utils", SrcVersion: "4.6", SrcRelease: "1.fc28", SrcEpoch: 0},
+				{Name: "shadow-utils", Version: "4.6", Release: "1.fc28", Epoch: 2, SrcName: "shadow-utils", SrcVersion: "4.6", SrcRelease: "1.fc28", SrcEpoch: 2},
 				{Name: "libpsl", Version: "0.20.2", Release: "2.fc28", Epoch: 0, SrcName: "libpsl", SrcVersion: "0.20.2", SrcRelease: "2.fc28", SrcEpoch: 0},
 				{Name: "nettle", Version: "3.4", Release: "2.fc28", Epoch: 0, SrcName: "nettle", SrcVersion: "3.4", SrcRelease: "2.fc28", SrcEpoch: 0},
 				{Name: "libfdisk", Version: "2.32.1", Release: "1.fc28", Epoch: 0, SrcName: "util-linux", SrcVersion: "2.32.1", SrcRelease: "1.fc28", SrcEpoch: 0},
@@ -177,11 +179,11 @@ func TestParseRpmInfo(t *testing.T) {
 				{Name: "libargon2", Version: "20161029", Release: "5.fc28", Epoch: 0, SrcName: "argon2", SrcVersion: "20161029", SrcRelease: "5.fc28", SrcEpoch: 0},
 				{Name: "libmodulemd", Version: "1.6.2", Release: "2.fc28", Epoch: 0, SrcName: "libmodulemd", SrcVersion: "1.6.2", SrcRelease: "2.fc28", SrcEpoch: 0},
 				{Name: "pkgconf", Version: "1.4.2", Release: "1.fc28", Epoch: 0, SrcName: "pkgconf", SrcVersion: "1.4.2", SrcRelease: "1.fc28", SrcEpoch: 0},
-				{Name: "libpcap", Version: "1.9.0", Release: "1.fc28", Epoch: 14, SrcName: "libpcap", SrcVersion: "1.9.0", SrcRelease: "1.fc28", SrcEpoch: 0},
+				{Name: "libpcap", Version: "1.9.0", Release: "1.fc28", Epoch: 14, SrcName: "libpcap", SrcVersion: "1.9.0", SrcRelease: "1.fc28", SrcEpoch: 14},
 				{Name: "device-mapper", Version: "1.02.146", Release: "5.fc28", Epoch: 0, SrcName: "lvm2", SrcVersion: "2.02.177", SrcRelease: "5.fc28", SrcEpoch: 0},
 				{Name: "cryptsetup-libs", Version: "2.0.4", Release: "1.fc28", Epoch: 0, SrcName: "cryptsetup", SrcVersion: "2.0.4", SrcRelease: "1.fc28", SrcEpoch: 0},
 				{Name: "elfutils-libs", Version: "0.173", Release: "1.fc28", Epoch: 0, SrcName: "elfutils", SrcVersion: "0.173", SrcRelease: "1.fc28", SrcEpoch: 0},
-				{Name: "dbus", Version: "1.12.10", Release: "1.fc28", Epoch: 1, SrcName: "dbus", SrcVersion: "1.12.10", SrcRelease: "1.fc28", SrcEpoch: 0},
+				{Name: "dbus", Version: "1.12.10", Release: "1.fc28", Epoch: 1, SrcName: "dbus", SrcVersion: "1.12.10", SrcRelease: "1.fc28", SrcEpoch: 1},
 				{Name: "libnghttp2", Version: "1.32.1", Release: "1.fc28", Epoch: 0, SrcName: "nghttp2", SrcVersion: "1.32.1", SrcRelease: "1.fc28", SrcEpoch: 0},
 				{Name: "librepo", Version: "1.8.1", Release: "7.fc28", Epoch: 0, SrcName: "librepo", SrcVersion: "1.8.1", SrcRelease: "7.fc28", SrcEpoch: 0},
 				{Name: "curl", Version: "7.59.0", Release: "6.fc28", Epoch: 0, SrcName: "curl", SrcVersion: "7.59.0", SrcRelease: "6.fc28", SrcEpoch: 0},
@@ -194,7 +196,7 @@ func TestParseRpmInfo(t *testing.T) {
 				{Name: "rpm-plugin-systemd-inhibit", Version: "4.14.1", Release: "9.fc28", Epoch: 0, SrcName: "rpm", SrcVersion: "4.14.1", SrcRelease: "9.fc28", SrcEpoch: 0},
 				{Name: "nss-tools", Version: "3.38.0", Release: "1.0.fc28", Epoch: 0, SrcName: "nss", SrcVersion: "3.38.0", SrcRelease: "1.0.fc28", SrcEpoch: 0},
 				{Name: "openssl-pkcs11", Version: "0.4.8", Release: "1.fc28", Epoch: 0, SrcName: "openssl-pkcs11", SrcVersion: "0.4.8", SrcRelease: "1.fc28", SrcEpoch: 0},
-				{Name: "vim-minimal", Version: "8.1.328", Release: "1.fc28", Epoch: 2, SrcName: "vim", SrcVersion: "8.1.328", SrcRelease: "1.fc28", SrcEpoch: 0},
+				{Name: "vim-minimal", Version: "8.1.328", Release: "1.fc28", Epoch: 2, SrcName: "vim", SrcVersion: "8.1.328", SrcRelease: "1.fc28", SrcEpoch: 2},
 				{Name: "glibc-langpack-en", Version: "2.27", Release: "32.fc28", Epoch: 0, SrcName: "glibc", SrcVersion: "2.27", SrcRelease: "32.fc28", SrcEpoch: 0},
 				{Name: "rootfiles", Version: "8.1", Release: "22.fc28", Epoch: 0, SrcName: "rootfiles", SrcVersion: "8.1", SrcRelease: "22.fc28", SrcEpoch: 0},
 			},
@@ -211,7 +213,7 @@ func TestParseRpmInfo(t *testing.T) {
 			t.Errorf("%s : catch the error : %v", testname, err)
 		}
 		if !reflect.DeepEqual(v.pkgs, pkgs) {
-			t.Errorf("[%s]\nexpected : %v\nactual : %v", testname, v.pkgs, pkgs)
+			t.Errorf("[%s]\ndiff: %s", testname, pretty.Compare(v.pkgs, pkgs))
 		}
 	}
 }

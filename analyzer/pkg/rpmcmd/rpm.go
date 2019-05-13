@@ -92,9 +92,9 @@ func parseRPMOutput(line string) (pkg analyzer.Package, err error) {
 
 	// parse source rpm
 	var srcName, srcVer, srcRel string
-	var srcEpoch int
 	if fields[4] != "(none)" {
-		srcName, srcVer, srcRel, srcEpoch, _ = splitFileName(fields[4])
+		// source epoch is not included in SOURCERPM
+		srcName, srcVer, srcRel, _, _ = splitFileName(fields[4])
 	}
 
 	return analyzer.Package{
@@ -105,7 +105,7 @@ func parseRPMOutput(line string) (pkg analyzer.Package, err error) {
 		SrcName:    srcName,
 		SrcVersion: srcVer,
 		SrcRelease: srcRel,
-		SrcEpoch:   srcEpoch,
+		SrcEpoch:   epoch, // NOTE: use epoch of binary package as epoch of src package
 	}, nil
 }
 
