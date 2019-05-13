@@ -60,6 +60,8 @@ type Package struct {
 	Epoch      int
 	SrcName    string
 	SrcVersion string
+	SrcRelease string
+	SrcEpoch   int
 }
 
 var (
