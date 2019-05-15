@@ -3,6 +3,7 @@ package npm
 import (
 	"bytes"
 	"path/filepath"
+	"strings"
 
 	"github.com/knqyf263/fanal/analyzer"
 	"github.com/knqyf263/fanal/extractor"
@@ -25,6 +26,11 @@ func (a npmLibraryAnalyzer) Analyze(fileMap extractor.FileMap) (map[analyzer.Fil
 	for filename, content := range fileMap {
 		basename := filepath.Base(filename)
 		if !utils.StringInSlice(basename, requiredFiles) {
+			continue
+		}
+
+		// skip analyze files which in dependency folder
+		if utils.StringInSlice(utils.NODE_DEP_DIR, strings.Split(filename, utils.PathSeparator)) {
 			continue
 		}
 
