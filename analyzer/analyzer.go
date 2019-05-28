@@ -19,7 +19,7 @@ var (
 	pkgAnalyzers     []PkgAnalyzer
 	libAnalyzers     []LibraryAnalyzer
 	commandAnalyzers []CommandAnalyzer
-	additinalFiles   []string
+	additionalFiles  []string
 
 	// ErrUnknownOS occurs when unknown OS is analyzed.
 	ErrUnknownOS = xerrors.New("Unknown OS")
@@ -89,12 +89,12 @@ func RegisterLibraryAnalyzer(analyzer LibraryAnalyzer) {
 }
 
 func AddRequiredFilenames(filenames []string) {
-	additinalFiles = append(additinalFiles, filenames...)
+	additionalFiles = append(additionalFiles, filenames...)
 }
 
 func RequiredFilenames() []string {
 	filenames := []string{}
-	filenames = append(filenames, additinalFiles...)
+	filenames = append(filenames, additionalFiles...)
 	for _, analyzer := range osAnalyzers {
 		filenames = append(filenames, analyzer.RequiredFiles()...)
 	}
