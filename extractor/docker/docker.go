@@ -13,7 +13,7 @@ import (
 	"strings"
 	"time"
 
-	digest "github.com/opencontainers/go-digest"
+	"github.com/opencontainers/go-digest"
 
 	"github.com/knqyf263/fanal/extractor"
 	"github.com/knqyf263/fanal/extractor/docker/token/ecr"
@@ -231,6 +231,13 @@ func (d DockerExtractor) Extract(ctx context.Context, imageName string, filename
 		if err != nil {
 			return nil, err
 		}
+
+		// add checked file once
+		checkedFilenames := []string{}
+		for filename, _ := range files {
+			checkedFilenames = append(checkedFilenames, filename)
+		}
+		filenames = append(filenames, checkedFilenames...)
 		layerID := string(l.ID)
 		filesInLayers[layerID] = files
 		opqInLayers[layerID] = opqDirs
@@ -291,6 +298,13 @@ func (d DockerExtractor) ExtractFromFile(ctx context.Context, r io.Reader, filen
 			if err != nil {
 				return nil, err
 			}
+
+			// add checked file once
+			checkedFilenames := []string{}
+			for filename, _ := range files {
+				checkedFilenames = append(checkedFilenames, filename)
+			}
+			filenames = append(filenames, checkedFilenames...)
 			filesInLayers[layerID] = files
 			opqInLayers[layerID] = opqDirs
 		default:
