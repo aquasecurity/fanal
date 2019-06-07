@@ -25,7 +25,7 @@ var redhatRe = regexp.MustCompile(`(.*) release (\d[\d\.]*)`)
 
 func (a redhatOSAnalyzer) Analyze(fileMap extractor.FileMap) (analyzer.OS, error) {
 	if file, ok := fileMap["etc/centos-release"]; ok {
-		scanner := bufio.NewScanner(bytes.NewBuffer(file))
+		scanner := bufio.NewScanner(bytes.NewBuffer(file.Body))
 		for scanner.Scan() {
 			line := scanner.Text()
 			result := redhatRe.FindStringSubmatch(strings.TrimSpace(line))
@@ -41,7 +41,7 @@ func (a redhatOSAnalyzer) Analyze(fileMap extractor.FileMap) (analyzer.OS, error
 	}
 
 	if file, ok := fileMap["etc/oracle-release"]; ok {
-		scanner := bufio.NewScanner(bytes.NewBuffer(file))
+		scanner := bufio.NewScanner(bytes.NewBuffer(file.Body))
 		for scanner.Scan() {
 			line := scanner.Text()
 			result := redhatRe.FindStringSubmatch(strings.TrimSpace(line))
@@ -53,15 +53,15 @@ func (a redhatOSAnalyzer) Analyze(fileMap extractor.FileMap) (analyzer.OS, error
 	}
 
 	if file, ok := fileMap["usr/lib/fedora-release"]; ok {
-		return parseFedoraRelease(file)
+		return parseFedoraRelease(file.Body)
 	}
 
 	if file, ok := fileMap["etc/fedora-release"]; ok {
-		return parseFedoraRelease(file)
+		return parseFedoraRelease(file.Body)
 	}
 
 	if file, ok := fileMap["etc/redhat-release"]; ok {
-		scanner := bufio.NewScanner(bytes.NewBuffer(file))
+		scanner := bufio.NewScanner(bytes.NewBuffer(file.Body))
 		for scanner.Scan() {
 			line := scanner.Text()
 			result := redhatRe.FindStringSubmatch(strings.TrimSpace(line))

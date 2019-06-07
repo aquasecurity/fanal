@@ -74,7 +74,7 @@ func (a alpineCmdAnalyzer) Analyze(targetOS analyzer.OS, fileMap extractor.FileM
 			continue
 		}
 		var config docker.Config
-		if err := json.Unmarshal(file, &config); err != nil {
+		if err := json.Unmarshal(file.Body, &config); err != nil {
 			return nil, err
 		}
 		pkgs = append(pkgs, a.parseConfig(config)...)

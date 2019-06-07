@@ -3,6 +3,7 @@ package extractor
 import (
 	"context"
 	"io"
+	"os"
 
 	"github.com/pkg/errors"
 )
@@ -12,7 +13,11 @@ var (
 	ErrCouldNotExtract = errors.New("Could not extract the archive")
 )
 
-type FileMap map[string][]byte
+type FileMap map[string]FileData
+type FileData struct {
+	Body     []byte
+	FileMode os.FileMode
+}
 
 type Extractor interface {
 	Extract(ctx context.Context, imageName string, filenames []string) (FileMap, error)

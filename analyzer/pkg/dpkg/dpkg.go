@@ -34,7 +34,7 @@ func (a debianPkgAnalyzer) Analyze(fileMap extractor.FileMap) (pkgs []analyzer.P
 		if !ok {
 			continue
 		}
-		scanner := bufio.NewScanner(bytes.NewBuffer(file))
+		scanner := bufio.NewScanner(bytes.NewBuffer(file.Body))
 		pkgs = a.parseDpkginfo(scanner)
 		detected = true
 	}

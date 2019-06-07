@@ -24,7 +24,7 @@ func (a alpineOSAnalyzer) Analyze(fileMap extractor.FileMap) (analyzer.OS, error
 		if !ok {
 			continue
 		}
-		scanner := bufio.NewScanner(bytes.NewBuffer(file))
+		scanner := bufio.NewScanner(bytes.NewBuffer(file.Body))
 		for scanner.Scan() {
 			line := scanner.Text()
 			return analyzer.OS{Family: os.Alpine, Name: line}, nil

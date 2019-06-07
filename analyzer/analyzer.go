@@ -3,6 +3,7 @@ package analyzer
 import (
 	"context"
 	"io"
+	"os"
 	"time"
 
 	"github.com/knqyf263/fanal/types"
@@ -15,11 +16,12 @@ import (
 )
 
 var (
-	osAnalyzers      []OSAnalyzer
-	pkgAnalyzers     []PkgAnalyzer
-	libAnalyzers     []LibraryAnalyzer
-	commandAnalyzers []CommandAnalyzer
-	additionalFiles  []string
+	osAnalyzers         []OSAnalyzer
+	pkgAnalyzers        []PkgAnalyzer
+	libAnalyzers        []LibraryAnalyzer
+	commandAnalyzers    []CommandAnalyzer
+	additionalFiles     []string
+	requiredPermissions []os.FileMode
 
 	// ErrUnknownOS occurs when unknown OS is analyzed.
 	ErrUnknownOS = xerrors.New("Unknown OS")
@@ -107,6 +109,16 @@ func RequiredFilenames() []string {
 	return filenames
 }
 
+func AddRequiredPermissions(permissions []os.FileMode) {
+	requiredPermissions = append(requiredPermissions, permissions...)
+}
+
+func RequiredPermissions() []os.FileMode {
+	permissions := []os.FileMode{}
+	permissions = append(permissions, requiredPermissions...)
+	return permissions
+}
+
 func Analyze(ctx context.Context, imageName string, opts ...types.DockerOption) (fileMap extractor.FileMap, err error) {
 	// default docker option
 	opt := types.DockerOption{
@@ -120,14 +132,14 @@ func Analyze(ctx context.Context, imageName string, opts ...types.DockerOption) 
 	r, err := e.SaveLocalImage(ctx, imageName)
 	if err != nil {
 		// when no docker daemon is installed or no image exists in the local machine
-		fileMap, err = e.Extract(ctx, imageName, RequiredFilenames())
+		fileMap, err = e.Extract(ctx, imageName, RequiredFilenames(), RequiredPermissions())
 		if err != nil {
 			return nil, xerrors.Errorf("failed to extract files: %w", err)
 		}
 		return fileMap, nil
 	}
 
-	fileMap, err = e.ExtractFromFile(ctx, r, RequiredFilenames())
+	fileMap, err = e.ExtractFromFile(ctx, r, RequiredFilenames(), RequiredPermissions())
 	if err != nil {
 		return nil, xerrors.Errorf("failed to extract files from saved tar: %w", err)
 	}
@@ -136,7 +148,7 @@ func Analyze(ctx context.Context, imageName string, opts ...types.DockerOption) 
 
 func AnalyzeFromFile(ctx context.Context, r io.ReadCloser) (fileMap extractor.FileMap, err error) {
 	e := docker.NewDockerExtractor(types.DockerOption{})
-	fileMap, err = e.ExtractFromFile(ctx, r, RequiredFilenames())
+	fileMap, err = e.ExtractFromFile(ctx, r, RequiredFilenames(), RequiredPermissions())
 	if err != nil {
 		return nil, xerrors.Errorf("failed to extract files from tar: %w", err)
 	}

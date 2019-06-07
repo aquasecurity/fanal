@@ -8,6 +8,7 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
+	"os"
 	"path/filepath"
 	"strings"
 	"time"
@@ -94,7 +95,7 @@ func applyLayers(layerIDs []string, filesInLayers map[string]extractor.FileMap, 
 
 	fileMap := extractor.FileMap{}
 	walkFn := func(keys []string, value interface{}) error {
-		content, ok := value.([]byte)
+		content, ok := value.(extractor.FileData)
 		if !ok {
 			return nil
 		}
@@ -163,7 +164,7 @@ func (d DockerExtractor) saveLocalImage(ctx context.Context, imageName string) (
 	return r, nil
 }
 
-func (d DockerExtractor) Extract(ctx context.Context, imageName string, filenames []string) (extractor.FileMap, error) {
+func (d DockerExtractor) Extract(ctx context.Context, imageName string, filenames []string, permissions []os.FileMode) (extractor.FileMap, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), d.Option.Timeout)
 	defer cancel()
 
@@ -226,7 +227,7 @@ func (d DockerExtractor) Extract(ctx context.Context, imageName string, filename
 		case <-ctx.Done():
 			return nil, xerrors.Errorf("timeout: %w", ctx.Err())
 		}
-		files, opqDirs, err := d.ExtractFiles(l.Content, filenames)
+		files, opqDirs, err := d.ExtractFiles(l.Content, filenames, permissions)
 		if err != nil {
 			return nil, err
 		}
@@ -251,12 +252,12 @@ func (d DockerExtractor) Extract(ctx context.Context, imageName string, filename
 	}
 
 	// special file for command analyzer
-	fileMap["/config"] = config
+	fileMap["/config"] = extractor.FileData{Body: config, FileMode: os.ModePerm}
 
 	return fileMap, nil
 }
 
-func (d DockerExtractor) ExtractFromFile(ctx context.Context, r io.Reader, filenames []string) (extractor.FileMap, error) {
+func (d DockerExtractor) ExtractFromFile(ctx context.Context, r io.Reader, filenames []string, permissions []os.FileMode) (extractor.FileMap, error) {
 	manifests := make([]manifest, 0)
 	filesInLayers := map[string]extractor.FileMap{}
 	tmpJSONs := extractor.FileMap{}
@@ -278,13 +279,15 @@ func (d DockerExtractor) ExtractFromFile(ctx context.Context, r io.Reader, filen
 			}
 		case strings.HasSuffix(header.Name, ".json"):
 			// save all JSON temporarily for config JSON
-			tmpJSONs[header.Name], err = ioutil.ReadAll(tr)
+			data, err := ioutil.ReadAll(tr)
 			if err != nil {
 				return nil, err
 			}
+			tmpJSONs[header.Name] = extractor.FileData{Body: data, FileMode: os.ModePerm}
+
 		case strings.HasSuffix(header.Name, ".tar"):
 			layerID := filepath.Base(filepath.Dir(header.Name))
-			files, opqDirs, err := d.ExtractFiles(tr, filenames)
+			files, opqDirs, err := d.ExtractFiles(tr, filenames, permissions)
 			if err != nil {
 				return nil, err
 			}
@@ -309,8 +312,8 @@ func (d DockerExtractor) ExtractFromFile(ctx context.Context, r io.Reader, filen
 	return fileMap, nil
 }
 
-func (d DockerExtractor) ExtractFiles(layer io.Reader, filenames []string) (extractor.FileMap, opqDirs, error) {
-	data := make(map[string][]byte)
+func (d DockerExtractor) ExtractFiles(layer io.Reader, filenames []string, permissions []os.FileMode) (extractor.FileMap, opqDirs, error) {
+	data := make(map[string]extractor.FileData)
 	opqDirs := opqDirs{}
 
 	tr := tar.NewReader(layer)
@@ -326,6 +329,8 @@ func (d DockerExtractor) ExtractFiles(layer io.Reader, filenames []string) (extr
 		filePath := hdr.Name
 		filePath = filepath.Clean(filePath)
 		fileName := filepath.Base(filePath)
+		fi := hdr.FileInfo()
+		fileMode := fi.Mode()
 
 		// e.g. etc/.wh..wh..opq
 		if opq == fileName {
@@ -342,6 +347,15 @@ func (d DockerExtractor) ExtractFiles(layer io.Reader, filenames []string) (extr
 			}
 		}
 
+		if extract == false {
+			for _, p := range permissions {
+				if fileMode&p != 0 {
+					extract = true
+					break
+				}
+			}
+		}
+
 		if !extract {
 			continue
 		}
@@ -351,7 +365,10 @@ func (d DockerExtractor) ExtractFiles(layer io.Reader, filenames []string) (extr
 			if err != nil {
 				return nil, nil, xerrors.Errorf("failed to read file: %w", err)
 			}
-			data[filePath] = d
+			data[filePath] = extractor.FileData{
+				Body:     d,
+				FileMode: fileMode,
+			}
 		}
 	}
 

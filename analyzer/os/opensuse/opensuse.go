@@ -27,7 +27,7 @@ func (a opensuseOSAnalyzer) Analyze(fileMap extractor.FileMap) (analyzer.OS, err
 			continue
 		}
 		suseName := ""
-		scanner := bufio.NewScanner(bytes.NewBuffer(file))
+		scanner := bufio.NewScanner(bytes.NewBuffer(file.Body))
 		for scanner.Scan() {
 			line := scanner.Text()
 			if strings.HasPrefix(line, "NAME=\"openSUSE") {

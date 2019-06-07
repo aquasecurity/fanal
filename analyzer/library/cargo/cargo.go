@@ -28,7 +28,7 @@ func (a cargoLibraryAnalyzer) Analyze(fileMap extractor.FileMap) (map[analyzer.F
 			continue
 		}
 
-		r := bytes.NewBuffer(content)
+		r := bytes.NewBuffer(content.Body)
 		libs, err := cargo.Parse(r)
 		if err != nil {
 			return nil, xerrors.Errorf("invalid Cargo.lock format: %w", err)

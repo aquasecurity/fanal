@@ -30,7 +30,7 @@ func GetFileMap(prefixPath string) (extractor.FileMap, error) {
 				return xerrors.Errorf("can't read file %s", path)
 			}
 			// delete prefix (directory) name. only leave etc/xxxx
-			fileMap[path[(len(prefixPath)-1):]] = fileBytes
+			fileMap[path[(len(prefixPath)-1):]] = extractor.FileData{Body: fileBytes, FileMode: info.Mode()}
 			return nil
 		},
 	)

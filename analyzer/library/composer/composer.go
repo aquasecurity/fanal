@@ -28,7 +28,7 @@ func (a composerLibraryAnalyzer) Analyze(fileMap extractor.FileMap) (map[analyze
 			continue
 		}
 
-		r := bytes.NewBuffer(content)
+		r := bytes.NewBuffer(content.Body)
 		libs, err := composer.Parse(r)
 		if err != nil {
 			return nil, xerrors.Errorf("invalid composer.lock format: %w", err)

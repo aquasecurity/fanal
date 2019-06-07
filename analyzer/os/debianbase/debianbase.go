@@ -22,7 +22,7 @@ type debianbaseOSAnalyzer struct{}
 func (a debianbaseOSAnalyzer) Analyze(fileMap extractor.FileMap) (analyzer.OS, error) {
 	if file, ok := fileMap["etc/lsb-release"]; ok {
 		isUbuntu := false
-		scanner := bufio.NewScanner(bytes.NewBuffer(file))
+		scanner := bufio.NewScanner(bytes.NewBuffer(file.Body))
 		for scanner.Scan() {
 			line := scanner.Text()
 			if line == "DISTRIB_ID=Ubuntu" {
@@ -40,7 +40,7 @@ func (a debianbaseOSAnalyzer) Analyze(fileMap extractor.FileMap) (analyzer.OS, e
 	}
 
 	if file, ok := fileMap["etc/debian_version"]; ok {
-		scanner := bufio.NewScanner(bytes.NewBuffer(file))
+		scanner := bufio.NewScanner(bytes.NewBuffer(file.Body))
 		for scanner.Scan() {
 			line := scanner.Text()
 			return analyzer.OS{Family: os.Debian, Name: line}, nil

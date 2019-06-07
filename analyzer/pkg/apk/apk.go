@@ -27,7 +27,7 @@ func (a alpinePkgAnalyzer) Analyze(fileMap extractor.FileMap) (pkgs []analyzer.P
 		if !ok {
 			continue
 		}
-		scanner := bufio.NewScanner(bytes.NewBuffer(file))
+		scanner := bufio.NewScanner(bytes.NewBuffer(file.Body))
 		parsedPkgs, err = a.parseApkInfo(scanner)
 		pkgs = append(pkgs, parsedPkgs...)
 		detected = true

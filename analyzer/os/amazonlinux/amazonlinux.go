@@ -26,7 +26,7 @@ func (a amazonlinuxOSAnalyzer) Analyze(fileMap extractor.FileMap) (analyzer.OS, 
 		if !ok {
 			continue
 		}
-		scanner := bufio.NewScanner(bytes.NewBuffer(file))
+		scanner := bufio.NewScanner(bytes.NewBuffer(file.Body))
 		for scanner.Scan() {
 			line := scanner.Text()
 			fields := strings.Fields(line)

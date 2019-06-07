@@ -30,7 +30,7 @@ func (a rpmCmdPkgAnalyzer) Analyze(fileMap extractor.FileMap) (pkgs []analyzer.P
 		if !ok {
 			continue
 		}
-		parsedPkgs, err = a.parsePkgInfo(file)
+		parsedPkgs, err = a.parsePkgInfo(file.Body)
 		pkgs = append(pkgs, parsedPkgs...)
 		detected = true
 	}
