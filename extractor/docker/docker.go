@@ -69,16 +69,15 @@ func NewDockerExtractor(option types.DockerOption) DockerExtractor {
 	return DockerExtractor{Option: option}
 }
 
-func applyLayers(layerIDs []string, filesInLayers map[string]extractor.FileMap, opqInLayers map[string]opqDirs) (extractor.FileMap, error) {
+func applyLayers(layerPaths []string, filesInLayers map[string]extractor.FileMap, opqInLayers map[string]opqDirs) (extractor.FileMap, error) {
 	sep := "/"
 	nestedMap := nested.Nested{}
-	for _, layerID := range layerIDs {
-		layerID := strings.Split(layerID, sep)[0]
-		for _, opqDir := range opqInLayers[layerID] {
+	for _, layerPath := range layerPaths {
+		for _, opqDir := range opqInLayers[layerPath] {
 			nestedMap.DeleteByString(opqDir, sep)
 		}
 
-		for filePath, content := range filesInLayers[layerID] {
+		for filePath, content := range filesInLayers[layerPath] {
 			fileName := filepath.Base(filePath)
 			fileDir := filepath.Dir(filePath)
 			switch {
@@ -226,6 +225,7 @@ func (d DockerExtractor) Extract(ctx context.Context, imageName string, filename
 		case <-ctx.Done():
 			return nil, xerrors.Errorf("timeout: %w", ctx.Err())
 		}
+
 		files, opqDirs, err := d.ExtractFiles(l.Content, filenames)
 		if err != nil {
 			return nil, err
@@ -283,13 +283,26 @@ func (d DockerExtractor) ExtractFromFile(ctx context.Context, r io.Reader, filen
 				return nil, err
 			}
 		case strings.HasSuffix(header.Name, ".tar"):
-			layerID := filepath.Base(filepath.Dir(header.Name))
+			layerPath := header.Name
 			files, opqDirs, err := d.ExtractFiles(tr, filenames)
 			if err != nil {
 				return nil, err
 			}
-			filesInLayers[layerID] = files
-			opqInLayers[layerID] = opqDirs
+			filesInLayers[layerPath] = files
+			opqInLayers[layerPath] = opqDirs
+		case strings.HasSuffix(header.Name, ".tar.gz"):
+			layerPath := header.Name
+
+			gzipReader, err := gzip.NewReader(tr)
+			if err != nil {
+				return nil, err
+			}
+			files, opqDirs, err := d.ExtractFiles(gzipReader, filenames)
+			if err != nil {
+				return nil, err
+			}
+			filesInLayers[layerPath] = files
+			opqInLayers[layerPath] = opqDirs
 		default:
 		}
 	}
@@ -297,7 +310,6 @@ func (d DockerExtractor) ExtractFromFile(ctx context.Context, r io.Reader, filen
 	if len(manifests) == 0 {
 		return nil, xerrors.New("Invalid image")
 	}
-
 	fileMap, err := applyLayers(manifests[0].Layers, filesInLayers, opqInLayers)
 	if err != nil {
 		return nil, err
