@@ -2,6 +2,7 @@ package docker
 
 import (
 	"archive/tar"
+	"bytes"
 	"compress/gzip"
 	"context"
 	"encoding/json"
@@ -259,9 +260,11 @@ func (d DockerExtractor) Extract(ctx context.Context, imageName string, filename
 func (d DockerExtractor) ExtractFromFile(ctx context.Context, r io.Reader, filenames []string) (extractor.FileMap, error) {
 	manifests := make([]manifest, 0)
 	filesInLayers := map[string]extractor.FileMap{}
-	tmpJSONs := extractor.FileMap{}
 	opqInLayers := make(map[string]opqDirs)
 
+	tarFiles := make(map[string][]byte)
+
+	// Extract the files from the tarball
 	tr := tar.NewReader(r)
 	for {
 		header, err := tr.Next()
@@ -271,29 +274,43 @@ func (d DockerExtractor) ExtractFromFile(ctx context.Context, r io.Reader, filen
 		if err != nil {
 			return nil, extractor.ErrCouldNotExtract
 		}
+		tarFiles[header.Name], err = ioutil.ReadAll(tr)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	data, ok := tarFiles["manifest.json"]
+	if ok == false {
+		return nil, xerrors.New("manifest.json not found")
+	}
+	if err := json.NewDecoder(bytes.NewReader(data)).Decode(&manifests); err != nil {
+		return nil, err
+	}
+	if len(manifests) == 0 {
+		return nil, xerrors.New("Invalid manifest file")
+	}
+
+	// Extract the layers
+	for _, layerPath := range manifests[0].Layers {
+		data, ok := tarFiles[layerPath]
+		if ok == false {
+			return nil, xerrors.Errorf("Layer: %s not found in tarball\n", layerPath)
+		}
+
+		r := bytes.NewReader(data)
+
 		switch {
-		case header.Name == "manifest.json":
-			if err := json.NewDecoder(tr).Decode(&manifests); err != nil {
-				return nil, err
-			}
-		case strings.HasSuffix(header.Name, ".json"):
-			// save all JSON temporarily for config JSON
-			tmpJSONs[header.Name], err = ioutil.ReadAll(tr)
-			if err != nil {
-				return nil, err
-			}
-		case strings.HasSuffix(header.Name, ".tar"):
-			layerPath := header.Name
-			files, opqDirs, err := d.ExtractFiles(tr, filenames)
+		case strings.HasSuffix(layerPath, ".tar"):
+			files, opqDirs, err := d.ExtractFiles(r, filenames)
+
 			if err != nil {
 				return nil, err
 			}
 			filesInLayers[layerPath] = files
 			opqInLayers[layerPath] = opqDirs
-		case strings.HasSuffix(header.Name, ".tar.gz"):
-			layerPath := header.Name
-
-			gzipReader, err := gzip.NewReader(tr)
+		case strings.HasSuffix(layerPath, ".tar.gz"):
+			gzipReader, err := gzip.NewReader(r)
 			if err != nil {
 				return nil, err
 			}
@@ -304,19 +321,21 @@ func (d DockerExtractor) ExtractFromFile(ctx context.Context, r io.Reader, filen
 			filesInLayers[layerPath] = files
 			opqInLayers[layerPath] = opqDirs
 		default:
+			return nil, xerrors.Errorf("layer: %s: format not supported", layerPath)
 		}
 	}
 
-	if len(manifests) == 0 {
-		return nil, xerrors.New("Invalid image")
-	}
 	fileMap, err := applyLayers(manifests[0].Layers, filesInLayers, opqInLayers)
 	if err != nil {
 		return nil, err
 	}
 
 	// special file for command analyzer
-	fileMap["/config"] = tmpJSONs[manifests[0].Config]
+	data, ok = tarFiles[manifests[0].Config]
+	if ok == false {
+		return nil, xerrors.Errorf("Image config: %s not found\n", manifests[0].Config)
+	}
+	fileMap["/config"] = data
 
 	return fileMap, nil
 }
@@ -336,7 +355,7 @@ func (d DockerExtractor) ExtractFiles(layer io.Reader, filenames []string) (extr
 		}
 
 		filePath := hdr.Name
-		filePath = filepath.Clean(filePath)
+		filePath = strings.TrimLeft(filepath.Clean(filePath), "/")
 		fileName := filepath.Base(filePath)
 
 		// e.g. etc/.wh..wh..opq
