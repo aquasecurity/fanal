@@ -8,21 +8,22 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
+	"os"
 	"path/filepath"
 	"strings"
 	"time"
 
-	digest "github.com/opencontainers/go-digest"
+	"github.com/opencontainers/go-digest"
 
 	"github.com/aquasecurity/fanal/extractor"
 	"github.com/aquasecurity/fanal/extractor/docker/token/ecr"
 	"github.com/aquasecurity/fanal/extractor/docker/token/gcr"
 	"github.com/aquasecurity/fanal/types"
 
+	"github.com/aquasecurity/fanal/cache"
 	"github.com/docker/distribution/manifest/schema2"
 	"github.com/docker/docker/client"
 	"github.com/genuinetools/reg/registry"
-	"github.com/aquasecurity/fanal/cache"
 	"github.com/knqyf263/nested"
 	"golang.org/x/xerrors"
 )
@@ -336,6 +337,14 @@ func (d DockerExtractor) ExtractFiles(layer io.Reader, filenames []string) (extr
 		// Determine if we should extract the element
 		extract := false
 		for _, s := range filenames {
+			// extract all files in target directory if last char is "/"(Separator)
+			if s[len(s)-1:] == string(os.PathSeparator) {
+				if filepath.Dir(s) == filepath.Dir(filePath) {
+					extract = true
+				}
+				break
+			}
+
 			if s == filePath || s == fileName || strings.HasPrefix(fileName, wh) {
 				extract = true
 				break

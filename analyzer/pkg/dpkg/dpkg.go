@@ -4,6 +4,8 @@ import (
 	"bufio"
 	"bytes"
 	"log"
+	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 
@@ -29,6 +31,19 @@ type debianPkgAnalyzer struct{}
 func (a debianPkgAnalyzer) Analyze(fileMap extractor.FileMap) (pkgs []analyzer.Package, err error) {
 	detected := false
 	for _, filename := range a.RequiredFiles() {
+		// find by target directory
+		if filename[len(filename)-1:] == string(os.PathSeparator) {
+			for targetname, targetbytes := range fileMap {
+				if filepath.Dir(filename) == filepath.Dir(targetname) {
+					scanner := bufio.NewScanner(bytes.NewBuffer(targetbytes))
+					pkgs = append(pkgs, a.parseDpkginfo(scanner)...)
+					detected = true
+				}
+			}
+			continue
+		}
+
+		// find by target file name
 		file, ok := fileMap[filename]
 		if !ok {
 			continue
@@ -144,5 +159,5 @@ func (a debianPkgAnalyzer) parseDpkgPkg(scanner *bufio.Scanner) (pkg *analyzer.P
 }
 
 func (a debianPkgAnalyzer) RequiredFiles() []string {
-	return []string{"var/lib/dpkg/status"}
+	return []string{"var/lib/dpkg/status", "var/lib/dpkg/status.d/"}
 }
