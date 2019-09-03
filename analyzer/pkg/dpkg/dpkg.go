@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"bytes"
 	"log"
-	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -32,7 +31,7 @@ func (a debianPkgAnalyzer) Analyze(fileMap extractor.FileMap) (pkgs []analyzer.P
 	detected := false
 	for _, filename := range a.RequiredFiles() {
 		// find by target directory
-		if filename[len(filename)-1:] == string(os.PathSeparator) {
+		if filename[len(filename)-1:] == "/" {
 			for targetname, targetbytes := range fileMap {
 				if filepath.Dir(filename) == filepath.Dir(targetname) {
 					scanner := bufio.NewScanner(bytes.NewBuffer(targetbytes))
