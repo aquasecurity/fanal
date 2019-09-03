@@ -337,7 +337,7 @@ func (d DockerExtractor) ExtractFiles(layer io.Reader, filenames []string) (extr
 		extract := false
 		for _, s := range filenames {
 			// extract all files in target directory if last char is "/"(Separator)
-			if s[len(s)-1:] == "/" {
+			if s[len(s)-1] == '/' {
 				if filepath.Dir(s) == filepath.Dir(filePath) {
 					extract = true
 				}

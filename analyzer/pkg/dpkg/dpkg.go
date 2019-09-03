@@ -8,6 +8,8 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/aquasecurity/fanal/utils"
+
 	mapset "github.com/deckarep/golang-set"
 
 	"github.com/aquasecurity/fanal/analyzer"
@@ -29,26 +31,13 @@ type debianPkgAnalyzer struct{}
 
 func (a debianPkgAnalyzer) Analyze(fileMap extractor.FileMap) (pkgs []analyzer.Package, err error) {
 	detected := false
-	for _, filename := range a.RequiredFiles() {
-		// find by target directory
-		if filename[len(filename)-1:] == "/" {
-			for targetname, targetbytes := range fileMap {
-				if filepath.Dir(filename) == filepath.Dir(targetname) {
-					scanner := bufio.NewScanner(bytes.NewBuffer(targetbytes))
-					pkgs = append(pkgs, a.parseDpkginfo(scanner)...)
-					detected = true
-				}
-			}
+	for filename, targetBytes := range fileMap {
+		dir := filepath.Dir(filename) + "/"
+		if !utils.StringInSlice(filename, a.requiredFiles()) && !utils.StringInSlice(dir, a.requiredDirs()) {
 			continue
 		}
-
-		// find by target file name
-		file, ok := fileMap[filename]
-		if !ok {
-			continue
-		}
-		scanner := bufio.NewScanner(bytes.NewBuffer(file))
-		pkgs = a.parseDpkginfo(scanner)
+		scanner := bufio.NewScanner(bytes.NewBuffer(targetBytes))
+		pkgs = append(pkgs, a.parseDpkginfo(scanner)...)
 		detected = true
 	}
 	if !detected {
@@ -158,5 +147,13 @@ func (a debianPkgAnalyzer) parseDpkgPkg(scanner *bufio.Scanner) (pkg *analyzer.P
 }
 
 func (a debianPkgAnalyzer) RequiredFiles() []string {
-	return []string{"var/lib/dpkg/status", "var/lib/dpkg/status.d/"}
+	return append(a.requiredFiles(), a.requiredDirs()...)
+}
+
+func (a debianPkgAnalyzer) requiredFiles() []string {
+	return []string{"var/lib/dpkg/status"}
+}
+
+func (a debianPkgAnalyzer) requiredDirs() []string {
+	return []string{"var/lib/dpkg/status.d/"}
 }
