@@ -32,8 +32,7 @@ func StringInSlice(a string, list []string) bool {
 }
 
 func IsCommandAvailable(name string) bool {
-	cmd := exec.Command(name, "--help")
-	if err := cmd.Run(); err != nil {
+	if _, err := exec.LookPath(name); err != nil {
 		return false
 	}
 	return true
