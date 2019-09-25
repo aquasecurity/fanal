@@ -280,7 +280,7 @@ func (d DockerExtractor) ExtractFromFile(ctx context.Context, r io.Reader, filen
 			// save all JSON temporarily for config JSON
 			tmpJSONs[header.Name], err = ioutil.ReadAll(tr)
 			if err != nil {
-				return nil, xerrors.Errorf("failed to read JSOn file: %w", err)
+				return nil, xerrors.Errorf("failed to read JSON file: %w", err)
 			}
 		case strings.HasSuffix(header.Name, ".tar"):
 			layerID := filepath.Base(filepath.Dir(header.Name))
