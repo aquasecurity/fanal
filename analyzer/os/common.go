@@ -34,5 +34,8 @@ func GetFileMap(prefixPath string) (extractor.FileMap, error) {
 			return nil
 		},
 	)
-	return fileMap, xerrors.Errorf("failed to walk the file tree: %w", err)
+	if err != nil {
+		return nil, xerrors.Errorf("failed to walk the file tree: %w", err)
+	}
+	return fileMap, nil
 }
