@@ -3,6 +3,7 @@ package utils
 import (
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 )
 
@@ -28,4 +29,12 @@ func StringInSlice(a string, list []string) bool {
 		}
 	}
 	return false
+}
+
+func IsCommandAvailable(name string) bool {
+	cmd := exec.Command(name, "--help")
+	if err := cmd.Run(); err != nil {
+		return false
+	}
+	return true
 }
