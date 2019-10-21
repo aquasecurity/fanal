@@ -1,3 +1,4 @@
+//Go lang
 module github.com/aquasecurity/fanal
 
 go 1.13
@@ -22,4 +23,4 @@ require (
 	golang.org/x/xerrors v0.0.0-20190717185122-a985d3407aa7
 )
 
-replace github.com/genuinetools/reg => github.com/tomoyamachi/reg v0.16.1-0.20190706172545-2a2250fd7c00
+replace github.com/genuinetools/reg => github.com/tomoyamachi/reg v0.16.1-0.20190706172545-2a2250fd7c00 //Refer Url
