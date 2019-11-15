@@ -8,7 +8,7 @@ import (
 	"testing"
 )
 
-func TestSetAndGet(t *testing.T) {
+func TestSetAndGetAndClear(t *testing.T) {
 	d, _ := ioutil.TempDir("", "TestGetDir-*")
 	f, _ := ioutil.TempFile(d, "foo.bar.baz-*")
 
@@ -35,4 +35,7 @@ func TestSetAndGet(t *testing.T) {
 	actualFile := Get(f.Name())
 	actualBytes, _ := ioutil.ReadAll(actualFile)
 	assert.Equal(t, expectedCacheContents, string(actualBytes))
+
+	// clear
+	assert.NoError(t, Clear())
 }
