@@ -2,14 +2,15 @@ package cache
 
 import (
 	"bytes"
-	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"os"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestSetAndGetAndClear(t *testing.T) {
-	d, _ := ioutil.TempDir("", "TestGetDir-*")
+	d, _ := ioutil.TempDir("", "TestCacheDir-*")
 	f, _ := ioutil.TempFile(d, "foo.bar.baz-*")
 
 	oldCacheDir := cacheDir
@@ -30,7 +31,6 @@ func TestSetAndGetAndClear(t *testing.T) {
 	b, _ := ioutil.ReadAll(r)
 	assert.Equal(t, expectedCacheContents, string(b))
 
-
 	// get
 	actualFile := Get(f.Name())
 	actualBytes, _ := ioutil.ReadAll(actualFile)
@@ -38,4 +38,8 @@ func TestSetAndGetAndClear(t *testing.T) {
 
 	// clear
 	assert.NoError(t, Clear())
+
+	// confirm that no cachedir remains
+	_, err = os.Stat(d)
+	assert.True(t, os.IsNotExist(err))
 }
