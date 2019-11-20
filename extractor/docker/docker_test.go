@@ -339,7 +339,8 @@ func TestDocker_ExtractLayerWorker(t *testing.T) {
 		httpPath := r.URL.String()
 		switch {
 		case strings.Contains(httpPath, "/v2/library/fooimage/blobs/sha256:62d8908bee94c202b2d35224a221aaa2058318bfa9879fa541efaecba272331b"):
-			_, _ = w.Write(hellotxtTarGz)
+			b, _ := ioutil.ReadFile("../../utils/testdata/testdir.tar.gz")
+			_, _ = w.Write(b)
 		default:
 			assert.FailNow(t, "unexpected path accessed: ", r.URL.String())
 		}
@@ -377,9 +378,10 @@ func TestDocker_ExtractLayerWorker(t *testing.T) {
 	inputDigest := digest.Digest("sha256:62d8908bee94c202b2d35224a221aaa2058318bfa9879fa541efaecba272331b")
 	layerCh := make(chan layer)
 	errCh := make(chan error)
+	fileToSaveInCache := []string{"etc/test/bar"}
 
 	go func() {
-		de.extractLayerWorker(inputDigest, r, context.TODO(), inputImage, errCh, layerCh)
+		de.extractLayerWorker(inputDigest, r, context.TODO(), inputImage, errCh, layerCh, fileToSaveInCache)
 	}()
 
 	var errRecieved error

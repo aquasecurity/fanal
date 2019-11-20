@@ -196,7 +196,7 @@ func (d DockerExtractor) Extract(ctx context.Context, imageName string, filename
 	for _, ref := range m.Manifest.Layers {
 		layerIDs = append(layerIDs, string(ref.Digest))
 		go func(dig digest.Digest) {
-			d.extractLayerWorker(dig, r, ctx, image, errCh, layerCh)
+			d.extractLayerWorker(dig, r, ctx, image, errCh, layerCh, filenames)
 		}(ref.Digest)
 	}
 
@@ -260,8 +260,8 @@ func (d DockerExtractor) extractLayerFiles(layerCh chan layer, errCh chan error,
 	return filesInLayers, opqInLayers, nil
 }
 
-func (d DockerExtractor) extractLayerWorker(dig digest.Digest, r *registry.Registry, ctx context.Context, image registry.Image, errCh chan error, layerCh chan layer) {
-	//var rc io.Reader
+func (d DockerExtractor) extractLayerWorker(dig digest.Digest, r *registry.Registry, ctx context.Context, image registry.Image, errCh chan error, layerCh chan layer, filename []string) {
+	var tarReader io.Reader
 
 	rc, err := r.DownloadLayer(ctx, image.Path, dig)
 	if err != nil {
@@ -269,7 +269,7 @@ func (d DockerExtractor) extractLayerWorker(dig digest.Digest, r *registry.Regis
 		return
 	}
 
-	// Use cache
+	//Use cache
 	//rc = d.Cache.Get(string(dig))
 	//if rc == nil {
 	//	// Download the layer.
@@ -284,12 +284,18 @@ func (d DockerExtractor) extractLayerWorker(dig digest.Digest, r *registry.Regis
 	//		log.Print(err)
 	//	}
 	//}
-	tarReader, err := gzip.NewReader(rc)
+	tarReader, err = gzip.NewReader(rc)
 	if err != nil {
 		errCh <- xerrors.Errorf("invalid gzip: %w", err)
 		return
 	}
-	layerCh <- layer{ID: dig, Content: tarReader}
+
+	teeTarReader, err := d.Cache.Set(string(dig), tarReader)
+	if err != nil {
+		log.Println(err)
+	}
+
+	layerCh <- layer{ID: dig, Content: ioutil.NopCloser(teeTarReader)}
 }
 
 func getValidManifest(err error, r *registry.Registry, ctx context.Context, image registry.Image) (*schema2.DeserializedManifest, error) {
