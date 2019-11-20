@@ -378,7 +378,7 @@ func TestDocker_ExtractLayerWorker(t *testing.T) {
 	inputDigest := digest.Digest("sha256:62d8908bee94c202b2d35224a221aaa2058318bfa9879fa541efaecba272331b")
 	layerCh := make(chan layer)
 	errCh := make(chan error)
-	fileToSaveInCache := []string{"etc/test/bar"}
+	fileToSaveInCache := []string{"testdir/helloworld.txt"}
 
 	go func() {
 		de.extractLayerWorker(inputDigest, r, context.TODO(), inputImage, errCh, layerCh, fileToSaveInCache)
@@ -392,6 +392,23 @@ func TestDocker_ExtractLayerWorker(t *testing.T) {
 		assert.FailNow(t, "unexpected error received, err: ", errRecieved)
 	case layerReceived = <-layerCh:
 		assert.Equal(t, inputDigest, layerReceived.ID)
+		assert.NotEmpty(t, layerReceived.Content)
+
+		// TODO: Add tests to validate the content is sane
+		//tr := tar.NewReader(layerReceived.Content)
+		//for {
+		//	hdr, err := tr.Next()
+		//	if err == io.EOF {
+		//		break // End of archive
+		//	}
+		//	assert.NoError(t, err)
+		//
+		//	fmt.Printf("[TEST] Contents of %s:\n", hdr.Name)
+		//	if _, err := io.Copy(os.Stdout, tr); err != nil {
+		//		assert.FailNow(t, "something bad happened")
+		//	}
+		//	fmt.Println()
+		//}
 	}
 
 	// check for no cache to exist

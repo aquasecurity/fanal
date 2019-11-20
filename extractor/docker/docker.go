@@ -2,12 +2,15 @@ package docker
 
 import (
 	"archive/tar"
+	"bytes"
 	"compress/gzip"
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
+	"os"
 	"path/filepath"
 	"strings"
 	"time"
@@ -237,6 +240,15 @@ func downloadConfigFile(err error, r *registry.Registry, ctx context.Context, im
 	return config, nil
 }
 
+func contains(s []string, e string) bool {
+	for _, a := range s {
+		if a == e {
+			return true
+		}
+	}
+	return false
+}
+
 func (d DockerExtractor) extractLayerFiles(layerCh chan layer, errCh chan error, ctx context.Context, filenames []string) (map[string]extractor.FileMap, map[string]extractor.OPQDirs, error) {
 	filesInLayers := make(map[string]extractor.FileMap)
 	opqInLayers := make(map[string]extractor.OPQDirs)
@@ -260,7 +272,7 @@ func (d DockerExtractor) extractLayerFiles(layerCh chan layer, errCh chan error,
 	return filesInLayers, opqInLayers, nil
 }
 
-func (d DockerExtractor) extractLayerWorker(dig digest.Digest, r *registry.Registry, ctx context.Context, image registry.Image, errCh chan error, layerCh chan layer, filename []string) {
+func (d DockerExtractor) extractLayerWorker(dig digest.Digest, r *registry.Registry, ctx context.Context, image registry.Image, errCh chan error, layerCh chan layer, filenames []string) {
 	var tarReader io.Reader
 
 	rc, err := r.DownloadLayer(ctx, image.Path, dig)
@@ -284,18 +296,43 @@ func (d DockerExtractor) extractLayerWorker(dig digest.Digest, r *registry.Regis
 	//		log.Print(err)
 	//	}
 	//}
+
+	// read the incoming gzip from the layer
 	tarReader, err = gzip.NewReader(rc)
 	if err != nil {
 		errCh <- xerrors.Errorf("invalid gzip: %w", err)
 		return
 	}
 
-	teeTarReader, err := d.Cache.Set(string(dig), tarReader)
+	// read the tar
+	tarContent, err := ioutil.ReadAll(tarReader)
 	if err != nil {
-		log.Println(err)
+		errCh <- xerrors.Errorf("invalid file: %w", err)
+	}
+	tr := tar.NewReader(bytes.NewReader(tarContent))
+
+	// do things with the tar
+	for {
+		hdr, err := tr.Next()
+		if err == io.EOF {
+			break // End of archive
+		}
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		// file to save in cache
+		if contains(filenames, hdr.Name) {
+			fmt.Printf("Contents of %s:\n", hdr.Name)
+			if _, err := io.Copy(os.Stdout, tr); err != nil {
+				log.Fatal(err)
+			}
+			fmt.Println()
+		}
 	}
 
-	layerCh <- layer{ID: dig, Content: ioutil.NopCloser(teeTarReader)}
+	layerCh <- layer{ID: dig, Content: ioutil.NopCloser(bytes.NewReader(tarContent))}
+	//layerCh <- layer{ID: dig, Content: ioutil.NopCloser(teeTarReader)}
 }
 
 func getValidManifest(err error, r *registry.Registry, ctx context.Context, image registry.Image) (*schema2.DeserializedManifest, error) {
