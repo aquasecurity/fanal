@@ -261,28 +261,35 @@ func (d DockerExtractor) extractLayerFiles(layerCh chan layer, errCh chan error,
 }
 
 func (d DockerExtractor) extractLayerWorker(dig digest.Digest, r *registry.Registry, ctx context.Context, image registry.Image, errCh chan error, layerCh chan layer) {
-	var rc io.Reader
-	// Use cache
-	rc = d.Cache.Get(string(dig))
-	if rc == nil {
-		// Download the layer.
-		layerRC, err := r.DownloadLayer(ctx, image.Path, dig)
-		if err != nil {
-			errCh <- xerrors.Errorf("failed to download the layer(%s): %w", dig, err)
-			return
-		}
+	//var rc io.Reader
 
-		rc, err = d.Cache.Set(string(dig), layerRC)
-		if err != nil {
-			log.Print(err)
-		}
+	rc, err := r.DownloadLayer(ctx, image.Path, dig)
+	if err != nil {
+		errCh <- xerrors.Errorf("failed to download the layer(%s): %w", dig, err)
+		return
 	}
-	gzipReader, err := gzip.NewReader(rc)
+
+	// Use cache
+	//rc = d.Cache.Get(string(dig))
+	//if rc == nil {
+	//	// Download the layer.
+	//	layerRC, err := r.DownloadLayer(ctx, image.Path, dig)
+	//	if err != nil {
+	//		errCh <- xerrors.Errorf("failed to download the layer(%s): %w", dig, err)
+	//		return
+	//	}
+	//
+	//	rc, err = d.Cache.Set(string(dig), layerRC)
+	//	if err != nil {
+	//		log.Print(err)
+	//	}
+	//}
+	tarReader, err := gzip.NewReader(rc)
 	if err != nil {
 		errCh <- xerrors.Errorf("invalid gzip: %w", err)
 		return
 	}
-	layerCh <- layer{ID: dig, Content: gzipReader}
+	layerCh <- layer{ID: dig, Content: tarReader}
 }
 
 func getValidManifest(err error, r *registry.Registry, ctx context.Context, image registry.Image) (*schema2.DeserializedManifest, error) {
@@ -368,11 +375,11 @@ func (d DockerExtractor) ExtractFromFile(ctx context.Context, r io.Reader, filen
 	return fileMap, nil
 }
 
-func (d DockerExtractor) ExtractFiles(layerContent io.Reader, filenames []string) (extractor.FileMap, extractor.OPQDirs, error) {
+func (d DockerExtractor) ExtractFiles(layerReader io.Reader, filenames []string) (extractor.FileMap, extractor.OPQDirs, error) {
 	data := make(map[string][]byte)
 	opqDirs := extractor.OPQDirs{}
 
-	tr := tar.NewReader(layerContent)
+	tr := tar.NewReader(layerReader)
 	for {
 		hdr, err := tr.Next()
 		if err == io.EOF {

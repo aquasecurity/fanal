@@ -392,10 +392,9 @@ func TestDocker_ExtractLayerWorker(t *testing.T) {
 		assert.Equal(t, inputDigest, layerReceived.ID)
 	}
 
-	// check cache for stored file
+	// check for no cache to exist
 	actualCacheFile := de.Cache.Get(string(inputDigest))
-	actualCacheData, _ := ioutil.ReadAll(actualCacheFile)
-	assert.Equal(t, hellotxtTarGz, actualCacheData) // should match the hello text file we served
+	assert.Equal(t, nil, actualCacheFile)
 }
 
 func TestDocker_ExtractLayerFiles(t *testing.T) {
