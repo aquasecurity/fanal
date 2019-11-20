@@ -389,6 +389,11 @@ func TestDocker_ExtractLayerWorker(t *testing.T) {
 	case errRecieved = <-errCh:
 		assert.FailNow(t, "unexpected error received, err: ", errRecieved)
 	case layerReceived = <-layerCh:
-		assert.Equal(t, digest.Digest("sha256:62d8908bee94c202b2d35224a221aaa2058318bfa9879fa541efaecba272331b"), layerReceived.ID)
+		assert.Equal(t, inputDigest, layerReceived.ID)
 	}
+
+	// check cache for stored file
+	actualCacheFile := de.Cache.Get(string(inputDigest))
+	actualCacheData, _ := ioutil.ReadAll(actualCacheFile)
+	assert.Equal(t, hellotxt, actualCacheData) // should match the hello text file we served
 }
