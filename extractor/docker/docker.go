@@ -200,10 +200,10 @@ func (d DockerExtractor) Extract(ctx context.Context, imageName string, filename
 		}(ref.Digest)
 	}
 
-	filesInLayers := make(map[string]extractor.FileMap)
-	opqInLayers := make(map[string]extractor.OPQDirs)
+	filesInLayers := map[string]extractor.FileMap{}
+	opqInLayers := map[string]extractor.OPQDirs{}
 	for i := 0; i < len(m.Manifest.Layers); i++ {
-		if err := d.extractLayerFiles(layerCh, errCh, ctx, filenames, filesInLayers, opqInLayers); err != nil {
+		if filesInLayers, opqInLayers, err = d.extractLayerFiles(layerCh, errCh, ctx, filenames); err != nil {
 			return nil, err
 		}
 	}
@@ -237,24 +237,27 @@ func downloadConfigFile(err error, r *registry.Registry, ctx context.Context, im
 	return config, nil
 }
 
-func (d DockerExtractor) extractLayerFiles(layerCh chan layer, errCh chan error, ctx context.Context, filenames []string, filesInLayers map[string]extractor.FileMap, opqInLayers map[string]extractor.OPQDirs) error {
+func (d DockerExtractor) extractLayerFiles(layerCh chan layer, errCh chan error, ctx context.Context, filenames []string) (map[string]extractor.FileMap, map[string]extractor.OPQDirs, error) {
+	filesInLayers := make(map[string]extractor.FileMap)
+	opqInLayers := make(map[string]extractor.OPQDirs)
+
 	var l layer
 	select {
 	case l = <-layerCh:
 	case err := <-errCh:
-		return err
+		return filesInLayers, opqInLayers, err
 	case <-ctx.Done():
-		return xerrors.Errorf("timeout: %w", ctx.Err())
+		return filesInLayers, opqInLayers, xerrors.Errorf("timeout: %w", ctx.Err())
 	}
 	files, opqDirs, err := d.ExtractFiles(l.Content, filenames)
 	if err != nil {
-		return xerrors.Errorf("failed to extract files: %w", err)
+		return filesInLayers, opqInLayers, xerrors.Errorf("failed to extract files: %w", err)
 	}
 	layerID := string(l.ID)
 	filesInLayers[layerID] = files
 	opqInLayers[layerID] = opqDirs
 
-	return nil
+	return filesInLayers, opqInLayers, nil
 }
 
 func (d DockerExtractor) extractLayerWorker(dig digest.Digest, r *registry.Registry, ctx context.Context, image registry.Image, errCh chan error, layerCh chan layer) {
@@ -365,11 +368,11 @@ func (d DockerExtractor) ExtractFromFile(ctx context.Context, r io.Reader, filen
 	return fileMap, nil
 }
 
-func (d DockerExtractor) ExtractFiles(layer io.Reader, filenames []string) (extractor.FileMap, extractor.OPQDirs, error) {
+func (d DockerExtractor) ExtractFiles(layerContent io.Reader, filenames []string) (extractor.FileMap, extractor.OPQDirs, error) {
 	data := make(map[string][]byte)
 	opqDirs := extractor.OPQDirs{}
 
-	tr := tar.NewReader(layer)
+	tr := tar.NewReader(layerContent)
 	for {
 		hdr, err := tr.Next()
 		if err == io.EOF {

@@ -29,7 +29,7 @@ import (
 )
 
 var (
-	hellotxt = []byte{ // this is hello.txt containing "hello world\n" POSIX tar'd and then gzipped
+	hellotxtTarGz = []byte{ // this is hello.txt containing "hello world\n" POSIX tar'd and then gzipped
 		0x1f, 0x8b, 0x8, 0x8, 0xfa, 0x33, 0xd4, 0x5d, 0x0, 0x3, 0x68, 0x65,
 		0x6c, 0x6c, 0x6f, 0x0, 0xd3, 0xd3, 0xcf, 0x48, 0xcd, 0xc9, 0xc9, 0xd7,
 		0x2b, 0xa9, 0x28, 0x61, 0xa0, 0x15, 0x30, 0x30, 0x30, 0x30, 0x33, 0x31,
@@ -267,7 +267,7 @@ func TestDockerExtractor_Extract(t *testing.T) {
 		     }
 		  ]
 		}`,
-			layerData: hellotxt,
+			layerData: hellotxtTarGz,
 			blobData:  "foo",
 			expectedFileMap: extractor.FileMap{
 				"/config": []uint8{0x66, 0x6f, 0x6f},
@@ -339,7 +339,7 @@ func TestDocker_ExtractLayerWorker(t *testing.T) {
 		httpPath := r.URL.String()
 		switch {
 		case strings.Contains(httpPath, "/v2/library/fooimage/blobs/sha256:62d8908bee94c202b2d35224a221aaa2058318bfa9879fa541efaecba272331b"):
-			_, _ = w.Write(hellotxt)
+			_, _ = w.Write(hellotxtTarGz)
 		default:
 			assert.FailNow(t, "unexpected path accessed: ", r.URL.String())
 		}
@@ -395,5 +395,37 @@ func TestDocker_ExtractLayerWorker(t *testing.T) {
 	// check cache for stored file
 	actualCacheFile := de.Cache.Get(string(inputDigest))
 	actualCacheData, _ := ioutil.ReadAll(actualCacheFile)
-	assert.Equal(t, hellotxt, actualCacheData) // should match the hello text file we served
+	assert.Equal(t, hellotxtTarGz, actualCacheData) // should match the hello text file we served
+}
+
+func TestDocker_ExtractLayerFiles(t *testing.T) {
+	de := DockerExtractor{}
+
+	layerCh := make(chan layer)
+	errCh := make(chan error)
+	inputFilenames := []string{"var/foo", "etc/test/bar"}
+
+	f, _ := os.Open("testdata/opq2.tar")
+	defer f.Close()
+
+	go func() {
+		layerCh <- layer{
+			ID:      "sha256:62d8908bee94c202b2d35224a221aaa2058318bfa9879fa541efaecba272331b",
+			Content: f,
+		}
+	}()
+
+	fm, opqdirs, err := de.extractLayerFiles(layerCh, errCh, context.TODO(), inputFilenames)
+	assert.NoError(t, err)
+	assert.Equal(t, map[string]extractor.FileMap{
+		"sha256:62d8908bee94c202b2d35224a221aaa2058318bfa9879fa541efaecba272331b": {
+			"etc/test/bar": {0x62, 0x61, 0x72, 0xa},
+			"var/.wh.foo":  {},
+		},
+	}, fm)
+	assert.Equal(t, map[string]extractor.OPQDirs{
+		"sha256:62d8908bee94c202b2d35224a221aaa2058318bfa9879fa541efaecba272331b": {
+			"etc/test",
+		},
+	}, opqdirs)
 }
