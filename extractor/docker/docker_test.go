@@ -17,8 +17,6 @@ import (
 
 	"github.com/genuinetools/reg/registry"
 
-	"github.com/aquasecurity/fanal/cache"
-
 	"github.com/docker/docker/client"
 
 	"github.com/stretchr/testify/assert"
@@ -26,6 +24,8 @@ import (
 	"github.com/aquasecurity/fanal/types"
 
 	"github.com/aquasecurity/fanal/extractor"
+	bolt "github.com/simar7/gokv/bbolt"
+	kvtypes "github.com/simar7/gokv/types"
 )
 
 var (
@@ -45,6 +45,18 @@ var (
 		0x7b, 0x78, 0xf9, 0x4b, 0x0, 0x8, 0x0, 0x0,
 	}
 )
+
+func setupCache() (*bolt.Store, *os.File, error) {
+	f, err := ioutil.TempFile(".", "Bolt_TestStore-*")
+	if err != nil {
+		return nil, nil, err
+	}
+
+	s, err := bolt.NewStore(bolt.Options{
+		Path: f.Name(),
+	})
+	return s, f, err
+}
 
 func TestExtractFromFile(t *testing.T) {
 	vectors := []struct {
@@ -236,7 +248,7 @@ func TestDockerExtractor_SaveLocalImage(t *testing.T) {
 	de := DockerExtractor{
 		Option: types.DockerOption{},
 		Client: c,
-		Cache:  cache.Initialize(tempCacheDir),
+		//Cache:  cache.Initialize(tempCacheDir),
 	}
 
 	r, err := de.SaveLocalImage(context.TODO(), "fooimage")
@@ -309,7 +321,7 @@ func TestDockerExtractor_Extract(t *testing.T) {
 				Timeout:  time.Second * 1000,
 			},
 			Client: c,
-			Cache:  cache.Initialize(tempCacheDir),
+			//Cache:  cache.Initialize(tempCacheDir),
 		}
 
 		filesToExtract := []string{"file1", "file2", "file3"}
@@ -351,10 +363,18 @@ func TestDocker_ExtractLayerWorker(t *testing.T) {
 	assert.NoError(t, err)
 
 	// setup cache
-	tempCacheDir, _ := ioutil.TempDir("", "TestDocker_ExtractLayerWorker-*")
+	//tempCacheDir, _ := ioutil.TempDir("", "TestDocker_ExtractLayerWorker-*")
+	//defer func() {
+	//	_ = os.RemoveAll(tempCacheDir)
+	//}()
+
+	// setup cache
+	s, f, err := setupCache()
 	defer func() {
-		_ = os.RemoveAll(tempCacheDir)
+		_ = f.Close()
+		_ = os.RemoveAll(f.Name())
 	}()
+	assert.NoError(t, err)
 
 	de := DockerExtractor{
 		Option: types.DockerOption{
@@ -364,7 +384,8 @@ func TestDocker_ExtractLayerWorker(t *testing.T) {
 			Timeout:  time.Second * 1000,
 		},
 		Client: c,
-		Cache:  cache.Initialize(tempCacheDir),
+		//Cache:  cache.Initialize(tempCacheDir),
+		Cache: s,
 	}
 
 	tsUrl := strings.TrimPrefix(ts.URL, "http://")
@@ -411,9 +432,19 @@ func TestDocker_ExtractLayerWorker(t *testing.T) {
 		//}
 	}
 
+	// check cache contents
+	var actualCacheContents []byte
+	found, err := s.Get(kvtypes.GetItemInput{
+		BucketName: string(inputDigest),
+		Key:        "testdir/helloworld.txt",
+		Value:      &actualCacheContents,
+	})
+	assert.True(t, found)
+	assert.Equal(t, "hello world\n", string(actualCacheContents))
+
 	// check for no cache to exist
-	actualCacheFile := de.Cache.Get(string(inputDigest))
-	assert.Equal(t, nil, actualCacheFile)
+	//actualCacheFile := de.Cache.Get(string(inputDigest))
+	//assert.Equal(t, nil, actualCacheFile)
 }
 
 func TestDocker_ExtractLayerFiles(t *testing.T) {

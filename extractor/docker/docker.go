@@ -10,10 +10,11 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
-	"os"
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/simar7/gokv/encoding"
 
 	"github.com/aquasecurity/fanal/analyzer/library"
 	"github.com/aquasecurity/fanal/utils"
@@ -25,11 +26,13 @@ import (
 	"github.com/aquasecurity/fanal/extractor/docker/token/gcr"
 	"github.com/aquasecurity/fanal/types"
 
-	"github.com/aquasecurity/fanal/cache"
+	//"github.com/aquasecurity/fanal/cache"
 	"github.com/docker/distribution/manifest/schema2"
 	"github.com/docker/docker/client"
 	"github.com/genuinetools/reg/registry"
 	"github.com/knqyf263/nested"
+	bolt "github.com/simar7/gokv/bbolt"
+	kvtypes "github.com/simar7/gokv/types"
 	"golang.org/x/xerrors"
 )
 
@@ -65,7 +68,8 @@ type layer struct {
 
 type DockerExtractor struct {
 	Client *client.Client
-	Cache  cache.Cache
+	//Cache  cache.Cache
+	Cache  *bolt.Store
 	Option types.DockerOption
 }
 
@@ -78,10 +82,21 @@ func NewDockerExtractor(option types.DockerOption) (extractor.Extractor, error) 
 		return nil, xerrors.Errorf("error initializing docker extractor: %w", err)
 	}
 
+	var kv *bolt.Store
+	if kv, err = bolt.NewStore(bolt.Options{
+		//DB:             nil,
+		RootBucketName: "fanal",
+		Path:           "kv",
+		Codec:          encoding.JSON,
+	}); err != nil {
+		return nil, xerrors.Errorf("error initializing cache: %w", err)
+	}
+
 	return DockerExtractor{
 		Option: option,
 		Client: cli,
-		Cache:  cache.Initialize(utils.CacheDir()),
+		//Cache:  kv.Initialize(utils.CacheDir()),
+		Cache: kv,
 	}, nil
 }
 
@@ -147,23 +162,29 @@ func (d DockerExtractor) createRegistryClient(ctx context.Context, domain string
 	})
 }
 
+// TODO: Placeholder until we bring actual function back
 func (d DockerExtractor) SaveLocalImage(ctx context.Context, imageName string) (io.Reader, error) {
-	var err error
-	r := d.Cache.Get(imageName)
-	if r == nil {
-		// Save the image
-		r, err = d.saveLocalImage(ctx, imageName)
-		if err != nil {
-			return nil, xerrors.Errorf("failed to save the image: %w", err)
-		}
-		r, err = d.Cache.Set(imageName, r)
-		if err != nil {
-			log.Print(err)
-		}
-	}
-
-	return r, nil
+	return nil, nil
 }
+
+// TODO: Bring this function back
+//func (d DockerExtractor) SaveLocalImage(ctx context.Context, imageName string) (io.Reader, error) {
+//	var err error
+//	r := d.Cache.Get(imageName)
+//	if r == nil {
+//		// Save the image
+//		r, err = d.saveLocalImage(ctx, imageName)
+//		if err != nil {
+//			return nil, xerrors.Errorf("failed to save the image: %w", err)
+//		}
+//		r, err = d.Cache.Set(imageName, r)
+//		if err != nil {
+//			log.Print(err)
+//		}
+//	}
+//
+//	return r, nil
+//}
 
 func (d DockerExtractor) saveLocalImage(ctx context.Context, imageName string) (io.ReadCloser, error) {
 	r, err := d.Client.ImageSave(ctx, []string{imageName})
@@ -318,16 +339,23 @@ func (d DockerExtractor) extractLayerWorker(dig digest.Digest, r *registry.Regis
 			break // End of archive
 		}
 		if err != nil {
-			log.Fatal(err)
+			errCh <- xerrors.Errorf("tar travesal failed: %w", err)
+			return
 		}
 
 		// file to save in cache
 		if contains(filenames, hdr.Name) {
 			fmt.Printf("Contents of %s:\n", hdr.Name)
-			if _, err := io.Copy(os.Stdout, tr); err != nil {
-				log.Fatal(err)
+			buf := new(bytes.Buffer)
+			_, _ = buf.ReadFrom(tr)
+
+			if err := d.Cache.Set(kvtypes.SetItemInput{
+				BucketName: string(dig),
+				Key:        hdr.Name,
+				Value:      buf.Bytes(),
+			}); err != nil {
+				log.Printf("an error occurred while caching: %s\n", err)
 			}
-			fmt.Println()
 		}
 	}
 
