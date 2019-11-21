@@ -339,7 +339,7 @@ func (d DockerExtractor) extractLayerWorker(dig digest.Digest, r *registry.Regis
 			break // End of archive
 		}
 		if err != nil {
-			errCh <- xerrors.Errorf("tar travesal failed: %w", err)
+			errCh <- xerrors.Errorf("tar traversal failed: %w", err)
 			return
 		}
 
