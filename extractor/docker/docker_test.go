@@ -1,6 +1,8 @@
 package docker
 
 import (
+	"bytes"
+	"compress/gzip"
 	"context"
 	"fmt"
 	"io/ioutil"
@@ -364,9 +366,9 @@ func TestDocker_ExtractLayerWorker(t *testing.T) {
 		name     string
 		cacheHit bool
 	}{
-		//{	//TODO: Fix this test currently broken
-		//	name: "happy path with cache miss",
-		//},
+		{
+			name: "happy path with cache miss",
+		},
 		{
 			name:     "happy path with cache hit",
 			cacheHit: true,
@@ -400,11 +402,12 @@ func TestDocker_ExtractLayerWorker(t *testing.T) {
 		}()
 		assert.NoError(t, err, tc.name)
 
+		b := getTarGzBuf(layerData)
 		if tc.cacheHit {
 			assert.NoError(t, s.Set(kvtypes.SetItemInput{
 				BucketName: "layertars",
 				Key:        string(inputDigest),
-				Value:      layerData,
+				Value:      b.Bytes(),
 			}), tc.name)
 		}
 
@@ -445,6 +448,9 @@ func TestDocker_ExtractLayerWorker(t *testing.T) {
 			// TODO: Add tests to validate the content is sane
 		}
 
+		eb := getTarGzBuf(layerData)
+		expectedContents := eb.Bytes()
+
 		// check cache contents
 		var actualCacheContents []byte
 		found, err := s.Get(kvtypes.GetItemInput{
@@ -453,9 +459,21 @@ func TestDocker_ExtractLayerWorker(t *testing.T) {
 			Value:      &actualCacheContents,
 		})
 		assert.True(t, found)
-		assert.Equal(t, layerData, actualCacheContents, tc.name) // TODO: Stengthen this assertion to assert.Equal
+		assert.Equal(t, expectedContents, actualCacheContents, tc.name) // TODO: Stengthen this assertion to assert.Equal
 	}
 
+}
+
+func getTarGzBuf(layerData []byte) bytes.Buffer {
+	gzr, _ := gzip.NewReader(bytes.NewBuffer(layerData))
+	expectedTarContent, _ := ioutil.ReadAll(gzr)
+	var wb bytes.Buffer
+	gzw := gzip.NewWriter(&wb)
+	_, _ = gzw.Write(expectedTarContent)
+	gzw.Flush()
+	gzw.Close()
+	gzr.Close()
+	return wb
 }
 
 func TestDocker_ExtractLayerFiles(t *testing.T) {
