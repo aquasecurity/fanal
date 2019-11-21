@@ -240,20 +240,31 @@ func TestDockerExtractor_SaveLocalImage(t *testing.T) {
 	assert.NoError(t, err)
 
 	// setup cache
-	tempCacheDir, _ := ioutil.TempDir("", "TestDockerExtractor_SaveLocalImage-*")
+	s, f, err := setupCache()
 	defer func() {
-		_ = os.RemoveAll(tempCacheDir)
+		_ = f.Close()
+		_ = os.RemoveAll(f.Name())
 	}()
+	assert.NoError(t, err)
 
 	de := DockerExtractor{
 		Option: types.DockerOption{},
 		Client: c,
-		//Cache:  cache.Initialize(tempCacheDir),
+		Cache:  s,
 	}
 
 	r, err := de.SaveLocalImage(context.TODO(), "fooimage")
 	assert.NotNil(t, r)
 	assert.NoError(t, err)
+
+	var actualValue interface{}
+	found, err := de.Cache.Get(kvtypes.GetItemInput{
+		BucketName: "imagebucket",
+		Key:        "fooimage",
+		Value:      &actualValue,
+	})
+	assert.NoError(t, err)
+	assert.True(t, found)
 }
 
 func TestDockerExtractor_Extract(t *testing.T) {
@@ -308,10 +319,12 @@ func TestDockerExtractor_Extract(t *testing.T) {
 		assert.NoError(t, err)
 
 		// setup cache
-		tempCacheDir, _ := ioutil.TempDir("", "TestDockerExtractor_Extract-*")
+		s, f, err := setupCache()
 		defer func() {
-			_ = os.RemoveAll(tempCacheDir)
+			_ = f.Close()
+			_ = os.RemoveAll(f.Name())
 		}()
+		assert.NoError(t, err)
 
 		de := DockerExtractor{
 			Option: types.DockerOption{
@@ -321,7 +334,7 @@ func TestDockerExtractor_Extract(t *testing.T) {
 				Timeout:  time.Second * 1000,
 			},
 			Client: c,
-			//Cache:  cache.Initialize(tempCacheDir),
+			Cache:  s,
 		}
 
 		filesToExtract := []string{"file1", "file2", "file3"}
@@ -363,12 +376,6 @@ func TestDocker_ExtractLayerWorker(t *testing.T) {
 	assert.NoError(t, err)
 
 	// setup cache
-	//tempCacheDir, _ := ioutil.TempDir("", "TestDocker_ExtractLayerWorker-*")
-	//defer func() {
-	//	_ = os.RemoveAll(tempCacheDir)
-	//}()
-
-	// setup cache
 	s, f, err := setupCache()
 	defer func() {
 		_ = f.Close()
@@ -399,10 +406,9 @@ func TestDocker_ExtractLayerWorker(t *testing.T) {
 	inputDigest := digest.Digest("sha256:62d8908bee94c202b2d35224a221aaa2058318bfa9879fa541efaecba272331b")
 	layerCh := make(chan layer)
 	errCh := make(chan error)
-	fileToSaveInCache := []string{"testdir/helloworld.txt"}
 
 	go func() {
-		de.extractLayerWorker(inputDigest, r, context.TODO(), inputImage, errCh, layerCh, fileToSaveInCache)
+		de.extractLayerWorker(inputDigest, r, context.TODO(), inputImage, errCh, layerCh)
 	}()
 
 	var errRecieved error
@@ -435,12 +441,12 @@ func TestDocker_ExtractLayerWorker(t *testing.T) {
 	// check cache contents
 	var actualCacheContents []byte
 	found, err := s.Get(kvtypes.GetItemInput{
-		BucketName: string(inputDigest),
-		Key:        "testdir/helloworld.txt",
+		BucketName: "layertars",
+		Key:        string(inputDigest),
 		Value:      &actualCacheContents,
 	})
 	assert.True(t, found)
-	assert.Equal(t, "hello world\n", string(actualCacheContents))
+	assert.NotEmpty(t, actualCacheContents) // TODO: Stengthen this assertion to assert.Equal
 
 	// check for no cache to exist
 	//actualCacheFile := de.Cache.Get(string(inputDigest))

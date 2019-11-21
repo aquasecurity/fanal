@@ -8,15 +8,9 @@ import (
 	"os"
 	"time"
 
-	"github.com/aquasecurity/fanal/utils"
-
 	"github.com/aquasecurity/fanal/types"
 
 	"github.com/aquasecurity/fanal/extractor/docker"
-
-	"golang.org/x/xerrors"
-
-	"github.com/aquasecurity/fanal/cache"
 
 	"github.com/aquasecurity/fanal/analyzer"
 	_ "github.com/aquasecurity/fanal/analyzer/command/apk"
@@ -48,16 +42,17 @@ func main() {
 func run() (err error) {
 	ctx := context.Background()
 	tarPath := flag.String("f", "-", "layer.tar path")
-	clearCache := flag.Bool("clear", false, "clear cache")
+	//clearCache := flag.Bool("clear", false, "clear cache")
 	flag.Parse()
 
-	c := cache.Initialize(utils.CacheDir())
-
-	if *clearCache {
-		if err = c.Clear(); err != nil {
-			return xerrors.Errorf("error in cache clear: %w", err)
-		}
-	}
+	// TODO: Bring this back later to configure cache
+	//c := cache.Initialize(utils.CacheDir())
+	//
+	//if *clearCache {
+	//	if err = c.Clear(); err != nil {
+	//		return xerrors.Errorf("error in cache clear: %w", err)
+	//	}
+	//}
 
 	args := flag.Args()
 

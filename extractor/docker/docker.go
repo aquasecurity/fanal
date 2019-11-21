@@ -6,7 +6,6 @@ import (
 	"compress/gzip"
 	"context"
 	"encoding/json"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
@@ -86,7 +85,7 @@ func NewDockerExtractor(option types.DockerOption) (extractor.Extractor, error) 
 	if kv, err = bolt.NewStore(bolt.Options{
 		//DB:             nil,
 		RootBucketName: "fanal",
-		Path:           "kv",
+		Path:           "kv.db",
 		Codec:          encoding.JSON,
 	}); err != nil {
 		return nil, xerrors.Errorf("error initializing cache: %w", err)
@@ -162,29 +161,31 @@ func (d DockerExtractor) createRegistryClient(ctx context.Context, domain string
 	})
 }
 
-// TODO: Placeholder until we bring actual function back
 func (d DockerExtractor) SaveLocalImage(ctx context.Context, imageName string) (io.Reader, error) {
-	return nil, nil
-}
+	var storedReader io.Reader
+	found, err := d.Cache.Get(kvtypes.GetItemInput{
+		BucketName: "imagebucket",
+		Key:        imageName,
+		Value:      &storedReader,
+	})
 
-// TODO: Bring this function back
-//func (d DockerExtractor) SaveLocalImage(ctx context.Context, imageName string) (io.Reader, error) {
-//	var err error
-//	r := d.Cache.Get(imageName)
-//	if r == nil {
-//		// Save the image
-//		r, err = d.saveLocalImage(ctx, imageName)
-//		if err != nil {
-//			return nil, xerrors.Errorf("failed to save the image: %w", err)
-//		}
-//		r, err = d.Cache.Set(imageName, r)
-//		if err != nil {
-//			log.Print(err)
-//		}
-//	}
-//
-//	return r, nil
-//}
+	if err != nil || !found {
+		storedReader, err = d.saveLocalImage(ctx, imageName)
+		if err != nil {
+			return nil, xerrors.Errorf("failed to save the image: %w", err)
+		}
+
+		if err := d.Cache.Set(kvtypes.SetItemInput{
+			BucketName: "imagebucket",
+			Key:        imageName,
+			Value:      storedReader,
+		}); err != nil {
+			log.Println(err)
+		}
+	}
+
+	return storedReader, nil
+}
 
 func (d DockerExtractor) saveLocalImage(ctx context.Context, imageName string) (io.ReadCloser, error) {
 	r, err := d.Client.ImageSave(ctx, []string{imageName})
@@ -195,7 +196,7 @@ func (d DockerExtractor) saveLocalImage(ctx context.Context, imageName string) (
 }
 
 func (d DockerExtractor) Extract(ctx context.Context, imageName string, filenames []string) (extractor.FileMap, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), d.Option.Timeout)
+	ctx, cancel := context.WithTimeout(ctx, d.Option.Timeout)
 	defer cancel()
 
 	image, err := registry.ParseImage(imageName)
@@ -220,7 +221,7 @@ func (d DockerExtractor) Extract(ctx context.Context, imageName string, filename
 	for _, ref := range m.Manifest.Layers {
 		layerIDs = append(layerIDs, string(ref.Digest))
 		go func(dig digest.Digest) {
-			d.extractLayerWorker(dig, r, ctx, image, errCh, layerCh, filenames)
+			d.extractLayerWorker(dig, r, ctx, image, errCh, layerCh)
 		}(ref.Digest)
 	}
 
@@ -261,15 +262,6 @@ func downloadConfigFile(err error, r *registry.Registry, ctx context.Context, im
 	return config, nil
 }
 
-func contains(s []string, e string) bool {
-	for _, a := range s {
-		if a == e {
-			return true
-		}
-	}
-	return false
-}
-
 func (d DockerExtractor) extractLayerFiles(layerCh chan layer, errCh chan error, ctx context.Context, filenames []string) (map[string]extractor.FileMap, map[string]extractor.OPQDirs, error) {
 	filesInLayers := make(map[string]extractor.FileMap)
 	opqInLayers := make(map[string]extractor.OPQDirs)
@@ -293,74 +285,46 @@ func (d DockerExtractor) extractLayerFiles(layerCh chan layer, errCh chan error,
 	return filesInLayers, opqInLayers, nil
 }
 
-func (d DockerExtractor) extractLayerWorker(dig digest.Digest, r *registry.Registry, ctx context.Context, image registry.Image, errCh chan error, layerCh chan layer, filenames []string) {
+func (d DockerExtractor) extractLayerWorker(dig digest.Digest, r *registry.Registry, ctx context.Context, image registry.Image, errCh chan error, layerCh chan layer) {
 	var tarReader io.Reader
 
-	rc, err := r.DownloadLayer(ctx, image.Path, dig)
-	if err != nil {
-		errCh <- xerrors.Errorf("failed to download the layer(%s): %w", dig, err)
-		return
-	}
-
-	//Use cache
-	//rc = d.Cache.Get(string(dig))
-	//if rc == nil {
-	//	// Download the layer.
-	//	layerRC, err := r.DownloadLayer(ctx, image.Path, dig)
-	//	if err != nil {
-	//		errCh <- xerrors.Errorf("failed to download the layer(%s): %w", dig, err)
-	//		return
-	//	}
-	//
-	//	rc, err = d.Cache.Set(string(dig), layerRC)
-	//	if err != nil {
-	//		log.Print(err)
-	//	}
-	//}
-
-	// read the incoming gzip from the layer
-	tarReader, err = gzip.NewReader(rc)
-	if err != nil {
-		errCh <- xerrors.Errorf("invalid gzip: %w", err)
-		return
-	}
-
-	// read the tar
-	tarContent, err := ioutil.ReadAll(tarReader)
-	if err != nil {
-		errCh <- xerrors.Errorf("invalid file: %w", err)
-	}
-	tr := tar.NewReader(bytes.NewReader(tarContent))
-
-	// do things with the tar
-	for {
-		hdr, err := tr.Next()
-		if err == io.EOF {
-			break // End of archive
-		}
+	var tarContent []byte
+	var found bool
+	var err error
+	if found, err = d.Cache.Get(kvtypes.GetItemInput{
+		BucketName: "layertars",
+		Key:        string(dig),
+		Value:      &tarContent,
+	}); err != nil || !found {
+		rc, err := r.DownloadLayer(ctx, image.Path, dig)
 		if err != nil {
-			errCh <- xerrors.Errorf("tar traversal failed: %w", err)
+			errCh <- xerrors.Errorf("failed to download the layer(%s): %w", dig, err)
 			return
 		}
 
-		// file to save in cache
-		if contains(filenames, hdr.Name) {
-			fmt.Printf("Contents of %s:\n", hdr.Name)
-			buf := new(bytes.Buffer)
-			_, _ = buf.ReadFrom(tr)
+		// read the incoming gzip from the layer
+		tarReader, err = gzip.NewReader(rc)
+		if err != nil {
+			errCh <- xerrors.Errorf("invalid gzip: %w", err)
+			return
+		}
 
-			if err := d.Cache.Set(kvtypes.SetItemInput{
-				BucketName: string(dig),
-				Key:        hdr.Name,
-				Value:      buf.Bytes(),
-			}); err != nil {
-				log.Printf("an error occurred while caching: %s\n", err)
-			}
+		// read the tar
+		tarContent, err = ioutil.ReadAll(tarReader)
+		if err != nil {
+			errCh <- xerrors.Errorf("invalid file: %w", err)
 		}
 	}
 
+	if err := d.Cache.Set(kvtypes.SetItemInput{
+		BucketName: "layertars",
+		Key:        string(dig),
+		Value:      tarContent,
+	}); err != nil {
+		log.Printf("an error occurred while caching: %s\n", err)
+	}
+
 	layerCh <- layer{ID: dig, Content: ioutil.NopCloser(bytes.NewReader(tarContent))}
-	//layerCh <- layer{ID: dig, Content: ioutil.NopCloser(teeTarReader)}
 }
 
 func getValidManifest(err error, r *registry.Registry, ctx context.Context, image registry.Image) (*schema2.DeserializedManifest, error) {
