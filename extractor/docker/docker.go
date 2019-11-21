@@ -83,7 +83,6 @@ func NewDockerExtractor(option types.DockerOption) (extractor.Extractor, error) 
 
 	var kv *bolt.Store
 	if kv, err = bolt.NewStore(bolt.Options{
-		//DB:             nil,
 		RootBucketName: "fanal",
 		Path:           "kv.db",
 		Codec:          encoding.JSON,
@@ -175,10 +174,10 @@ func (d DockerExtractor) SaveLocalImage(ctx context.Context, imageName string) (
 			return nil, xerrors.Errorf("failed to save the image: %w", err)
 		}
 
-		if err := d.Cache.Set(kvtypes.SetItemInput{
+		if err := d.Cache.BatchSet(kvtypes.BatchSetItemInput{
 			BucketName: "imagebucket",
-			Key:        imageName,
-			Value:      storedReader,
+			Keys:       []string{imageName},
+			Values:     storedReader,
 		}); err != nil {
 			log.Println(err)
 		}
@@ -296,7 +295,7 @@ func (d DockerExtractor) extractLayerWorker(dig digest.Digest, r *registry.Regis
 
 	if found {
 		// uncompress from gzip to tar
-		gzipReader, err := gzip.NewReader(bytes.NewReader(cacheContent))
+		gzipReader, err := gzip.NewReader(bytes.NewReader(cacheContent)) // TODO: DRY
 		if err != nil {
 			errCh <- xerrors.Errorf("failed to uncompress the layer(%s): %w", dig, err)
 			return
@@ -311,7 +310,7 @@ func (d DockerExtractor) extractLayerWorker(dig digest.Digest, r *registry.Regis
 	}
 
 	if !found {
-		rc, err := r.DownloadLayer(ctx, image.Path, dig) // TODO: DRY
+		rc, err := r.DownloadLayer(ctx, image.Path, dig)
 		if err != nil {
 			errCh <- xerrors.Errorf("failed to download the layer(%s): %w", dig, err)
 			return
@@ -319,7 +318,7 @@ func (d DockerExtractor) extractLayerWorker(dig digest.Digest, r *registry.Regis
 		defer rc.Close()
 
 		// read the incoming gzip from the layer
-		gzipReader, err := gzip.NewReader(rc)
+		gzipReader, err := gzip.NewReader(rc) // TODO: DRY
 		if err != nil {
 			errCh <- xerrors.Errorf("could not init gzip reader: %w", err)
 			return
@@ -332,28 +331,6 @@ func (d DockerExtractor) extractLayerWorker(dig digest.Digest, r *registry.Regis
 			return
 		}
 
-		// read the tar
-		//tr := tar.NewReader(gzipReader)
-		//tarContent, err = ioutil.ReadAll(tr)
-		//if err != nil {
-		//	errCh <- xerrors.Errorf("invalid tar file: %w", err)
-		//	return
-		//}
-		//for {
-		//	hdr, err := tr.Next()
-		//	if err == io.EOF {
-		//		break // End of archive
-		//	}
-		//	if err != nil {
-		//		log.Fatal(err)
-		//	}
-		//	fmt.Printf("Contents of %s:\n", hdr.Name)
-		//	if _, err := io.Copy(os.Stdout, tr); err != nil {
-		//		log.Fatal(err)
-		//	}
-		//	fmt.Println()
-		//}
-
 		// compress before storage
 		var b bytes.Buffer
 		w := gzip.NewWriter(&b)
@@ -362,15 +339,13 @@ func (d DockerExtractor) extractLayerWorker(dig digest.Digest, r *registry.Regis
 		if err != nil {
 			log.Printf("an error ocurred while gzipping: %s\n", err)
 		}
-		//w.Close() // flush the buffer
 		w.Flush()
 		w.Close()
 
-		if err := d.Cache.Set(kvtypes.SetItemInput{
+		if err := d.Cache.BatchSet(kvtypes.BatchSetItemInput{
 			BucketName: "layertars",
-			Key:        string(dig),
-			Value:      b.Bytes(),
-			//Value: tarContent,
+			Keys:       []string{string(dig)},
+			Values:     b.Bytes(),
 		}); err != nil {
 			log.Printf("an error occurred while caching: %s\n", err)
 		}
