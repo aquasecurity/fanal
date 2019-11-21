@@ -286,45 +286,98 @@ func (d DockerExtractor) extractLayerFiles(layerCh chan layer, errCh chan error,
 }
 
 func (d DockerExtractor) extractLayerWorker(dig digest.Digest, r *registry.Registry, ctx context.Context, image registry.Image, errCh chan error, layerCh chan layer) {
-	var tarReader io.Reader
-
 	var tarContent []byte
-	var found bool
-	var err error
-	if found, err = d.Cache.Get(kvtypes.GetItemInput{
+	var cacheContent []byte
+	found, _ := d.Cache.Get(kvtypes.GetItemInput{
 		BucketName: "layertars",
 		Key:        string(dig),
-		Value:      &tarContent,
-	}); err != nil || !found {
-		rc, err := r.DownloadLayer(ctx, image.Path, dig)
+		Value:      &cacheContent,
+	})
+
+	if found {
+		// uncompress from gzip to tar
+		gzipReader, err := gzip.NewReader(bytes.NewReader(cacheContent))
+		if err != nil {
+			errCh <- xerrors.Errorf("failed to uncompress the layer(%s): %w", dig, err)
+			return
+		}
+
+		tarContent, err = ioutil.ReadAll(gzipReader)
+		if err != nil {
+			log.Println("bad cache data found, redownloading... err: ", err)
+			found = false
+		}
+		gzipReader.Close()
+	}
+
+	if !found {
+		rc, err := r.DownloadLayer(ctx, image.Path, dig) // TODO: DRY
 		if err != nil {
 			errCh <- xerrors.Errorf("failed to download the layer(%s): %w", dig, err)
 			return
 		}
+		defer rc.Close()
 
 		// read the incoming gzip from the layer
-		tarReader, err = gzip.NewReader(rc)
+		gzipReader, err := gzip.NewReader(rc)
+		if err != nil {
+			errCh <- xerrors.Errorf("could not init gzip reader: %w", err)
+			return
+		}
+		defer gzipReader.Close()
+
+		tarContent, err = ioutil.ReadAll(gzipReader)
 		if err != nil {
 			errCh <- xerrors.Errorf("invalid gzip: %w", err)
 			return
 		}
 
 		// read the tar
-		tarContent, err = ioutil.ReadAll(tarReader)
+		//tr := tar.NewReader(gzipReader)
+		//tarContent, err = ioutil.ReadAll(tr)
+		//if err != nil {
+		//	errCh <- xerrors.Errorf("invalid tar file: %w", err)
+		//	return
+		//}
+		//for {
+		//	hdr, err := tr.Next()
+		//	if err == io.EOF {
+		//		break // End of archive
+		//	}
+		//	if err != nil {
+		//		log.Fatal(err)
+		//	}
+		//	fmt.Printf("Contents of %s:\n", hdr.Name)
+		//	if _, err := io.Copy(os.Stdout, tr); err != nil {
+		//		log.Fatal(err)
+		//	}
+		//	fmt.Println()
+		//}
+
+		// compress before storage
+		var b bytes.Buffer
+		w := gzip.NewWriter(&b)
+
+		_, err = w.Write(tarContent)
 		if err != nil {
-			errCh <- xerrors.Errorf("invalid file: %w", err)
+			log.Printf("an error ocurred while gzipping: %s\n", err)
+		}
+		//w.Close() // flush the buffer
+		w.Flush()
+		w.Close()
+
+		if err := d.Cache.Set(kvtypes.SetItemInput{
+			BucketName: "layertars",
+			Key:        string(dig),
+			Value:      b.Bytes(),
+			//Value: tarContent,
+		}); err != nil {
+			log.Printf("an error occurred while caching: %s\n", err)
 		}
 	}
 
-	if err := d.Cache.Set(kvtypes.SetItemInput{
-		BucketName: "layertars",
-		Key:        string(dig),
-		Value:      tarContent,
-	}); err != nil {
-		log.Printf("an error occurred while caching: %s\n", err)
-	}
-
 	layerCh <- layer{ID: dig, Content: ioutil.NopCloser(bytes.NewReader(tarContent))}
+	return
 }
 
 func getValidManifest(err error, r *registry.Registry, ctx context.Context, image registry.Image) (*schema2.DeserializedManifest, error) {

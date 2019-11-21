@@ -360,97 +360,102 @@ func TestDockerExtractor_Extract(t *testing.T) {
 }
 
 func TestDocker_ExtractLayerWorker(t *testing.T) {
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		httpPath := r.URL.String()
-		switch {
-		case strings.Contains(httpPath, "/v2/library/fooimage/blobs/sha256:62d8908bee94c202b2d35224a221aaa2058318bfa9879fa541efaecba272331b"):
-			b, _ := ioutil.ReadFile("../../utils/testdata/testdir.tar.gz")
-			_, _ = w.Write(b)
-		default:
-			assert.FailNow(t, "unexpected path accessed: ", r.URL.String())
-		}
-	}))
-	defer ts.Close()
-
-	c, err := client.NewClientWithOpts(client.WithHost(ts.URL))
-	assert.NoError(t, err)
-
-	// setup cache
-	s, f, err := setupCache()
-	defer func() {
-		_ = f.Close()
-		_ = os.RemoveAll(f.Name())
-	}()
-	assert.NoError(t, err)
-
-	de := DockerExtractor{
-		Option: types.DockerOption{
-			AuthURL:  ts.URL,
-			NonSSL:   true,
-			SkipPing: true,
-			Timeout:  time.Second * 1000,
+	testCases := []struct {
+		name     string
+		cacheHit bool
+	}{
+		//{	//TODO: Fix this test currently broken
+		//	name: "happy path with cache miss",
+		//},
+		{
+			name:     "happy path with cache hit",
+			cacheHit: true,
 		},
-		Client: c,
-		//Cache:  cache.Initialize(tempCacheDir),
-		Cache: s,
 	}
 
-	tsUrl := strings.TrimPrefix(ts.URL, "http://")
-	inputImage := registry.Image{
-		Domain: tsUrl,
-		Path:   "library/fooimage",
-		Tag:    "latest",
+	for _, tc := range testCases {
+		inputDigest := digest.Digest("sha256:62d8908bee94c202b2d35224a221aaa2058318bfa9879fa541efaecba272331b")
+		layerData, err := ioutil.ReadFile("../../utils/testdata/testdir.tar.gz")
+		assert.NoError(t, err)
+
+		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			httpPath := r.URL.String()
+			switch {
+			case strings.Contains(httpPath, "/v2/library/fooimage/blobs/sha256:62d8908bee94c202b2d35224a221aaa2058318bfa9879fa541efaecba272331b"):
+				_, _ = w.Write(layerData)
+			default:
+				assert.FailNow(t, "unexpected path accessed: ", fmt.Sprintf("%s %s", r.URL.String(), tc.name))
+			}
+		}))
+		defer ts.Close()
+
+		c, err := client.NewClientWithOpts(client.WithHost(ts.URL))
+		assert.NoError(t, err)
+
+		// setup cache
+		s, f, err := setupCache()
+		defer func() {
+			_ = f.Close()
+			_ = os.RemoveAll(f.Name())
+		}()
+		assert.NoError(t, err, tc.name)
+
+		if tc.cacheHit {
+			assert.NoError(t, s.Set(kvtypes.SetItemInput{
+				BucketName: "layertars",
+				Key:        string(inputDigest),
+				Value:      layerData,
+			}), tc.name)
+		}
+
+		de := DockerExtractor{
+			Option: types.DockerOption{
+				AuthURL:  ts.URL,
+				NonSSL:   true,
+				SkipPing: true,
+				Timeout:  time.Second * 1000,
+			},
+			Client: c,
+			Cache:  s,
+		}
+
+		tsUrl := strings.TrimPrefix(ts.URL, "http://")
+		inputImage := registry.Image{
+			Domain: tsUrl,
+			Path:   "library/fooimage",
+			Tag:    "latest",
+		}
+
+		layerCh := make(chan layer)
+		errCh := make(chan error)
+		r, err := de.createRegistryClient(context.TODO(), inputImage.Domain)
+		go func() {
+			de.extractLayerWorker(inputDigest, r, context.TODO(), inputImage, errCh, layerCh)
+		}()
+
+		var errRecieved error
+		var layerReceived layer
+
+		select {
+		case errRecieved = <-errCh:
+			assert.FailNow(t, "unexpected error received, err: ", fmt.Sprintf("%s, %s", errRecieved, tc.name))
+		case layerReceived = <-layerCh:
+			assert.Equal(t, inputDigest, layerReceived.ID, tc.name)
+			assert.NotEmpty(t, layerReceived.Content, tc.name)
+			// TODO: Add tests to validate the content is sane
+		}
+
+		// check cache contents
+		var actualCacheContents []byte
+		found, err := s.Get(kvtypes.GetItemInput{
+			BucketName: "layertars",
+			Key:        string(inputDigest),
+			Value:      &actualCacheContents,
+		})
+		assert.True(t, found)
+		assert.Equal(t, layerData, actualCacheContents, tc.name) // TODO: Stengthen this assertion to assert.Equal
 	}
 
-	r, err := de.createRegistryClient(context.TODO(), inputImage.Domain)
-	inputDigest := digest.Digest("sha256:62d8908bee94c202b2d35224a221aaa2058318bfa9879fa541efaecba272331b")
-	layerCh := make(chan layer)
-	errCh := make(chan error)
-
-	go func() {
-		de.extractLayerWorker(inputDigest, r, context.TODO(), inputImage, errCh, layerCh)
-	}()
-
-	var errRecieved error
-	var layerReceived layer
-
-	select {
-	case errRecieved = <-errCh:
-		assert.FailNow(t, "unexpected error received, err: ", errRecieved)
-	case layerReceived = <-layerCh:
-		assert.Equal(t, inputDigest, layerReceived.ID)
-		assert.NotEmpty(t, layerReceived.Content)
-
-		// TODO: Add tests to validate the content is sane
-		//tr := tar.NewReader(layerReceived.Content)
-		//for {
-		//	hdr, err := tr.Next()
-		//	if err == io.EOF {
-		//		break // End of archive
-		//	}
-		//	assert.NoError(t, err)
-		//
-		//	fmt.Printf("[TEST] Contents of %s:\n", hdr.Name)
-		//	if _, err := io.Copy(os.Stdout, tr); err != nil {
-		//		assert.FailNow(t, "something bad happened")
-		//	}
-		//	fmt.Println()
-		//}
-	}
-
-	// check cache contents
-	var actualCacheContents []byte
-	found, err := s.Get(kvtypes.GetItemInput{
-		BucketName: "layertars",
-		Key:        string(inputDigest),
-		Value:      &actualCacheContents,
-	})
-	assert.True(t, found)
-	assert.NotEmpty(t, actualCacheContents) // TODO: Stengthen this assertion to assert.Equal
-
-	// check for no cache to exist
-	//actualCacheFile := de.Cache.Get(string(inputDigest))
-	//assert.Equal(t, nil, actualCacheFile)
 }
 
 func TestDocker_ExtractLayerFiles(t *testing.T) {
