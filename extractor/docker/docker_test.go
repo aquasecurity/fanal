@@ -493,7 +493,7 @@ func getTarGzBuf(layerData []byte) bytes.Buffer {
 	gzr, _ := gzip.NewReader(bytes.NewBuffer(layerData))
 	expectedTarContent, _ := ioutil.ReadAll(gzr)
 	var wb bytes.Buffer
-	gzw := gzip.NewWriter(&wb)
+	gzw, _ := gzip.NewWriterLevel(&wb, gzip.BestCompression)
 	_, _ = gzw.Write(expectedTarContent)
 	gzw.Flush()
 	gzw.Close()

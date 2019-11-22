@@ -345,7 +345,11 @@ func (d DockerExtractor) extractLayerWorker(dig digest.Digest, r *registry.Regis
 
 		// compress before storage
 		var b bytes.Buffer
-		w := gzip.NewWriter(&b)
+		w, err := gzip.NewWriterLevel(&b, gzip.BestCompression)
+		if err != nil {
+			errCh <- xerrors.Errorf("unable to init gzip compressor: %w", err)
+			return
+		}
 
 		_, err = w.Write(tarContent)
 		if err != nil {
