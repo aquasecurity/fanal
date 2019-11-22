@@ -232,7 +232,7 @@ func (d DockerExtractor) Extract(ctx context.Context, imageName string, filename
 	for _, ref := range m.Manifest.Layers {
 		layerIDs = append(layerIDs, string(ref.Digest))
 		go func(dig digest.Digest) {
-			d.extractLayerWorker(dig, r, ctx, image, errCh, layerCh)
+			d.extractLayerWorker(dig, r, ctx, image, errCh, layerCh, filenames)
 		}(ref.Digest)
 	}
 
@@ -296,7 +296,7 @@ func (d DockerExtractor) extractLayerFiles(layerCh chan layer, errCh chan error,
 	return filesInLayers, opqInLayers, nil
 }
 
-func (d DockerExtractor) extractLayerWorker(dig digest.Digest, r *registry.Registry, ctx context.Context, image registry.Image, errCh chan error, layerCh chan layer) {
+func (d DockerExtractor) extractLayerWorker(dig digest.Digest, r *registry.Registry, ctx context.Context, image registry.Image, errCh chan error, layerCh chan layer, filenames []string) {
 	var tarContent []byte
 	var cacheContent []byte
 	found, _ := d.Cache.Get(kvtypes.GetItemInput{
@@ -343,27 +343,55 @@ func (d DockerExtractor) extractLayerWorker(dig digest.Digest, r *registry.Regis
 			return
 		}
 
-		// compress before storage
-		var b bytes.Buffer
-		w, err := gzip.NewWriterLevel(&b, gzip.BestCompression)
-		if err != nil {
-			errCh <- xerrors.Errorf("unable to init gzip compressor: %w", err)
-			return
+		var storeLayerInCache bool
+
+		if len(filenames) > 0 {
+			// check what files are inside the tar
+			tr := tar.NewReader(bytes.NewReader(tarContent))
+			for {
+				if storeLayerInCache {
+					break
+				}
+				hdr, err := tr.Next()
+				if err == io.EOF {
+					break // end of archive
+				}
+				if err != nil {
+					errCh <- xerrors.Errorf("invalid tar: %w", err)
+					return
+				}
+				for _, file := range filenames {
+					if file == hdr.Name {
+						storeLayerInCache = true
+					}
+				}
+			}
 		}
 
-		_, err = w.Write(tarContent)
-		if err != nil {
-			log.Printf("an error ocurred while gzipping: %s\n", err)
-		}
-		w.Flush()
-		w.Close()
+		// only store in cache if a required file was found
+		if storeLayerInCache {
+			// compress before storage
+			var b bytes.Buffer
+			w, err := gzip.NewWriterLevel(&b, gzip.BestCompression)
+			if err != nil {
+				errCh <- xerrors.Errorf("unable to init gzip compressor: %w", err)
+				return
+			}
 
-		if err := d.Cache.BatchSet(kvtypes.BatchSetItemInput{
-			BucketName: "layertars",
-			Keys:       []string{string(dig)},
-			Values:     b.Bytes(),
-		}); err != nil {
-			log.Printf("an error occurred while caching: %s\n", err)
+			_, err = w.Write(tarContent)
+			if err != nil {
+				log.Printf("an error ocurred while gzipping: %s\n", err)
+			}
+			w.Flush()
+			w.Close()
+
+			if err := d.Cache.BatchSet(kvtypes.BatchSetItemInput{
+				BucketName: "layertars",
+				Keys:       []string{string(dig)},
+				Values:     b.Bytes(),
+			}); err != nil {
+				log.Printf("an error occurred while caching: %s\n", err)
+			}
 		}
 	}
 

@@ -388,15 +388,27 @@ func TestDockerExtractor_Extract(t *testing.T) {
 
 func TestDocker_ExtractLayerWorker(t *testing.T) {
 	testCases := []struct {
-		name     string
-		cacheHit bool
+		name          string
+		cacheHit      bool
+		requiredFiles []string
+		cacheWB       bool
 	}{
 		{
-			name: "happy path with cache miss",
+			name:          "happy path with cache miss and write back",
+			cacheHit:      false,
+			requiredFiles: []string{"testdir/helloworld.txt", "testdir/badworld.txt"},
+			cacheWB:       true,
 		},
 		{
 			name:     "happy path with cache hit",
 			cacheHit: true,
+			cacheWB:  true,
+		},
+		{
+			name:          "happy path with cache miss but no write back",
+			cacheHit:      false,
+			requiredFiles: []string{"somerandomfilethatdoesntexistinthelayer"},
+			cacheWB:       false,
 		},
 	}
 
@@ -458,7 +470,7 @@ func TestDocker_ExtractLayerWorker(t *testing.T) {
 		errCh := make(chan error)
 		r, err := de.createRegistryClient(context.TODO(), inputImage.Domain)
 		go func() {
-			de.extractLayerWorker(inputDigest, r, context.TODO(), inputImage, errCh, layerCh)
+			de.extractLayerWorker(inputDigest, r, context.TODO(), inputImage, errCh, layerCh, tc.requiredFiles)
 		}()
 
 		var errRecieved error
@@ -483,8 +495,16 @@ func TestDocker_ExtractLayerWorker(t *testing.T) {
 			Key:        string(inputDigest),
 			Value:      &actualCacheContents,
 		})
-		assert.True(t, found)
-		assert.Equal(t, expectedContents, actualCacheContents, tc.name) // TODO: Stengthen this assertion to assert.Equal
+
+		switch tc.cacheWB {
+		case true:
+			assert.True(t, found)
+			assert.Equal(t, expectedContents, actualCacheContents, tc.name)
+		case false:
+			assert.False(t, found)
+			assert.Empty(t, actualCacheContents, tc.name)
+		}
+
 	}
 
 }
