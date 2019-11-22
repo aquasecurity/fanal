@@ -162,28 +162,40 @@ func (d DockerExtractor) createRegistryClient(ctx context.Context, domain string
 
 func (d DockerExtractor) SaveLocalImage(ctx context.Context, imageName string) (io.Reader, error) {
 	var storedReader io.Reader
+
+	var storedImage []byte
 	found, err := d.Cache.Get(kvtypes.GetItemInput{
 		BucketName: "imagebucket",
 		Key:        imageName,
-		Value:      &storedReader,
+		Value:      &storedImage,
 	})
 
+	if found {
+		return ioutil.NopCloser(bytes.NewReader(storedImage)), nil
+	}
+
+	var savedImage []byte
 	if err != nil || !found {
 		storedReader, err = d.saveLocalImage(ctx, imageName)
 		if err != nil {
 			return nil, xerrors.Errorf("failed to save the image: %w", err)
 		}
 
+		savedImage, err = ioutil.ReadAll(storedReader)
+		if err != nil {
+			return nil, xerrors.Errorf("failed to read saved image: %w", err)
+		}
+
 		if err := d.Cache.BatchSet(kvtypes.BatchSetItemInput{
 			BucketName: "imagebucket",
 			Keys:       []string{imageName},
-			Values:     storedReader,
+			Values:     savedImage,
 		}); err != nil {
 			log.Println(err)
 		}
 	}
 
-	return storedReader, nil
+	return ioutil.NopCloser(bytes.NewReader(savedImage)), nil
 }
 
 func (d DockerExtractor) saveLocalImage(ctx context.Context, imageName string) (io.ReadCloser, error) {

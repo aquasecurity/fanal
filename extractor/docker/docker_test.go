@@ -227,46 +227,71 @@ func TestExtractFiles(t *testing.T) {
 }
 
 func TestDockerExtractor_SaveLocalImage(t *testing.T) {
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		httpPath := r.URL.String()
-		switch {
-		case strings.Contains(httpPath, "images/get?names=fooimage"):
-			_, _ = fmt.Fprint(w, "foocontent")
-		default:
-			assert.FailNow(t, "unexpected path accessed: ", r.URL.String())
-		}
-	}))
-	defer ts.Close()
-
-	c, err := client.NewClientWithOpts(client.WithHost(ts.URL))
-	assert.NoError(t, err)
-
-	// setup cache
-	s, f, err := setupCache()
-	defer func() {
-		_ = f.Close()
-		_ = os.RemoveAll(f.Name())
-	}()
-	assert.NoError(t, err)
-
-	de := DockerExtractor{
-		Option: types.DockerOption{},
-		Client: c,
-		Cache:  s,
+	testCases := []struct {
+		name     string
+		cacheHit bool
+	}{
+		{
+			name: "happy path with cache miss",
+		},
+		{
+			name:     "happy path with cache hit",
+			cacheHit: true,
+		},
 	}
 
-	r, err := de.SaveLocalImage(context.TODO(), "fooimage")
-	assert.NotNil(t, r)
-	assert.NoError(t, err)
+	for _, tc := range testCases {
+		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			httpPath := r.URL.String()
+			switch {
+			case strings.Contains(httpPath, "images/get?names=fooimage"):
+				_, _ = fmt.Fprint(w, "foocontent")
+			default:
+				assert.FailNow(t, "unexpected path accessed: ", r.URL.String())
+			}
+		}))
+		defer ts.Close()
 
-	var actualValue interface{}
-	found, err := de.Cache.Get(kvtypes.GetItemInput{
-		BucketName: "imagebucket",
-		Key:        "fooimage",
-		Value:      &actualValue,
-	})
-	assert.NoError(t, err)
-	assert.True(t, found)
+		c, err := client.NewClientWithOpts(client.WithHost(ts.URL))
+		assert.NoError(t, err)
+
+		// setup cache
+		s, f, err := setupCache()
+		defer func() {
+			_ = f.Close()
+			_ = os.RemoveAll(f.Name())
+		}()
+		assert.NoError(t, err)
+
+		if tc.cacheHit {
+			_ = s.Set(kvtypes.SetItemInput{
+				BucketName: "imagebucket",
+				Key:        "fooimage",
+				Value:      []byte("foocontent"),
+			})
+		}
+
+		de := DockerExtractor{
+			Option: types.DockerOption{},
+			Client: c,
+			Cache:  s,
+		}
+
+		r, err := de.SaveLocalImage(context.TODO(), "fooimage")
+		assert.NotNil(t, r, tc.name)
+		assert.NoError(t, err, tc.name)
+
+		var actualValue []byte
+		found, err := de.Cache.Get(kvtypes.GetItemInput{
+			BucketName: "imagebucket",
+			Key:        "fooimage",
+			Value:      &actualValue,
+		})
+		assert.NoError(t, err, tc.name)
+		assert.True(t, found, tc.name)
+		assert.Equal(t, "foocontent", string(actualValue), tc.name)
+	}
+
 }
 
 func TestDockerExtractor_Extract(t *testing.T) {

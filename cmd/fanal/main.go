@@ -39,6 +39,7 @@ func main() {
 	}
 }
 
+// TODO: Update this example to include new kv cache
 func run() (err error) {
 	ctx := context.Background()
 	tarPath := flag.String("f", "-", "layer.tar path")
@@ -49,9 +50,9 @@ func run() (err error) {
 	//c := cache.Initialize(utils.CacheDir())
 	//
 	//if *clearCache {
-	//	if err = c.Clear(); err != nil {
-	//		return xerrors.Errorf("error in cache clear: %w", err)
-	//	}
+	//if err = c.Clear(); err != nil {
+	//	return xerrors.Errorf("error in cache clear: %w", err)
+	//}
 	//}
 
 	args := flag.Args()
