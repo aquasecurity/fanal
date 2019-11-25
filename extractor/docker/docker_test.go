@@ -299,8 +299,9 @@ func TestDockerExtractor_Extract(t *testing.T) {
 		name            string
 		imageName       string
 		manifestResp    string
-		layerData       []byte
+		fileName        string
 		blobData        string
+		fileToExtract   []string
 		expectedFileMap extractor.FileMap
 		expectedError   string
 	}{
@@ -317,11 +318,41 @@ func TestDockerExtractor_Extract(t *testing.T) {
 		     }
 		  ]
 		}`,
-			layerData: hellotxtTarGz,
-			blobData:  "foo",
+			fileName:      "testdata/testdir.tar.gz", // includes helloworld.txt and badworld.txt
+			blobData:      "foo",
+			fileToExtract: []string{"testdir/helloworld.txt"},
 			expectedFileMap: extractor.FileMap{
-				"/config": []uint8{0x66, 0x6f, 0x6f},
+				"/config":                []uint8{0x66, 0x6f, 0x6f},
+				"testdir/helloworld.txt": []uint8{0x68, 0x65, 0x6c, 0x6c, 0x6f, 0x20, 0x77, 0x6f, 0x72, 0x6c, 0x64, 0xa},
 			},
+		},
+		{
+			name:          "sad path: invalid manifest response",
+			manifestResp:  "badManifestResponse",
+			expectedError: "failed to get the v2 manifest: invalid character 'b' looking for beginning of value",
+		},
+		{
+			name:          "sad path: bad image name",
+			imageName:     "https://docker/very/bad/imagename",
+			expectedError: `failed to parse the image: parsing image "https://docker/very/bad/imagename" failed: invalid reference format`,
+		},
+		{
+			name: "sad path: corrupt layer data invalid gzip",
+			manifestResp: `{
+		 "schemaVersion": 2,
+		 "mediaType": "application/vnd.docker.distribution.manifest.v2+json",
+		 "layers": [
+		    {
+		       "mediaType": "application/vnd.docker.image.rootfs.diff.tar.gzip",
+		       "size": 153263,
+		       "digest": "sha256:62d8908bee94c202b2d35224a221aaa2058318bfa9879fa541efaecba272331b"
+		    }
+		 ]
+		}`,
+			fileName:        "testdata/opq.tar",
+			blobData:        "foo",
+			expectedFileMap: extractor.FileMap(nil),
+			expectedError:   "invalid gzip: gzip: invalid header",
 		},
 	}
 
@@ -333,7 +364,8 @@ func TestDockerExtractor_Extract(t *testing.T) {
 				w.Header().Set("Content-Type", "application/vnd.docker.distribution.manifest.v2+json")
 				_, _ = fmt.Fprint(w, tc.manifestResp)
 			case strings.Contains(httpPath, "/v2/library/fooimage/blobs/sha256:62d8908bee94c202b2d35224a221aaa2058318bfa9879fa541efaecba272331b"):
-				_, _ = w.Write(tc.layerData)
+				b, _ := ioutil.ReadFile(tc.fileName)
+				_, _ = w.Write(b)
 			case strings.Contains(httpPath, "/v2/library/fooimage/blobs/"):
 				_, _ = w.Write([]byte(tc.blobData))
 			default:
@@ -364,7 +396,6 @@ func TestDockerExtractor_Extract(t *testing.T) {
 			Cache:  s,
 		}
 
-		filesToExtract := []string{"file1", "file2", "file3"}
 		tsURL := strings.TrimPrefix(ts.URL, "http://")
 
 		var imageName string
@@ -374,7 +405,7 @@ func TestDockerExtractor_Extract(t *testing.T) {
 		default:
 			imageName = tsURL + "/library/fooimage"
 		}
-		fm, err := de.Extract(context.TODO(), imageName, filesToExtract)
+		fm, err := de.Extract(context.TODO(), imageName, tc.fileToExtract)
 
 		switch {
 		case tc.expectedError != "":
