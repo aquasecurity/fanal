@@ -220,7 +220,7 @@ func (d DockerExtractor) Extract(ctx context.Context, imageName string, filename
 	}
 
 	// Get the v2 manifest.
-	m, err := getValidManifest(err, r, ctx, image)
+	m, err := getValidManifest(ctx, r, image)
 	if err != nil {
 		return nil, err
 	}
@@ -399,7 +399,7 @@ func (d DockerExtractor) extractLayerWorker(dig digest.Digest, r *registry.Regis
 	return
 }
 
-func getValidManifest(err error, r *registry.Registry, ctx context.Context, image registry.Image) (*schema2.DeserializedManifest, error) {
+func getValidManifest(ctx context.Context, r *registry.Registry, image registry.Image) (*schema2.DeserializedManifest, error) {
 	manifest, err := r.Manifest(ctx, image.Path, image.Reference())
 	if err != nil {
 		return nil, xerrors.Errorf("failed to get the v2 manifest: %w", err)
