@@ -8,10 +8,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/aquasecurity/fanal/types"
-
-	"github.com/aquasecurity/fanal/extractor/docker"
-
 	"github.com/aquasecurity/fanal/analyzer"
 	_ "github.com/aquasecurity/fanal/analyzer/command/apk"
 	_ "github.com/aquasecurity/fanal/analyzer/library/bundler"
@@ -30,6 +26,8 @@ import (
 	_ "github.com/aquasecurity/fanal/analyzer/pkg/dpkg"
 	_ "github.com/aquasecurity/fanal/analyzer/pkg/rpm"
 	"github.com/aquasecurity/fanal/extractor"
+	"github.com/aquasecurity/fanal/extractor/docker"
+	"github.com/aquasecurity/fanal/types"
 	"golang.org/x/crypto/ssh/terminal"
 )
 
