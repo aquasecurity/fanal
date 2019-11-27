@@ -155,7 +155,7 @@ func TestExtractFromFile(t *testing.T) {
 			}
 			defer f.Close()
 
-			d := DockerExtractor{}
+			d := Extractor{}
 			fm, err := d.ExtractFromFile(context.TODO(), f, v.filenames)
 			if v.err != err {
 				t.Errorf("err: got %v, want %v", v.err, err)
@@ -211,7 +211,7 @@ func TestExtractFiles(t *testing.T) {
 			}
 			defer f.Close()
 
-			d := DockerExtractor{}
+			d := Extractor{}
 			fm, opqDirs, err := d.ExtractFiles(f, v.filenames)
 			if v.err != err {
 				t.Errorf("err: got %v, want %v", v.err, err)
@@ -271,7 +271,7 @@ func TestDockerExtractor_SaveLocalImage(t *testing.T) {
 			})
 		}
 
-		de := DockerExtractor{
+		de := Extractor{
 			Option: types.DockerOption{},
 			Client: c,
 			Cache:  s,
@@ -352,7 +352,7 @@ func TestDockerExtractor_Extract(t *testing.T) {
 			fileName:        "testdata/opq.tar",
 			blobData:        "foo",
 			expectedFileMap: extractor.FileMap(nil),
-			expectedError:   "invalid gzip: gzip: invalid header",
+			expectedError:   "could not init gzip reader: gzip: invalid header",
 		},
 	}
 
@@ -385,7 +385,7 @@ func TestDockerExtractor_Extract(t *testing.T) {
 		}()
 		assert.NoError(t, err)
 
-		de := DockerExtractor{
+		de := Extractor{
 			Option: types.DockerOption{
 				AuthURL:  ts.URL,
 				NonSSL:   true,
@@ -479,7 +479,7 @@ func TestDocker_ExtractLayerWorker(t *testing.T) {
 			}), tc.name)
 		}
 
-		de := DockerExtractor{
+		de := Extractor{
 			Option: types.DockerOption{
 				AuthURL:  ts.URL,
 				NonSSL:   true,
@@ -553,7 +553,7 @@ func getTarGzBuf(layerData []byte) bytes.Buffer {
 }
 
 func TestDocker_ExtractLayerFiles(t *testing.T) {
-	de := DockerExtractor{}
+	de := Extractor{}
 
 	layerCh := make(chan layer)
 	errCh := make(chan error)
