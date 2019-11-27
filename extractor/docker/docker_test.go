@@ -15,19 +15,14 @@ import (
 	"testing"
 	"time"
 
-	"github.com/opencontainers/go-digest"
-
-	"github.com/genuinetools/reg/registry"
-
-	"github.com/docker/docker/client"
-
-	"github.com/stretchr/testify/assert"
-
-	"github.com/aquasecurity/fanal/types"
-
 	"github.com/aquasecurity/fanal/extractor"
+	"github.com/aquasecurity/fanal/types"
+	"github.com/docker/docker/client"
+	"github.com/genuinetools/reg/registry"
+	"github.com/opencontainers/go-digest"
 	bolt "github.com/simar7/gokv/bbolt"
 	kvtypes "github.com/simar7/gokv/types"
+	"github.com/stretchr/testify/assert"
 )
 
 func setupCache() (*bolt.Store, *os.File, error) {

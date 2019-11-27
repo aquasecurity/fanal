@@ -13,24 +13,19 @@ import (
 	"strings"
 	"time"
 
-	"github.com/simar7/gokv/encoding"
-
 	"github.com/aquasecurity/fanal/analyzer/library"
-	"github.com/aquasecurity/fanal/utils"
-
-	"github.com/opencontainers/go-digest"
-
 	"github.com/aquasecurity/fanal/extractor"
 	"github.com/aquasecurity/fanal/extractor/docker/token/ecr"
 	"github.com/aquasecurity/fanal/extractor/docker/token/gcr"
 	"github.com/aquasecurity/fanal/types"
-
-	//"github.com/aquasecurity/fanal/cache"
+	"github.com/aquasecurity/fanal/utils"
 	"github.com/docker/distribution/manifest/schema2"
 	"github.com/docker/docker/client"
 	"github.com/genuinetools/reg/registry"
 	"github.com/knqyf263/nested"
+	"github.com/opencontainers/go-digest"
 	bolt "github.com/simar7/gokv/bbolt"
+	"github.com/simar7/gokv/encoding"
 	kvtypes "github.com/simar7/gokv/types"
 	"golang.org/x/xerrors"
 )
@@ -67,7 +62,6 @@ type layer struct {
 
 type Extractor struct {
 	Client *client.Client
-	//Cache  cache.Cache
 	Cache  *bolt.Store
 	Option types.DockerOption
 }
@@ -93,8 +87,7 @@ func NewDockerExtractor(option types.DockerOption) (Extractor, error) {
 	return Extractor{
 		Option: option,
 		Client: cli,
-		//Cache:  kv.Initialize(utils.CacheDir()),
-		Cache: kv,
+		Cache:  kv,
 	}, nil
 }
 

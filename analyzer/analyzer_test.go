@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/aquasecurity/fanal/extractor"
-
 	"github.com/stretchr/testify/assert"
 )
 
