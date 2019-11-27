@@ -25,7 +25,6 @@ import (
 
 	"github.com/aquasecurity/fanal/types"
 
-	"github.com/aquasecurity/fanal/cache"
 	"github.com/aquasecurity/fanal/extractor"
 	bolt "github.com/simar7/gokv/bbolt"
 	kvtypes "github.com/simar7/gokv/types"
