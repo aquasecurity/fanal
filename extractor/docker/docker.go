@@ -66,7 +66,7 @@ type Extractor struct {
 	Option types.DockerOption
 }
 
-func NewDockerExtractor(option types.DockerOption) (Extractor, error) {
+func NewDockerExtractorWithCache(option types.DockerOption, cacheOptions bolt.Options) (Extractor, error) {
 	RegisterRegistry(&gcr.GCR{})
 	RegisterRegistry(&ecr.ECR{})
 
@@ -76,11 +76,7 @@ func NewDockerExtractor(option types.DockerOption) (Extractor, error) {
 	}
 
 	var kv *bolt.Store
-	if kv, err = bolt.NewStore(bolt.Options{
-		RootBucketName: "fanal",
-		Path:           "kv.db",
-		Codec:          encoding.JSON,
-	}); err != nil {
+	if kv, err = bolt.NewStore(cacheOptions); err != nil {
 		return Extractor{}, xerrors.Errorf("error initializing cache: %w", err)
 	}
 
@@ -89,6 +85,14 @@ func NewDockerExtractor(option types.DockerOption) (Extractor, error) {
 		Client: cli,
 		Cache:  kv,
 	}, nil
+}
+
+func NewDockerExtractor(option types.DockerOption) (Extractor, error) {
+	return NewDockerExtractorWithCache(option, bolt.Options{
+		RootBucketName: "fanal",
+		Path:           "kv.db",
+		Codec:          encoding.JSON,
+	})
 }
 
 func applyLayers(layerPaths []string, filesInLayers map[string]extractor.FileMap, opqInLayers map[string]extractor.OPQDirs) (extractor.FileMap, error) {

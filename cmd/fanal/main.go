@@ -29,6 +29,7 @@ import (
 	"github.com/aquasecurity/fanal/extractor/docker"
 	"github.com/aquasecurity/fanal/types"
 	"golang.org/x/crypto/ssh/terminal"
+	"golang.org/x/xerrors"
 )
 
 func main() {
@@ -37,21 +38,17 @@ func main() {
 	}
 }
 
-// TODO: Update this example to include new kv cache
 func run() (err error) {
 	ctx := context.Background()
 	tarPath := flag.String("f", "-", "layer.tar path")
-	//clearCache := flag.Bool("clear", false, "clear cache")
+	clearCache := flag.Bool("clear", false, "clear cache")
 	flag.Parse()
 
-	// TODO: Bring this back later to configure cache
-	//c := cache.Initialize(utils.CacheDir())
-	//
-	//if *clearCache {
-	//if err = c.Clear(); err != nil {
-	//	return xerrors.Errorf("error in cache clear: %w", err)
-	//}
-	//}
+	if *clearCache {
+		if err = os.RemoveAll("kv.db"); err != nil {
+			return xerrors.Errorf("error in cache clear: %w", err)
+		}
+	}
 
 	args := flag.Args()
 
