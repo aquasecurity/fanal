@@ -168,7 +168,7 @@ func (d Extractor) SaveLocalImage(ctx context.Context, imageName string) (io.Rea
 	})
 
 	if found {
-		return ioutil.NopCloser(bytes.NewReader(storedImage)), nil
+		return bytes.NewReader(storedImage), nil
 	}
 
 	var savedImage []byte
@@ -192,7 +192,7 @@ func (d Extractor) SaveLocalImage(ctx context.Context, imageName string) (io.Rea
 		}
 	}
 
-	return ioutil.NopCloser(bytes.NewReader(savedImage)), nil
+	return bytes.NewReader(savedImage), nil
 }
 
 func (d Extractor) saveLocalImage(ctx context.Context, imageName string) (io.ReadCloser, error) {
