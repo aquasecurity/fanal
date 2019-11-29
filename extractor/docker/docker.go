@@ -37,8 +37,9 @@ const (
 )
 
 var (
-	ErrFailedCacheWrite = errors.New("failed to write to cache")
-	ErrFailedCacheRead  = errors.New("failed to read from cache")
+	ErrFailedCacheWrite  = errors.New("failed to write to cache")
+	ErrFailedCacheRead   = errors.New("failed to read from cache")
+	ErrBadCacheDataFound = errors.New("bad cache data found, redownloading")
 )
 
 type manifest struct {
@@ -309,17 +310,16 @@ func (d Extractor) extractLayerWorker(dig digest.Digest, r *registry.Registry, c
 	})
 
 	if found {
-		// uncompress from gzip to tar
-		gzipReader, err := gzip.NewReader(bytes.NewReader(cacheContent)) // TODO: DRY
+		var err error
+		tarContent, err = extractTarContent(cacheContent, dig, tarContent)
 		if err != nil {
-			errCh <- xerrors.Errorf("%s failed to uncompress the layer(%s): %w", ErrFailedCacheRead, dig, err)
-			return
-		}
-
-		tarContent, err = ioutil.ReadAll(gzipReader)
-		if err != nil {
-			log.Printf("%s bad cache data found, redownloading... \n", ErrFailedCacheRead)
-			found = false
+			switch err {
+			case ErrBadCacheDataFound:
+				found = false
+			default:
+				errCh <- err
+				return
+			}
 		}
 	}
 
@@ -345,90 +345,112 @@ func (d Extractor) extractLayerWorker(dig digest.Digest, r *registry.Registry, c
 			return
 		}
 
-		var storeLayerInCache bool
+		var storeInCache bool
 		var cacheBuf bytes.Buffer
-
 		if len(filenames) > 0 {
-			// Create a new tar to store in the cache
-			twc := tar.NewWriter(&cacheBuf)
-
-			// check what files are inside the tar
-			tr := tar.NewReader(bytes.NewReader(tarContent))
-			for {
-				hdr, err := tr.Next()
-				if err == io.EOF {
-					break // end of archive
-				}
-				if err != nil {
-					errCh <- xerrors.Errorf("%s: invalid tar: %w", ErrFailedCacheWrite, err)
-					return
-				}
-				for _, file := range filenames {
-					if file == hdr.Name {
-						storeLayerInCache = true
-
-						var fileBuf bytes.Buffer
-						n, err := io.Copy(&fileBuf, tr)
-						if err != nil {
-							errCh <- xerrors.Errorf("%s: %s", ErrFailedCacheWrite, err)
-							return
-						}
-
-						hdrtwc := &tar.Header{
-							Name: hdr.Name,
-							Mode: 0600,
-							Size: n,
-						}
-
-						if err := twc.WriteHeader(hdrtwc); err != nil {
-							errCh <- xerrors.Errorf("%s: %s", ErrFailedCacheWrite, err)
-							return
-						}
-
-						_, err = twc.Write(fileBuf.Next(int(n)))
-						if err != nil {
-							errCh <- xerrors.Errorf("%s: %s", ErrFailedCacheWrite, err)
-							return
-						}
-						break
-					}
-				}
-			}
-
-			if err := twc.Close(); err != nil {
-				errCh <- xerrors.Errorf("%s: %s", ErrFailedCacheWrite, err)
+			if cacheBuf, storeInCache, err = getFilteredTarballBuffer(tarContent, filenames); err != nil {
+				errCh <- err
 				return
 			}
 		}
 
 		// only store in cache if a required file was found
-		if storeLayerInCache { // TODO: Refactor
-			// compress before storage
-			var b bytes.Buffer
-			w, _ := gzip.NewWriterLevel(&b, gzip.BestCompression)
-			cacheBytes, _ := ioutil.ReadAll(&cacheBuf)
-			_, err = w.Write(cacheBytes)
-			if err != nil {
-				errCh <- xerrors.Errorf("%s: %s\n", ErrFailedCacheWrite, err)
+		if storeInCache {
+			if ok := d.storeLayerInCache(cacheBuf, err, errCh, dig); !ok {
 				return
-			}
-			if err := w.Close(); err != nil {
-				errCh <- xerrors.Errorf("%s: %s\n", ErrFailedCacheWrite, err)
-				return
-			}
-
-			if err := d.Cache.BatchSet(kvtypes.BatchSetItemInput{
-				BucketName: "layertars",
-				Keys:       []string{string(dig)},
-				Values:     b.Bytes(),
-			}); err != nil {
-				log.Printf("an error occurred while caching: %s\n", err)
 			}
 		}
 	}
 
 	layerCh <- layer{ID: dig, Content: ioutil.NopCloser(bytes.NewReader(tarContent))}
 	return
+}
+
+func extractTarContent(cacheContent []byte, dig digest.Digest, tarContent []byte) ([]byte, error) {
+	// uncompress from gzip to tar
+	gzipReader, err := gzip.NewReader(bytes.NewReader(cacheContent))
+	if err != nil {
+		return nil, xerrors.Errorf("%s failed to uncompress the layer(%s): %w", ErrFailedCacheRead, dig, err)
+	}
+	tarContent, err = ioutil.ReadAll(gzipReader)
+	if err != nil {
+		return nil, ErrBadCacheDataFound
+	}
+	return tarContent, nil
+}
+
+func getFilteredTarballBuffer(fullTarContent []byte, requiredFilenames []string) (bytes.Buffer, bool, error) {
+	var requiredFileFound bool
+
+	var cacheBuf bytes.Buffer
+	// Create a new tar to store in the cache
+	twc := tar.NewWriter(&cacheBuf)
+	// check what files are inside the tar
+	tr := tar.NewReader(bytes.NewReader(fullTarContent))
+	for {
+		hdr, err := tr.Next()
+		if err == io.EOF {
+			break // end of archive
+		}
+		if err != nil {
+			return cacheBuf, false, xerrors.Errorf("%s: invalid tar: %w", ErrFailedCacheWrite, err)
+		}
+		for _, file := range requiredFilenames {
+			if file == hdr.Name {
+				requiredFileFound = true
+
+				var fileBuf bytes.Buffer
+				n, err := io.Copy(&fileBuf, tr)
+				if err != nil {
+					return cacheBuf, requiredFileFound, xerrors.Errorf("%s: %s", ErrFailedCacheWrite, err)
+				}
+
+				hdrtwc := &tar.Header{
+					Name: hdr.Name,
+					Mode: 0600,
+					Size: n,
+				}
+
+				if err := twc.WriteHeader(hdrtwc); err != nil {
+					return cacheBuf, requiredFileFound, xerrors.Errorf("%s: %s", ErrFailedCacheWrite, err)
+				}
+
+				_, err = twc.Write(fileBuf.Next(int(n)))
+				if err != nil {
+					return cacheBuf, requiredFileFound, xerrors.Errorf("%s: %s", ErrFailedCacheWrite, err)
+				}
+				break
+			}
+		}
+	}
+	if err := twc.Close(); err != nil {
+		return cacheBuf, requiredFileFound, xerrors.Errorf("%s: %s", ErrFailedCacheWrite, err)
+	}
+	return cacheBuf, requiredFileFound, nil
+}
+
+func (d Extractor) storeLayerInCache(cacheBuf bytes.Buffer, err error, errCh chan error, dig digest.Digest) bool {
+	// compress before storage
+	var b bytes.Buffer
+	w, _ := gzip.NewWriterLevel(&b, gzip.BestCompression)
+	cacheBytes, _ := ioutil.ReadAll(&cacheBuf)
+	_, err = w.Write(cacheBytes)
+	if err != nil {
+		errCh <- xerrors.Errorf("%s: %s\n", ErrFailedCacheWrite, err)
+		return false
+	}
+	if err := w.Close(); err != nil {
+		errCh <- xerrors.Errorf("%s: %s\n", ErrFailedCacheWrite, err)
+		return false
+	}
+	if err := d.Cache.BatchSet(kvtypes.BatchSetItemInput{
+		BucketName: "layertars",
+		Keys:       []string{string(dig)},
+		Values:     b.Bytes(),
+	}); err != nil {
+		log.Printf("an error occurred while caching: %s\n", err)
+	}
+	return true
 }
 
 func getValidManifest(ctx context.Context, r *registry.Registry, image registry.Image) (*schema2.DeserializedManifest, error) {
