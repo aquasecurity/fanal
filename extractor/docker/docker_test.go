@@ -399,9 +399,17 @@ func TestDocker_ExtractLayerWorker(t *testing.T) {
 	testCases := []struct {
 		name          string
 		cacheHit      bool
+		garbageCache  bool
 		requiredFiles []string
 		cacheWB       bool
 	}{
+		{
+			name:          "happy path with cache hit with garbage cache and write back",
+			cacheHit:      true,
+			garbageCache:  true,
+			requiredFiles: []string{"testdir/helloworld.txt", "testdir/badworld.txt"},
+			cacheWB:       true,
+		},
 		{
 			name:          "happy path with cache miss and write back",
 			cacheHit:      false,
@@ -450,11 +458,21 @@ func TestDocker_ExtractLayerWorker(t *testing.T) {
 
 		b := getTarGzBuf(layerData)
 		if tc.cacheHit {
-			assert.NoError(t, s.Set(kvtypes.SetItemInput{
-				BucketName: "layertars",
-				Key:        string(inputDigest),
-				Value:      b.Bytes(),
-			}), tc.name)
+			switch tc.garbageCache {
+			case true:
+				garbage, _ := ioutil.ReadFile("testdata/invalidgzvalidtar.tar.gz")
+				assert.NoError(t, s.Set(kvtypes.SetItemInput{
+					BucketName: "layertars",
+					Key:        string(inputDigest),
+					Value:      garbage,
+				}), tc.name)
+			default:
+				assert.NoError(t, s.Set(kvtypes.SetItemInput{
+					BucketName: "layertars",
+					Key:        string(inputDigest),
+					Value:      b.Bytes(),
+				}), tc.name)
+			}
 		}
 
 		de := Extractor{

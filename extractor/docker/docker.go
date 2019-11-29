@@ -37,9 +37,7 @@ const (
 )
 
 var (
-	ErrFailedCacheWrite  = errors.New("failed to write to cache")
-	ErrFailedCacheRead   = errors.New("failed to read from cache")
-	ErrBadCacheDataFound = errors.New("bad cache data found, redownloading")
+	ErrFailedCacheWrite = errors.New("failed to write to cache")
 )
 
 type manifest struct {
@@ -313,13 +311,7 @@ func (d Extractor) extractLayerWorker(dig digest.Digest, r *registry.Registry, c
 		var err error
 		tarContent, err = extractTarContent(cacheContent, dig)
 		if err != nil {
-			switch err {
-			case ErrBadCacheDataFound:
-				found = false
-			default:
-				errCh <- err
-				return
-			}
+			found = false
 		}
 	}
 
@@ -332,7 +324,7 @@ func (d Extractor) extractLayerWorker(dig digest.Digest, r *registry.Registry, c
 		defer rc.Close()
 
 		// read the incoming gzip from the layer
-		gzipReader, err := gzip.NewReader(rc) // TODO: DRY
+		gzipReader, err := gzip.NewReader(rc)
 		if err != nil {
 			errCh <- xerrors.Errorf("could not init gzip reader: %w", err)
 			return
@@ -371,11 +363,11 @@ func extractTarContent(cacheContent []byte, dig digest.Digest) ([]byte, error) {
 	// uncompress from gzip to tar
 	gzipReader, err := gzip.NewReader(bytes.NewReader(cacheContent))
 	if err != nil {
-		return nil, xerrors.Errorf("%s: failed to uncompress the layer(%s): %w", ErrFailedCacheRead, dig, err)
+		return nil, err
 	}
 	tarContent, err = ioutil.ReadAll(gzipReader)
 	if err != nil {
-		return nil, ErrBadCacheDataFound
+		return nil, err
 	}
 	return tarContent, nil
 }
