@@ -17,6 +17,7 @@ require (
 	github.com/kylelemons/godebug v0.0.0-20170820004349-d65d576e9348
 	github.com/opencontainers/go-digest v1.0.0-rc1
 	github.com/pkg/errors v0.8.1
+	github.com/pkg/profile v1.4.0
 	github.com/simar7/gokv v0.1.0
 	github.com/stretchr/testify v1.4.0
 	golang.org/x/crypto v0.0.0-20190404164418-38d8ce5564a5

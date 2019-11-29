@@ -6,6 +6,7 @@ import (
 	"compress/gzip"
 	"context"
 	"encoding/json"
+	"errors"
 	"io"
 	"io/ioutil"
 	"log"
@@ -33,6 +34,11 @@ import (
 const (
 	opq string = ".wh..wh..opq"
 	wh  string = ".wh."
+)
+
+var (
+	ErrFailedCacheWrite = errors.New("failed to write to cache")
+	ErrFailedCacheRead  = errors.New("failed to read from cache")
 )
 
 type manifest struct {
@@ -306,16 +312,15 @@ func (d Extractor) extractLayerWorker(dig digest.Digest, r *registry.Registry, c
 		// uncompress from gzip to tar
 		gzipReader, err := gzip.NewReader(bytes.NewReader(cacheContent)) // TODO: DRY
 		if err != nil {
-			errCh <- xerrors.Errorf("failed to uncompress the layer(%s): %w", dig, err)
+			errCh <- xerrors.Errorf("%s failed to uncompress the layer(%s): %w", ErrFailedCacheRead, dig, err)
 			return
 		}
 
 		tarContent, err = ioutil.ReadAll(gzipReader)
 		if err != nil {
-			log.Println("bad cache data found, redownloading... err: ", err)
+			log.Printf("%s bad cache data found, redownloading... \n", ErrFailedCacheRead)
 			found = false
 		}
-		gzipReader.Close()
 	}
 
 	if !found {
@@ -341,46 +346,76 @@ func (d Extractor) extractLayerWorker(dig digest.Digest, r *registry.Registry, c
 		}
 
 		var storeLayerInCache bool
+		var cacheBuf bytes.Buffer
 
 		if len(filenames) > 0 {
+			// Create a new tar to store in the cache
+			twc := tar.NewWriter(&cacheBuf)
+
 			// check what files are inside the tar
 			tr := tar.NewReader(bytes.NewReader(tarContent))
 			for {
-				if storeLayerInCache {
-					break
-				}
 				hdr, err := tr.Next()
 				if err == io.EOF {
 					break // end of archive
 				}
 				if err != nil {
-					errCh <- xerrors.Errorf("invalid tar: %w", err)
+					errCh <- xerrors.Errorf("%s: invalid tar: %w", ErrFailedCacheWrite, err)
 					return
 				}
 				for _, file := range filenames {
 					if file == hdr.Name {
 						storeLayerInCache = true
+
+						var fileBuf bytes.Buffer
+						n, err := io.Copy(&fileBuf, tr)
+						if err != nil {
+							errCh <- xerrors.Errorf("%s: %s", ErrFailedCacheWrite, err)
+							return
+						}
+
+						hdrtwc := &tar.Header{
+							Name: hdr.Name,
+							Mode: 0600,
+							Size: n,
+						}
+
+						if err := twc.WriteHeader(hdrtwc); err != nil {
+							errCh <- xerrors.Errorf("%s: %s", ErrFailedCacheWrite, err)
+							return
+						}
+
+						_, err = twc.Write(fileBuf.Next(int(n)))
+						if err != nil {
+							errCh <- xerrors.Errorf("%s: %s", ErrFailedCacheWrite, err)
+							return
+						}
+						break
 					}
 				}
+			}
+
+			if err := twc.Close(); err != nil {
+				errCh <- xerrors.Errorf("%s: %s", ErrFailedCacheWrite, err)
+				return
 			}
 		}
 
 		// only store in cache if a required file was found
-		if storeLayerInCache {
+		if storeLayerInCache { // TODO: Refactor
 			// compress before storage
 			var b bytes.Buffer
-			w, err := gzip.NewWriterLevel(&b, gzip.BestCompression)
+			w, _ := gzip.NewWriterLevel(&b, gzip.BestCompression)
+			cacheBytes, _ := ioutil.ReadAll(&cacheBuf)
+			_, err = w.Write(cacheBytes)
 			if err != nil {
-				errCh <- xerrors.Errorf("unable to init gzip compressor: %w", err)
+				errCh <- xerrors.Errorf("%s: %s\n", ErrFailedCacheWrite, err)
 				return
 			}
-
-			_, err = w.Write(tarContent)
-			if err != nil {
-				log.Printf("an error ocurred while gzipping: %s\n", err)
+			if err := w.Close(); err != nil {
+				errCh <- xerrors.Errorf("%s: %s\n", ErrFailedCacheWrite, err)
+				return
 			}
-			w.Flush()
-			w.Close()
 
 			if err := d.Cache.BatchSet(kvtypes.BatchSetItemInput{
 				BucketName: "layertars",
@@ -423,7 +458,7 @@ func (d Extractor) ExtractFromFile(ctx context.Context, r io.Reader, filenames [
 			break
 		}
 		if err != nil {
-			return nil, xerrors.Errorf("failed to extract the archive: %w", err)
+			return nil, xerrors.Errorf(">>> 459: failed to extract the archive: %w", err)
 		}
 
 		switch {
@@ -490,7 +525,7 @@ func (d Extractor) ExtractFiles(layerReader io.Reader, filenames []string) (extr
 			break
 		}
 		if err != nil {
-			return data, nil, xerrors.Errorf("failed to extract the archive: %w", err)
+			return data, nil, xerrors.Errorf(">>> 526: failed to extract the archive: %w", err)
 		}
 
 		filePath := hdr.Name
