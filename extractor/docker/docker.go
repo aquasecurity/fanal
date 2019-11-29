@@ -23,6 +23,7 @@ import (
 	"github.com/docker/distribution/manifest/schema2"
 	"github.com/docker/docker/client"
 	"github.com/genuinetools/reg/registry"
+	"github.com/klauspost/compress/zstd"
 	"github.com/knqyf263/nested"
 	"github.com/opencontainers/go-digest"
 	bolt "github.com/simar7/gokv/bbolt"
@@ -309,7 +310,7 @@ func (d Extractor) extractLayerWorker(dig digest.Digest, r *registry.Registry, c
 
 	if found {
 		var err error
-		tarContent, err = extractTarContent(cacheContent, dig)
+		tarContent, err = extractTarContent(cacheContent)
 		if err != nil {
 			found = false
 		}
@@ -358,17 +359,19 @@ func (d Extractor) extractLayerWorker(dig digest.Digest, r *registry.Registry, c
 	return
 }
 
-func extractTarContent(cacheContent []byte, dig digest.Digest) ([]byte, error) {
+func extractTarContent(cacheContent []byte) ([]byte, error) {
 	var tarContent []byte
-	// uncompress from gzip to tar
-	gzipReader, err := gzip.NewReader(bytes.NewReader(cacheContent))
+
+	dec, err := zstd.NewReader(nil)
 	if err != nil {
 		return nil, err
 	}
-	tarContent, err = ioutil.ReadAll(gzipReader)
+
+	tarContent, err = dec.DecodeAll(cacheContent, nil)
 	if err != nil {
 		return nil, err
 	}
+
 	return tarContent, nil
 }
 
@@ -423,23 +426,16 @@ func getFilteredTarballBuffer(fullTarContent []byte, requiredFilenames []string)
 }
 
 func (d Extractor) storeLayerInCache(cacheBuf bytes.Buffer, err error, errCh chan error, dig digest.Digest) bool {
-	// compress before storage
-	var b bytes.Buffer
-	w, _ := gzip.NewWriterLevel(&b, gzip.BestCompression)
-	cacheBytes, _ := ioutil.ReadAll(&cacheBuf)
-	_, err = w.Write(cacheBytes)
+	// compress tar to zstd before storing to cache
+	e, err := zstd.NewWriter(nil, zstd.WithEncoderLevel(zstd.SpeedDefault))
 	if err != nil {
-		errCh <- xerrors.Errorf("%s: %s\n", ErrFailedCacheWrite, err)
-		return false
+		log.Println(err)
 	}
-	if err := w.Close(); err != nil {
-		errCh <- xerrors.Errorf("%s: %s\n", ErrFailedCacheWrite, err)
-		return false
-	}
+	dst := e.EncodeAll(cacheBuf.Bytes(), nil)
 	if err := d.Cache.BatchSet(kvtypes.BatchSetItemInput{
 		BucketName: "layertars",
 		Keys:       []string{string(dig)},
-		Values:     b.Bytes(),
+		Values:     dst,
 	}); err != nil {
 		log.Printf("an error occurred while caching: %s\n", err)
 	}

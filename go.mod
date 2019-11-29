@@ -11,13 +11,13 @@ require (
 	github.com/docker/distribution v2.7.1+incompatible
 	github.com/docker/docker v1.4.2-0.20190916154449-92cc603036dd
 	github.com/genuinetools/reg v0.16.1
+	github.com/klauspost/compress v1.9.3
 	github.com/knqyf263/go-deb-version v0.0.0-20190517075300-09fca494f03d
 	github.com/knqyf263/go-rpmdb v0.0.0-20190501070121-10a1c42a10dc
 	github.com/knqyf263/nested v0.0.1
 	github.com/kylelemons/godebug v0.0.0-20170820004349-d65d576e9348
 	github.com/opencontainers/go-digest v1.0.0-rc1
 	github.com/pkg/errors v0.8.1
-	github.com/pkg/profile v1.4.0
 	github.com/simar7/gokv v0.1.0
 	github.com/stretchr/testify v1.4.0
 	golang.org/x/crypto v0.0.0-20190404164418-38d8ce5564a5

@@ -17,6 +17,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/klauspost/compress/zstd"
+
 	"github.com/aquasecurity/fanal/extractor"
 	"github.com/aquasecurity/fanal/types"
 	"github.com/docker/docker/client"
@@ -456,7 +458,7 @@ func TestDocker_ExtractLayerWorker(t *testing.T) {
 		}()
 		assert.NoError(t, err, tc.name)
 
-		b := getTarGzBuf(layerData)
+		b := getTarZstdBuf(layerData)
 		if tc.cacheHit {
 			switch tc.garbageCache {
 			case true:
@@ -470,7 +472,7 @@ func TestDocker_ExtractLayerWorker(t *testing.T) {
 				assert.NoError(t, s.Set(kvtypes.SetItemInput{
 					BucketName: "layertars",
 					Key:        string(inputDigest),
-					Value:      b.Bytes(),
+					Value:      b,
 				}), tc.name)
 			}
 		}
@@ -525,7 +527,7 @@ func TestDocker_ExtractLayerWorker(t *testing.T) {
 			assert.True(t, found, tc.name)
 			assert.NoError(t, err, tc.name)
 
-			tbuf, err := extractTarContent(actualCacheContents, inputDigest)
+			tbuf, err := extractTarContent(actualCacheContents)
 			assert.NoError(t, err, tc.name)
 			ftbuf, requiredFileFound, err := getFilteredTarballBuffer(tbuf, tc.requiredFiles)
 			assert.NoError(t, err, tc.name)
@@ -561,16 +563,12 @@ func TestDocker_ExtractLayerWorker(t *testing.T) {
 
 }
 
-func getTarGzBuf(layerData []byte) bytes.Buffer {
+func getTarZstdBuf(layerData []byte) []byte {
 	gzr, _ := gzip.NewReader(bytes.NewBuffer(layerData))
 	expectedTarContent, _ := ioutil.ReadAll(gzr)
-	var wb bytes.Buffer
-	gzw, _ := gzip.NewWriterLevel(&wb, gzip.BestCompression)
-	_, _ = gzw.Write(expectedTarContent)
-	gzw.Flush()
-	gzw.Close()
-	gzr.Close()
-	return wb
+	e, _ := zstd.NewWriter(nil, zstd.WithEncoderLevel(zstd.SpeedDefault))
+	_ = gzr.Close()
+	return e.EncodeAll(expectedTarContent, nil)
 }
 
 func TestDocker_ExtractLayerFiles(t *testing.T) {
