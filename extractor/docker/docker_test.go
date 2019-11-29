@@ -1,10 +1,12 @@
 package docker
 
 import (
+	"archive/tar"
 	"bytes"
 	"compress/gzip"
 	"context"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -504,7 +506,34 @@ func TestDocker_ExtractLayerWorker(t *testing.T) {
 		case true:
 			assert.True(t, found, tc.name)
 			assert.NoError(t, err, tc.name)
-			// TODO: Add assertion to check cache contents
+
+			tbuf, err := extractTarContent(actualCacheContents, inputDigest)
+			assert.NoError(t, err, tc.name)
+			ftbuf, requiredFileFound, err := getFilteredTarballBuffer(tbuf, tc.requiredFiles)
+			assert.NoError(t, err, tc.name)
+
+			// check if all required files were found in the cache
+			if len(tc.requiredFiles) > 0 {
+				assert.True(t, requiredFileFound, tc.name)
+				tr := tar.NewReader(&ftbuf)
+				numRequiredFilesFound := 0
+				for {
+					hdr, err := tr.Next()
+					if err == io.EOF {
+						break
+					}
+					if err != nil {
+						assert.FailNow(t, err.Error(), tc.name)
+					}
+					for _, file := range tc.requiredFiles {
+						if hdr.Name == file {
+							numRequiredFilesFound += 1
+						}
+					}
+				}
+				assert.Equal(t, len(tc.requiredFiles), numRequiredFilesFound, tc.name)
+			}
+
 		case false:
 			assert.False(t, found, tc.name)
 			assert.Empty(t, actualCacheContents, tc.name)

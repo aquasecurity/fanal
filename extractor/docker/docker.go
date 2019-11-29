@@ -311,7 +311,7 @@ func (d Extractor) extractLayerWorker(dig digest.Digest, r *registry.Registry, c
 
 	if found {
 		var err error
-		tarContent, err = extractTarContent(cacheContent, dig, tarContent)
+		tarContent, err = extractTarContent(cacheContent, dig)
 		if err != nil {
 			switch err {
 			case ErrBadCacheDataFound:
@@ -366,11 +366,12 @@ func (d Extractor) extractLayerWorker(dig digest.Digest, r *registry.Registry, c
 	return
 }
 
-func extractTarContent(cacheContent []byte, dig digest.Digest, tarContent []byte) ([]byte, error) {
+func extractTarContent(cacheContent []byte, dig digest.Digest) ([]byte, error) {
+	var tarContent []byte
 	// uncompress from gzip to tar
 	gzipReader, err := gzip.NewReader(bytes.NewReader(cacheContent))
 	if err != nil {
-		return nil, xerrors.Errorf("%s failed to uncompress the layer(%s): %w", ErrFailedCacheRead, dig, err)
+		return nil, xerrors.Errorf("%s: failed to uncompress the layer(%s): %w", ErrFailedCacheRead, dig, err)
 	}
 	tarContent, err = ioutil.ReadAll(gzipReader)
 	if err != nil {
