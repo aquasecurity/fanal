@@ -383,6 +383,8 @@ func getFilteredTarballBuffer(tr *tar.Reader, requiredFilenames []string) (bytes
 	var cacheBuf bytes.Buffer
 	// Create a new tar to store in the cache
 	twc := tar.NewWriter(&cacheBuf)
+	defer twc.Close()
+
 	// check what files are inside the tar
 	for {
 		hdr, err := tr.Next()
@@ -413,9 +415,6 @@ func getFilteredTarballBuffer(tr *tar.Reader, requiredFilenames []string) (bytes
 				break
 			}
 		}
-	}
-	if err := twc.Close(); err != nil {
-		return cacheBuf, requiredFileFound, xerrors.Errorf("%s: %s", ErrFailedCacheWrite, err)
 	}
 	return cacheBuf, requiredFileFound, nil
 }
