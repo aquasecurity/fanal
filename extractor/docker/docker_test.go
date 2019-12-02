@@ -319,15 +319,15 @@ func TestDockerExtractor_Extract(t *testing.T) {
 		{
 			name: "sad path: corrupt layer data invalid gzip",
 			manifestResp: `{
-		 "schemaVersion": 2,
-		 "mediaType": "application/vnd.docker.distribution.manifest.v2+json",
-		 "layers": [
-		    {
-		       "mediaType": "application/vnd.docker.image.rootfs.diff.tar.gzip",
-		       "size": 153263,
-		       "digest": "sha256:62d8908bee94c202b2d35224a221aaa2058318bfa9879fa541efaecba272331b"
-		    }
-		 ]
+		"schemaVersion": 2,
+		"mediaType": "application/vnd.docker.distribution.manifest.v2+json",
+		"layers": [
+		   {
+		      "mediaType": "application/vnd.docker.image.rootfs.diff.tar.gzip",
+		      "size": 153263,
+		      "digest": "sha256:62d8908bee94c202b2d35224a221aaa2058318bfa9879fa541efaecba272331b"
+		   }
+		]
 		}`,
 			fileName:        "testdata/opq.tar",
 			blobData:        "foo",
@@ -406,15 +406,15 @@ func TestDocker_ExtractLayerWorker(t *testing.T) {
 		cacheWB       bool
 	}{
 		{
-			name:          "happy path with cache hit with garbage cache and write back",
-			cacheHit:      true,
-			garbageCache:  true,
+			name:          "happy path with cache miss and write back",
+			cacheHit:      false,
 			requiredFiles: []string{"testdir/helloworld.txt", "testdir/badworld.txt"},
 			cacheWB:       true,
 		},
 		{
-			name:          "happy path with cache miss and write back",
-			cacheHit:      false,
+			name:          "happy path with cache hit with garbage cache and write back",
+			cacheHit:      true,
+			garbageCache:  true,
 			requiredFiles: []string{"testdir/helloworld.txt", "testdir/badworld.txt"},
 			cacheWB:       true,
 		},
@@ -529,7 +529,7 @@ func TestDocker_ExtractLayerWorker(t *testing.T) {
 
 			tbuf, err := extractTarContent(actualCacheContents)
 			assert.NoError(t, err, tc.name)
-			ftbuf, requiredFileFound, err := getFilteredTarballBuffer(tbuf, tc.requiredFiles)
+			ftbuf, requiredFileFound, err := getFilteredTarballBuffer(tar.NewReader(bytes.NewReader(tbuf)), tc.requiredFiles)
 			assert.NoError(t, err, tc.name)
 
 			// check if all required files were found in the cache

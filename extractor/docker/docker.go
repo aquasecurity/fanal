@@ -35,6 +35,8 @@ import (
 const (
 	opq string = ".wh..wh..opq"
 	wh  string = ".wh."
+
+	KVImageBucket string = "imagebucket"
 )
 
 var (
@@ -96,7 +98,7 @@ func NewDockerExtractorWithCache(option types.DockerOption, cacheOptions bolt.Op
 func NewDockerExtractor(option types.DockerOption) (Extractor, error) {
 	return NewDockerExtractorWithCache(option, bolt.Options{
 		RootBucketName: "fanal",
-		Path:           "kv.db",
+		Path:           utils.CacheDir(),
 		Codec:          encoding.JSON,
 	})
 }
@@ -168,7 +170,7 @@ func (d Extractor) SaveLocalImage(ctx context.Context, imageName string) (io.Rea
 
 	var storedImage []byte
 	found, err := d.Cache.Get(kvtypes.GetItemInput{
-		BucketName: "imagebucket",
+		BucketName: KVImageBucket,
 		Key:        imageName,
 		Value:      &storedImage,
 	})
@@ -300,7 +302,7 @@ func (d Extractor) extractLayerFiles(layerCh chan layer, errCh chan error, ctx c
 }
 
 func (d Extractor) extractLayerWorker(dig digest.Digest, r *registry.Registry, ctx context.Context, image registry.Image, errCh chan error, layerCh chan layer, filenames []string) {
-	var tarContent []byte
+	var tarContent bytes.Buffer
 	var cacheContent []byte
 	found, _ := d.Cache.Get(kvtypes.GetItemInput{
 		BucketName: "layertars",
@@ -309,8 +311,12 @@ func (d Extractor) extractLayerWorker(dig digest.Digest, r *registry.Registry, c
 	})
 
 	if found {
-		var err error
-		tarContent, err = extractTarContent(cacheContent)
+		b, err := extractTarContent(cacheContent)
+		if err != nil || len(b) <= 0 {
+			found = false
+		}
+
+		_, err = tarContent.Write(b)
 		if err != nil {
 			found = false
 		}
@@ -332,16 +338,12 @@ func (d Extractor) extractLayerWorker(dig digest.Digest, r *registry.Registry, c
 		}
 		defer gzipReader.Close()
 
-		tarContent, err = ioutil.ReadAll(gzipReader)
-		if err != nil {
-			errCh <- xerrors.Errorf("invalid gzip: %w", err)
-			return
-		}
+		tarReader := tar.NewReader(io.TeeReader(gzipReader, &tarContent))
 
 		var storeInCache bool
 		var cacheBuf bytes.Buffer
 		if len(filenames) > 0 {
-			if cacheBuf, storeInCache, err = getFilteredTarballBuffer(tarContent, filenames); err != nil {
+			if cacheBuf, storeInCache, err = getFilteredTarballBuffer(tarReader, filenames); err != nil {
 				errCh <- err
 				return
 			}
@@ -355,7 +357,7 @@ func (d Extractor) extractLayerWorker(dig digest.Digest, r *registry.Registry, c
 		}
 	}
 
-	layerCh <- layer{ID: dig, Content: ioutil.NopCloser(bytes.NewReader(tarContent))}
+	layerCh <- layer{ID: dig, Content: ioutil.NopCloser(bytes.NewReader(tarContent.Bytes()))}
 	return
 }
 
@@ -375,14 +377,13 @@ func extractTarContent(cacheContent []byte) ([]byte, error) {
 	return tarContent, nil
 }
 
-func getFilteredTarballBuffer(fullTarContent []byte, requiredFilenames []string) (bytes.Buffer, bool, error) {
+func getFilteredTarballBuffer(tr *tar.Reader, requiredFilenames []string) (bytes.Buffer, bool, error) {
 	var requiredFileFound bool
 
 	var cacheBuf bytes.Buffer
 	// Create a new tar to store in the cache
 	twc := tar.NewWriter(&cacheBuf)
 	// check what files are inside the tar
-	tr := tar.NewReader(bytes.NewReader(fullTarContent))
 	for {
 		hdr, err := tr.Next()
 		if err == io.EOF {
@@ -395,23 +396,17 @@ func getFilteredTarballBuffer(fullTarContent []byte, requiredFilenames []string)
 			if file == hdr.Name {
 				requiredFileFound = true
 
-				var fileBuf bytes.Buffer
-				n, err := io.Copy(&fileBuf, tr)
-				if err != nil {
-					return cacheBuf, requiredFileFound, xerrors.Errorf("%s: %s", ErrFailedCacheWrite, err)
-				}
-
 				hdrtwc := &tar.Header{
 					Name: hdr.Name,
 					Mode: 0600,
-					Size: n,
+					Size: hdr.Size,
 				}
 
 				if err := twc.WriteHeader(hdrtwc); err != nil {
 					return cacheBuf, requiredFileFound, xerrors.Errorf("%s: %s", ErrFailedCacheWrite, err)
 				}
 
-				_, err = twc.Write(fileBuf.Next(int(n)))
+				_, err := io.Copy(twc, tr)
 				if err != nil {
 					return cacheBuf, requiredFileFound, xerrors.Errorf("%s: %s", ErrFailedCacheWrite, err)
 				}
