@@ -98,7 +98,7 @@ func NewDockerExtractorWithCache(option types.DockerOption, cacheOptions bolt.Op
 func NewDockerExtractor(option types.DockerOption) (Extractor, error) {
 	return NewDockerExtractorWithCache(option, bolt.Options{
 		RootBucketName: "fanal",
-		Path:           utils.CacheDir(),
+		Path:           utils.CacheDir() + "/cache.db",
 		Codec:          encoding.JSON,
 	})
 }

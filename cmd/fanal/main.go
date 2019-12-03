@@ -47,7 +47,7 @@ func run() (err error) {
 	flag.Parse()
 
 	if *clearCache {
-		if err = os.RemoveAll(utils.CacheDir()); err != nil {
+		if err = os.RemoveAll(utils.CacheDir() + "/cache.db"); err != nil {
 			return xerrors.Errorf("error in cache clear: %w", err)
 		}
 	}
