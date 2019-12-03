@@ -168,15 +168,22 @@ func (d Extractor) createRegistryClient(ctx context.Context, domain string) (*re
 func (d Extractor) SaveLocalImage(ctx context.Context, imageName string) (io.Reader, error) {
 	var storedReader io.Reader
 
-	var storedImage []byte
+	var storedImageBytes []byte
 	found, err := d.Cache.Get(kvtypes.GetItemInput{
 		BucketName: KVImageBucket,
 		Key:        imageName,
-		Value:      &storedImage,
+		Value:      &storedImageBytes,
 	})
 
 	if found {
-		return bytes.NewReader(storedImage), nil
+		dec, _ := zstd.NewReader(nil)
+		storedImage, err := dec.DecodeAll(storedImageBytes, nil)
+		if err == nil {
+			return bytes.NewReader(storedImage), nil
+		}
+
+		// bad cache, redownload
+		found = false
 	}
 
 	var savedImage []byte
@@ -191,10 +198,16 @@ func (d Extractor) SaveLocalImage(ctx context.Context, imageName string) (io.Rea
 			return nil, xerrors.Errorf("failed to read saved image: %w", err)
 		}
 
+		e, err := zstd.NewWriter(nil, zstd.WithEncoderLevel(zstd.SpeedDefault))
+		if err != nil {
+			return nil, err
+		}
+
+		dst := e.EncodeAll(savedImage, nil)
 		if err := d.Cache.BatchSet(kvtypes.BatchSetItemInput{
 			BucketName: "imagebucket",
 			Keys:       []string{imageName},
-			Values:     savedImage,
+			Values:     dst,
 		}); err != nil {
 			log.Println(err)
 		}

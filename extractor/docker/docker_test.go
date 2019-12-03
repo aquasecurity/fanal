@@ -221,12 +221,13 @@ func TestDockerExtractor_SaveLocalImage(t *testing.T) {
 		},
 	}
 
+	expectedCacheBytes := "foo"
 	for _, tc := range testCases {
 		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			httpPath := r.URL.String()
 			switch {
 			case strings.Contains(httpPath, "images/get?names=fooimage"):
-				_, _ = fmt.Fprint(w, "foocontent")
+				_, _ = fmt.Fprint(w, expectedCacheBytes)
 			default:
 				assert.FailNow(t, "unexpected path accessed: ", r.URL.String())
 			}
@@ -245,10 +246,12 @@ func TestDockerExtractor_SaveLocalImage(t *testing.T) {
 		assert.NoError(t, err)
 
 		if tc.cacheHit {
+			e, _ := zstd.NewWriter(nil, zstd.WithEncoderLevel(zstd.SpeedDefault))
+			dst := e.EncodeAll([]byte(expectedCacheBytes), nil)
 			_ = s.Set(kvtypes.SetItemInput{
 				BucketName: "imagebucket",
 				Key:        "fooimage",
-				Value:      []byte("foocontent"),
+				Value:      dst,
 			})
 		}
 
@@ -259,18 +262,24 @@ func TestDockerExtractor_SaveLocalImage(t *testing.T) {
 		}
 
 		r, err := de.SaveLocalImage(context.TODO(), "fooimage")
-		assert.NotNil(t, r, tc.name)
+		actualSavedTarBytes, _ := ioutil.ReadAll(r)
+		assert.Equal(t, []byte("foo"), actualSavedTarBytes[:], tc.name)
 		assert.NoError(t, err, tc.name)
 
+		// check the cache for what was stored
 		var actualValue []byte
 		found, err := de.Cache.Get(kvtypes.GetItemInput{
 			BucketName: "imagebucket",
 			Key:        "fooimage",
 			Value:      &actualValue,
 		})
+
 		assert.NoError(t, err, tc.name)
 		assert.True(t, found, tc.name)
-		assert.Equal(t, "foocontent", string(actualValue), tc.name)
+
+		dec, _ := zstd.NewReader(nil)
+		actualStoredValue, _ := dec.DecodeAll(actualValue, nil)
+		assert.Equal(t, expectedCacheBytes, string(actualStoredValue), tc.name)
 	}
 }
 
