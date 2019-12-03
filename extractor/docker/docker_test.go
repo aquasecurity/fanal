@@ -1,12 +1,8 @@
 package docker
 
 import (
-	"archive/tar"
-	"bytes"
-	"compress/gzip"
 	"context"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -442,7 +438,7 @@ func TestDocker_ExtractLayerWorker(t *testing.T) {
 
 	for _, tc := range testCases {
 		inputDigest := digest.Digest("sha256:62d8908bee94c202b2d35224a221aaa2058318bfa9879fa541efaecba272331b")
-		layerData, err := ioutil.ReadFile("../../utils/testdata/testdir.tar.gz")
+		layerData, err := ioutil.ReadFile("testdata/testdir.tar.gz")
 		assert.NoError(t, err)
 
 		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -467,7 +463,6 @@ func TestDocker_ExtractLayerWorker(t *testing.T) {
 		}()
 		assert.NoError(t, err, tc.name)
 
-		b := getTarZstdBuf(layerData)
 		if tc.cacheHit {
 			switch tc.garbageCache {
 			case true:
@@ -478,6 +473,7 @@ func TestDocker_ExtractLayerWorker(t *testing.T) {
 					Value:      garbage,
 				}), tc.name)
 			default:
+				b, _ := ioutil.ReadFile("testdata/testdir.tar.zstd")
 				assert.NoError(t, s.Set(kvtypes.SetItemInput{
 					BucketName: "layertars",
 					Key:        string(inputDigest),
@@ -535,47 +531,14 @@ func TestDocker_ExtractLayerWorker(t *testing.T) {
 		case true:
 			assert.True(t, found, tc.name)
 			assert.NoError(t, err, tc.name)
-
-			tbuf, err := extractTarContent(actualCacheContents)
-			assert.NoError(t, err, tc.name)
-			ftbuf, requiredFileFound, err := getFilteredTarballBuffer(tar.NewReader(bytes.NewReader(tbuf)), tc.requiredFiles)
-			assert.NoError(t, err, tc.name)
-
-			// check if all required files were found in the cache
-			if len(tc.requiredFiles) > 0 {
-				assert.True(t, requiredFileFound, tc.name)
-				tr := tar.NewReader(&ftbuf)
-				numRequiredFilesFound := 0
-				for {
-					hdr, err := tr.Next()
-					if err == io.EOF {
-						break
-					}
-					if err != nil {
-						assert.FailNow(t, err.Error(), tc.name)
-					}
-					for _, file := range tc.requiredFiles {
-						if hdr.Name == file {
-							numRequiredFilesFound += 1
-						}
-					}
-				}
-				assert.Equal(t, len(tc.requiredFiles), numRequiredFilesFound, tc.name)
-			}
+			expectedCacheContents, _ := ioutil.ReadFile("testdata/testdir.tar.zstd")
+			assert.Equal(t, expectedCacheContents, actualCacheContents, tc.name)
 
 		case false:
 			assert.False(t, found, tc.name)
 			assert.Empty(t, actualCacheContents, tc.name)
 		}
 	}
-}
-
-func getTarZstdBuf(layerData []byte) []byte {
-	gzr, _ := gzip.NewReader(bytes.NewBuffer(layerData))
-	expectedTarContent, _ := ioutil.ReadAll(gzr)
-	e, _ := zstd.NewWriter(nil, zstd.WithEncoderLevel(zstd.SpeedDefault))
-	_ = gzr.Close()
-	return e.EncodeAll(expectedTarContent, nil)
 }
 
 func TestDocker_ExtractLayerFiles(t *testing.T) {
