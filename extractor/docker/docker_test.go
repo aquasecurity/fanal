@@ -293,22 +293,28 @@ func TestDockerExtractor_Extract(t *testing.T) {
 		{
 			name: "happy path",
 			manifestResp: `{
-		  "schemaVersion": 2,
-		  "mediaType": "application/vnd.docker.distribution.manifest.v2+json",
-		  "layers": [
-		     {
-		        "mediaType": "application/vnd.docker.image.rootfs.diff.tar.gzip",
-		        "size": 153263,
-		        "digest": "sha256:62d8908bee94c202b2d35224a221aaa2058318bfa9879fa541efaecba272331b"
-		     }
-		  ]
+		 "schemaVersion": 2,
+		 "mediaType": "application/vnd.docker.distribution.manifest.v2+json",
+		 "layers": [
+		    {
+		       "mediaType": "application/vnd.docker.image.rootfs.diff.tar.gzip",
+		       "size": 153263,
+		       "digest": "sha256:shafortestdirslashhelloworlddottxt"
+		    },
+		    {
+		       "mediaType": "application/vnd.docker.image.rootfs.diff.tar.gzip",
+		       "size": 153263,
+		       "digest": "sha256:shafortestdirslashbadworlddottxt"
+		    }
+		 ]
 		}`,
 			fileName:      "testdata/testdir.tar.gz", // includes helloworld.txt and badworld.txt
 			blobData:      "foo",
-			fileToExtract: []string{"testdir/helloworld.txt"},
+			fileToExtract: []string{"testdir/helloworld.txt", "testdir/badworld.txt"},
 			expectedFileMap: extractor.FileMap{
 				"/config":                []uint8{0x66, 0x6f, 0x6f},
 				"testdir/helloworld.txt": []uint8{0x68, 0x65, 0x6c, 0x6c, 0x6f, 0x20, 0x77, 0x6f, 0x72, 0x6c, 0x64, 0xa},
+				"testdir/badworld.txt":   []uint8{0x62, 0x61, 0x64, 0x20, 0x77, 0x6f, 0x72, 0x6c, 0x64, 0xa},
 			},
 		},
 		{
@@ -327,11 +333,11 @@ func TestDockerExtractor_Extract(t *testing.T) {
 		"schemaVersion": 2,
 		"mediaType": "application/vnd.docker.distribution.manifest.v2+json",
 		"layers": [
-		   {
-		      "mediaType": "application/vnd.docker.image.rootfs.diff.tar.gzip",
-		      "size": 153263,
-		      "digest": "sha256:62d8908bee94c202b2d35224a221aaa2058318bfa9879fa541efaecba272331b"
-		   }
+		 {
+		    "mediaType": "application/vnd.docker.image.rootfs.diff.tar.gzip",
+		    "size": 153263,
+		    "digest": "sha256:shaforinvalidgzipfile"
+		 }
 		]
 		}`,
 			fileName:        "testdata/opq.tar",
@@ -348,8 +354,14 @@ func TestDockerExtractor_Extract(t *testing.T) {
 			case strings.Contains(httpPath, "/v2/library/fooimage/manifests/latest"):
 				w.Header().Set("Content-Type", "application/vnd.docker.distribution.manifest.v2+json")
 				_, _ = fmt.Fprint(w, tc.manifestResp)
-			case strings.Contains(httpPath, "/v2/library/fooimage/blobs/sha256:62d8908bee94c202b2d35224a221aaa2058318bfa9879fa541efaecba272331b"):
-				b, _ := ioutil.ReadFile(tc.fileName)
+			case strings.Contains(httpPath, "/v2/library/fooimage/blobs/sha256:shafortestdirslashhelloworlddottxt"):
+				b, _ := ioutil.ReadFile("testdata/helloworld.tar.gz")
+				_, _ = w.Write(b)
+			case strings.Contains(httpPath, "/v2/library/fooimage/blobs/sha256:shafortestdirslashbadworlddottxt"):
+				b, _ := ioutil.ReadFile("testdata/badworld.tar.gz")
+				_, _ = w.Write(b)
+			case strings.Contains(httpPath, "/v2/library/fooimage/blobs/sha256:shaforinvalidgzipfile"):
+				b, _ := ioutil.ReadFile("testdata/opq.tar")
 				_, _ = w.Write(b)
 			case strings.Contains(httpPath, "/v2/library/fooimage/blobs/"):
 				_, _ = w.Write([]byte(tc.blobData))
@@ -558,17 +570,19 @@ func TestDocker_ExtractLayerFiles(t *testing.T) {
 		}
 	}()
 
-	fm, opqdirs, err := de.extractLayerFiles(layerCh, errCh, context.TODO(), inputFilenames)
+	filesInLayers := map[string]extractor.FileMap{}
+	opqInLayers := map[string]extractor.OPQDirs{}
+	err := de.extractLayerFiles(context.TODO(), layerCh, errCh, filesInLayers, opqInLayers, inputFilenames)
 	assert.NoError(t, err)
 	assert.Equal(t, map[string]extractor.FileMap{
 		"sha256:62d8908bee94c202b2d35224a221aaa2058318bfa9879fa541efaecba272331b": {
 			"etc/test/bar": {0x62, 0x61, 0x72, 0xa},
 			"var/.wh.foo":  {},
 		},
-	}, fm)
+	}, filesInLayers)
 	assert.Equal(t, map[string]extractor.OPQDirs{
 		"sha256:62d8908bee94c202b2d35224a221aaa2058318bfa9879fa541efaecba272331b": {
 			"etc/test",
 		},
-	}, opqdirs)
+	}, opqInLayers)
 }

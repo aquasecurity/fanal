@@ -257,7 +257,7 @@ func (d Extractor) Extract(ctx context.Context, imageName string, filenames []st
 	filesInLayers := map[string]extractor.FileMap{}
 	opqInLayers := map[string]extractor.OPQDirs{}
 	for i := 0; i < len(m.Manifest.Layers); i++ {
-		if filesInLayers, opqInLayers, err = d.extractLayerFiles(layerCh, errCh, ctx, filenames); err != nil {
+		if err := d.extractLayerFiles(ctx, layerCh, errCh, filesInLayers, opqInLayers, filenames); err != nil {
 			return nil, err
 		}
 	}
@@ -291,27 +291,24 @@ func downloadConfigFile(ctx context.Context, r *registry.Registry, image registr
 	return config, nil
 }
 
-func (d Extractor) extractLayerFiles(layerCh chan layer, errCh chan error, ctx context.Context, filenames []string) (map[string]extractor.FileMap, map[string]extractor.OPQDirs, error) {
-	filesInLayers := make(map[string]extractor.FileMap)
-	opqInLayers := make(map[string]extractor.OPQDirs)
-
+func (d Extractor) extractLayerFiles(ctx context.Context, layerCh chan layer, errCh chan error, filesInLayers map[string]extractor.FileMap, opqInLayers map[string]extractor.OPQDirs, filenames []string) error {
 	var l layer
 	select {
 	case l = <-layerCh:
 	case err := <-errCh:
-		return filesInLayers, opqInLayers, err
+		return err
 	case <-ctx.Done():
-		return filesInLayers, opqInLayers, xerrors.Errorf("timeout: %w", ctx.Err())
+		return xerrors.Errorf("timeout: %w", ctx.Err())
 	}
 	files, opqDirs, err := d.ExtractFiles(l.Content, filenames)
 	if err != nil {
-		return filesInLayers, opqInLayers, xerrors.Errorf("failed to extract files: %w", err)
+		return xerrors.Errorf("failed to extract files: %w", err)
 	}
 	layerID := string(l.ID)
 	filesInLayers[layerID] = files
 	opqInLayers[layerID] = opqDirs
 
-	return filesInLayers, opqInLayers, nil
+	return nil
 }
 
 func (d Extractor) extractLayerWorker(dig digest.Digest, r *registry.Registry, ctx context.Context, image registry.Image, errCh chan error, layerCh chan layer, filenames []string) {
