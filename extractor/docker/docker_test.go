@@ -25,6 +25,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+// TODO: Use a memory based FS rather than actual fs
+// context: https://github.com/aquasecurity/fanal/pull/51#discussion_r352337762
 func setupCache() (*bolt.Store, *os.File, error) {
 	f, err := ioutil.TempFile(".", "Bolt_TestStore-*")
 	if err != nil {
