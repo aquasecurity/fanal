@@ -350,10 +350,9 @@ func (d Extractor) extractLayerWorker(dig digest.Digest, r *registry.Registry, c
 		}
 
 		// only store in cache if a required file was found
+		// TODO: should we error out in case of a cache store failure?
 		if storeInCache {
-			if ok := d.storeLayerInCache(cacheBuf, errCh, dig); !ok {
-				return
-			}
+			d.storeLayerInCache(cacheBuf, dig)
 		}
 	}
 
@@ -419,11 +418,12 @@ func getFilteredTarballBuffer(tr *tar.Reader, requiredFilenames []string) (bytes
 	return cacheBuf, requiredFileFound, nil
 }
 
-func (d Extractor) storeLayerInCache(cacheBuf bytes.Buffer, errCh chan error, dig digest.Digest) bool {
+func (d Extractor) storeLayerInCache(cacheBuf bytes.Buffer, dig digest.Digest) {
 	// compress tar to zstd before storing to cache
 	e, err := zstd.NewWriter(nil, zstd.WithEncoderLevel(zstd.SpeedDefault))
 	if err != nil {
 		log.Println(err)
+		return
 	}
 	dst := e.EncodeAll(cacheBuf.Bytes(), nil)
 	if err := d.Cache.BatchSet(kvtypes.BatchSetItemInput{
@@ -433,7 +433,6 @@ func (d Extractor) storeLayerInCache(cacheBuf bytes.Buffer, errCh chan error, di
 	}); err != nil {
 		log.Printf("an error occurred while caching: %s\n", err)
 	}
-	return true
 }
 
 func getValidManifest(ctx context.Context, r *registry.Registry, image registry.Image) (*schema2.DeserializedManifest, error) {
