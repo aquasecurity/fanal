@@ -558,9 +558,7 @@ func TestDocker_ExtractLayerWorker(t *testing.T) {
 			assert.False(t, found, tc.name)
 			assert.Empty(t, actualCacheContents, tc.name)
 		}
-
 	}
-
 }
 
 func getTarZstdBuf(layerData []byte) []byte {

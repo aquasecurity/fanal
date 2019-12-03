@@ -351,7 +351,7 @@ func (d Extractor) extractLayerWorker(dig digest.Digest, r *registry.Registry, c
 
 		// only store in cache if a required file was found
 		if storeInCache {
-			if ok := d.storeLayerInCache(cacheBuf, err, errCh, dig); !ok {
+			if ok := d.storeLayerInCache(cacheBuf, errCh, dig); !ok {
 				return
 			}
 		}
@@ -419,7 +419,7 @@ func getFilteredTarballBuffer(tr *tar.Reader, requiredFilenames []string) (bytes
 	return cacheBuf, requiredFileFound, nil
 }
 
-func (d Extractor) storeLayerInCache(cacheBuf bytes.Buffer, err error, errCh chan error, dig digest.Digest) bool {
+func (d Extractor) storeLayerInCache(cacheBuf bytes.Buffer, errCh chan error, dig digest.Digest) bool {
 	// compress tar to zstd before storing to cache
 	e, err := zstd.NewWriter(nil, zstd.WithEncoderLevel(zstd.SpeedDefault))
 	if err != nil {
@@ -463,7 +463,7 @@ func (d Extractor) ExtractFromFile(ctx context.Context, r io.Reader, filenames [
 			break
 		}
 		if err != nil {
-			return nil, xerrors.Errorf(">>> 459: failed to extract the archive: %w", err)
+			return nil, xerrors.Errorf("failed to extract the archive: %w", err)
 		}
 
 		switch {
@@ -530,7 +530,7 @@ func (d Extractor) ExtractFiles(layerReader io.Reader, filenames []string) (extr
 			break
 		}
 		if err != nil {
-			return data, nil, xerrors.Errorf(">>> 526: failed to extract the archive: %w", err)
+			return data, nil, xerrors.Errorf("failed to extract the archive: %w", err)
 		}
 
 		filePath := hdr.Name
