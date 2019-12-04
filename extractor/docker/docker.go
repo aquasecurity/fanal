@@ -98,7 +98,7 @@ func NewDockerExtractorWithCache(option types.DockerOption, cacheOptions bolt.Op
 func NewDockerExtractor(option types.DockerOption) (Extractor, error) {
 	return NewDockerExtractorWithCache(option, bolt.Options{
 		RootBucketName: "fanal",
-		Path:           utils.CacheDir() + "/cache.db",
+		Path:           utils.CacheDir() + "/cache.db", // TODO: Make this configurable via a public method
 		Codec:          encoding.JSON,
 	})
 }
@@ -403,26 +403,24 @@ func getFilteredTarballBuffer(tr *tar.Reader, requiredFilenames []string) (bytes
 		if err != nil {
 			return cacheBuf, false, xerrors.Errorf("%s: invalid tar: %w", ErrFailedCacheWrite, err)
 		}
-		for _, file := range requiredFilenames {
-			if file == hdr.Name {
-				requiredFileFound = true
+		if !utils.StringInSlice(hdr.Name, requiredFilenames) {
+			continue
+		}
+		requiredFileFound = true
 
-				hdrtwc := &tar.Header{
-					Name: hdr.Name,
-					Mode: 0600,
-					Size: hdr.Size,
-				}
+		hdrtwc := &tar.Header{
+			Name: hdr.Name,
+			Mode: 0600,
+			Size: hdr.Size,
+		}
 
-				if err := twc.WriteHeader(hdrtwc); err != nil {
-					return cacheBuf, requiredFileFound, xerrors.Errorf("%s: %s", ErrFailedCacheWrite, err)
-				}
+		if err := twc.WriteHeader(hdrtwc); err != nil {
+			return cacheBuf, requiredFileFound, xerrors.Errorf("%s: %s", ErrFailedCacheWrite, err)
+		}
 
-				_, err := io.Copy(twc, tr)
-				if err != nil {
-					return cacheBuf, requiredFileFound, xerrors.Errorf("%s: %s", ErrFailedCacheWrite, err)
-				}
-				break
-			}
+		_, err = io.Copy(twc, tr)
+		if err != nil {
+			return cacheBuf, requiredFileFound, xerrors.Errorf("%s: %s", ErrFailedCacheWrite, err)
 		}
 	}
 	return cacheBuf, requiredFileFound, nil
