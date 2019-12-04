@@ -428,16 +428,15 @@ func getFilteredTarballBuffer(tr *tar.Reader, requiredFilenames []string) (bytes
 
 func (d Extractor) storeLayerInCache(cacheBuf bytes.Buffer, dig digest.Digest) {
 	// compress tar to zstd before storing to cache
-	e, err := zstd.NewWriter(nil, zstd.WithEncoderLevel(zstd.SpeedDefault))
-	if err != nil {
-		log.Println(err)
-		return
-	}
-	dst := e.EncodeAll(cacheBuf.Bytes(), nil)
+	var dst bytes.Buffer
+	w, _ := zstd.NewWriter(&dst)
+	_, _ = io.Copy(w, &cacheBuf)
+	_ = w.Close()
+
 	if err := d.Cache.BatchSet(kvtypes.BatchSetItemInput{
 		BucketName: "layertars",
 		Keys:       []string{string(dig)},
-		Values:     dst,
+		Values:     dst.Bytes(),
 	}); err != nil {
 		log.Printf("an error occurred while caching: %s\n", err)
 	}
