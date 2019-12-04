@@ -207,25 +207,27 @@ func TestExtractFiles(t *testing.T) {
 
 func TestDockerExtractor_SaveLocalImage(t *testing.T) {
 	testCases := []struct {
-		name     string
-		cacheHit bool
+		name              string
+		expectedImageData string
+		cacheHit          bool
 	}{
 		{
-			name: "happy path with cache miss",
+			name:              "happy path with cache miss",
+			expectedImageData: "foofromdocker",
 		},
 		{
-			name:     "happy path with cache hit",
-			cacheHit: true,
+			name:              "happy path with cache hit",
+			cacheHit:          true,
+			expectedImageData: "foofromcache",
 		},
 	}
 
-	expectedCacheBytes := "foo"
 	for _, tc := range testCases {
 		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			httpPath := r.URL.String()
 			switch {
 			case strings.Contains(httpPath, "images/get?names=fooimage"):
-				_, _ = fmt.Fprint(w, expectedCacheBytes)
+				_, _ = fmt.Fprint(w, tc.expectedImageData)
 			default:
 				assert.FailNow(t, "unexpected path accessed: ", r.URL.String())
 			}
@@ -245,7 +247,7 @@ func TestDockerExtractor_SaveLocalImage(t *testing.T) {
 
 		if tc.cacheHit {
 			e, _ := zstd.NewWriter(nil, zstd.WithEncoderLevel(zstd.SpeedDefault))
-			dst := e.EncodeAll([]byte(expectedCacheBytes), nil)
+			dst := e.EncodeAll([]byte(tc.expectedImageData), nil)
 			_ = s.Set(kvtypes.SetItemInput{
 				BucketName: "imagebucket",
 				Key:        "fooimage",
@@ -261,7 +263,7 @@ func TestDockerExtractor_SaveLocalImage(t *testing.T) {
 
 		r, err := de.SaveLocalImage(context.TODO(), "fooimage")
 		actualSavedTarBytes, _ := ioutil.ReadAll(r)
-		assert.Equal(t, []byte("foo"), actualSavedTarBytes[:], tc.name)
+		assert.Equal(t, []byte(tc.expectedImageData), actualSavedTarBytes[:], tc.name)
 		assert.NoError(t, err, tc.name)
 
 		// check the cache for what was stored
@@ -277,7 +279,7 @@ func TestDockerExtractor_SaveLocalImage(t *testing.T) {
 
 		dec, _ := zstd.NewReader(nil)
 		actualStoredValue, _ := dec.DecodeAll(actualValue, nil)
-		assert.Equal(t, expectedCacheBytes, string(actualStoredValue), tc.name)
+		assert.Equal(t, tc.expectedImageData, string(actualStoredValue), tc.name)
 	}
 }
 
