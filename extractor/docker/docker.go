@@ -366,7 +366,7 @@ func (d Extractor) extractLayerWorker(dig digest.Digest, r *registry.Registry, c
 		}
 	}
 
-	layerCh <- layer{ID: dig, Content: ioutil.NopCloser(bytes.NewReader(tarContent.Bytes()))}
+	layerCh <- layer{ID: dig, Content: ioutil.NopCloser(&tarContent)}
 	return
 }
 
