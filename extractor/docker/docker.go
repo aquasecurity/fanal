@@ -332,6 +332,7 @@ func (d Extractor) extractLayerWorker(dig digest.Digest, r *registry.Registry, c
 		}
 	}
 
+	var cacheBuf bytes.Buffer
 	if !found {
 		rc, err := r.DownloadLayer(ctx, image.Path, dig)
 		if err != nil {
@@ -350,7 +351,6 @@ func (d Extractor) extractLayerWorker(dig digest.Digest, r *registry.Registry, c
 
 		tarReader := tar.NewReader(io.TeeReader(gzipReader, &tarContent))
 
-		var cacheBuf bytes.Buffer
 		if len(filenames) > 0 {
 			if cacheBuf, err = getFilteredTarballBuffer(tarReader, filenames); err != nil {
 				errCh <- err
@@ -361,7 +361,7 @@ func (d Extractor) extractLayerWorker(dig digest.Digest, r *registry.Registry, c
 		d.storeLayerInCache(cacheBuf, dig)
 	}
 
-	layerCh <- layer{ID: dig, Content: ioutil.NopCloser(&tarContent)}
+	layerCh <- layer{ID: dig, Content: ioutil.NopCloser(&cacheBuf)}
 	return
 }
 
