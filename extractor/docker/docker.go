@@ -431,7 +431,7 @@ func (d Extractor) storeLayerInCache(cacheBuf bytes.Buffer, dig digest.Digest) {
 		Keys:       []string{string(dig)},
 		Values:     dst.Bytes(),
 	}); err != nil {
-		log.Printf("an error occurred while caching: %s\n", err)
+		log.Printf("an error occurred while caching: %s", err)
 	}
 }
 
