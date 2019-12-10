@@ -8,7 +8,9 @@ import (
 	"os"
 	"time"
 
+	"github.com/aquasecurity/fanal/cache"
 	"github.com/aquasecurity/fanal/utils"
+	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/fanal/analyzer"
 	_ "github.com/aquasecurity/fanal/analyzer/command/apk"
@@ -31,7 +33,6 @@ import (
 	"github.com/aquasecurity/fanal/extractor/docker"
 	"github.com/aquasecurity/fanal/types"
 	"golang.org/x/crypto/ssh/terminal"
-	"golang.org/x/xerrors"
 )
 
 func main() {
@@ -46,9 +47,11 @@ func run() (err error) {
 	clearCache := flag.Bool("clear", false, "clear cache")
 	flag.Parse()
 
+	c := cache.Initialize(utils.CacheDir() + "/cache.db")
+
 	if *clearCache {
-		if err = os.RemoveAll(utils.CacheDir() + "/cache.db"); err != nil {
-			return xerrors.Errorf("error in cache clear: %w", err)
+		if err = c.Clear(); err != nil {
+			return xerrors.Errorf("%w", err)
 		}
 	}
 
