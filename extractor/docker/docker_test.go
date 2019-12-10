@@ -419,36 +419,38 @@ func TestDockerExtractor_Extract(t *testing.T) {
 }
 
 func TestDocker_ExtractLayerWorker(t *testing.T) {
+	sampletarzstd, _ := ioutil.ReadFile("testdata/testdir.tar.zstd")
+
 	testCases := []struct {
-		name          string
-		cacheHit      bool
-		garbageCache  bool
-		requiredFiles []string
-		cacheWB       bool
+		name                  string
+		cacheHit              bool
+		garbageCache          bool
+		requiredFiles         []string
+		expectedCacheContents []byte
 	}{
 		{
-			name:          "happy path with cache miss and write back",
-			cacheHit:      false,
-			requiredFiles: []string{"testdir/helloworld.txt", "testdir/badworld.txt"},
-			cacheWB:       true,
+			name:                  "happy path with cache miss and write back",
+			cacheHit:              false,
+			requiredFiles:         []string{"testdir/helloworld.txt", "testdir/badworld.txt"},
+			expectedCacheContents: sampletarzstd,
 		},
 		{
-			name:          "happy path with cache hit with garbage cache and write back",
-			cacheHit:      true,
-			garbageCache:  true,
-			requiredFiles: []string{"testdir/helloworld.txt", "testdir/badworld.txt"},
-			cacheWB:       true,
+			name:                  "happy path with cache hit with garbage cache and write back",
+			cacheHit:              true,
+			garbageCache:          true,
+			requiredFiles:         []string{"testdir/helloworld.txt", "testdir/badworld.txt"},
+			expectedCacheContents: sampletarzstd,
 		},
 		{
-			name:     "happy path with cache hit",
-			cacheHit: true,
-			cacheWB:  true,
+			name:                  "happy path with cache hit",
+			cacheHit:              true,
+			expectedCacheContents: sampletarzstd,
 		},
 		{
-			name:          "happy path with cache miss but no write back",
-			cacheHit:      false,
-			requiredFiles: []string{"somerandomfilethatdoesntexistinthelayer"},
-			cacheWB:       false,
+			name:                  "happy path with cache miss but no write back",
+			cacheHit:              false,
+			requiredFiles:         []string{"somerandomfilethatdoesntexistinthelayer"},
+			expectedCacheContents: []byte{0x28, 0xb5, 0x2f, 0xfd, 0x4, 0x60, 0x1, 0x0, 0x0, 0x99, 0xe9, 0xd8, 0x51}, // just the empty tar header
 		},
 	}
 
@@ -543,17 +545,9 @@ func TestDocker_ExtractLayerWorker(t *testing.T) {
 			Value:      &actualCacheContents,
 		})
 
-		switch tc.cacheWB {
-		case true:
-			assert.True(t, found, tc.name)
-			assert.NoError(t, err, tc.name)
-			expectedCacheContents, _ := ioutil.ReadFile("testdata/testdir.tar.zstd")
-			assert.Equal(t, expectedCacheContents, actualCacheContents, tc.name)
-
-		case false:
-			assert.False(t, found, tc.name)
-			assert.Empty(t, actualCacheContents, tc.name)
-		}
+		assert.True(t, found, tc.name)
+		assert.NoError(t, err, tc.name)
+		assert.Equal(t, tc.expectedCacheContents, actualCacheContents, tc.name)
 	}
 }
 

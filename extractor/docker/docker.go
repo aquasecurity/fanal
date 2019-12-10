@@ -350,20 +350,15 @@ func (d Extractor) extractLayerWorker(dig digest.Digest, r *registry.Registry, c
 
 		tarReader := tar.NewReader(io.TeeReader(gzipReader, &tarContent))
 
-		var storeInCache bool
 		var cacheBuf bytes.Buffer
 		if len(filenames) > 0 {
-			if cacheBuf, storeInCache, err = getFilteredTarballBuffer(tarReader, filenames); err != nil {
+			if cacheBuf, err = getFilteredTarballBuffer(tarReader, filenames); err != nil {
 				errCh <- err
 				return
 			}
 		}
 
-		// only store in cache if a required file was found
-		// TODO: should we error out in case of a cache store failure?
-		if storeInCache {
-			d.storeLayerInCache(cacheBuf, dig)
-		}
+		d.storeLayerInCache(cacheBuf, dig)
 	}
 
 	layerCh <- layer{ID: dig, Content: ioutil.NopCloser(&tarContent)}
@@ -386,9 +381,7 @@ func extractTarContent(cacheContent []byte) ([]byte, error) {
 	return tarContent, nil
 }
 
-func getFilteredTarballBuffer(tr *tar.Reader, requiredFilenames []string) (bytes.Buffer, bool, error) {
-	var requiredFileFound bool
-
+func getFilteredTarballBuffer(tr *tar.Reader, requiredFilenames []string) (bytes.Buffer, error) {
 	var cacheBuf bytes.Buffer
 	// Create a new tar to store in the cache
 	twc := tar.NewWriter(&cacheBuf)
@@ -401,12 +394,11 @@ func getFilteredTarballBuffer(tr *tar.Reader, requiredFilenames []string) (bytes
 			break // end of archive
 		}
 		if err != nil {
-			return cacheBuf, false, xerrors.Errorf("%s: invalid tar: %w", ErrFailedCacheWrite, err)
+			return cacheBuf, xerrors.Errorf("%s: invalid tar: %w", ErrFailedCacheWrite, err)
 		}
 		if !utils.StringInSlice(hdr.Name, requiredFilenames) {
 			continue
 		}
-		requiredFileFound = true
 
 		hdrtwc := &tar.Header{
 			Name: hdr.Name,
@@ -415,15 +407,15 @@ func getFilteredTarballBuffer(tr *tar.Reader, requiredFilenames []string) (bytes
 		}
 
 		if err := twc.WriteHeader(hdrtwc); err != nil {
-			return cacheBuf, requiredFileFound, xerrors.Errorf("%s: %s", ErrFailedCacheWrite, err)
+			return cacheBuf, xerrors.Errorf("%s: %s", ErrFailedCacheWrite, err)
 		}
 
 		_, err = io.Copy(twc, tr)
 		if err != nil {
-			return cacheBuf, requiredFileFound, xerrors.Errorf("%s: %s", ErrFailedCacheWrite, err)
+			return cacheBuf, xerrors.Errorf("%s: %s", ErrFailedCacheWrite, err)
 		}
 	}
-	return cacheBuf, requiredFileFound, nil
+	return cacheBuf, nil
 }
 
 func (d Extractor) storeLayerInCache(cacheBuf bytes.Buffer, dig digest.Digest) {
