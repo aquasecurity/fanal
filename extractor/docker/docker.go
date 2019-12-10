@@ -36,7 +36,8 @@ const (
 	opq string = ".wh..wh..opq"
 	wh  string = ".wh."
 
-	KVImageBucket string = "imagebucket"
+	KVImageBucket   string = "imagebucket"
+	LayerTarsBucket string = "layertars"
 )
 
 var (
@@ -315,7 +316,7 @@ func (d Extractor) extractLayerWorker(dig digest.Digest, r *registry.Registry, c
 	var tarContent bytes.Buffer
 	var cacheContent []byte
 	found, _ := d.Cache.Get(kvtypes.GetItemInput{
-		BucketName: "layertars",
+		BucketName: LayerTarsBucket,
 		Key:        string(dig),
 		Value:      &cacheContent,
 	})
@@ -426,7 +427,7 @@ func (d Extractor) storeLayerInCache(cacheBuf bytes.Buffer, dig digest.Digest) {
 	_ = w.Close()
 
 	if err := d.Cache.BatchSet(kvtypes.BatchSetItemInput{
-		BucketName: "layertars",
+		BucketName: LayerTarsBucket,
 		Keys:       []string{string(dig)},
 		Values:     dst.Bytes(),
 	}); err != nil {

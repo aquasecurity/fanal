@@ -486,14 +486,14 @@ func TestDocker_ExtractLayerWorker(t *testing.T) {
 			case true:
 				garbage, _ := ioutil.ReadFile("testdata/invalidgzvalidtar.tar.gz")
 				assert.NoError(t, s.Set(kvtypes.SetItemInput{
-					BucketName: "layertars",
+					BucketName: LayerTarsBucket,
 					Key:        string(inputDigest),
 					Value:      garbage,
 				}), tc.name)
 			default:
 				b, _ := ioutil.ReadFile("testdata/testdir.tar.zstd")
 				assert.NoError(t, s.Set(kvtypes.SetItemInput{
-					BucketName: "layertars",
+					BucketName: LayerTarsBucket,
 					Key:        string(inputDigest),
 					Value:      b,
 				}), tc.name)
@@ -540,7 +540,7 @@ func TestDocker_ExtractLayerWorker(t *testing.T) {
 		// check cache contents
 		var actualCacheContents []byte
 		found, err := s.Get(kvtypes.GetItemInput{
-			BucketName: "layertars",
+			BucketName: LayerTarsBucket,
 			Key:        string(inputDigest),
 			Value:      &actualCacheContents,
 		})
