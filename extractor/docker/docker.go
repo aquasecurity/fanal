@@ -315,6 +315,8 @@ func (d Extractor) extractLayerFiles(ctx context.Context, layerCh chan layer, er
 func (d Extractor) extractLayerWorker(dig digest.Digest, r *registry.Registry, ctx context.Context, image registry.Image, errCh chan error, layerCh chan layer, filenames []string) {
 	var tarContent bytes.Buffer
 	var cacheContent []byte
+	var cacheBuf bytes.Buffer
+
 	found, _ := d.Cache.Get(kvtypes.GetItemInput{
 		BucketName: LayerTarsBucket,
 		Key:        string(dig),
@@ -322,18 +324,13 @@ func (d Extractor) extractLayerWorker(dig digest.Digest, r *registry.Registry, c
 	})
 
 	if found {
-		b, err := extractTarContent(cacheContent)
-		if err != nil || len(b) <= 0 {
-			found = false
-		}
-
-		_, err = tarContent.Write(b)
-		if err != nil {
+		b, errTar := extractTarFromTarZstd(cacheContent)
+		n, errWrite := cacheBuf.Write(b)
+		if errTar != nil || len(b) <= 0 || errWrite != nil || n <= 0 {
 			found = false
 		}
 	}
 
-	var cacheBuf bytes.Buffer
 	if !found {
 		rc, err := r.DownloadLayer(ctx, image.Path, dig)
 		if err != nil {
@@ -366,7 +363,7 @@ func (d Extractor) extractLayerWorker(dig digest.Digest, r *registry.Registry, c
 	return
 }
 
-func extractTarContent(cacheContent []byte) ([]byte, error) {
+func extractTarFromTarZstd(cacheContent []byte) ([]byte, error) {
 	var tarContent []byte
 
 	dec, err := zstd.NewReader(nil)

@@ -419,50 +419,54 @@ func TestDockerExtractor_Extract(t *testing.T) {
 }
 
 func TestDocker_ExtractLayerWorker(t *testing.T) {
-	sampletarzstd, _ := ioutil.ReadFile("testdata/testdir.tar.zstd")
+	goodtarzstdgolden, _ := ioutil.ReadFile("testdata/testdir.tar.zstd")
+	goodReturnedTarContent, _ := ioutil.ReadFile("testdata/goodTarContent.golden")
 
 	testCases := []struct {
-		name                  string
-		cacheHit              bool
-		garbageCache          bool
-		requiredFiles         []string
-		expectedCacheContents []byte
+		name                       string
+		cacheHit                   bool
+		garbageCache               bool
+		requiredFiles              []string
+		expectedCacheContents      []byte
+		expectedReturnedTarContent []byte
 	}{
 		{
-			name:                  "happy path with cache miss and write back",
-			cacheHit:              false,
-			requiredFiles:         []string{"testdir/helloworld.txt", "testdir/badworld.txt"},
-			expectedCacheContents: sampletarzstd,
+			name:                       "happy path with cache miss and write back",
+			cacheHit:                   false,
+			requiredFiles:              []string{"testdir/helloworld.txt", "testdir/badworld.txt"},
+			expectedCacheContents:      goodtarzstdgolden,
+			expectedReturnedTarContent: goodReturnedTarContent,
 		},
 		{
-			name:                  "happy path with cache hit with garbage cache and write back",
-			cacheHit:              true,
-			garbageCache:          true,
-			requiredFiles:         []string{"testdir/helloworld.txt", "testdir/badworld.txt"},
-			expectedCacheContents: sampletarzstd,
+			name:                       "happy path with cache hit with garbage cache and write back",
+			cacheHit:                   true,
+			garbageCache:               true,
+			requiredFiles:              []string{"testdir/helloworld.txt", "testdir/badworld.txt"},
+			expectedCacheContents:      goodtarzstdgolden,
+			expectedReturnedTarContent: goodReturnedTarContent,
 		},
 		{
-			name:                  "happy path with cache hit",
-			cacheHit:              true,
-			expectedCacheContents: sampletarzstd,
+			name:                       "happy path with cache hit",
+			cacheHit:                   true,
+			expectedCacheContents:      goodtarzstdgolden,
+			expectedReturnedTarContent: goodReturnedTarContent,
 		},
 		{
-			name:                  "happy path with cache miss but no write back",
-			cacheHit:              false,
-			requiredFiles:         []string{"somerandomfilethatdoesntexistinthelayer"},
-			expectedCacheContents: []byte{0x28, 0xb5, 0x2f, 0xfd, 0x4, 0x60, 0x1, 0x0, 0x0, 0x99, 0xe9, 0xd8, 0x51}, // just the empty tar header
+			name:                       "happy path with cache miss but no write back",
+			cacheHit:                   false,
+			expectedCacheContents:      []byte{0x28, 0xb5, 0x2f, 0xfd, 0x4, 0x60, 0x1, 0x0, 0x0, 0x99, 0xe9, 0xd8, 0x51}, // just the empty tar header
+			expectedReturnedTarContent: []byte{},
 		},
 	}
 
 	for _, tc := range testCases {
 		inputDigest := digest.Digest("sha256:62d8908bee94c202b2d35224a221aaa2058318bfa9879fa541efaecba272331b")
-		layerData, err := ioutil.ReadFile("testdata/testdir.tar.gz")
-		assert.NoError(t, err)
 
 		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			httpPath := r.URL.String()
 			switch {
 			case strings.Contains(httpPath, "/v2/library/fooimage/blobs/sha256:62d8908bee94c202b2d35224a221aaa2058318bfa9879fa541efaecba272331b"):
+				layerData, _ := ioutil.ReadFile("testdata/testdir.tar.gz")
 				_, _ = w.Write(layerData)
 			default:
 				assert.FailNow(t, "unexpected path accessed: ", fmt.Sprintf("%s %s", r.URL.String(), tc.name))
@@ -491,11 +495,12 @@ func TestDocker_ExtractLayerWorker(t *testing.T) {
 					Value:      garbage,
 				}), tc.name)
 			default:
-				b, _ := ioutil.ReadFile("testdata/testdir.tar.zstd")
+				//b, _ := ioutil.ReadFile("testdata/testdir.tar.zstd")
 				assert.NoError(t, s.Set(kvtypes.SetItemInput{
 					BucketName: LayerTarsBucket,
 					Key:        string(inputDigest),
-					Value:      b,
+					//Value:      b,
+					Value: goodtarzstdgolden,
 				}), tc.name)
 			}
 		}
@@ -533,8 +538,8 @@ func TestDocker_ExtractLayerWorker(t *testing.T) {
 			assert.FailNow(t, "unexpected error received, err: ", fmt.Sprintf("%s, %s", errRecieved, tc.name))
 		case layerReceived = <-layerCh:
 			assert.Equal(t, inputDigest, layerReceived.ID, tc.name)
-			assert.NotEmpty(t, layerReceived.Content, tc.name)
-			// TODO: Add tests to validate the content is sane
+			got, _ := ioutil.ReadAll(layerReceived.Content)
+			assert.Equal(t, tc.expectedReturnedTarContent, got, tc.name)
 		}
 
 		// check cache contents
