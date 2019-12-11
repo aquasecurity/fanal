@@ -495,12 +495,10 @@ func TestDocker_ExtractLayerWorker(t *testing.T) {
 					Value:      garbage,
 				}), tc.name)
 			default:
-				//b, _ := ioutil.ReadFile("testdata/testdir.tar.zstd")
 				assert.NoError(t, s.Set(kvtypes.SetItemInput{
 					BucketName: LayerTarsBucket,
 					Key:        string(inputDigest),
-					//Value:      b,
-					Value: goodtarzstdgolden,
+					Value:      goodtarzstdgolden,
 				}), tc.name)
 			}
 		}
