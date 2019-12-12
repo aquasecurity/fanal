@@ -227,7 +227,7 @@ func TestDockerExtractor_SaveLocalImage(t *testing.T) {
 			httpPath := r.URL.String()
 			switch {
 			case strings.Contains(httpPath, "images/get?names=fooimage"):
-				_, _ = fmt.Fprint(w, tc.expectedImageData)
+				_, _ = fmt.Fprint(w, "foofromdocker")
 			default:
 				assert.FailNow(t, "unexpected path accessed: ", r.URL.String())
 			}
@@ -247,7 +247,7 @@ func TestDockerExtractor_SaveLocalImage(t *testing.T) {
 
 		if tc.cacheHit {
 			e, _ := zstd.NewWriter(nil, zstd.WithEncoderLevel(zstd.SpeedDefault))
-			dst := e.EncodeAll([]byte(tc.expectedImageData), nil)
+			dst := e.EncodeAll([]byte("foofromcache"), nil)
 			_ = s.Set(kvtypes.SetItemInput{
 				BucketName: "imagebucket",
 				Key:        "fooimage",
