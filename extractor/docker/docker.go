@@ -14,6 +14,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/simar7/gokv/encoding"
+
 	"github.com/aquasecurity/fanal/analyzer/library"
 	"github.com/aquasecurity/fanal/extractor"
 	"github.com/aquasecurity/fanal/extractor/docker/token/ecr"
@@ -27,7 +29,6 @@ import (
 	"github.com/knqyf263/nested"
 	"github.com/opencontainers/go-digest"
 	bolt "github.com/simar7/gokv/bbolt"
-	"github.com/simar7/gokv/encoding"
 	kvtypes "github.com/simar7/gokv/types"
 	"golang.org/x/xerrors"
 )
@@ -100,7 +101,7 @@ func NewDockerExtractor(option types.DockerOption) (Extractor, error) {
 	return NewDockerExtractorWithCache(option, bolt.Options{
 		RootBucketName: "fanal",
 		Path:           utils.CacheDir() + "/cache.db", // TODO: Make this configurable via a public method
-		Codec:          encoding.JSON,
+		Codec:          encoding.Gob,
 	})
 }
 
