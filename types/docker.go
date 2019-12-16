@@ -9,6 +9,7 @@ type DockerOption struct {
 	GcpCredPath  string
 	AwsAccessKey string
 	AwsSecretKey string
+	AwsSessionToken string
 	AwsRegion    string
 	Insecure     bool
 	Debug        bool
