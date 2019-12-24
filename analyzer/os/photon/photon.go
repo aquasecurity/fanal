@@ -31,12 +31,12 @@ func (a photonOSAnalyzer) Analyze(fileMap extractor.FileMap) (analyzer.OS, error
 			line := scanner.Text()
 			if strings.HasPrefix(line, "NAME=\"VMware Photon") {
 				photonName = os.Photon
+				continue
 			}
 
 			if photonName != "" && strings.HasPrefix(line, "VERSION_ID=") {
 				return analyzer.OS{
 					Family: photonName,
-					Name:   strings.TrimSpace(line[11:len(line)]),
 				}, nil
 			}
 		}
