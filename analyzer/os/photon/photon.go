@@ -37,6 +37,7 @@ func (a photonOSAnalyzer) Analyze(fileMap extractor.FileMap) (analyzer.OS, error
 			if photonName != "" && strings.HasPrefix(line, "VERSION_ID=") {
 				return analyzer.OS{
 					Family: photonName,
+					Name:   strings.TrimSpace(line[11:]),
 				}, nil
 			}
 		}
