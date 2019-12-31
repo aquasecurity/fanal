@@ -367,12 +367,15 @@ func getFilteredTarballBuffer(tr *tar.Reader, requiredFilenames []string) (bytes
 		if err != nil {
 			return cacheBuf, xerrors.Errorf("%s: invalid tar: %w", ErrFailedCacheWrite, err)
 		}
-		if !utils.StringInSlice(hdr.Name, requiredFilenames) {
+
+		filePath := hdr.Name
+		filePath = strings.TrimLeft(filepath.Clean(filePath), "/")
+		if !utils.StringInSlice(filePath, requiredFilenames) {
 			continue
 		}
 
 		hdrtwc := &tar.Header{
-			Name: hdr.Name,
+			Name: filePath,
 			Mode: 0600,
 			Size: hdr.Size,
 		}
