@@ -454,7 +454,7 @@ func TestDocker_ExtractLayerWorker(t *testing.T) {
 			goldenReturnedTarContent: "testdata/goodTarContent.golden",
 		},
 		{
-			name:               "happy path with cache miss but no write back",
+			name:               "bad path with cache miss but no write back",
 			cacheHit:           false,
 			goldenCacheContent: "testdata/empty.tar.zstd",
 			expectedError:      "could not init gzip reader: EOF",
