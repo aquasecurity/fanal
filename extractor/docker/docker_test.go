@@ -406,56 +406,68 @@ func TestDockerExtractor_Extract(t *testing.T) {
 }
 
 func TestDocker_ExtractLayerWorker(t *testing.T) {
-	goodtarzstdgolden, _ := ioutil.ReadFile("testdata/testdir.tar.zstd")
-	goodReturnedTarContent, _ := ioutil.ReadFile("testdata/goodTarContent.golden")
-
 	testCases := []struct {
-		name                       string
-		cacheHit                   bool
-		garbageCache               bool
-		requiredFiles              []string
-		expectedCacheContents      []byte
-		expectedReturnedTarContent []byte
+		name                     string
+		cacheHit                 bool
+		garbageCache             bool
+		requiredFiles            []string
+		digest                   string
+		goldenTarFile            string
+		goldenCacheContent       string
+		goldenReturnedTarContent string
+		expectedError            string
 	}{
 		{
-			name:                       "happy path with cache miss and write back",
-			cacheHit:                   false,
-			requiredFiles:              []string{"testdir/helloworld.txt", "testdir/badworld.txt"},
-			expectedCacheContents:      goodtarzstdgolden,
-			expectedReturnedTarContent: goodReturnedTarContent,
+			name:                     "happy path with cache miss and write back",
+			cacheHit:                 false,
+			requiredFiles:            []string{"testdir/helloworld.txt", "testdir/badworld.txt"},
+			digest:                   "sha256:62d8908bee94c202b2d35224a221aaa2058318bfa9879fa541efaecba272331b",
+			goldenTarFile:            "testdata/testdir.tar.gz",
+			goldenCacheContent:       "testdata/testdir.tar.zstd",
+			goldenReturnedTarContent: "testdata/goodTarContent.golden",
 		},
 		{
-			name:                       "happy path with cache hit with garbage cache and write back",
-			cacheHit:                   true,
-			garbageCache:               true,
-			requiredFiles:              []string{"testdir/helloworld.txt", "testdir/badworld.txt"},
-			expectedCacheContents:      goodtarzstdgolden,
-			expectedReturnedTarContent: goodReturnedTarContent,
+			name:                     "happy path with dot tar file",
+			cacheHit:                 false,
+			requiredFiles:            []string{"testdir/helloworld.txt", "testdir/badworld.txt"},
+			digest:                   "sha256:62d8908bee94c202b2d35224a221aaa2058318bfa9879fa541efaecba272331b",
+			goldenTarFile:            "testdata/testdirdot.tar.gz",
+			goldenCacheContent:       "testdata/testdir.tar.zstd",
+			goldenReturnedTarContent: "testdata/goodTarContent.golden",
 		},
 		{
-			name:                       "happy path with cache hit",
-			cacheHit:                   true,
-			expectedCacheContents:      goodtarzstdgolden,
-			expectedReturnedTarContent: goodReturnedTarContent,
+			name:                     "happy path with cache hit with garbage cache and write back",
+			cacheHit:                 true,
+			garbageCache:             true,
+			requiredFiles:            []string{"testdir/helloworld.txt", "testdir/badworld.txt"},
+			digest:                   "sha256:62d8908bee94c202b2d35224a221aaa2058318bfa9879fa541efaecba272331b",
+			goldenTarFile:            "testdata/testdir.tar.gz",
+			goldenCacheContent:       "testdata/testdir.tar.zstd",
+			goldenReturnedTarContent: "testdata/goodTarContent.golden",
 		},
 		{
-			name:                       "happy path with cache miss but no write back",
-			cacheHit:                   false,
-			expectedCacheContents:      []byte{0x28, 0xb5, 0x2f, 0xfd, 0x4, 0x60, 0x1, 0x0, 0x0, 0x99, 0xe9, 0xd8, 0x51}, // just the empty tar header
-			expectedReturnedTarContent: []byte{},
+			name:                     "happy path with cache hit",
+			cacheHit:                 true,
+			digest:                   "sha256:62d8908bee94c202b2d35224a221aaa2058318bfa9879fa541efaecba272331b",
+			goldenTarFile:            "testdata/testdir.tar.gz",
+			goldenCacheContent:       "testdata/testdir.tar.zstd",
+			goldenReturnedTarContent: "testdata/goodTarContent.golden",
+		},
+		{
+			name:               "happy path with cache miss but no write back",
+			cacheHit:           false,
+			goldenCacheContent: "testdata/empty.tar.zstd",
+			expectedError:      "could not init gzip reader: EOF",
 		},
 	}
 
 	for _, tc := range testCases {
-		inputDigest := digest.Digest("sha256:62d8908bee94c202b2d35224a221aaa2058318bfa9879fa541efaecba272331b")
-
 		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			httpPath := r.URL.String()
-			switch {
-			case strings.Contains(httpPath, "/v2/library/fooimage/blobs/sha256:62d8908bee94c202b2d35224a221aaa2058318bfa9879fa541efaecba272331b"):
-				layerData, _ := ioutil.ReadFile("testdata/testdir.tar.gz")
+			if strings.Contains(httpPath, "/v2/library/fooimage/blobs/"+tc.digest) {
+				layerData, _ := ioutil.ReadFile(tc.goldenTarFile)
 				_, _ = w.Write(layerData)
-			default:
+			} else {
 				assert.FailNow(t, "unexpected path accessed: ", fmt.Sprintf("%s %s", r.URL.String(), tc.name))
 			}
 		}))
@@ -469,13 +481,14 @@ func TestDocker_ExtractLayerWorker(t *testing.T) {
 		require.NoError(t, err, tc.name)
 		defer os.RemoveAll(tmpDir)
 
+		expectedCacheContents, _ := ioutil.ReadFile(tc.goldenCacheContent)
 		if tc.cacheHit {
 			switch tc.garbageCache {
 			case true:
 				garbage, _ := ioutil.ReadFile("testdata/invalidgzvalidtar.tar.gz")
-				assert.NoError(t, s.Set(LayerTarsBucket, string(inputDigest), garbage))
+				assert.NoError(t, s.Set(LayerTarsBucket, tc.digest, garbage))
 			default:
-				assert.NoError(t, s.Set(LayerTarsBucket, string(inputDigest), goodtarzstdgolden))
+				assert.NoError(t, s.Set(LayerTarsBucket, tc.digest, expectedCacheContents))
 			}
 		}
 
@@ -501,7 +514,7 @@ func TestDocker_ExtractLayerWorker(t *testing.T) {
 		errCh := make(chan error)
 		r, err := de.createRegistryClient(context.TODO(), inputImage.Domain)
 		go func() {
-			de.extractLayerWorker(inputDigest, r, context.TODO(), inputImage, errCh, layerCh, tc.requiredFiles)
+			de.extractLayerWorker(digest.Digest(tc.digest), r, context.TODO(), inputImage, errCh, layerCh, tc.requiredFiles)
 		}()
 
 		var errRecieved error
@@ -509,20 +522,23 @@ func TestDocker_ExtractLayerWorker(t *testing.T) {
 
 		select {
 		case errRecieved = <-errCh:
-			assert.FailNow(t, "unexpected error received, err: ", fmt.Sprintf("%s, %s", errRecieved, tc.name))
+			assert.Equal(t, tc.expectedError, errRecieved.Error(), tc.name)
+			continue
 		case layerReceived = <-layerCh:
-			assert.Equal(t, inputDigest, layerReceived.ID, tc.name)
+			assert.Equal(t, digest.Digest(tc.digest), layerReceived.ID, tc.name)
 			got, _ := ioutil.ReadAll(layerReceived.Content)
-			assert.Equal(t, tc.expectedReturnedTarContent, got, tc.name)
+
+			expectedReturnedTarContent, _ := ioutil.ReadFile(tc.goldenReturnedTarContent)
+			assert.Equal(t, expectedReturnedTarContent, got, tc.name)
 		}
 
 		// check cache contents
 		var actualCacheContents []byte
-		found, err := s.Get(LayerTarsBucket, string(inputDigest), &actualCacheContents)
+		found, err := s.Get(LayerTarsBucket, tc.digest, &actualCacheContents)
 
 		assert.True(t, found, tc.name)
 		assert.NoError(t, err, tc.name)
-		assert.Equal(t, tc.expectedCacheContents, actualCacheContents, tc.name)
+		assert.Equal(t, expectedCacheContents, actualCacheContents, tc.name)
 	}
 }
 
