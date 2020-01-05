@@ -415,7 +415,6 @@ func TestDocker_ExtractLayerWorker(t *testing.T) {
 		goldenTarFile            string
 		goldenCacheContent       string
 		goldenReturnedTarContent string
-		expectedError            string
 	}{
 		{
 			name:                     "happy path with cache miss and write back",
@@ -454,10 +453,12 @@ func TestDocker_ExtractLayerWorker(t *testing.T) {
 			goldenReturnedTarContent: "testdata/goodTarContent.tar.golden",
 		},
 		{
-			name:               "bad path with cache miss but no write back",
-			cacheHit:           false,
-			goldenCacheContent: "testdata/empty.tar.zst",
-			expectedError:      "could not init gzip reader: EOF",
+			name:                     "happy path with cache miss but no write back",
+			digest:                   "sha256:62d8908bee94c202b2d35224a221aaa2058318bfa9879fa541efaecba272331b",
+			cacheHit:                 false,
+			goldenCacheContent:       "testdata/empty.tar.zst",
+			goldenTarFile:            "testdata/empty.tar.gz",
+			goldenReturnedTarContent: "testdata/empty",
 		},
 	}
 
@@ -522,8 +523,7 @@ func TestDocker_ExtractLayerWorker(t *testing.T) {
 
 		select {
 		case errRecieved = <-errCh:
-			assert.Equal(t, tc.expectedError, errRecieved.Error(), tc.name)
-			continue
+			assert.FailNow(t, "unexpected error received, err: ", fmt.Sprintf("%s, %s", errRecieved, tc.name))
 		case layerReceived = <-layerCh:
 			assert.Equal(t, digest.Digest(tc.digest), layerReceived.ID, tc.name)
 			got, _ := ioutil.ReadAll(layerReceived.Content)
