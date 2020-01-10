@@ -129,88 +129,88 @@ func TestFanal_Library_DockerMode(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		ctx := context.Background()
-		d, _ := ioutil.TempDir("", "TestFanal_Library_*")
-		defer func() {
-			_ = os.RemoveAll(d)
-		}()
-		c, _ := cache.New(d)
+		t.Run(tc.name, func(t *testing.T) {
+			ctx := context.Background()
+			d, _ := ioutil.TempDir("", "TestFanal_Library_*")
+			defer os.RemoveAll(d)
+			c, _ := cache.New(d)
 
-		opt := types.DockerOption{
-			Timeout:  600 * time.Second,
-			SkipPing: true,
-		}
+			opt := types.DockerOption{
+				Timeout:  600 * time.Second,
+				SkipPing: true,
+			}
 
-		cli, err := client.NewClientWithOpts(client.FromEnv)
-		require.NoError(t, err, tc.name)
+			cli, err := client.NewClientWithOpts(client.FromEnv)
+			require.NoError(t, err, tc.name)
 
-		// ensure image doesnt already exists
-		_, _ = cli.ImageRemove(ctx, tc.imageFile, dtypes.ImageRemoveOptions{
-			Force:         true,
-			PruneChildren: true,
+			// ensure image doesnt already exists
+			_, _ = cli.ImageRemove(ctx, tc.imageFile, dtypes.ImageRemoveOptions{
+				Force:         true,
+				PruneChildren: true,
+			})
+
+			testfile, err := os.Open(tc.imageFile)
+			require.NoError(t, err)
+
+			// load image into docker engine
+			_, err = cli.ImageLoad(ctx, testfile, true)
+			require.NoError(t, err, tc.name)
+
+			// tag our image to something unique
+			err = cli.ImageTag(ctx, tc.imageName, tc.imageFile)
+			require.NoError(t, err, tc.name)
+
+			ext, err := docker.NewDockerExtractor(opt, c)
+			require.NoError(t, err, tc.name)
+			ac := analyzer.Config{Extractor: ext}
+
+			actualFiles, err := ac.Analyze(ctx, tc.imageFile)
+			require.NoError(t, err)
+			for file, _ := range actualFiles {
+				assert.Contains(t, tc.expectedFiles, file, tc.name)
+			}
+			assert.Equal(t, len(tc.expectedFiles), len(actualFiles), tc.name)
+
+			// check OS
+			osFound, err := analyzer.GetOS(actualFiles)
+			require.NoError(t, err)
+			assert.Equal(t, tc.expectedOS, osFound, tc.name)
+
+			// check Packages
+			actualPkgs, err := analyzer.GetPackages(actualFiles)
+			require.NoError(t, err)
+			assert.ElementsMatch(t, tc.expectedPkgs, actualPkgs, tc.name)
+
+			// check Packges from Commands
+			actualPkgsFromCmds, err := analyzer.GetPackagesFromCommands(osFound, actualFiles)
+			require.NoError(t, err)
+			assert.Equal(t, tc.expectedPkgsFromCmds, actualPkgsFromCmds, tc.name)
+
+			// check Libraries
+			actualLibs, err := analyzer.GetLibraries(actualFiles)
+			require.NoError(t, err)
+			assert.Equal(t, tc.expectedLibraries, actualLibs, tc.name)
+
+			// check Cache
+			actualCachedFiles, _ := ioutil.ReadDir(d + "/fanal/")
+			require.Equal(t, 1, len(actualCachedFiles), tc.name)
+
+			// check Cache contents
+			var actualCacheValue []byte
+			found, err := c.Get("imagebucket", tc.imageFile, &actualCacheValue)
+			require.NoError(t, err)
+			assert.True(t, found)
+			assert.NotEmpty(t, actualCacheValue, tc.name)
+
+			// clear Cache
+			require.NoError(t, c.Clear(), tc.name)
+
+			// remove Image
+			_, err = cli.ImageRemove(ctx, tc.imageFile, dtypes.ImageRemoveOptions{
+				Force:         true,
+				PruneChildren: true,
+			})
+			assert.NoError(t, err, tc.name)
 		})
-
-		testfile, err := os.Open(tc.imageFile)
-		require.NoError(t, err)
-
-		// load image into docker engine
-		_, err = cli.ImageLoad(ctx, testfile, true)
-		require.NoError(t, err, tc.name)
-
-		// tag our image to something unique
-		err = cli.ImageTag(ctx, tc.imageName, tc.imageFile)
-		require.NoError(t, err, tc.name)
-
-		ext, err := docker.NewDockerExtractor(opt, c)
-		require.NoError(t, err, tc.name)
-		ac := analyzer.Config{Extractor: ext}
-
-		actualFiles, err := ac.Analyze(ctx, tc.imageFile)
-		require.NoError(t, err)
-		for file, _ := range actualFiles {
-			assert.Contains(t, tc.expectedFiles, file, tc.name)
-		}
-		assert.Equal(t, len(tc.expectedFiles), len(actualFiles), tc.name)
-
-		// check OS
-		osFound, err := analyzer.GetOS(actualFiles)
-		require.NoError(t, err)
-		assert.Equal(t, tc.expectedOS, osFound, tc.name)
-
-		// check Packages
-		actualPkgs, err := analyzer.GetPackages(actualFiles)
-		require.NoError(t, err)
-		assert.ElementsMatch(t, tc.expectedPkgs, actualPkgs, tc.name)
-
-		// check Packges from Commands
-		actualPkgsFromCmds, err := analyzer.GetPackagesFromCommands(osFound, actualFiles)
-		require.NoError(t, err)
-		assert.Equal(t, tc.expectedPkgsFromCmds, actualPkgsFromCmds, tc.name)
-
-		// check Libraries
-		actualLibs, err := analyzer.GetLibraries(actualFiles)
-		require.NoError(t, err)
-		assert.Equal(t, tc.expectedLibraries, actualLibs, tc.name)
-
-		// check Cache
-		actualCachedFiles, _ := ioutil.ReadDir(d + "/fanal/")
-		require.Equal(t, 1, len(actualCachedFiles), tc.name)
-
-		// check Cache contents
-		var actualCacheValue []byte
-		found, err := c.Get("imagebucket", tc.imageFile, &actualCacheValue)
-		require.NoError(t, err)
-		assert.True(t, found)
-		assert.NotEmpty(t, actualCacheValue, tc.name)
-
-		// clear Cache
-		require.NoError(t, c.Clear(), tc.name)
-
-		// remove Image
-		_, err = cli.ImageRemove(ctx, tc.imageFile, dtypes.ImageRemoveOptions{
-			Force:         true,
-			PruneChildren: true,
-		})
-		assert.NoError(t, err, tc.name)
 	}
 }
