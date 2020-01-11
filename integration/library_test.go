@@ -103,7 +103,9 @@ func TestFanal_Library_DockerMode(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
+		tc := tc // save a copy of tc for use in t.Run https://gist.github.com/posener/92a55c4cd441fc5e5e85f27bca008721
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 			ctx := context.Background()
 			d, _ := ioutil.TempDir("", "TestFanal_Library_*")
 			defer os.RemoveAll(d)
