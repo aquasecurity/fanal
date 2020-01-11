@@ -140,46 +140,10 @@ func TestFanal_Library_DockerMode(t *testing.T) {
 			require.NoError(t, err, tc.name)
 			ac := analyzer.Config{Extractor: ext}
 
-			actualFiles, err := ac.Analyze(ctx, tc.imageFile)
-			require.NoError(t, err)
-			for file, _ := range actualFiles {
-				assert.Contains(t, tc.expectedFiles, file, tc.name)
+			// run tests twice, one without cache and with cache
+			for i := 1; i <= 2; i++ {
+				runChecks(t, ac, ctx, tc, d, c)
 			}
-			assert.Equal(t, len(tc.expectedFiles), len(actualFiles), tc.name)
-
-			// check OS
-			osFound, err := analyzer.GetOS(actualFiles)
-			require.NoError(t, err)
-			assert.Equal(t, tc.expectedOS, osFound, tc.name)
-
-			// check Packages
-			actualPkgs, err := analyzer.GetPackages(actualFiles)
-			require.NoError(t, err)
-			data, _ := ioutil.ReadFile(fmt.Sprintf("testdata/goldens/%s.expectedpackages.golden", strings.ReplaceAll(tc.imageName, "/", "")))
-			var expectedPkgs []analyzer.Package
-			json.Unmarshal(data, &expectedPkgs)
-			assert.ElementsMatch(t, expectedPkgs, actualPkgs, tc.name)
-
-			// check Packges from Commands
-			actualPkgsFromCmds, err := analyzer.GetPackagesFromCommands(osFound, actualFiles)
-			require.NoError(t, err)
-			assert.Equal(t, tc.expectedPkgsFromCmds, actualPkgsFromCmds, tc.name)
-
-			// check Libraries
-			actualLibs, err := analyzer.GetLibraries(actualFiles)
-			require.NoError(t, err)
-			assert.Equal(t, tc.expectedLibraries, actualLibs, tc.name)
-
-			// check Cache
-			actualCachedFiles, _ := ioutil.ReadDir(d + "/fanal/")
-			require.Equal(t, 1, len(actualCachedFiles), tc.name)
-
-			// check Cache contents
-			var actualCacheValue []byte
-			found, err := c.Get("imagebucket", tc.imageFile, &actualCacheValue)
-			require.NoError(t, err)
-			assert.True(t, found)
-			assert.NotEmpty(t, actualCacheValue, tc.name)
 
 			// clear Cache
 			require.NoError(t, c.Clear(), tc.name)
@@ -192,4 +156,55 @@ func TestFanal_Library_DockerMode(t *testing.T) {
 			assert.NoError(t, err, tc.name)
 		})
 	}
+}
+
+func runChecks(t *testing.T, ac analyzer.Config, ctx context.Context, tc struct {
+	name                 string
+	imageName            string
+	imageFile            string
+	expectedFiles        []string
+	expectedOS           analyzer.OS
+	expectedPkgsFromCmds []analyzer.Package
+	expectedLibraries    map[analyzer.FilePath][]godeptypes.Library
+}, d string, c cache.Cache) {
+	actualFiles, err := ac.Analyze(ctx, tc.imageFile)
+	require.NoError(t, err)
+	for file, _ := range actualFiles {
+		assert.Contains(t, tc.expectedFiles, file, tc.name)
+	}
+	assert.Equal(t, len(tc.expectedFiles), len(actualFiles), tc.name)
+
+	// check OS
+	osFound, err := analyzer.GetOS(actualFiles)
+	require.NoError(t, err)
+	assert.Equal(t, tc.expectedOS, osFound, tc.name)
+
+	// check Packages
+	actualPkgs, err := analyzer.GetPackages(actualFiles)
+	require.NoError(t, err)
+	data, _ := ioutil.ReadFile(fmt.Sprintf("testdata/goldens/%s.expectedpackages.golden", strings.ReplaceAll(tc.imageName, "/", "")))
+	var expectedPkgs []analyzer.Package
+	json.Unmarshal(data, &expectedPkgs)
+	assert.ElementsMatch(t, expectedPkgs, actualPkgs, tc.name)
+
+	// check Packges from Commands
+	actualPkgsFromCmds, err := analyzer.GetPackagesFromCommands(osFound, actualFiles)
+	require.NoError(t, err)
+	assert.Equal(t, tc.expectedPkgsFromCmds, actualPkgsFromCmds, tc.name)
+
+	// check Libraries
+	actualLibs, err := analyzer.GetLibraries(actualFiles)
+	require.NoError(t, err)
+	assert.Equal(t, tc.expectedLibraries, actualLibs, tc.name)
+
+	// check Cache
+	actualCachedFiles, _ := ioutil.ReadDir(d + "/fanal/")
+	require.Equal(t, 1, len(actualCachedFiles), tc.name)
+
+	// check Cache contents
+	var actualCacheValue []byte
+	found, err := c.Get("imagebucket", tc.imageFile, &actualCacheValue)
+	require.NoError(t, err)
+	assert.True(t, found)
+	assert.NotEmpty(t, actualCacheValue, tc.name)
 }
