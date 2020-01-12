@@ -81,11 +81,7 @@ func (a alpineCmdAnalyzer) Analyze(targetOS analyzer.OS, fileMap extractor.FileM
 	}
 	return pkgs, nil
 }
-func (a alpineCmdAnalyzer) fetchApkIndexArchive(targetOS analyzer.OS) (apkIndexArchive *apkIndex, err error) {
-	if apkIndexArchive != nil {
-		return nil, nil
-	}
-
+func (a alpineCmdAnalyzer) fetchApkIndexArchive(targetOS analyzer.OS) (*apkIndex, error) {
 	// 3.9.3 => 3.9
 	osVer := targetOS.Name
 	if strings.Count(osVer, ".") > 1 {
@@ -99,6 +95,7 @@ func (a alpineCmdAnalyzer) fetchApkIndexArchive(targetOS analyzer.OS) (apkIndexA
 	}
 	defer resp.Body.Close()
 
+	apkIndexArchive := &apkIndex{}
 	if err = json.NewDecoder(resp.Body).Decode(&apkIndexArchive); err != nil {
 		return nil, xerrors.Errorf("failed to decode APKINDEX JSON: %w", err)
 	}
@@ -172,8 +169,8 @@ func (a alpineCmdAnalyzer) resolveDependencies(apkIndexArchive *apkIndex, origin
 			continue
 		}
 
-		circularDependencyCheck := map[string]struct{}{}
-		for _, p := range a.resolveDependency(apkIndexArchive, pkgName, circularDependencyCheck) {
+		seenPkgs := map[string]struct{}{}
+		for _, p := range a.resolveDependency(apkIndexArchive, pkgName, seenPkgs) {
 			uniqPkgs[p] = struct{}{}
 		}
 	}
@@ -183,19 +180,18 @@ func (a alpineCmdAnalyzer) resolveDependencies(apkIndexArchive *apkIndex, origin
 	return pkgs
 }
 
-func (a alpineCmdAnalyzer) resolveDependency(apkIndexArchive *apkIndex, pkgName string, cdc map[string]struct{}) (pkgNames []string) {
+func (a alpineCmdAnalyzer) resolveDependency(apkIndexArchive *apkIndex, pkgName string, seenPkgs map[string]struct{}) (pkgNames []string) {
 	pkg, ok := apkIndexArchive.Package[pkgName]
 	if !ok {
 		return nil
 	}
+	if _, ok = seenPkgs[pkgName]; ok {
+		return nil
+	}
+	seenPkgs[pkgName] = struct{}{}
+
 	pkgNames = append(pkgNames, pkgName)
 	for _, dependency := range pkg.Dependencies {
-		_, ok = cdc[dependency]
-		if ok {
-			continue
-		}
-		cdc[dependency] = struct{}{}
-
 		// sqlite-libs=3.26.0-r3 => sqlite-libs
 		if strings.Contains(dependency, "=") {
 			dependency = dependency[:strings.Index(dependency, "=")]
@@ -203,17 +199,17 @@ func (a alpineCmdAnalyzer) resolveDependency(apkIndexArchive *apkIndex, pkgName 
 
 		if strings.HasPrefix(dependency, "so:") {
 			soProvidePkg := apkIndexArchive.Provide.SO[dependency[3:]].Package
-			pkgNames = append(pkgNames, a.resolveDependency(apkIndexArchive, soProvidePkg, cdc)...)
+			pkgNames = append(pkgNames, a.resolveDependency(apkIndexArchive, soProvidePkg, seenPkgs)...)
 			continue
 		} else if strings.HasPrefix(dependency, "pc:") || strings.HasPrefix(dependency, "cmd:") {
 			continue
 		}
 		pkgProvidePkg, ok := apkIndexArchive.Provide.Package[dependency]
 		if ok {
-			pkgNames = append(pkgNames, a.resolveDependency(apkIndexArchive, pkgProvidePkg.Package, cdc)...)
+			pkgNames = append(pkgNames, a.resolveDependency(apkIndexArchive, pkgProvidePkg.Package, seenPkgs)...)
 			continue
 		}
-		pkgNames = append(pkgNames, a.resolveDependency(apkIndexArchive, dependency, cdc)...)
+		pkgNames = append(pkgNames, a.resolveDependency(apkIndexArchive, dependency, seenPkgs)...)
 	}
 	return pkgNames
 }
