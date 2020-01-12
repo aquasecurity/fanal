@@ -175,7 +175,9 @@ func (a alpineCmdAnalyzer) resolveDependencies(originalPkgs []string) (pkgs []st
 		if _, ok := uniqPkgs[pkgName]; ok {
 			continue
 		}
-		for _, p := range a.resolveDependency(pkgName) {
+
+		circularDependencyCheck := map[string]struct{}{}
+		for _, p := range a.resolveDependency(pkgName, circularDependencyCheck) {
 			uniqPkgs[p] = struct{}{}
 		}
 	}
@@ -185,13 +187,19 @@ func (a alpineCmdAnalyzer) resolveDependencies(originalPkgs []string) (pkgs []st
 	return pkgs
 }
 
-func (a alpineCmdAnalyzer) resolveDependency(pkgName string) (pkgNames []string) {
+func (a alpineCmdAnalyzer) resolveDependency(pkgName string, cdc map[string]struct{}) (pkgNames []string) {
 	pkg, ok := apkIndexArchive.Package[pkgName]
 	if !ok {
 		return nil
 	}
 	pkgNames = append(pkgNames, pkgName)
 	for _, dependency := range pkg.Dependencies {
+		_, ok = cdc[dependency]
+		if ok {
+			continue
+		}
+		cdc[dependency] = struct{}{}
+
 		// sqlite-libs=3.26.0-r3 => sqlite-libs
 		if strings.Contains(dependency, "=") {
 			dependency = dependency[:strings.Index(dependency, "=")]
@@ -199,17 +207,17 @@ func (a alpineCmdAnalyzer) resolveDependency(pkgName string) (pkgNames []string)
 
 		if strings.HasPrefix(dependency, "so:") {
 			soProvidePkg := apkIndexArchive.Provide.SO[dependency[3:]].Package
-			pkgNames = append(pkgNames, a.resolveDependency(soProvidePkg)...)
+			pkgNames = append(pkgNames, a.resolveDependency(soProvidePkg, cdc)...)
 			continue
 		} else if strings.HasPrefix(dependency, "pc:") || strings.HasPrefix(dependency, "cmd:") {
 			continue
 		}
 		pkgProvidePkg, ok := apkIndexArchive.Provide.Package[dependency]
 		if ok {
-			pkgNames = append(pkgNames, a.resolveDependency(pkgProvidePkg.Package)...)
+			pkgNames = append(pkgNames, a.resolveDependency(pkgProvidePkg.Package, cdc)...)
 			continue
 		}
-		pkgNames = append(pkgNames, a.resolveDependency(dependency)...)
+		pkgNames = append(pkgNames, a.resolveDependency(dependency, cdc)...)
 	}
 	return pkgNames
 }
