@@ -96,7 +96,7 @@ func (a alpineCmdAnalyzer) fetchApkIndexArchive(targetOS analyzer.OS) (*apkIndex
 	defer resp.Body.Close()
 
 	apkIndexArchive := &apkIndex{}
-	if err = json.NewDecoder(resp.Body).Decode(&apkIndexArchive); err != nil {
+	if err = json.NewDecoder(resp.Body).Decode(apkIndexArchive); err != nil {
 		return nil, xerrors.Errorf("failed to decode APKINDEX JSON: %w", err)
 	}
 
