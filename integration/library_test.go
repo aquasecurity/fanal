@@ -49,56 +49,59 @@ func TestFanal_Library_DockerMode(t *testing.T) {
 		imageFile            string
 		expectedFiles        []string
 		expectedOS           analyzer.OS
-		expectedPkgsFromCmds []analyzer.Package
-		expectedLibraries    map[analyzer.FilePath][]godeptypes.Library
+		expectedPkgsFromCmds string
+		expectedLibraries    string
 	}{
 		{
-			name:              "happy path, alpine:3.10",
-			imageName:         "alpine:3.10",
-			imageFile:         "testdata/fixtures/alpine-310.tar.gz",
-			expectedOS:        analyzer.OS{Name: "3.10.2", Family: "alpine"},
-			expectedFiles:     []string{"etc/alpine-release", "etc/os-release", "lib/apk/db/installed", "/config"},
-			expectedLibraries: map[analyzer.FilePath][]godeptypes.Library{},
+			name:          "happy path, alpine:3.10",
+			imageName:     "alpine:3.10",
+			imageFile:     "testdata/fixtures/alpine-310.tar.gz",
+			expectedOS:    analyzer.OS{Name: "3.10.2", Family: "alpine"},
+			expectedFiles: []string{"etc/alpine-release", "etc/os-release", "lib/apk/db/installed", "/config"},
 		},
 		{
-			name:              "happy path, amazonlinux:2",
-			imageName:         "amazonlinux:2",
-			imageFile:         "testdata/fixtures/amazon-2.tar.gz",
-			expectedFiles:     []string{"etc/system-release", "var/lib/rpm/Packages", "etc/os-release", "/config"},
-			expectedOS:        analyzer.OS{Name: "2 (Karoo)", Family: "amazon"},
-			expectedLibraries: map[analyzer.FilePath][]godeptypes.Library{},
+			name:          "happy path, amazonlinux:2",
+			imageName:     "amazonlinux:2",
+			imageFile:     "testdata/fixtures/amazon-2.tar.gz",
+			expectedFiles: []string{"etc/system-release", "var/lib/rpm/Packages", "etc/os-release", "/config"},
+			expectedOS:    analyzer.OS{Name: "2 (Karoo)", Family: "amazon"},
 		},
 		{
-			name:              "happy path, debian:buster",
-			imageName:         "debian:buster",
-			imageFile:         "testdata/fixtures/debian-buster.tar.gz",
-			expectedFiles:     []string{"var/lib/dpkg/status", "etc/debian_version", "etc/os-release", "usr/lib/os-release", "/config"},
-			expectedOS:        analyzer.OS{Name: "10.1", Family: "debian"},
-			expectedLibraries: map[analyzer.FilePath][]godeptypes.Library{},
+			name:          "happy path, debian:buster",
+			imageName:     "debian:buster",
+			imageFile:     "testdata/fixtures/debian-buster.tar.gz",
+			expectedFiles: []string{"var/lib/dpkg/status", "etc/debian_version", "etc/os-release", "usr/lib/os-release", "/config"},
+			expectedOS:    analyzer.OS{Name: "10.1", Family: "debian"},
 		},
 		{
-			name:              "happy path, photon:1.0",
-			imageName:         "photon:1.0-20190823",
-			imageFile:         "testdata/fixtures/photon-10.tar.gz",
-			expectedFiles:     []string{"var/lib/rpm/Packages", "etc/lsb-release", "etc/os-release", "/config", "usr/lib/os-release"},
-			expectedOS:        analyzer.OS{Name: "1.0", Family: "photon"},
-			expectedLibraries: map[analyzer.FilePath][]godeptypes.Library{},
+			name:          "happy path, photon:1.0",
+			imageName:     "photon:1.0-20190823",
+			imageFile:     "testdata/fixtures/photon-10.tar.gz",
+			expectedFiles: []string{"var/lib/rpm/Packages", "etc/lsb-release", "etc/os-release", "/config", "usr/lib/os-release"},
+			expectedOS:    analyzer.OS{Name: "1.0", Family: "photon"},
 		},
 		{
-			name:              "happy path, registry.redhat.io/ubi7",
-			imageName:         "registry.redhat.io/ubi7",
-			imageFile:         "testdata/fixtures/ubi-7.tar.gz",
-			expectedFiles:     []string{"etc/redhat-release", "etc/system-release", "/config", "var/lib/rpm/Packages", "etc/os-release"},
-			expectedOS:        analyzer.OS{Name: "7.7", Family: "redhat"},
-			expectedLibraries: map[analyzer.FilePath][]godeptypes.Library{},
+			name:          "happy path, registry.redhat.io/ubi7",
+			imageName:     "registry.redhat.io/ubi7",
+			imageFile:     "testdata/fixtures/ubi-7.tar.gz",
+			expectedFiles: []string{"etc/redhat-release", "etc/system-release", "/config", "var/lib/rpm/Packages", "etc/os-release"},
+			expectedOS:    analyzer.OS{Name: "7.7", Family: "redhat"},
 		},
 		{
-			name:              "happy path, opensuse leap 15.1",
-			imageName:         "opensuse/leap:latest",
-			imageFile:         "testdata/fixtures/opensuse-leap-151.tar.gz",
-			expectedFiles:     []string{"usr/lib/os-release", "usr/lib/sysimage/rpm/Packages", "/config", "etc/os-release"},
-			expectedOS:        analyzer.OS{Name: "15.1", Family: "opensuse.leap"},
-			expectedLibraries: map[analyzer.FilePath][]godeptypes.Library{},
+			name:          "happy path, opensuse leap 15.1",
+			imageName:     "opensuse/leap:latest",
+			imageFile:     "testdata/fixtures/opensuse-leap-151.tar.gz",
+			expectedFiles: []string{"usr/lib/os-release", "usr/lib/sysimage/rpm/Packages", "/config", "etc/os-release"},
+			expectedOS:    analyzer.OS{Name: "15.1", Family: "opensuse.leap"},
+		},
+		{
+			name:                 "happy path, vulnimage with lock files",
+			imageName:            "knqyf263/vuln-image:1.2.3",
+			imageFile:            "testdata/fixtures/vulnimage.tar.gz",
+			expectedFiles:        []string{"etc/os-release", "node-app/package-lock.json", "python-app/Pipfile.lock", "ruby-app/Gemfile.lock", "rust-app/Cargo.lock", "/config", "etc/alpine-release", "lib/apk/db/installed", "php-app/composer.lock"},
+			expectedOS:           analyzer.OS{Name: "3.7.1", Family: "alpine"},
+			expectedLibraries:    "testdata/goldens/knqyf263vuln-image:1.2.3.expectedlibs.golden",
+			expectedPkgsFromCmds: "testdata/goldens/knqyf263vuln-image:1.2.3.expectedpkgsfromcmds.golden",
 		},
 	}
 
@@ -164,8 +167,8 @@ func runChecks(t *testing.T, ac analyzer.Config, ctx context.Context, tc struct 
 	imageFile            string
 	expectedFiles        []string
 	expectedOS           analyzer.OS
-	expectedPkgsFromCmds []analyzer.Package
-	expectedLibraries    map[analyzer.FilePath][]godeptypes.Library
+	expectedPkgsFromCmds string
+	expectedLibraries    string
 }, d string, c cache.Cache) {
 	actualFiles, err := ac.Analyze(ctx, tc.imageFile)
 	require.NoError(t, err)
@@ -190,12 +193,30 @@ func runChecks(t *testing.T, ac analyzer.Config, ctx context.Context, tc struct 
 	// check Packges from Commands
 	actualPkgsFromCmds, err := analyzer.GetPackagesFromCommands(osFound, actualFiles)
 	require.NoError(t, err)
-	assert.Equal(t, tc.expectedPkgsFromCmds, actualPkgsFromCmds, tc.name)
+	if tc.expectedPkgsFromCmds != "" {
+		data, _ := ioutil.ReadFile(tc.expectedPkgsFromCmds)
+		var expectedPkgsFromCmds []analyzer.Package
+		json.Unmarshal(data, &expectedPkgsFromCmds)
+		assert.ElementsMatch(t, expectedPkgsFromCmds, actualPkgsFromCmds, tc.name)
+	} else {
+		assert.Equal(t, []analyzer.Package(nil), actualPkgsFromCmds, tc.name)
+	}
 
 	// check Libraries
 	actualLibs, err := analyzer.GetLibraries(actualFiles)
+	data, _ = json.MarshalIndent(actualLibs, "", "  ")
 	require.NoError(t, err)
-	assert.Equal(t, tc.expectedLibraries, actualLibs, tc.name)
+	if tc.expectedLibraries != "" {
+		data, _ := ioutil.ReadFile(tc.expectedLibraries)
+		var expectedLibraries map[analyzer.FilePath][]godeptypes.Library
+		json.Unmarshal(data, &expectedLibraries)
+		require.Equal(t, len(expectedLibraries), len(actualLibs), tc.name)
+		for l := range expectedLibraries {
+			assert.Contains(t, actualLibs, l, tc.name)
+		}
+	} else {
+		assert.Equal(t, map[analyzer.FilePath][]godeptypes.Library{}, actualLibs, tc.name)
+	}
 
 	// check Cache
 	actualCachedFiles, _ := ioutil.ReadDir(d + "/fanal/")
