@@ -42,16 +42,18 @@ import (
 	"github.com/aquasecurity/fanal/types"
 )
 
+type testCase struct {
+	name                 string
+	imageName            string
+	imageFile            string
+	expectedFiles        []string
+	expectedOS           analyzer.OS
+	expectedPkgsFromCmds string
+	expectedLibraries    string
+}
+
 func TestFanal_Library_DockerMode(t *testing.T) {
-	testCases := []struct {
-		name                 string
-		imageName            string
-		imageFile            string
-		expectedFiles        []string
-		expectedOS           analyzer.OS
-		expectedPkgsFromCmds string
-		expectedLibraries    string
-	}{
+	testCases := []testCase{
 		{
 			name:          "happy path, alpine:3.10",
 			imageName:     "alpine:3.10",
@@ -161,15 +163,7 @@ func TestFanal_Library_DockerMode(t *testing.T) {
 	}
 }
 
-func runChecks(t *testing.T, ac analyzer.Config, ctx context.Context, tc struct {
-	name                 string
-	imageName            string
-	imageFile            string
-	expectedFiles        []string
-	expectedOS           analyzer.OS
-	expectedPkgsFromCmds string
-	expectedLibraries    string
-}, d string, c cache.Cache) {
+func runChecks(t *testing.T, ac analyzer.Config, ctx context.Context, tc testCase, d string, c cache.Cache) {
 	actualFiles, err := ac.Analyze(ctx, tc.imageFile)
 	require.NoError(t, err)
 	for file, _ := range actualFiles {
