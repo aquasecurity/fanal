@@ -109,7 +109,7 @@ func TestFanal_Library_DockerMode(t *testing.T) {
 			ctx := context.Background()
 			d, _ := ioutil.TempDir("", "TestFanal_Library_*")
 			defer os.RemoveAll(d)
-			c, _ := cache.New(d)
+			c := cache.Initialize(d)
 
 			opt := types.DockerOption{
 				Timeout:  600 * time.Second,
@@ -202,9 +202,8 @@ func runChecks(t *testing.T, ac analyzer.Config, ctx context.Context, tc struct 
 	require.Equal(t, 1, len(actualCachedFiles), tc.name)
 
 	// check Cache contents
-	var actualCacheValue []byte
-	found, err := c.Get("imagebucket", tc.imageFile, &actualCacheValue)
+	r := c.Get(tc.imageFile)
+	actualCacheValue, err := ioutil.ReadAll(r)
 	require.NoError(t, err)
-	assert.True(t, found)
 	assert.NotEmpty(t, actualCacheValue, tc.name)
 }
