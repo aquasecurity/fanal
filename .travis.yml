@@ -4,15 +4,20 @@ dist: bionic
 
 go:
   - "1.13"
+
 before_install:
   - go get github.com/mattn/goveralls
   - go get golang.org/x/tools/cmd/cover
   - sudo apt-get -y install docker-ce
 
+before_script:
+  - curl -sfL https://raw.githubusercontent.com/knqyf263/cob/master/install.sh | sudo sh -s -- -b /usr/local/bin
+
 script:
   - env GO111MODULE=on go test -v -covermode=count -coverprofile=coverage.out ./...
   - make test-integration
-    #  - if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then $HOME/gopath/bin/goveralls -coverprofile=coverage.out -service=travis-ci -repotoken $COVERALLS_TOKEN; fi
+  - cob -bench-cmd make -bench-args test-performance
+  #  - if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then $HOME/gopath/bin/goveralls -coverprofile=coverage.out -service=travis-ci -repotoken $COVERALLS_TOKEN; fi
 
 addons:
   apt:
