@@ -1,4 +1,4 @@
-// +build integration
+// +build performance
 
 package integration
 
@@ -41,6 +41,16 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+type testCase struct {
+	name                 string
+	imageName            string
+	imageFile            string
+	expectedFiles        []string
+	expectedOS           analyzer.OS
+	expectedPkgsFromCmds string
+	expectedLibraries    string
+}
 
 func runChecksBench(j int, b *testing.B, ac analyzer.Config, ctx context.Context, tc testCase, d string, c cache.Cache) {
 	for i := 0; i < b.N; i++ {

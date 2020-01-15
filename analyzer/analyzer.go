@@ -6,6 +6,7 @@ import (
 	"context"
 	"io"
 	"os"
+	"time"
 
 	"github.com/aquasecurity/fanal/utils"
 
@@ -118,6 +119,7 @@ func RequiredFilenames() []string {
 
 // TODO: Remove opts as they're no longer needed
 func (ac Config) Analyze(ctx context.Context, imageName string, opts ...types.DockerOption) (fileMap extractor.FileMap, err error) {
+	time.Sleep(time.Second * 2)
 	r, err := ac.Extractor.SaveLocalImage(ctx, imageName)
 	if err != nil {
 		// when no docker daemon is installed or no image exists in the local machine

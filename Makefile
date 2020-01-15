@@ -29,3 +29,7 @@ integration/testdata/fixtures/*.tar.gz:
 .PHONY: test-integration
 test-integration: integration/testdata/fixtures/*.tar.gz
 	go test -v -tags=integration ./integration/...
+
+.PHONY: test-performance
+test-performance: integration/testdata/fixtures/*.tar.gz
+	go test -v -tags=performance -bench=. ./integration/...
