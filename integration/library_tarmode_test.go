@@ -4,18 +4,20 @@ package integration
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"os"
+	"strings"
 	"testing"
 	"time"
 
-	"github.com/aquasecurity/fanal/analyzer"
-	"github.com/aquasecurity/fanal/extractor/docker"
-	dtypes "github.com/docker/docker/api/types"
-	"github.com/docker/docker/client"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
+	"github.com/aquasecurity/fanal/extractor"
 
+	"github.com/aquasecurity/fanal/extractor/docker"
+	"github.com/aquasecurity/fanal/types"
+
+	"github.com/aquasecurity/fanal/analyzer"
 	_ "github.com/aquasecurity/fanal/analyzer/command/apk"
 	_ "github.com/aquasecurity/fanal/analyzer/library/bundler"
 	_ "github.com/aquasecurity/fanal/analyzer/library/cargo"
@@ -35,20 +37,14 @@ import (
 	_ "github.com/aquasecurity/fanal/analyzer/pkg/rpm"
 
 	"github.com/aquasecurity/fanal/cache"
-	"github.com/aquasecurity/fanal/types"
+	godeptypes "github.com/aquasecurity/go-dep-parser/pkg/types"
+	dtypes "github.com/docker/docker/api/types"
+	"github.com/docker/docker/client"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
-type testCase struct {
-	name                 string
-	imageName            string
-	imageFile            string
-	expectedFiles        []string
-	expectedOS           analyzer.OS
-	expectedPkgsFromCmds string
-	expectedLibraries    string
-}
-
-func TestFanal_Library_DockerMode(t *testing.T) {
+func TestFanal_Library_TarMode(t *testing.T) {
 	testCases := []testCase{
 		{
 			name:          "happy path, alpine:3.10",
@@ -126,41 +122,25 @@ func TestFanal_Library_DockerMode(t *testing.T) {
 				PruneChildren: true,
 			})
 
+			// open tar.gz file
 			testfile, err := os.Open(tc.imageFile)
 			require.NoError(t, err)
-
-			// load image into docker engine
-			_, err = cli.ImageLoad(ctx, testfile, true)
-			require.NoError(t, err, tc.name)
-
-			// tag our image to something unique
-			err = cli.ImageTag(ctx, tc.imageName, tc.imageFile)
-			require.NoError(t, err, tc.name)
+			defer testfile.Close()
 
 			ext, err := docker.NewDockerExtractor(opt, c)
 			require.NoError(t, err, tc.name)
-			ac := analyzer.Config{Extractor: ext}
 
-			// run tests twice, one without cache and with cache
-			for i := 1; i <= 2; i++ {
-				runChecksDockerMode(t, ac, ctx, tc, d, c)
-			}
+			ac := analyzer.Config{Extractor: ext}
+			runCheckTarMode(t, ac, ctx, tc, d, testfile)
 
 			// clear Cache
 			require.NoError(t, c.Clear(), tc.name)
-
-			// remove Image
-			_, err = cli.ImageRemove(ctx, tc.imageFile, dtypes.ImageRemoveOptions{
-				Force:         true,
-				PruneChildren: true,
-			})
-			assert.NoError(t, err, tc.name)
 		})
 	}
 }
 
-func runChecksDockerMode(t *testing.T, ac analyzer.Config, ctx context.Context, tc testCase, d string, c cache.Cache) {
-	actualFiles, err := ac.Analyze(ctx, tc.imageFile)
+func runCheckTarMode(t *testing.T, ac analyzer.Config, ctx context.Context, tc testCase, d string, testfile *os.File) {
+	actualFiles, err := ac.AnalyzeFile(ctx, testfile)
 	checkFiles(t, err, actualFiles, tc)
 
 	// check OS
@@ -176,11 +156,63 @@ func runChecksDockerMode(t *testing.T, ac analyzer.Config, ctx context.Context, 
 	checkLibraries(actualFiles, t, tc)
 
 	// check Cache
-	checkCache(d, 1, t, tc)
+	checkCache(d, 0, t, tc)
+}
 
-	// check Cache contents
-	r := c.Get(tc.imageFile)
-	actualCacheValue, err := ioutil.ReadAll(r)
+func checkFiles(t *testing.T, err error, actualFiles extractor.FileMap, tc testCase) {
 	require.NoError(t, err)
-	assert.NotEmpty(t, actualCacheValue, tc.name)
+	for file, _ := range actualFiles {
+		assert.Contains(t, tc.expectedFiles, file, tc.name)
+	}
+	assert.Equal(t, len(tc.expectedFiles), len(actualFiles), tc.name)
+}
+
+func checkCache(d string, numExpectedFiles int, t *testing.T, tc testCase) {
+	actualCachedFiles, _ := ioutil.ReadDir(d + "/fanal/")
+	require.Equal(t, numExpectedFiles, len(actualCachedFiles), tc.name)
+}
+
+func checkLibraries(actualFiles extractor.FileMap, t *testing.T, tc testCase) {
+	actualLibs, err := analyzer.GetLibraries(actualFiles)
+	require.NoError(t, err)
+	if tc.expectedLibraries != "" {
+		data, _ := ioutil.ReadFile(tc.expectedLibraries)
+		var expectedLibraries map[analyzer.FilePath][]godeptypes.Library
+		json.Unmarshal(data, &expectedLibraries)
+		require.Equal(t, len(expectedLibraries), len(actualLibs), tc.name)
+		for l := range expectedLibraries {
+			assert.Contains(t, actualLibs, l, tc.name)
+		}
+	} else {
+		assert.Equal(t, map[analyzer.FilePath][]godeptypes.Library{}, actualLibs, tc.name)
+	}
+}
+
+func checkPackageFromCommands(osFound analyzer.OS, actualFiles extractor.FileMap, t *testing.T, tc testCase) {
+	actualPkgsFromCmds, err := analyzer.GetPackagesFromCommands(osFound, actualFiles)
+	require.NoError(t, err)
+	if tc.expectedPkgsFromCmds != "" {
+		data, _ := ioutil.ReadFile(tc.expectedPkgsFromCmds)
+		var expectedPkgsFromCmds []analyzer.Package
+		json.Unmarshal(data, &expectedPkgsFromCmds)
+		assert.ElementsMatch(t, expectedPkgsFromCmds, actualPkgsFromCmds, tc.name)
+	} else {
+		assert.Equal(t, []analyzer.Package(nil), actualPkgsFromCmds, tc.name)
+	}
+}
+
+func checkPackages(actualFiles extractor.FileMap, t *testing.T, tc testCase) {
+	actualPkgs, err := analyzer.GetPackages(actualFiles)
+	require.NoError(t, err)
+	data, _ := ioutil.ReadFile(fmt.Sprintf("testdata/goldens/%s.expectedpackages.golden", strings.ReplaceAll(tc.imageName, "/", "")))
+	var expectedPkgs []analyzer.Package
+	json.Unmarshal(data, &expectedPkgs)
+	assert.ElementsMatch(t, expectedPkgs, actualPkgs, tc.name)
+}
+
+func checkOS(actualFiles extractor.FileMap, t *testing.T, tc testCase) analyzer.OS {
+	osFound, err := analyzer.GetOS(actualFiles)
+	require.NoError(t, err)
+	assert.Equal(t, tc.expectedOS, osFound, tc.name)
+	return osFound
 }
