@@ -58,25 +58,18 @@ type layer struct {
 }
 
 type Extractor struct {
-	Client *client.Client
-	Option types.DockerOption
+	option types.DockerOption
 	cache  cache.Cache
 }
 
-func NewDockerExtractor(option types.DockerOption, c cache.Cache) (Extractor, error) {
-	RegisterRegistry(&gcr.GCR{})
-	RegisterRegistry(&ecr.ECR{})
-
-	cli, err := client.NewClientWithOpts(client.FromEnv)
-	if err != nil {
-		return Extractor{}, xerrors.Errorf("error initializing docker extractor: %w", err)
-	}
+func NewDockerExtractor(option types.DockerOption, c cache.Cache) Extractor {
+	image.RegisterRegistry(&gcr.GCR{})
+	image.RegisterRegistry(&ecr.ECR{})
 
 	return Extractor{
-		Option: option,
-		Client: cli,
+		option: option,
 		cache:  c,
-	}, nil
+	}
 }
 
 func applyLayers(layerPaths []string, filesInLayers map[string]extractor.FileMap, opqInLayers map[string]extractor.OPQDirs) (extractor.FileMap, error) {
@@ -167,40 +160,40 @@ func (d Extractor) saveLocalImage(ctx context.Context, imageName string) (io.Rea
 	return r, nil
 }
 
-func (d Extractor) Extract(ctx context.Context, imageName string, filenames []string) (extractor.FileMap, error) {
 	ctx, cancel := context.WithTimeout(ctx, d.Option.Timeout)
+func (d Extractor) Extract(ctx context.Context, imgRef image.Reference, transports, filenames []string) (extractor.FileMap, error) {
+	ctx, cancel := context.WithTimeout(ctx, d.option.Timeout)
 	defer cancel()
 
-	image, err := registry.ParseImage(imageName)
+	img, err := image.NewImage(ctx, imgRef, transports, d.option, d.cache)
 	if err != nil {
-		return nil, xerrors.Errorf("failed to parse the image: %w", err)
-	}
-	r, err := d.createRegistryClient(ctx, image.Domain)
-	if err != nil {
-		return nil, xerrors.Errorf("failed to create the registry client: %w", err)
+		return nil, err
 	}
 
-	// Get the v2 manifest.
-	m, err := getValidManifest(ctx, r, image)
+	var layerIDs []string
+	layers, err := img.LayerInfos()
 	if err != nil {
 		return nil, err
 	}
 
 	layerCh := make(chan layer)
 	errCh := make(chan error)
-	var layerIDs []string
-
-	for _, ref := range m.Manifest.Layers {
-		layerIDs = append(layerIDs, string(ref.Digest))
+	for _, l := range layers {
+		layerIDs = append(layerIDs, string(l.Digest))
 		go func(dig digest.Digest) {
-			d.extractLayerWorker(dig, r, ctx, image, errCh, layerCh)
-		}(ref.Digest)
+			img, err := img.GetBlob(ctx, dig)
+			if err != nil {
+				errCh <- err
+				return
+			}
+			layerCh <- layer{ID: dig, Content: img}
+		}(l.Digest)
 	}
 
-	filesInLayers := make(map[string]extractor.FileMap)
-	opqInLayers := make(map[string]extractor.OPQDirs)
-	for i := 0; i < len(m.Manifest.Layers); i++ {
-		if err := d.extractLayerFiles(ctx, layerCh, errCh, filenames, filesInLayers, opqInLayers); err != nil {
+	filesInLayers := map[string]extractor.FileMap{}
+	opqInLayers := map[string]extractor.OPQDirs{}
+	for i := 0; i < len(layerIDs); i++ {
+		if err := d.extractLayerFiles(ctx, layerCh, errCh, filesInLayers, opqInLayers, filenames); err != nil {
 			return nil, err
 		}
 	}
@@ -211,9 +204,9 @@ func (d Extractor) Extract(ctx context.Context, imageName string, filenames []st
 	}
 
 	// download config file
-	config, err := downloadConfigFile(ctx, r, image, m)
+	config, err := img.ConfigBlob(ctx)
 	if err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("failed to get a config blob: %w", err)
 	}
 
 	// special file for command analyzer
@@ -234,7 +227,8 @@ func downloadConfigFile(ctx context.Context, r *registry.Registry, image registr
 	return config, nil
 }
 
-func (d Extractor) extractLayerFiles(ctx context.Context, layerCh chan layer, errCh chan error, filenames []string, filesInLayers map[string]extractor.FileMap, opqInLayers map[string]extractor.OPQDirs) error {
+func (d Extractor) extractLayerFiles(ctx context.Context, layerCh chan layer, errCh chan error,
+	filesInLayers map[string]extractor.FileMap, opqInLayers map[string]extractor.OPQDirs, filenames []string) error {
 	var l layer
 	select {
 	case l = <-layerCh:
@@ -243,10 +237,13 @@ func (d Extractor) extractLayerFiles(ctx context.Context, layerCh chan layer, er
 	case <-ctx.Done():
 		return xerrors.Errorf("timeout: %w", ctx.Err())
 	}
+	defer l.Content.Close()
+
 	files, opqDirs, err := d.ExtractFiles(l.Content, filenames)
 	if err != nil {
 		return xerrors.Errorf("failed to extract files: %w", err)
 	}
+
 	layerID := string(l.ID)
 	filesInLayers[layerID] = files
 	opqInLayers[layerID] = opqDirs
