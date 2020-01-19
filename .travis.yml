@@ -13,14 +13,9 @@ before_install:
   - sudo apt-get update
   - sudo apt-get -y -o Dpkg::Options::="--force-confnew" install docker-ce
 
-before_script:
-  - curl -sfL https://raw.githubusercontent.com/knqyf263/cob/master/install.sh | sudo sh -s -- -b /usr/local/bin
-
 script:
   - env GO111MODULE=on go test -v -covermode=count -coverprofile=coverage.out ./...
   - make test-integration
-  - cob -bench-cmd make -bench-args test-performance
-  #  - if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then $HOME/gopath/bin/goveralls -coverprofile=coverage.out -service=travis-ci -repotoken $COVERALLS_TOKEN; fi
 
 addons:
   apt:
