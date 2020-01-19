@@ -32,12 +32,6 @@ const (
 	wh  string = ".wh."
 )
 
-type manifest struct {
-	Config   string   `json:"Config"`
-	RepoTags []string `json:"RepoTags"`
-	Layers   []string `json:"Layers"`
-}
-
 type Config struct {
 	ContainerConfig containerConfig `json:"container_config"`
 	History         []History
@@ -112,55 +106,6 @@ func applyLayers(layerPaths []string, filesInLayers map[string]extractor.FileMap
 
 }
 
-func (d Extractor) createRegistryClient(ctx context.Context, domain string) (*registry.Registry, error) {
-	auth, err := GetToken(ctx, domain, d.Option)
-	if err != nil {
-		return nil, xerrors.Errorf("failed to get auth config: %w", err)
-	}
-
-	// Prevent non-ssl unless explicitly forced
-	if !d.Option.NonSSL && strings.HasPrefix(auth.ServerAddress, "http:") {
-		return nil, xerrors.New("attempted to use insecure protocol! Use force-non-ssl option to force")
-	}
-
-	// Create the registry client.
-	return registry.New(ctx, auth, registry.Opt{
-		Domain:   domain,
-		Insecure: d.Option.Insecure,
-		Debug:    d.Option.Debug,
-		SkipPing: d.Option.SkipPing,
-		NonSSL:   d.Option.NonSSL,
-		Timeout:  d.Option.Timeout,
-	})
-}
-
-func (d Extractor) SaveLocalImage(ctx context.Context, imageName string) (io.Reader, error) {
-	var err error
-	r := d.cache.Get(imageName)
-	if r == nil {
-		// Save the image
-		r, err = d.saveLocalImage(ctx, imageName)
-		if err != nil {
-			return nil, xerrors.Errorf("failed to save the image: %w", err)
-		}
-		r, err = d.cache.Set(imageName, r)
-		if err != nil {
-			log.Print(err)
-		}
-	}
-
-	return r, nil
-}
-
-func (d Extractor) saveLocalImage(ctx context.Context, imageName string) (io.ReadCloser, error) {
-	r, err := d.Client.ImageSave(ctx, []string{imageName})
-	if err != nil {
-		return nil, xerrors.New("error in docker image save")
-	}
-	return r, nil
-}
-
-	ctx, cancel := context.WithTimeout(ctx, d.Option.Timeout)
 func (d Extractor) Extract(ctx context.Context, imgRef image.Reference, transports, filenames []string) (extractor.FileMap, error) {
 	ctx, cancel := context.WithTimeout(ctx, d.option.Timeout)
 	defer cancel()
@@ -215,18 +160,6 @@ func (d Extractor) Extract(ctx context.Context, imgRef image.Reference, transpor
 	return fileMap, nil
 }
 
-func downloadConfigFile(ctx context.Context, r *registry.Registry, image registry.Image, m *schema2.DeserializedManifest) ([]byte, error) {
-	rc, err := r.DownloadLayer(ctx, image.Path, m.Manifest.Config.Digest)
-	if err != nil {
-		return nil, xerrors.Errorf("error in layer download: %w", err)
-	}
-	config, err := ioutil.ReadAll(rc)
-	if err != nil {
-		return nil, xerrors.Errorf("failed to decode config JSON: %w", err)
-	}
-	return config, nil
-}
-
 func (d Extractor) extractLayerFiles(ctx context.Context, layerCh chan layer, errCh chan error,
 	filesInLayers map[string]extractor.FileMap, opqInLayers map[string]extractor.OPQDirs, filenames []string) error {
 	var l layer
@@ -249,114 +182,6 @@ func (d Extractor) extractLayerFiles(ctx context.Context, layerCh chan layer, er
 	opqInLayers[layerID] = opqDirs
 
 	return nil
-}
-
-func (d Extractor) extractLayerWorker(dig digest.Digest, r *registry.Registry, ctx context.Context, image registry.Image, errCh chan error, layerCh chan layer) {
-	var rc io.Reader
-	// Use cache
-	rc = d.cache.Get(string(dig))
-	if rc == nil {
-		// Download the layer.
-		layerRC, err := r.DownloadLayer(ctx, image.Path, dig)
-		if err != nil {
-			errCh <- xerrors.Errorf("failed to download the layer(%s): %w", dig, err)
-			return
-		}
-
-		rc, err = d.cache.Set(string(dig), layerRC)
-		if err != nil {
-			log.Print(err)
-		}
-	}
-	gzipReader, err := gzip.NewReader(rc)
-	if err != nil {
-		errCh <- xerrors.Errorf("invalid gzip: %w", err)
-		return
-	}
-	layerCh <- layer{ID: dig, Content: gzipReader}
-}
-
-func getValidManifest(ctx context.Context, r *registry.Registry, image registry.Image) (*schema2.DeserializedManifest, error) {
-	manifest, err := r.Manifest(ctx, image.Path, image.Reference())
-	if err != nil {
-		return nil, xerrors.Errorf("failed to get the v2 manifest: %w", err)
-	}
-	m, ok := manifest.(*schema2.DeserializedManifest)
-	if !ok {
-		return nil, xerrors.New("invalid manifest")
-	}
-	return m, nil
-}
-
-func (d Extractor) ExtractFromFile(ctx context.Context, r io.Reader, filenames []string) (extractor.FileMap, error) {
-	manifests := make([]manifest, 0)
-	filesInLayers := map[string]extractor.FileMap{}
-	opqInLayers := make(map[string]extractor.OPQDirs)
-
-	tarFiles := make(map[string][]byte)
-
-	// Extract the files from the tarball
-	tr := tar.NewReader(r)
-	for {
-		header, err := tr.Next()
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			return nil, xerrors.Errorf("failed to extract the archive: %w", err)
-		}
-
-		switch {
-		case header.Name == "manifest.json":
-			if err := json.NewDecoder(tr).Decode(&manifests); err != nil {
-				return nil, xerrors.Errorf("failed to decode manifest JSON: %w", err)
-			}
-		case strings.HasSuffix(header.Name, ".tar"):
-			files, opqDirs, err := d.ExtractFiles(tr, filenames)
-			if err != nil {
-				return nil, err
-			}
-
-			filesInLayers[header.Name] = files
-			opqInLayers[header.Name] = opqDirs
-		case strings.HasSuffix(header.Name, ".tar.gz"):
-			gzipReader, err := gzip.NewReader(tr)
-			if err != nil {
-				return nil, err
-			}
-			files, opqDirs, err := d.ExtractFiles(gzipReader, filenames)
-			if err != nil {
-				return nil, err
-			}
-
-			filesInLayers[header.Name] = files
-			opqInLayers[header.Name] = opqDirs
-		default:
-			// save all JSON temporarily for config JSON
-			tarFiles[header.Name], err = ioutil.ReadAll(tr)
-			if err != nil {
-				return nil, xerrors.Errorf("failed to read a file: %w", err)
-			}
-		}
-	}
-
-	if len(manifests) == 0 {
-		return nil, xerrors.New("Invalid manifest file")
-	}
-
-	fileMap, err := applyLayers(manifests[0].Layers, filesInLayers, opqInLayers)
-	if err != nil {
-		return nil, xerrors.Errorf("failed to apply layers: %w", err)
-	}
-
-	// special file for command analyzer
-	data, ok := tarFiles[manifests[0].Config]
-	if !ok {
-		return nil, xerrors.Errorf("Image config: %s not found\n", manifests[0].Config)
-	}
-	fileMap["/config"] = data
-
-	return fileMap, nil
 }
 
 func (d Extractor) ExtractFiles(layer io.Reader, filenames []string) (extractor.FileMap, extractor.OPQDirs, error) {
