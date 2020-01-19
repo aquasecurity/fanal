@@ -45,7 +45,7 @@ func NewImage(ctx context.Context, image Reference, transports []string, option 
 	if !image.IsFile {
 		named, err := reference.ParseNormalizedNamed(image.Name)
 		if err != nil {
-			return Image{}, err
+			return Image{}, xerrors.Errorf("invalid image name: %w", err)
 		}
 
 		// add 'latest' tag
@@ -89,7 +89,7 @@ func (img *Image) populateSource() error {
 		var ref imageTypes.ImageReference
 		ref, err = alltransports.ParseImageName(imgName)
 		if err != nil {
-			return err
+			return xerrors.Errorf("failed to parse an image name: %w", err)
 		}
 
 		img.rawSource, err = ref.NewImageSource(ctx, img.systemContext)
@@ -99,7 +99,7 @@ func (img *Image) populateSource() error {
 		}
 		img.src, err = image.FromSource(ctx, img.systemContext, img.rawSource)
 		if err != nil {
-			return err
+			return xerrors.Errorf("failed to initialize: %w", err)
 		}
 		return nil
 	}
@@ -116,7 +116,7 @@ func (img *Image) LayerInfos() ([]imageTypes.BlobInfo, error) {
 
 	// When it doesn't hit a cache, it fetches the image from Docker Engine or Docker Registry
 	if err := img.populateSource(); err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("failed population: %w", err)
 	}
 
 	layers := img.src.LayerInfos()
@@ -151,7 +151,7 @@ func (img Image) storeLayerInfosInCache(imageName string, isFile bool, layers []
 
 	b, err := json.Marshal(layers)
 	if err != nil {
-		return err
+		return xerrors.Errorf("invalid json: %w", err)
 	}
 	return img.cache.SetBytes("layerinfos::"+imageName, b)
 }
@@ -163,12 +163,12 @@ func (img *Image) ConfigBlob(ctx context.Context) ([]byte, error) {
 	}
 
 	if err := img.populateSource(); err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("failed population: %w", err)
 	}
 
 	blob, err := img.src.ConfigBlob(ctx)
 	if err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("failed to get a config: %w", err)
 	}
 
 	if !img.isFile {
@@ -201,7 +201,7 @@ func (img *Image) GetBlob(ctx context.Context, dig digest.Digest) (io.ReadCloser
 	}
 
 	if err := img.populateSource(); err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("failed population: %w", err)
 	}
 
 	rc, _, err := img.rawSource.GetBlob(ctx, imageTypes.BlobInfo{Digest: dig, Size: -1}, img.blobInfoCache)

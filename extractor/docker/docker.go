@@ -107,13 +107,13 @@ func (d Extractor) Extract(ctx context.Context, imgRef image.Reference, transpor
 
 	img, err := image.NewImage(ctx, imgRef, transports, d.option, d.cache)
 	if err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("unable to initialize a image struct: %w", err)
 	}
 
 	var layerIDs []string
 	layers, err := img.LayerInfos()
 	if err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("unable to get layer information: %w", err)
 	}
 
 	layerCh := make(chan layer)
@@ -123,7 +123,7 @@ func (d Extractor) Extract(ctx context.Context, imgRef image.Reference, transpor
 		go func(dig digest.Digest) {
 			img, err := img.GetBlob(ctx, dig)
 			if err != nil {
-				errCh <- err
+				errCh <- xerrors.Errorf("failed to get a blob: %w", err)
 				return
 			}
 			layerCh <- layer{ID: dig, Content: img}
@@ -134,7 +134,7 @@ func (d Extractor) Extract(ctx context.Context, imgRef image.Reference, transpor
 	opqInLayers := map[string]extractor.OPQDirs{}
 	for i := 0; i < len(layerIDs); i++ {
 		if err := d.extractLayerFiles(ctx, layerCh, errCh, filesInLayers, opqInLayers, filenames); err != nil {
-			return nil, err
+			return nil, xerrors.Errorf("failed to extract files from layer: %w", err)
 		}
 	}
 

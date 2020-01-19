@@ -296,7 +296,7 @@ func TestDockerExtractor_Extract(t *testing.T) {
 			switch {
 			case tc.expectedError != "":
 				require.NotNil(t, err, tc.name)
-				assert.Equal(t, tc.expectedError, err.Error(), tc.name)
+				assert.Contains(t, err.Error(), tc.expectedError, tc.name)
 			default:
 				assert.NoError(t, err, tc.name)
 			}

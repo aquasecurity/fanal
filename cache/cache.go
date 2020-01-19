@@ -66,7 +66,7 @@ func (fs FSCache) SetBytes(key string, b []byte) error {
 	}
 
 	if _, err := cacheFile.Write(b); err != nil {
-		return err
+		return xerrors.Errorf("cache write error: %w", err)
 	}
 	return nil
 }
