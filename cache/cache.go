@@ -20,6 +20,7 @@ var (
 type Cache interface {
 	Get(key string) io.Reader
 	Set(key string, file io.Reader) (io.Reader, error)
+	SetBytes(key string, b []byte) error
 	Clear() error
 }
 
@@ -52,6 +53,22 @@ func (fs FSCache) Set(key string, file io.Reader) (io.Reader, error) {
 
 	tee := io.TeeReader(file, cacheFile)
 	return tee, nil
+}
+
+func (fs FSCache) SetBytes(key string, b []byte) error {
+	filePath := filepath.Join(fs.directory, replacer.Replace(key))
+	if err := os.MkdirAll(fs.directory, os.ModePerm); err != nil {
+		return xerrors.Errorf("failed to mkdir all: %w", err)
+	}
+	cacheFile, err := os.Create(filePath)
+	if err != nil {
+		return xerrors.Errorf("failed to create cache file: %w", err)
+	}
+
+	if _, err := cacheFile.Write(b); err != nil {
+		return err
+	}
+	return nil
 }
 
 func (fs FSCache) Clear() error {
