@@ -195,8 +195,6 @@ func (img Image) getConfigBlobInCache(imageName string, isFile bool) ([]byte, er
 }
 
 func (img *Image) GetBlob(ctx context.Context, dig digest.Digest) (io.ReadCloser, error) {
-	var err error
-
 	rc := img.cache.Get(dig.String())
 	if rc != nil {
 		return rc, nil
@@ -206,7 +204,7 @@ func (img *Image) GetBlob(ctx context.Context, dig digest.Digest) (io.ReadCloser
 		return nil, err
 	}
 
-	rc, _, err = img.rawSource.GetBlob(ctx, imageTypes.BlobInfo{Digest: dig, Size: -1}, img.blobInfoCache)
+	rc, _, err := img.rawSource.GetBlob(ctx, imageTypes.BlobInfo{Digest: dig, Size: -1}, img.blobInfoCache)
 	if err != nil {
 		return nil, xerrors.Errorf("failed to download the layer(%s): %w", dig, err)
 	}
