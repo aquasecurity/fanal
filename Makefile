@@ -11,8 +11,8 @@ devel-deps: deps
 	  github.com/mattn/goveralls
 
 .PHONY: test
-test: deps
-	go test ./...
+test:
+	go test -tags="containers_image_storage_stub" ./...
 
 .PHONY: lint
 lint: devel-deps
