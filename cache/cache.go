@@ -28,7 +28,7 @@ type FSCache struct {
 	directory string
 }
 
-func Initialize(cacheDir string) Cache {
+func New(cacheDir string) Cache {
 	return &FSCache{directory: filepath.Join(cacheDir, cacheDirName)}
 }
 
