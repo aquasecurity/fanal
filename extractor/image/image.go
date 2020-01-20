@@ -154,7 +154,7 @@ func (img Image) getLayerInfosInCache(imageName string, isFile bool) ([]imageTyp
 	}
 	var layerInfos []imageTypes.BlobInfo
 	if err := json.NewDecoder(rc).Decode(&layerInfos); err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("invalid cache: %w", err)
 	}
 	return layerInfos, nil
 }
@@ -205,7 +205,7 @@ func (img Image) getConfigBlobInCache(imageName string, isFile bool) ([]byte, er
 	}
 	b, err := ioutil.ReadAll(rc)
 	if err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("unable to read a cache file: %w", err)
 	}
 	return b, nil
 }
