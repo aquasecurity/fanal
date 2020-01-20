@@ -58,6 +58,7 @@ func NewImage(ctx context.Context, image Reference, transports []string, option 
 	}
 
 	sys := &imageTypes.SystemContext{
+		// TODO: make OSChoice configurable
 		OSChoice:                          "linux",
 		DockerAuthConfig:                  &auth,
 		DockerDisableV1Ping:               option.SkipPing,
