@@ -19,6 +19,15 @@ import (
 	"github.com/aquasecurity/fanal/types"
 )
 
+type ImageSource interface {
+	GetBlob(ctx context.Context, info imageTypes.BlobInfo, cache imageTypes.BlobInfoCache) (reader io.ReadCloser, n int64, err error)
+}
+
+type ImageCloser interface {
+	LayerInfos() (layerInfos []imageTypes.BlobInfo)
+	ConfigBlob(ctx context.Context) (blob []byte, err error)
+}
+
 type Reference struct {
 	Name   string
 	IsFile bool
@@ -31,8 +40,8 @@ type Image struct {
 
 	systemContext *imageTypes.SystemContext
 	blobInfoCache imageTypes.BlobInfoCache
-	rawSource     imageTypes.ImageSource
-	src           imageTypes.ImageCloser
+	rawSource     ImageSource
+	src           ImageCloser
 
 	cache cache.Cache
 }
@@ -93,15 +102,21 @@ func (img *Image) populateSource() error {
 			return xerrors.Errorf("failed to parse an image name: %w", err)
 		}
 
-		img.rawSource, err = ref.NewImageSource(ctx, img.systemContext)
+		var rawSource imageTypes.ImageSource
+		rawSource, err = ref.NewImageSource(ctx, img.systemContext)
 		if err != nil {
 			// try next transport
 			continue
 		}
-		img.src, err = image.FromSource(ctx, img.systemContext, img.rawSource)
+
+		var src imageTypes.ImageCloser
+		src, err = image.FromSource(ctx, img.systemContext, rawSource)
 		if err != nil {
 			return xerrors.Errorf("failed to initialize: %w", err)
 		}
+
+		img.rawSource = rawSource
+		img.src = src
 		return nil
 	}
 	// return only the last error

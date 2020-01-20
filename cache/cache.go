@@ -18,10 +18,10 @@ var (
 )
 
 type Cache interface {
-	Get(key string) io.ReadCloser
-	Set(key string, file io.Reader) (io.Reader, error)
-	SetBytes(key string, b []byte) error
-	Clear() error
+	Get(key string) (reader io.ReadCloser)
+	Set(key string, file io.Reader) (reader io.Reader, err error)
+	SetBytes(key string, value []byte) (err error)
+	Clear() (err error)
 }
 
 type FSCache struct {
