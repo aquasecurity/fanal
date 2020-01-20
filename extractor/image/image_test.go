@@ -392,3 +392,157 @@ func TestImage_LayerInfos(t *testing.T) {
 	}
 }
 
+func TestImage_ConfigBlob(t *testing.T) {
+	type fields struct {
+		name   string
+		isFile bool
+	}
+	tests := []struct {
+		name          string
+		fields        fields
+		cacheGet      []cache.GetExpectation
+		cacheSetBytes []cache.SetBytesExpectation
+		configBlob    []ConfigBlobExpectation
+		want          []byte
+		wantErr       string
+	}{
+		{
+			name: "happy path without cache",
+			fields: fields{
+				name:   "docker.io/library/alpine:3.10",
+				isFile: false,
+			},
+			cacheGet: []cache.GetExpectation{
+				{
+					Args: cache.GetArgs{
+						Key: "configblob::docker.io/library/alpine:3.10",
+					},
+					Returns: cache.GetReturns{Reader: nil},
+				},
+			},
+			cacheSetBytes: []cache.SetBytesExpectation{
+				{
+					Args: cache.SetBytesArgs{
+						Key:   "configblob::docker.io/library/alpine:3.10",
+						Value: []byte(`foo`),
+					},
+					Returns: cache.SetBytesReturns{Err: nil},
+				},
+			},
+			configBlob: []ConfigBlobExpectation{
+				{
+					Args: ConfigBlobArgs{
+						CtxAnything: true,
+					},
+					Returns: ConfigBlobReturns{
+						Blob: []byte(`foo`),
+					},
+				},
+			},
+			want: []byte(`foo`),
+		},
+		{
+			name: "happy path with cache",
+			fields: fields{
+				name:   "docker.io/library/alpine:3.11",
+				isFile: false,
+			},
+			cacheGet: []cache.GetExpectation{
+				{
+					Args: cache.GetArgs{
+						Key: "configblob::docker.io/library/alpine:3.11",
+					},
+					Returns: cache.GetReturns{Reader: ioutil.NopCloser(bytes.NewBuffer([]byte(`foo`)))},
+				},
+			},
+			want: []byte(`foo`),
+		},
+		{
+			name: "happy path: cache.SetBytes returns an error, but it is ignored",
+			fields: fields{
+				name:   "docker.io/library/alpine:3.11",
+				isFile: false,
+			},
+			cacheGet: []cache.GetExpectation{
+				{
+					Args: cache.GetArgs{
+						Key: "configblob::docker.io/library/alpine:3.11",
+					},
+					Returns: cache.GetReturns{Reader: nil},
+				},
+			},
+			cacheSetBytes: []cache.SetBytesExpectation{
+				{
+					Args: cache.SetBytesArgs{
+						Key:           "configblob::docker.io/library/alpine:3.11",
+						ValueAnything: true,
+					},
+					Returns: cache.SetBytesReturns{Err: xerrors.New("error")},
+				},
+			},
+			configBlob: []ConfigBlobExpectation{
+				{
+					Args: ConfigBlobArgs{
+						CtxAnything: true,
+					},
+					Returns: ConfigBlobReturns{
+						Blob: []byte(`bar`),
+					},
+				},
+			},
+			want: []byte(`bar`),
+		},
+		{
+			name: "happy path: tar file",
+			fields: fields{
+				name:   "/workspace/alpine-3.10.tar",
+				isFile: true,
+			},
+			configBlob: []ConfigBlobExpectation{
+				{
+					Args: ConfigBlobArgs{
+						CtxAnything: true,
+					},
+					Returns: ConfigBlobReturns{
+						Blob: []byte(`baz`),
+					},
+				},
+			},
+			want: []byte(`baz`),
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := new(cache.MockCache)
+			c.ApplyGetExpectations(tt.cacheGet)
+			c.ApplySetBytesExpectations(tt.cacheSetBytes)
+
+			rawSource := new(MockImageSource)
+
+			src := new(MockImageCloser)
+			src.ApplyConfigBlobExpectations(tt.configBlob)
+
+			img := &Image{
+				name:      tt.fields.name,
+				isFile:    tt.fields.isFile,
+				rawSource: rawSource,
+				src:       src,
+				cache:     c,
+			}
+			got, err := img.ConfigBlob(context.Background())
+			if tt.wantErr != "" {
+				require.NotNil(t, err, tt.name)
+				require.Contains(t, err.Error(), tt.wantErr, tt.name)
+				return
+			} else {
+				require.NoError(t, err, tt.name)
+			}
+
+			assert.Equal(t, tt.want, got, tt.name)
+
+			c.AssertExpectations(t)
+			rawSource.AssertExpectations(t)
+			src.AssertExpectations(t)
+		})
+	}
+}
