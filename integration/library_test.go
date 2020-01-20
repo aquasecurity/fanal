@@ -147,7 +147,7 @@ func TestFanal_Library_DockerMode(t *testing.T) {
 
 			// run tests twice, one without cache and with cache
 			for i := 1; i <= 2; i++ {
-				runChecksDockerMode(t, ac, ctx, tc, d, c)
+				runChecks(t, "docker", ac, ctx, tc, d, c, nil)
 			}
 
 			// clear Cache
@@ -197,7 +197,7 @@ func TestFanal_Library_TarMode(t *testing.T) {
 			require.NoError(t, err, tc.name)
 
 			ac := analyzer.Config{Extractor: ext}
-			runCheckTarMode(t, ac, ctx, tc, d, testfile)
+			runChecks(t, "tar", ac, ctx, tc, d, nil, testfile)
 
 			// clear Cache
 			require.NoError(t, c.Clear(), tc.name)
@@ -205,50 +205,29 @@ func TestFanal_Library_TarMode(t *testing.T) {
 	}
 }
 
-func runChecksDockerMode(t *testing.T, ac analyzer.Config, ctx context.Context, tc testCase, d string, c cache.Cache) {
-	actualFiles, err := ac.Analyze(ctx, tc.imageFile)
-	checkFiles(t, err, actualFiles, tc)
-
-	// check OS
-	osFound := checkOS(actualFiles, t, tc)
-
-	// check Packages
-	checkPackages(actualFiles, t, tc)
-
-	// check Packges from Commands
-	checkPackageFromCommands(osFound, actualFiles, t, tc)
-
-	// check Libraries
-	checkLibraries(actualFiles, t, tc)
-
-	// check Cache
-	checkCache(d, 1, t, tc)
-
-	// check Cache contents
-	r := c.Get(tc.imageFile)
-	actualCacheValue, err := ioutil.ReadAll(r)
-	require.NoError(t, err)
-	assert.NotEmpty(t, actualCacheValue, tc.name)
+func runChecks(t *testing.T, mode string, ac analyzer.Config, ctx context.Context, tc testCase, d string, c cache.Cache, testfile *os.File) {
+	switch mode {
+	case "docker":
+		actualFiles, err := ac.Analyze(ctx, tc.imageFile)
+		commonChecks(t, err, actualFiles, tc)
+		checkCache(d, 1, t, tc)
+		r := c.Get(tc.imageFile)
+		actualCacheValue, err := ioutil.ReadAll(r)
+		require.NoError(t, err)
+		assert.NotEmpty(t, actualCacheValue, tc.name)
+	case "tar":
+		actualFiles, err := ac.AnalyzeFile(ctx, testfile)
+		commonChecks(t, err, actualFiles, tc)
+		checkCache(d, 0, t, tc)
+	}
 }
 
-func runCheckTarMode(t *testing.T, ac analyzer.Config, ctx context.Context, tc testCase, d string, testfile *os.File) {
-	actualFiles, err := ac.AnalyzeFile(ctx, testfile)
+func commonChecks(t *testing.T, err error, actualFiles extractor.FileMap, tc testCase) {
 	checkFiles(t, err, actualFiles, tc)
-
-	// check OS
 	osFound := checkOS(actualFiles, t, tc)
-
-	// check Packages
 	checkPackages(actualFiles, t, tc)
-
-	// check Packges from Commands
 	checkPackageFromCommands(osFound, actualFiles, t, tc)
-
-	// check Libraries
 	checkLibraries(actualFiles, t, tc)
-
-	// check Cache
-	checkCache(d, 0, t, tc)
 }
 
 func checkFiles(t *testing.T, err error, actualFiles extractor.FileMap, tc testCase) {
