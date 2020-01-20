@@ -6,6 +6,8 @@ import (
 	"io/ioutil"
 	"testing"
 
+	"github.com/opencontainers/go-digest"
+
 	imageTypes "github.com/containers/image/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -538,6 +540,109 @@ func TestImage_ConfigBlob(t *testing.T) {
 				require.NoError(t, err, tt.name)
 			}
 
+			assert.Equal(t, tt.want, got, tt.name)
+
+			c.AssertExpectations(t)
+			rawSource.AssertExpectations(t)
+			src.AssertExpectations(t)
+		})
+	}
+}
+
+func TestImage_GetBlob(t *testing.T) {
+	tests := []struct {
+		name     string
+		dig      digest.Digest
+		cacheGet []cache.GetExpectation
+		cacheSet []cache.SetExpectation
+		getBlob  []GetBlobExpectation
+		want     []byte
+		wantErr  string
+	}{
+		{
+			name: "happy path without cache",
+			dig:  "sha256:e6b0cf9c0882fb079c9d35361d12ff4691f916b6d825061247d1bd0b26d7cf3f",
+			cacheGet: []cache.GetExpectation{
+				{
+					Args: cache.GetArgs{
+						Key: "sha256:e6b0cf9c0882fb079c9d35361d12ff4691f916b6d825061247d1bd0b26d7cf3f",
+					},
+					Returns: cache.GetReturns{Reader: nil},
+				},
+			},
+			cacheSet: []cache.SetExpectation{
+				{
+					Args: cache.SetArgs{
+						Key:          "sha256:e6b0cf9c0882fb079c9d35361d12ff4691f916b6d825061247d1bd0b26d7cf3f",
+						FileAnything: true,
+					},
+					Returns: cache.SetReturns{
+						Reader: ioutil.NopCloser(bytes.NewBuffer([]byte(`foo`))),
+					},
+				},
+			},
+			getBlob: []GetBlobExpectation{
+				{
+					Args: GetBlobArgs{
+						CtxAnything: true,
+						Info: imageTypes.BlobInfo{
+							Digest: "sha256:e6b0cf9c0882fb079c9d35361d12ff4691f916b6d825061247d1bd0b26d7cf3f",
+							Size:   -1,
+						},
+						CacheAnything: true,
+					},
+					Returns: GetBlobReturns{
+						Reader: ioutil.NopCloser(bytes.NewBuffer([]byte(`foo`))),
+					},
+				},
+			},
+			want: []byte(`foo`),
+		},
+		{
+			name: "happy path with cache",
+			dig:  "sha256:03901b4a2ea88eeaad62dbe59b072b28b6efa00491962b8741081c5df50c65e0",
+			cacheGet: []cache.GetExpectation{
+				{
+					Args: cache.GetArgs{
+						Key: "sha256:03901b4a2ea88eeaad62dbe59b072b28b6efa00491962b8741081c5df50c65e0",
+					},
+					Returns: cache.GetReturns{
+						Reader: ioutil.NopCloser(bytes.NewBuffer([]byte(`foo`))),
+					},
+				},
+			},
+			want: []byte(`foo`),
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := new(cache.MockCache)
+			c.ApplyGetExpectations(tt.cacheGet)
+			c.ApplySetExpectations(tt.cacheSet)
+
+			rawSource := new(MockImageSource)
+			rawSource.ApplyGetBlobExpectations(tt.getBlob)
+
+			src := new(MockImageCloser)
+
+			img := &Image{
+				name:      "dummy",
+				isFile:    false,
+				rawSource: rawSource,
+				src:       src,
+				cache:     c,
+			}
+			r, err := img.GetBlob(context.Background(), tt.dig)
+			if tt.wantErr != "" {
+				require.NotNil(t, err, tt.name)
+				require.Contains(t, err.Error(), tt.wantErr, tt.name)
+				return
+			} else {
+				require.NoError(t, err, tt.name)
+			}
+
+			got, err := ioutil.ReadAll(r)
+			require.NoError(t, err, tt.name)
 			assert.Equal(t, tt.want, got, tt.name)
 
 			c.AssertExpectations(t)
