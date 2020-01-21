@@ -104,32 +104,33 @@ var testCases = []testCase{
 // benchCache is shared across benchmarks
 var benchCache string
 
+func run(ac analyzer.Config, ctx context.Context, tc testCase, b *testing.B) {
+	actualFiles, err := ac.Analyze(ctx, tc.imageFile)
+	require.NoError(b, err)
+
+	osFound, err := analyzer.GetOS(actualFiles)
+	require.NoError(b, err)
+
+	_, err = analyzer.GetPackages(actualFiles)
+	require.NoError(b, err)
+
+	_, err = analyzer.GetPackagesFromCommands(osFound, actualFiles)
+	require.NoError(b, err)
+
+	_, err = analyzer.GetLibraries(actualFiles)
+	require.NoError(b, err)
+}
+
 func runChecksBench(b *testing.B, ac analyzer.Config, ctx context.Context, tc testCase) {
 	for i := 0; i < b.N; i++ {
-		actualFiles, err := ac.Analyze(ctx, tc.imageFile)
-		require.NoError(b, err)
-
-		osFound, err := analyzer.GetOS(actualFiles)
-		require.NoError(b, err)
-
-		_, err = analyzer.GetPackages(actualFiles)
-		require.NoError(b, err)
-
-		_, err = analyzer.GetPackagesFromCommands(osFound, actualFiles)
-		require.NoError(b, err)
-
-		_, err = analyzer.GetLibraries(actualFiles)
+		run(ac, ctx, tc, b)
 	}
 }
 
 func BenchmarkFanal_Library_DockerMode_WithoutCache(b *testing.B) {
 	benchCache, _ = ioutil.TempDir("", "TestFanal_Library_*")
 	for _, tc := range testCases {
-		tc := tc // save a copy of tc for use in t.Run https://gist.github.com/posener/92a55c4cd441fc5e5e85f27bca008721
-		var ctx context.Context
-		var ac analyzer.Config
-
-		ctx, _, _, ac = setup(b, tc, benchCache)
+		ctx, _, _, ac := setup(b, tc, benchCache)
 		b.Run(tc.name, func(b *testing.B) {
 			b.ReportAllocs()
 			b.ResetTimer()
@@ -143,7 +144,6 @@ func BenchmarkFanal_Library_DockerMode_WithCache(b *testing.B) {
 	defer os.RemoveAll(benchCache)
 
 	for _, tc := range testCases {
-		tc := tc // save a copy of tc for use in t.Run https://gist.github.com/posener/92a55c4cd441fc5e5e85f27bca008721
 		// setup
 		opt := types.DockerOption{
 			Timeout:  600 * time.Second,
