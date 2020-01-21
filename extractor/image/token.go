@@ -20,7 +20,7 @@ func RegisterRegistry(registry Registry) {
 	registries = append(registries, registry)
 }
 
-func GetToken(ctx context.Context, domain string, opt types.DockerOption) (auth imageTypes.DockerAuthConfig) {
+func GetToken(ctx context.Context, domain string, opt types.DockerOption) (auth *imageTypes.DockerAuthConfig) {
 	var username, password string
 
 	// check registry which particular to get credential
@@ -34,7 +34,7 @@ func GetToken(ctx context.Context, domain string, opt types.DockerOption) (auth 
 			// only skip check registry if error occurred
 			break
 		}
-		return imageTypes.DockerAuthConfig{Username: username, Password: password}
+		return &imageTypes.DockerAuthConfig{Username: username, Password: password}
 	}
-	return imageTypes.DockerAuthConfig{}
+	return nil
 }

@@ -57,7 +57,6 @@ func TestNewImage(t *testing.T) {
 				OSChoice:                          "linux",
 				OCIInsecureSkipTLSVerify:          true,
 				DockerInsecureSkipTLSVerify:       imageTypes.NewOptionalBool(true),
-				DockerAuthConfig:                  &imageTypes.DockerAuthConfig{},
 				DockerDisableV1Ping:               true,
 				DockerDaemonInsecureSkipTLSVerify: true,
 			},
@@ -79,7 +78,6 @@ func TestNewImage(t *testing.T) {
 			wantSystemContext: &imageTypes.SystemContext{
 				OSChoice:                    "linux",
 				DockerInsecureSkipTLSVerify: imageTypes.NewOptionalBool(false),
-				DockerAuthConfig:            &imageTypes.DockerAuthConfig{},
 			},
 		},
 		{
@@ -99,7 +97,6 @@ func TestNewImage(t *testing.T) {
 			wantSystemContext: &imageTypes.SystemContext{
 				OSChoice:                    "linux",
 				DockerInsecureSkipTLSVerify: imageTypes.NewOptionalBool(false),
-				DockerAuthConfig:            &imageTypes.DockerAuthConfig{},
 			},
 		},
 		{
@@ -119,7 +116,6 @@ func TestNewImage(t *testing.T) {
 			wantSystemContext: &imageTypes.SystemContext{
 				OSChoice:                    "linux",
 				DockerInsecureSkipTLSVerify: imageTypes.NewOptionalBool(false),
-				DockerAuthConfig:            &imageTypes.DockerAuthConfig{},
 			},
 		},
 		{
@@ -139,7 +135,6 @@ func TestNewImage(t *testing.T) {
 			wantSystemContext: &imageTypes.SystemContext{
 				OSChoice:                    "linux",
 				DockerInsecureSkipTLSVerify: imageTypes.NewOptionalBool(false),
-				DockerAuthConfig:            &imageTypes.DockerAuthConfig{},
 			},
 			wantErr: "invalid image name",
 		},

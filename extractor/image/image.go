@@ -49,7 +49,7 @@ type Image struct {
 func NewImage(ctx context.Context, image Reference, transports []string, option types.DockerOption,
 	c cache.Cache) (Image, error) {
 	var domain string
-	var auth imageTypes.DockerAuthConfig
+	var auth *imageTypes.DockerAuthConfig
 
 	if !image.IsFile {
 		named, err := reference.ParseNormalizedNamed(image.Name)
@@ -69,7 +69,7 @@ func NewImage(ctx context.Context, image Reference, transports []string, option 
 	sys := &imageTypes.SystemContext{
 		// TODO: make OSChoice configurable
 		OSChoice:                          "linux",
-		DockerAuthConfig:                  &auth,
+		DockerAuthConfig:                  auth,
 		DockerDisableV1Ping:               option.SkipPing,
 		DockerInsecureSkipTLSVerify:       imageTypes.NewOptionalBool(option.InsecureSkipTLSVerify),
 		OCIInsecureSkipTLSVerify:          option.InsecureSkipTLSVerify,
