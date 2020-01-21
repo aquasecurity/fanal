@@ -38,71 +38,48 @@ import (
 )
 
 type testCase struct {
-	name                 string
-	imageName            string
-	imageFile            string
-	expectedFiles        []string
-	expectedOS           analyzer.OS
-	expectedPkgsFromCmds string
-	expectedLibraries    string
+	name      string
+	imageName string
+	imageFile string
 }
 
 var testCases = []testCase{
 	{
-		name:          "happy path, alpine:3.10",
-		imageName:     "alpine:3.10",
-		imageFile:     "testdata/fixtures/alpine-310.tar.gz",
-		expectedOS:    analyzer.OS{Name: "3.10.2", Family: "alpine"},
-		expectedFiles: []string{"etc/alpine-release", "etc/os-release", "lib/apk/db/installed", "/config"},
+		name:      "happy path, alpine:3.10",
+		imageName: "alpine:3.10",
+		imageFile: "testdata/fixtures/alpine-310.tar.gz",
 	},
 	{
-		name:          "happy path, amazonlinux:2",
-		imageName:     "amazonlinux:2",
-		imageFile:     "testdata/fixtures/amazon-2.tar.gz",
-		expectedFiles: []string{"etc/system-release", "var/lib/rpm/Packages", "etc/os-release", "/config"},
-		expectedOS:    analyzer.OS{Name: "2 (Karoo)", Family: "amazon"},
+		name:      "happy path, amazonlinux:2",
+		imageName: "amazonlinux:2",
+		imageFile: "testdata/fixtures/amazon-2.tar.gz",
 	},
 	{
-		name:          "happy path, debian:buster",
-		imageName:     "debian:buster",
-		imageFile:     "testdata/fixtures/debian-buster.tar.gz",
-		expectedFiles: []string{"var/lib/dpkg/status", "etc/debian_version", "etc/os-release", "usr/lib/os-release", "/config"},
-		expectedOS:    analyzer.OS{Name: "10.1", Family: "debian"},
+		name:      "happy path, debian:buster",
+		imageName: "debian:buster",
+		imageFile: "testdata/fixtures/debian-buster.tar.gz",
 	},
 	{
-		name:          "happy path, photon:1.0",
-		imageName:     "photon:1.0-20190823",
-		imageFile:     "testdata/fixtures/photon-10.tar.gz",
-		expectedFiles: []string{"var/lib/rpm/Packages", "etc/lsb-release", "etc/os-release", "/config", "usr/lib/os-release"},
-		expectedOS:    analyzer.OS{Name: "1.0", Family: "photon"},
+		name:      "happy path, photon:1.0",
+		imageName: "photon:1.0-20190823",
+		imageFile: "testdata/fixtures/photon-10.tar.gz",
 	},
 	{
-		name:          "happy path, registry.redhat.io/ubi7",
-		imageName:     "registry.redhat.io/ubi7",
-		imageFile:     "testdata/fixtures/ubi-7.tar.gz",
-		expectedFiles: []string{"etc/redhat-release", "etc/system-release", "/config", "var/lib/rpm/Packages", "etc/os-release"},
-		expectedOS:    analyzer.OS{Name: "7.7", Family: "redhat"},
+		name:      "happy path, registry.redhat.io/ubi7",
+		imageName: "registry.redhat.io/ubi7",
+		imageFile: "testdata/fixtures/ubi-7.tar.gz",
 	},
 	{
-		name:          "happy path, opensuse leap 15.1",
-		imageName:     "opensuse/leap:latest",
-		imageFile:     "testdata/fixtures/opensuse-leap-151.tar.gz",
-		expectedFiles: []string{"usr/lib/os-release", "usr/lib/sysimage/rpm/Packages", "/config", "etc/os-release"},
-		expectedOS:    analyzer.OS{Name: "15.1", Family: "opensuse.leap"},
+		name:      "happy path, opensuse leap 15.1",
+		imageName: "opensuse/leap:latest",
+		imageFile: "testdata/fixtures/opensuse-leap-151.tar.gz",
 	},
 	{
-		name:                 "happy path, vulnimage with lock files",
-		imageName:            "knqyf263/vuln-image:1.2.3",
-		imageFile:            "testdata/fixtures/vulnimage.tar.gz",
-		expectedFiles:        []string{"etc/os-release", "node-app/package-lock.json", "python-app/Pipfile.lock", "ruby-app/Gemfile.lock", "rust-app/Cargo.lock", "/config", "etc/alpine-release", "lib/apk/db/installed", "php-app/composer.lock"},
-		expectedOS:           analyzer.OS{Name: "3.7.1", Family: "alpine"},
-		expectedLibraries:    "testdata/goldens/knqyf263vuln-image:1.2.3.expectedlibs.golden",
-		expectedPkgsFromCmds: "testdata/goldens/knqyf263vuln-image:1.2.3.expectedpkgsfromcmds.golden",
+		name:      "happy path, vulnimage with lock files",
+		imageName: "knqyf263/vuln-image:1.2.3",
+		imageFile: "testdata/fixtures/vulnimage.tar.gz",
 	},
 }
-
-// benchCache is shared across benchmarks
-var benchCache string
 
 func run(ac analyzer.Config, ctx context.Context, tc testCase, b *testing.B) {
 	actualFiles, err := ac.Analyze(ctx, tc.imageFile)
@@ -128,7 +105,9 @@ func runChecksBench(b *testing.B, ac analyzer.Config, ctx context.Context, tc te
 }
 
 func BenchmarkFanal_Library_DockerMode_WithoutCache(b *testing.B) {
-	benchCache, _ = ioutil.TempDir("", "TestFanal_Library_*")
+	benchCache, _ := ioutil.TempDir("", "BenchmarkFanal_Library_DockerMode_WithoutCache_*")
+	defer os.RemoveAll(benchCache)
+
 	for _, tc := range testCases {
 		ctx, _, _, ac := setup(b, tc, benchCache)
 		b.Run(tc.name, func(b *testing.B) {
@@ -137,24 +116,22 @@ func BenchmarkFanal_Library_DockerMode_WithoutCache(b *testing.B) {
 			runChecksBench(b, ac, ctx, tc)
 			b.StopTimer()
 		})
+
+		// teardown
+		cli, err := client.NewClientWithOpts(client.FromEnv)
+		require.NoError(b, err, tc.name)
+		teardown(b, tc, cli, context.Background())
 	}
 }
 
 func BenchmarkFanal_Library_DockerMode_WithCache(b *testing.B) {
+	benchCache, _ := ioutil.TempDir("", "BenchmarkFanal_Library_DockerMode_WithCache_*")
 	defer os.RemoveAll(benchCache)
 
 	for _, tc := range testCases {
-		// setup
-		opt := types.DockerOption{
-			Timeout:  600 * time.Second,
-			SkipPing: true,
-		}
-
-		// resuse cache created in previous test
-		c := cache.Initialize(benchCache)
-		ext, err := docker.NewDockerExtractor(opt, c)
-		require.NoError(b, err, tc.name)
-		ac := analyzer.Config{Extractor: ext}
+		ctx, _, _, ac := setup(b, tc, benchCache)
+		// run once to generate cache
+		run(ac, ctx, tc, b)
 
 		b.Run(tc.name, func(b *testing.B) {
 			b.ReportAllocs()
@@ -171,7 +148,6 @@ func BenchmarkFanal_Library_DockerMode_WithCache(b *testing.B) {
 }
 
 func teardown(b *testing.B, tc testCase, cli *client.Client, ctx context.Context) {
-	// remove Image
 	_, err := cli.ImageRemove(ctx, tc.imageFile, dtypes.ImageRemoveOptions{
 		Force:         true,
 		PruneChildren: true,
