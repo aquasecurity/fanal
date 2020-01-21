@@ -4,12 +4,8 @@ package integration
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"os"
-	"strings"
-	"sync"
 	"testing"
 	"time"
 
@@ -35,7 +31,6 @@ import (
 	"github.com/aquasecurity/fanal/cache"
 	"github.com/aquasecurity/fanal/extractor/docker"
 	"github.com/aquasecurity/fanal/types"
-	godeptypes "github.com/aquasecurity/go-dep-parser/pkg/types"
 	dtypes "github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
 	"github.com/stretchr/testify/assert"
@@ -52,74 +47,21 @@ type testCase struct {
 	expectedLibraries    string
 }
 
-func runChecksBench(j int, b *testing.B, ac analyzer.Config, ctx context.Context, tc testCase, d string, c cache.Cache) {
+func runChecksBench(b *testing.B, ac analyzer.Config, ctx context.Context, tc testCase) {
 	for i := 0; i < b.N; i++ {
-		var wg sync.WaitGroup
-		for i := 0; i <= j; i++ {
-			wg.Add(1)
-			go func(i int) {
-				defer wg.Done()
+		actualFiles, err := ac.Analyze(ctx, tc.imageFile)
+		require.NoError(b, err)
 
-				actualFiles, err := ac.Analyze(ctx, tc.imageFile)
-				require.NoError(b, err)
-				for file, _ := range actualFiles {
-					assert.Contains(b, tc.expectedFiles, file, tc.name)
-				}
-				assert.Equal(b, len(tc.expectedFiles), len(actualFiles), tc.name)
+		osFound, err := analyzer.GetOS(actualFiles)
+		require.NoError(b, err)
 
-				// check OS
-				osFound, err := analyzer.GetOS(actualFiles)
-				require.NoError(b, err)
-				assert.Equal(b, tc.expectedOS, osFound, tc.name)
+		_, err = analyzer.GetPackages(actualFiles)
+		require.NoError(b, err)
 
-				// check Packages
-				actualPkgs, err := analyzer.GetPackages(actualFiles)
-				require.NoError(b, err)
-				data, _ := ioutil.ReadFile(fmt.Sprintf("testdata/goldens/%s.expectedpackages.golden", strings.ReplaceAll(tc.imageName, "/", "")))
-				var expectedPkgs []analyzer.Package
-				json.Unmarshal(data, &expectedPkgs)
-				assert.ElementsMatch(b, expectedPkgs, actualPkgs, tc.name)
+		_, err = analyzer.GetPackagesFromCommands(osFound, actualFiles)
+		require.NoError(b, err)
 
-				// check Packges from Commands
-				actualPkgsFromCmds, err := analyzer.GetPackagesFromCommands(osFound, actualFiles)
-				require.NoError(b, err)
-				if tc.expectedPkgsFromCmds != "" {
-					data, _ := ioutil.ReadFile(tc.expectedPkgsFromCmds)
-					var expectedPkgsFromCmds []analyzer.Package
-					json.Unmarshal(data, &expectedPkgsFromCmds)
-					assert.ElementsMatch(b, expectedPkgsFromCmds, actualPkgsFromCmds, tc.name)
-				} else {
-					assert.Equal(b, []analyzer.Package(nil), actualPkgsFromCmds, tc.name)
-				}
-
-				// check Libraries
-				actualLibs, err := analyzer.GetLibraries(actualFiles)
-				data, _ = json.MarshalIndent(actualLibs, "", "  ")
-				require.NoError(b, err)
-				if tc.expectedLibraries != "" {
-					data, _ := ioutil.ReadFile(tc.expectedLibraries)
-					var expectedLibraries map[analyzer.FilePath][]godeptypes.Library
-					json.Unmarshal(data, &expectedLibraries)
-					require.Equal(b, len(expectedLibraries), len(actualLibs), tc.name)
-					for l := range expectedLibraries {
-						assert.Contains(b, actualLibs, l, tc.name)
-					}
-				} else {
-					assert.Equal(b, map[analyzer.FilePath][]godeptypes.Library{}, actualLibs, tc.name)
-				}
-
-				// check Cache
-				actualCachedFiles, _ := ioutil.ReadDir(d + "/fanal/")
-				require.Equal(b, 1, len(actualCachedFiles), tc.name)
-
-				// check Cache contents
-				r := c.Get(tc.imageFile)
-				actualCacheValue, err := ioutil.ReadAll(r)
-				require.NoError(b, err)
-				assert.NotEmpty(b, actualCacheValue, tc.name)
-			}(i)
-		}
-		wg.Wait()
+		_, err = analyzer.GetLibraries(actualFiles)
 	}
 }
 
@@ -220,8 +162,7 @@ func BenchmarkFanal_Library_DockerMode_10(b *testing.B) {
 			b.ResetTimer()
 			// run tests twice, one without cache and with cache
 			for i := 1; i <= 2; i++ {
-				runChecksBench(5, b, ac, ctx, tc, d, c)
-
+				runChecksBench(b, ac, ctx, tc)
 			}
 			b.StopTimer()
 
