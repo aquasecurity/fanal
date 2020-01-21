@@ -209,36 +209,37 @@ func runChecks(t *testing.T, mode string, ac analyzer.Config, ctx context.Contex
 	switch mode {
 	case "docker":
 		actualFiles, err := ac.Analyze(ctx, tc.imageFile)
-		commonChecks(t, err, actualFiles, tc)
-		checkCache(d, 1, t, tc)
+		require.NoError(t, err, tc.name)
+		commonChecks(t, actualFiles, tc)
+		checkCache(t, 1, d, tc)
 		r := c.Get(tc.imageFile)
 		actualCacheValue, err := ioutil.ReadAll(r)
-		require.NoError(t, err)
+		require.NoError(t, err, tc.name)
 		assert.NotEmpty(t, actualCacheValue, tc.name)
 	case "tar":
 		actualFiles, err := ac.AnalyzeFile(ctx, testfile)
-		commonChecks(t, err, actualFiles, tc)
-		checkCache(d, 0, t, tc)
+		require.NoError(t, err, tc.name)
+		commonChecks(t, actualFiles, tc)
+		checkCache(t, 0, d, tc)
 	}
 }
 
-func commonChecks(t *testing.T, err error, actualFiles extractor.FileMap, tc testCase) {
-	checkFiles(t, err, actualFiles, tc)
+func commonChecks(t *testing.T, actualFiles extractor.FileMap, tc testCase) {
+	checkFiles(t, actualFiles, tc)
 	osFound := checkOS(actualFiles, t, tc)
 	checkPackages(actualFiles, t, tc)
-	checkPackageFromCommands(osFound, actualFiles, t, tc)
+	checkPackageFromCommands(t, actualFiles, osFound, tc)
 	checkLibraries(actualFiles, t, tc)
 }
 
-func checkFiles(t *testing.T, err error, actualFiles extractor.FileMap, tc testCase) {
-	require.NoError(t, err)
+func checkFiles(t *testing.T, actualFiles extractor.FileMap, tc testCase) {
 	for file, _ := range actualFiles {
 		assert.Contains(t, tc.expectedFiles, file, tc.name)
 	}
 	assert.Equal(t, len(tc.expectedFiles), len(actualFiles), tc.name)
 }
 
-func checkCache(d string, numExpectedFiles int, t *testing.T, tc testCase) {
+func checkCache(t *testing.T, numExpectedFiles int, d string, tc testCase) {
 	actualCachedFiles, _ := ioutil.ReadDir(d + "/fanal/")
 	require.Equal(t, numExpectedFiles, len(actualCachedFiles), tc.name)
 }
@@ -259,7 +260,7 @@ func checkLibraries(actualFiles extractor.FileMap, t *testing.T, tc testCase) {
 	}
 }
 
-func checkPackageFromCommands(osFound analyzer.OS, actualFiles extractor.FileMap, t *testing.T, tc testCase) {
+func checkPackageFromCommands(t *testing.T, actualFiles extractor.FileMap, osFound analyzer.OS, tc testCase) {
 	actualPkgsFromCmds, err := analyzer.GetPackagesFromCommands(osFound, actualFiles)
 	require.NoError(t, err)
 	if tc.expectedPkgsFromCmds != "" {
