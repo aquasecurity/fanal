@@ -124,12 +124,6 @@ func TestFanal_Library_DockerMode(t *testing.T) {
 			cli, err := client.NewClientWithOpts(client.FromEnv)
 			require.NoError(t, err, tc.name)
 
-			// ensure image doesnt already exists
-			_, _ = cli.ImageRemove(ctx, tc.imageFile, dtypes.ImageRemoveOptions{
-				Force:         true,
-				PruneChildren: true,
-			})
-
 			testfile, err := os.Open(tc.imageFile)
 			require.NoError(t, err)
 
