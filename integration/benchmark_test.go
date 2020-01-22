@@ -117,10 +117,7 @@ func BenchmarkFanal_Library_DockerMode_WithoutCache(b *testing.B) {
 			b.StopTimer()
 		})
 
-		// teardown
-		cli, err := client.NewClientWithOpts(client.FromEnv)
-		require.NoError(b, err, tc.name)
-		teardown(b, tc, cli, context.Background())
+		teardown(b, tc, context.Background())
 	}
 }
 
@@ -140,15 +137,15 @@ func BenchmarkFanal_Library_DockerMode_WithCache(b *testing.B) {
 			b.StopTimer()
 		})
 
-		// teardown
-		cli, err := client.NewClientWithOpts(client.FromEnv)
-		require.NoError(b, err, tc.name)
-		teardown(b, tc, cli, context.Background())
+		teardown(b, tc, context.Background())
 	}
 }
 
-func teardown(b *testing.B, tc testCase, cli *client.Client, ctx context.Context) {
-	_, err := cli.ImageRemove(ctx, tc.imageFile, dtypes.ImageRemoveOptions{
+func teardown(b *testing.B, tc testCase, ctx context.Context) {
+	cli, err := client.NewClientWithOpts(client.FromEnv)
+	require.NoError(b, err, tc.name)
+
+	_, err = cli.ImageRemove(ctx, tc.imageFile, dtypes.ImageRemoveOptions{
 		Force:         true,
 		PruneChildren: true,
 	})
