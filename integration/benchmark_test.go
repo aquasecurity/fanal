@@ -157,7 +157,7 @@ func teardown(b *testing.B, tc testCase, ctx context.Context) {
 
 func setup(b *testing.B, tc testCase, cacheDir string) (context.Context, cache.Cache, *client.Client, analyzer.Config) {
 	ctx := context.Background()
-	c := cache.Initialize(cacheDir)
+	c := cache.New(cacheDir)
 
 	opt := types.DockerOption{
 		Timeout:  600 * time.Second,
@@ -184,8 +184,7 @@ func setup(b *testing.B, tc testCase, cacheDir string) (context.Context, cache.C
 	err = cli.ImageTag(ctx, tc.imageName, tc.imageFile)
 	require.NoError(b, err, tc.name)
 
-	ext, err := docker.NewDockerExtractor(opt, c)
-	require.NoError(b, err, tc.name)
+	ext := docker.NewDockerExtractor(opt, c)
 	ac := analyzer.Config{Extractor: ext}
 	return ctx, c, cli, ac
 }
