@@ -98,9 +98,12 @@ func run(ac analyzer.Config, ctx context.Context, tc testCase, b *testing.B) {
 	require.NoError(b, err)
 }
 
-func runChecksBench(b *testing.B, ac analyzer.Config, ctx context.Context, tc testCase) {
+func runChecksBench(b *testing.B, ac analyzer.Config, c cache.Cache, ctx context.Context, tc testCase) {
 	for i := 0; i < b.N; i++ {
 		run(ac, ctx, tc, b)
+		if c != nil {
+			c.Clear()
+		}
 	}
 }
 
@@ -109,11 +112,11 @@ func BenchmarkFanal_Library_DockerMode_WithoutCache(b *testing.B) {
 	defer os.RemoveAll(benchCache)
 
 	for _, tc := range testCases {
-		ctx, _, _, ac := setup(b, tc, benchCache)
+		ctx, c, _, ac := setup(b, tc, benchCache)
 		b.Run(tc.name, func(b *testing.B) {
 			b.ReportAllocs()
 			b.ResetTimer()
-			runChecksBench(b, ac, ctx, tc)
+			runChecksBench(b, ac, c, ctx, tc)
 			b.StopTimer()
 		})
 
@@ -133,7 +136,7 @@ func BenchmarkFanal_Library_DockerMode_WithCache(b *testing.B) {
 		b.Run(tc.name, func(b *testing.B) {
 			b.ReportAllocs()
 			b.ResetTimer()
-			runChecksBench(b, ac, context.Background(), tc)
+			runChecksBench(b, ac, nil, context.Background(), tc)
 			b.StopTimer()
 		})
 
