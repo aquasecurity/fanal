@@ -171,15 +171,6 @@ func TestFanal_Library_TarMode(t *testing.T) {
 				SkipPing: true,
 			}
 
-			cli, err := client.NewClientWithOpts(client.FromEnv)
-			require.NoError(t, err, tc.name)
-
-			// ensure image doesnt already exists
-			_, _ = cli.ImageRemove(ctx, tc.imageFile, dtypes.ImageRemoveOptions{
-				Force:         true,
-				PruneChildren: true,
-			})
-
 			ext := docker.NewDockerExtractor(opt, c)
 			ac := analyzer.Config{Extractor: ext}
 			runChecks(t, "tar", ac, ctx, tc, d, nil, tc.imageFile)
