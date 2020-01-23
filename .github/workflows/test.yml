@@ -13,8 +13,7 @@ jobs:
       id: go
 
     - name: Check out code into the Go module directory
-      uses: actions/checkout@v1
-
+      uses: actions/checkout@v1 
     - name: Install dependencies
       run: sudo apt-get install libdb-dev
 
@@ -58,5 +57,8 @@ jobs:
     - name: Install dependencies
       run: sudo apt-get install libdb-dev
 
+    - name: Install cob
+      run: curl -sfL https://raw.githubusercontent.com/knqyf263/cob/master/install.sh | sudo sh -s -- -b /usr/local/bin
+
     - name: Run Benchmark
-      run: make test-performance
+      run: cob --base origin/master --bench-cmd make --bench-args test-performance 
