@@ -3,6 +3,7 @@ package image
 import (
 	"bytes"
 	"context"
+	"errors"
 	"io/ioutil"
 	"testing"
 
@@ -607,6 +608,42 @@ func TestImage_GetBlob(t *testing.T) {
 				},
 			},
 			want: []byte(`foo`),
+		},
+		{
+			name: "sad path without cache, GetBlob returns an error",
+			dig:  "sha256:e6b0cf9c0882fb079c9d35361d12ff4691f916b6d825061247d1bd0b26d7cf3f",
+			cacheGet: []cache.GetExpectation{
+				{
+					Args: cache.GetArgs{
+						Key: "sha256:e6b0cf9c0882fb079c9d35361d12ff4691f916b6d825061247d1bd0b26d7cf3f",
+					},
+					Returns: cache.GetReturns{Reader: nil},
+				},
+			},
+			cacheSet: []cache.SetExpectation{
+				{
+					Args: cache.SetArgs{
+						Key:          "sha256:e6b0cf9c0882fb079c9d35361d12ff4691f916b6d825061247d1bd0b26d7cf3f",
+						FileAnything: true,
+					},
+					Returns: cache.SetReturns{
+						Reader: ioutil.NopCloser(bytes.NewBuffer([]byte(`foo`))),
+					},
+				},
+			},
+			getBlob: []GetBlobExpectation{
+				{
+					Args: GetBlobArgs{
+						CtxAnything:   true,
+						InfoAnything:  true,
+						CacheAnything: true,
+					},
+					Returns: GetBlobReturns{
+						Err: errors.New("get blob failed error"),
+					},
+				},
+			},
+			wantErr: "get blob failed error",
 		},
 	}
 	for _, tt := range tests {
