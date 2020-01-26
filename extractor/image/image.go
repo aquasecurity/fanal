@@ -93,7 +93,7 @@ func (img *Image) populateSource() error {
 		return nil
 	}
 	ctx := context.Background()
-	var err error
+	err := xerrors.New("no valid transport")
 	for _, transport := range img.transports {
 		imgName := transport + img.name
 		var ref imageTypes.ImageReference
