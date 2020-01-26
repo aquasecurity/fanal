@@ -64,15 +64,19 @@ type OS struct {
 }
 
 type Package struct {
-	Name       string
-	Version    string
-	Release    string
-	Epoch      int
-	Arch       string
-	SrcName    string
-	SrcVersion string
-	SrcRelease string
-	SrcEpoch   int
+	Name          string
+	Version       string
+	Release       string
+	Epoch         int
+	Arch          string
+	SrcName       string
+	SrcVersion    string
+	SrcRelease    string
+	SrcEpoch      int
+	ModuleName    string
+	ModuleStream  string
+	ModuleVersion string
+	ModuleContext string
 }
 
 type SrcPackage struct {

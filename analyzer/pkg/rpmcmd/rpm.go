@@ -82,7 +82,7 @@ func (a rpmCmdPkgAnalyzer) parsePkgInfo(packageBytes []byte) (pkgs []analyzer.Pa
 
 func parseRPMOutput(line string) (pkg analyzer.Package, err error) {
 	fields := strings.Fields(line)
-	if len(fields) != 6 {
+	if len(fields) != 7 {
 		return pkg, xerrors.Errorf("Failed to parse package line: %s", line)
 	}
 
@@ -104,27 +104,45 @@ func parseRPMOutput(line string) (pkg analyzer.Package, err error) {
 		srcName, srcVer, srcRel, _, _ = splitFileName(fields[4])
 	}
 
+	var moduleName, moduleStream, moduleVersion, moduleContext string
+	if fields[6] != "(none)" {
+		moduleName, moduleStream, moduleVersion, moduleContext = splitModularityLabel(fields[6])
+	}
+
 	return analyzer.Package{
-		Name:       fields[0],
-		Epoch:      epoch,
-		Version:    fields[2],
-		Release:    fields[3],
-		Arch:       fields[5],
-		SrcName:    srcName,
-		SrcVersion: srcVer,
-		SrcRelease: srcRel,
-		SrcEpoch:   epoch, // NOTE: use epoch of binary package as epoch of src package
+		Name:          fields[0],
+		Epoch:         epoch,
+		Version:       fields[2],
+		Release:       fields[3],
+		Arch:          fields[5],
+		SrcName:       srcName,
+		SrcVersion:    srcVer,
+		SrcRelease:    srcRel,
+		SrcEpoch:      epoch, // NOTE: use epoch of binary package as epoch of src package
+		ModuleName:    moduleName,
+		ModuleStream:  moduleStream,
+		ModuleVersion: moduleVersion,
+		ModuleContext: moduleContext,
 	}, nil
 }
 
 func outputPkgInfo(dir string) (out []byte, err error) {
-	const oldFmt = "%{NAME} %{EPOCH} %{VERSION} %{RELEASE} %{SOURCERPM} %{ARCH}\n"
-	const newFmt = "%{NAME} %{EPOCHNUM} %{VERSION} %{RELEASE} %{SOURCERPM} %{ARCH}\n"
+	const oldFmt = "%{NAME} %{EPOCH} %{VERSION} %{RELEASE} %{SOURCERPM} %{ARCH} (none)\n"
+	const newFmt = "%{NAME} %{EPOCHNUM} %{VERSION} %{RELEASE} %{SOURCERPM} %{ARCH} %{RPMTAG_MODULARITYLABEL}\n"
 	out, err = exec.Command("rpm", "--dbpath", dir, "-qa", "--qf", newFmt).Output()
 	if err != nil {
 		return exec.Command("rpm", "--dbpath", dir, "-qa", "--qf", oldFmt).Output()
 	}
 	return out, nil
+}
+
+// ModularityLabel format is {module_name}:{module_stream}:{module_version}:{module_context}
+func splitModularityLabel(moduleLabel string) (name, stream, version, context string) {
+	ss := strings.Split(moduleLabel, ":")
+	if len(ss) != 4 {
+		return
+	}
+	return ss[0], ss[1], ss[2], ss[3]
 }
 
 // splitFileName returns a name, version, release, epoch, arch, e.g.::
