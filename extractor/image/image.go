@@ -234,7 +234,3 @@ func (img *Image) GetBlob(ctx context.Context, dig digest.Digest) (io.ReadCloser
 
 	return ioutil.NopCloser(r), nil
 }
-
-func (img Image) RecordDigestUncompressedPair(dig digest.Digest, uncompressed digest.Digest) {
-	img.blobInfoCache.RecordDigestUncompressedPair(dig, uncompressed)
-}
