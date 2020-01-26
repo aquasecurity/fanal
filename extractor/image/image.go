@@ -210,27 +210,29 @@ func (img Image) getConfigBlobInCache(imageName string, isFile bool) ([]byte, er
 	return b, nil
 }
 
-func (img *Image) GetBlob(ctx context.Context, dig digest.Digest) (io.ReadCloser, error) {
+func (img *Image) GetBlob(ctx context.Context, dig digest.Digest) (io.ReadCloser, func(), error) {
 	rc := img.cache.Get(dig.String())
 	if rc != nil {
-		return rc, nil
+		cleanup := func() { _ = rc.Close() }
+		return rc, cleanup, nil
 	}
 
 	if err := img.populateSource(); err != nil {
-		return nil, xerrors.Errorf("failed population: %w", err)
+		return nil, nil, xerrors.Errorf("failed population: %w", err)
 	}
 
 	rc, _, err := img.rawSource.GetBlob(ctx, imageTypes.BlobInfo{Digest: dig, Size: -1}, img.blobInfoCache)
 	if err != nil {
-		return nil, xerrors.Errorf("failed to download the layer(%s): %w", dig, err)
+		return nil, nil, xerrors.Errorf("failed to download the layer(%s): %w", dig, err)
 	}
 
 	stream, _, err := compression.AutoDecompress(rc)
 	if err != nil {
-		return nil, xerrors.Errorf("failed to download the layer(%s): %w", dig, err)
+		return nil, nil, xerrors.Errorf("failed to download the layer(%s): %w", dig, err)
 	}
+	cleanup := func() { _ = stream.Close() }
 
 	r, _ := img.cache.Set(dig.String(), stream)
 
-	return ioutil.NopCloser(r), nil
+	return ioutil.NopCloser(r), cleanup, nil
 }

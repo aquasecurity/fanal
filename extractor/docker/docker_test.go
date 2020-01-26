@@ -315,10 +315,14 @@ func TestDocker_ExtractLayerFiles(t *testing.T) {
 	f, _ := os.Open("testdata/opq2.tar")
 	defer f.Close()
 
+	calledCleanup := false
 	go func() {
 		layerCh <- layer{
-			ID:      "sha256:62d8908bee94c202b2d35224a221aaa2058318bfa9879fa541efaecba272331b",
-			Content: f,
+			id:      "sha256:62d8908bee94c202b2d35224a221aaa2058318bfa9879fa541efaecba272331b",
+			content: f,
+			cleanup: func() {
+				calledCleanup = true
+			},
 		}
 	}()
 
@@ -337,4 +341,5 @@ func TestDocker_ExtractLayerFiles(t *testing.T) {
 			"etc/test",
 		},
 	}, opqInLayers)
+	assert.True(t, calledCleanup)
 }

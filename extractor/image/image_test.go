@@ -664,7 +664,7 @@ func TestImage_GetBlob(t *testing.T) {
 				src:       src,
 				cache:     c,
 			}
-			r, err := img.GetBlob(context.Background(), tt.dig)
+			r, cleanup, err := img.GetBlob(context.Background(), tt.dig)
 			if tt.wantErr != "" {
 				require.NotNil(t, err, tt.name)
 				require.Contains(t, err.Error(), tt.wantErr, tt.name)
@@ -672,6 +672,7 @@ func TestImage_GetBlob(t *testing.T) {
 			} else {
 				require.NoError(t, err, tt.name)
 			}
+			defer cleanup()
 
 			got, err := ioutil.ReadAll(r)
 			require.NoError(t, err, tt.name)

@@ -42,8 +42,9 @@ type History struct {
 }
 
 type layer struct {
-	ID      digest.Digest
-	Content io.ReadCloser
+	id      digest.Digest
+	content io.ReadCloser
+	cleanup func()
 }
 
 type Extractor struct {
@@ -121,12 +122,12 @@ func (d Extractor) Extract(ctx context.Context, imgRef image.Reference, transpor
 	for _, l := range layers {
 		layerIDs = append(layerIDs, string(l.Digest))
 		go func(dig digest.Digest) {
-			img, err := img.GetBlob(ctx, dig)
+			img, cleanup, err := img.GetBlob(ctx, dig)
 			if err != nil {
 				errCh <- xerrors.Errorf("failed to get a blob: %w", err)
 				return
 			}
-			layerCh <- layer{ID: dig, Content: img}
+			layerCh <- layer{id: dig, content: img, cleanup: cleanup}
 		}(l.Digest)
 	}
 
@@ -165,14 +166,14 @@ func (d Extractor) extractLayerFiles(ctx context.Context, layerCh chan layer, er
 	case <-ctx.Done():
 		return xerrors.Errorf("timeout: %w", ctx.Err())
 	}
-	defer l.Content.Close()
+	defer l.cleanup()
 
-	files, opqDirs, err := d.ExtractFiles(l.Content, filenames)
+	files, opqDirs, err := d.ExtractFiles(l.content, filenames)
 	if err != nil {
 		return xerrors.Errorf("failed to extract files: %w", err)
 	}
 
-	layerID := string(l.ID)
+	layerID := string(l.id)
 	filesInLayers[layerID] = files
 	opqInLayers[layerID] = opqDirs
 
