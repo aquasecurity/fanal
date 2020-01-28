@@ -2,6 +2,7 @@ package rpmcmd
 
 import (
 	"bufio"
+	"bytes"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -20,6 +21,10 @@ import (
 func init() {
 	analyzer.RegisterPkgAnalyzer(&rpmCmdPkgAnalyzer{})
 }
+
+var (
+	RPMCommandError = xerrors.New("rpm command error")
+)
 
 type rpmCmdPkgAnalyzer struct{}
 
@@ -128,10 +133,23 @@ func parseRPMOutput(line string) (pkg analyzer.Package, err error) {
 
 func outputPkgInfo(dir string) (out []byte, err error) {
 	const oldFmt = "%{NAME} %{EPOCH} %{VERSION} %{RELEASE} %{SOURCERPM} %{ARCH} (none)\n"
-	const newFmt = "%{NAME} %{EPOCHNUM} %{VERSION} %{RELEASE} %{SOURCERPM} %{ARCH} %{RPMTAG_MODULARITYLABEL}\n"
-	out, err = exec.Command("rpm", "--dbpath", dir, "-qa", "--qf", newFmt).Output()
-	if err != nil {
-		return exec.Command("rpm", "--dbpath", dir, "-qa", "--qf", oldFmt).Output()
+	const newFmt = "%{NAME} %{EPOCHNUM} %{VERSION} %{RELEASE} %{SOURCERPM} %{ARCH} (none)\n"
+	const modularityFmt = "%{NAME} %{EPOCHNUM} %{VERSION} %{RELEASE} %{SOURCERPM} %{ARCH} %{RPMTAG_MODULARITYLABEL}\n"
+
+	// newest format order
+	fmts := []string{modularityFmt, newFmt, oldFmt}
+	for _, fmt := range fmts {
+		var stdout bytes.Buffer
+		command := exec.Command("rpm", "--dbpath", dir, "-qa", "--qf", fmt)
+		command.Stderr = &stdout
+		out, err = command.Output()
+		if err != nil {
+			return nil, RPMCommandError
+		}
+		if len(stdout.Bytes()) != 0 {
+			continue
+		}
+		return out, nil
 	}
 	return out, nil
 }
