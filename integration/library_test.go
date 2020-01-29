@@ -50,7 +50,6 @@ type testCase struct {
 	expectedOS           analyzer.OS
 	expectedPkgsFromCmds string
 	expectedLibraries    string
-	expectedNumLayers    int
 }
 
 var testCases = []testCase{
@@ -61,7 +60,6 @@ var testCases = []testCase{
 		imageFile:           "testdata/fixtures/alpine-310.tar.gz",
 		expectedOS:          analyzer.OS{Name: "3.10.2", Family: "alpine"},
 		expectedFiles:       []string{"etc/alpine-release", "etc/os-release", "lib/apk/db/installed", "/config"},
-		expectedNumLayers:   1,
 	},
 	{
 		name:                "happy path, amazonlinux:2",
@@ -70,7 +68,6 @@ var testCases = []testCase{
 		imageFile:           "testdata/fixtures/amazon-2.tar.gz",
 		expectedFiles:       []string{"etc/system-release", "var/lib/rpm/Packages", "etc/os-release", "/config"},
 		expectedOS:          analyzer.OS{Name: "2 (Karoo)", Family: "amazon"},
-		expectedNumLayers:   1,
 	},
 	{
 		name:                "happy path, debian:buster",
@@ -79,7 +76,6 @@ var testCases = []testCase{
 		imageFile:           "testdata/fixtures/debian-buster.tar.gz",
 		expectedFiles:       []string{"var/lib/dpkg/status", "etc/debian_version", "etc/os-release", "usr/lib/os-release", "/config"},
 		expectedOS:          analyzer.OS{Name: "10.1", Family: "debian"},
-		expectedNumLayers:   1,
 	},
 	{
 		name:                "happy path, photon:1.0",
@@ -88,7 +84,6 @@ var testCases = []testCase{
 		imageFile:           "testdata/fixtures/photon-10.tar.gz",
 		expectedFiles:       []string{"var/lib/rpm/Packages", "etc/lsb-release", "etc/os-release", "/config", "usr/lib/os-release"},
 		expectedOS:          analyzer.OS{Name: "1.0", Family: "photon"},
-		expectedNumLayers:   1,
 	},
 	{
 		name:                "happy path, registry.redhat.io/ubi7",
@@ -97,7 +92,6 @@ var testCases = []testCase{
 		imageFile:           "testdata/fixtures/ubi-7.tar.gz",
 		expectedFiles:       []string{"etc/redhat-release", "etc/system-release", "/config", "var/lib/rpm/Packages", "etc/os-release"},
 		expectedOS:          analyzer.OS{Name: "7.7", Family: "redhat"},
-		expectedNumLayers:   2,
 	},
 	{
 		name:                "happy path, opensuse leap 15.1",
@@ -106,7 +100,6 @@ var testCases = []testCase{
 		imageFile:           "testdata/fixtures/opensuse-leap-151.tar.gz",
 		expectedFiles:       []string{"usr/lib/os-release", "usr/lib/sysimage/rpm/Packages", "/config", "etc/os-release"},
 		expectedOS:          analyzer.OS{Name: "15.1", Family: "opensuse.leap"},
-		expectedNumLayers:   1,
 	},
 	{
 		name:                 "happy path, vulnimage with lock files",
@@ -117,7 +110,6 @@ var testCases = []testCase{
 		expectedOS:           analyzer.OS{Name: "3.7.1", Family: "alpine"},
 		expectedLibraries:    "testdata/goldens/knqyf263vuln-image1.2.3.expectedlibs.golden",
 		expectedPkgsFromCmds: "testdata/goldens/knqyf263vuln-image1.2.3.expectedpkgsfromcmds.golden",
-		expectedNumLayers:    20,
 	},
 }
 
@@ -129,7 +121,7 @@ func TestFanal_Library_DockerLessMode(t *testing.T) {
 			ctx := context.Background()
 			d, _ := ioutil.TempDir("", "TestFanal_Library_DockerLessMode_*")
 			defer os.RemoveAll(d)
-			c := cache.Initialize(d)
+			c := cache.New(d)
 
 			opt := types.DockerOption{
 				Timeout:  600 * time.Second,
@@ -148,13 +140,13 @@ func TestFanal_Library_DockerLessMode(t *testing.T) {
 				PruneChildren: true,
 			})
 
-			ext, err := docker.NewDockerExtractor(opt, c)
-			require.NoError(t, err, tc.name)
+			ext := docker.NewDockerExtractor(opt, c)
+			//require.NoError(t, err, tc.name)
 			ac := analyzer.Config{Extractor: ext}
 
 			// run tests twice, one without cache and with cache
 			for i := 1; i <= 2; i++ {
-				runChecks(t, "dockerless", ac, ctx, tc, d, c, nil)
+				runChecks(t, "dockerless", ac, ctx, tc, d, c, "")
 			}
 
 			// clear Cache
@@ -243,16 +235,12 @@ func runChecks(t *testing.T, mode string, ac analyzer.Config, ctx context.Contex
 		actualFiles, err := ac.Analyze(ctx, tc.imageFile)
 		require.NoError(t, err, tc.name)
 		commonChecks(t, actualFiles, tc)
-		checkCache(t, 1, d, tc)
-		r := c.Get(tc.imageFile)
-		actualCacheValue, err := ioutil.ReadAll(r)
-		require.NoError(t, err, tc.name)
-		assert.NotEmpty(t, actualCacheValue, tc.name)
+		checkCache(t, d, tc, mode)
 	case "dockerless":
 		actualFiles, err := ac.Analyze(ctx, tc.dockerlessImageName)
 		require.NoError(t, err, tc.name)
 		commonChecks(t, actualFiles, tc)
-		checkCache(t, tc.expectedNumLayers, d, tc)
+		checkCache(t, d, tc, mode)
 	case "tar":
 		actualFiles, err := ac.AnalyzeFile(ctx, testFile)
 		require.NoError(t, err, tc.name)
@@ -266,6 +254,23 @@ func commonChecks(t *testing.T, actualFiles extractor.FileMap, tc testCase) {
 	checkPackages(actualFiles, t, tc)
 	checkPackageFromCommands(t, actualFiles, osFound, tc)
 	checkLibraries(actualFiles, t, tc)
+}
+
+func checkCache(t *testing.T, d string, tc testCase, mode string) {
+	cachedFiles, _ := ioutil.ReadDir(d + "/fanal/")
+
+	r := strings.NewReplacer("/", "", ":", "", "knqyf263/", "")
+	goldenFile := fmt.Sprintf("testdata/goldens/%s.expectedcachefiles.%s.golden", r.Replace(tc.imageName), mode)
+
+	data, _ := ioutil.ReadFile(goldenFile)
+	var expectedCachedFiles []string
+	json.Unmarshal(data, &expectedCachedFiles)
+
+	var actualCachedFiles []string
+	for _, acf := range cachedFiles {
+		actualCachedFiles = append(actualCachedFiles, acf.Name())
+	}
+	require.ElementsMatch(t, expectedCachedFiles, actualCachedFiles, tc.name)
 }
 
 func checkFiles(t *testing.T, actualFiles extractor.FileMap, tc testCase) {
