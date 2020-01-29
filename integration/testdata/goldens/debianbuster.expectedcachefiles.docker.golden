@@ -1,0 +1,5 @@
+[
+  "configblob::docker.io_testdata_fixtures_debian-buster.tar.gz:latest",
+  "layerinfos::docker.io_testdata_fixtures_debian-buster.tar.gz:latest",
+  "sha256:78c1b9419976227e05be9d243b7fa583bea44a5258e52018b2af4cdfe23d148d"
+]

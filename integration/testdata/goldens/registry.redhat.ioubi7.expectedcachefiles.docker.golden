@@ -1,0 +1,6 @@
+[
+  "configblob::docker.io_testdata_fixtures_ubi-7.tar.gz:latest",
+  "layerinfos::docker.io_testdata_fixtures_ubi-7.tar.gz:latest",
+  "sha256:4468e6d912c76d5b127f3554c3cd83b7dc07cce6107c6b916299ba76fa7d15ac",
+  "sha256:ecb0311889b3478bc9b62660fa9391d5ebf8da4c6ae143cb33434873668f9e36"
+]
