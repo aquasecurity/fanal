@@ -13,8 +13,6 @@ import (
 	"github.com/aquasecurity/fanal/cache"
 	"github.com/aquasecurity/fanal/extractor"
 	"github.com/aquasecurity/fanal/extractor/image"
-	"github.com/aquasecurity/fanal/extractor/image/token/ecr"
-	"github.com/aquasecurity/fanal/extractor/image/token/gcr"
 	"github.com/aquasecurity/fanal/types"
 	"github.com/aquasecurity/fanal/utils"
 	"github.com/knqyf263/nested"
@@ -50,16 +48,26 @@ type layer struct {
 type Extractor struct {
 	option types.DockerOption
 	cache  cache.Cache
+	image  image.Image
 }
 
-func NewDockerExtractor(option types.DockerOption, c cache.Cache) Extractor {
-	image.RegisterRegistry(&gcr.GCR{})
-	image.RegisterRegistry(&ecr.ECR{})
+func NewDockerExtractor(ctx context.Context, imgRef image.Reference, transports []string,
+	option types.DockerOption, c cache.Cache) (Extractor, error) {
+	//image.RegisterRegistry(&gcr.GCR{})
+	//image.RegisterRegistry(&ecr.ECR{})
+	ctx, cancel := context.WithTimeout(ctx, option.Timeout)
+	defer cancel()
+
+	img, err := image.NewImage(ctx, imgRef, transports, option, c)
+	if err != nil {
+		return Extractor{}, xerrors.Errorf("unable to initialize a image struct: %w", err)
+	}
 
 	return Extractor{
 		option: option,
 		cache:  c,
-	}
+		image:  img,
+	}, nil
 }
 
 func applyLayers(layerPaths []string, filesInLayers map[string]extractor.FileMap, opqInLayers map[string]extractor.OPQDirs) (extractor.FileMap, error) {
@@ -102,85 +110,99 @@ func applyLayers(layerPaths []string, filesInLayers map[string]extractor.FileMap
 
 }
 
-func (d Extractor) Extract(ctx context.Context, imgRef image.Reference, transports, filenames []string) (extractor.FileMap, error) {
-	ctx, cancel := context.WithTimeout(ctx, d.option.Timeout)
-	defer cancel()
-
-	img, err := image.NewImage(ctx, imgRef, transports, d.option, d.cache)
-	if err != nil {
-		return nil, xerrors.Errorf("unable to initialize a image struct: %w", err)
-	}
-
-	var layerIDs []string
-	layers, err := img.LayerInfos()
+func (d Extractor) LayerInfos() ([]string, error) {
+	layers, err := d.image.LayerInfos()
 	if err != nil {
 		return nil, xerrors.Errorf("unable to get layer information: %w", err)
 	}
 
-	layerCh := make(chan layer)
-	errCh := make(chan error)
+	var layerIDs []string
 	for _, l := range layers {
 		layerIDs = append(layerIDs, string(l.Digest))
-		go func(dig digest.Digest) {
-			img, cleanup, err := img.GetBlob(ctx, dig)
-			if err != nil {
-				errCh <- xerrors.Errorf("failed to get a blob: %w", err)
-				return
-			}
-			layerCh <- layer{id: dig, content: img, cleanup: cleanup}
-		}(l.Digest)
 	}
-
-	filesInLayers := map[string]extractor.FileMap{}
-	opqInLayers := map[string]extractor.OPQDirs{}
-	for i := 0; i < len(layerIDs); i++ {
-		if err := d.extractLayerFiles(ctx, layerCh, errCh, filesInLayers, opqInLayers, filenames); err != nil {
-			return nil, xerrors.Errorf("failed to extract files from layer: %w", err)
-		}
-	}
-
-	fileMap, err := applyLayers(layerIDs, filesInLayers, opqInLayers)
-	if err != nil {
-		return nil, xerrors.Errorf("failed to apply layers: %w", err)
-	}
-
-	// download config file
-	config, err := img.ConfigBlob(ctx)
-	if err != nil {
-		return nil, xerrors.Errorf("failed to get a config blob: %w", err)
-	}
-
-	// special file for command analyzer
-	fileMap["/config"] = config
-
-	return fileMap, nil
+	return layerIDs, nil
 }
 
-func (d Extractor) extractLayerFiles(ctx context.Context, layerCh chan layer, errCh chan error,
-	filesInLayers map[string]extractor.FileMap, opqInLayers map[string]extractor.OPQDirs, filenames []string) error {
-	var l layer
-	select {
-	case l = <-layerCh:
-	case err := <-errCh:
-		return err
-	case <-ctx.Done():
-		return xerrors.Errorf("timeout: %w", ctx.Err())
-	}
-	defer l.cleanup()
+//func (d Extractor) Extract(ctx context.Context, layerIDs []digest.Digest, filenames []string) (extractor.FileMap, error) {
+//	layerCh := make(chan layer)
+//	errCh := make(chan error)
+//	for _, layerID := range layerIDs {
+//		go func(dig digest.Digest) {
+//			img, cleanup, err := d.image.GetBlob(ctx, dig)
+//			if err != nil {
+//				errCh <- xerrors.Errorf("failed to get a blob: %w", err)
+//				return
+//			}
+//			layerCh <- layer{id: dig, content: img, cleanup: cleanup}
+//		}(layerID)
+//	}
+//
+//	filesInLayers := map[string]extractor.FileMap{}
+//	opqInLayers := map[string]extractor.OPQDirs{}
+//	for i := 0; i < len(layerIDs); i++ {
+//		if err := d.extractLayerFiles(ctx, layerCh, errCh, filesInLayers, opqInLayers, filenames); err != nil {
+//			return nil, xerrors.Errorf("failed to extract files from layer: %w", err)
+//		}
+//	}
+//
+//	//fileMap, err := applyLayers(layerIDs, filesInLayers, opqInLayers)
+//	//if err != nil {
+//	//	return nil, xerrors.Errorf("failed to apply layers: %w", err)
+//	//}
+//
+//	//// download config file
+//	//config, err := img.ConfigBlob(ctx)
+//	//if err != nil {
+//	//	return nil, xerrors.Errorf("failed to get a config blob: %w", err)
+//	//}
+//	//
+//	//// special file for command analyzer
+//	//fileMap["/config"] = config
+//
+//	return fileMap, nil
+//}
 
-	files, opqDirs, err := d.ExtractFiles(l.content, filenames)
+func (d Extractor) ExtractLayerFiles(ctx context.Context, dig digest.Digest, filenames []string) (
+	extractor.FileMap, extractor.OPQDirs, error) {
+	img, cleanup, err := d.image.GetBlob(ctx, dig)
 	if err != nil {
-		return xerrors.Errorf("failed to extract files: %w", err)
+		return nil, nil, xerrors.Errorf("failed to get a blob: %w", err)
+	}
+	defer cleanup()
+
+	files, opqDirs, err := d.extractFiles(img, filenames)
+	if err != nil {
+		return nil, nil, xerrors.Errorf("failed to extract files: %w", err)
 	}
 
-	layerID := string(l.id)
-	filesInLayers[layerID] = files
-	opqInLayers[layerID] = opqDirs
-
-	return nil
+	return files, opqDirs, nil
 }
 
-func (d Extractor) ExtractFiles(layer io.Reader, filenames []string) (extractor.FileMap, extractor.OPQDirs, error) {
+//func (d Extractor) extractLayerFiles(ctx context.Context, layerCh chan layer, errCh chan error,
+//	filesInLayers map[string]extractor.FileMap, opqInLayers map[string]extractor.OPQDirs, filenames []string) error {
+//	var l layer
+//	select {
+//	case l = <-layerCh:
+//	case err := <-errCh:
+//		return err
+//	case <-ctx.Done():
+//		return xerrors.Errorf("timeout: %w", ctx.Err())
+//	}
+//	defer l.cleanup()
+//
+//	files, opqDirs, err := d.extractFiles(l.content, filenames)
+//	if err != nil {
+//		return xerrors.Errorf("failed to extract files: %w", err)
+//	}
+//
+//	layerID := string(l.id)
+//	filesInLayers[layerID] = files
+//	opqInLayers[layerID] = opqDirs
+//
+//	return nil
+//}
+
+func (d Extractor) extractFiles(layer io.Reader, filenames []string) (extractor.FileMap, extractor.OPQDirs, error) {
 	data := make(map[string][]byte)
 	opqDirs := extractor.OPQDirs{}
 

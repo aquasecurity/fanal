@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"path/filepath"
 
+	"github.com/aquasecurity/fanal/analyzer/library"
+
 	"github.com/aquasecurity/fanal/analyzer"
 	"github.com/aquasecurity/fanal/extractor"
 	"github.com/aquasecurity/fanal/utils"
@@ -40,4 +42,8 @@ func (a cargoLibraryAnalyzer) Analyze(fileMap extractor.FileMap) (map[analyzer.F
 
 func (a cargoLibraryAnalyzer) RequiredFiles() []string {
 	return []string{"Cargo.lock"}
+}
+
+func (a cargoLibraryAnalyzer) Name() string {
+	return library.Cargo
 }

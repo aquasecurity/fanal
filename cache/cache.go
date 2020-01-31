@@ -19,7 +19,8 @@ var (
 
 type Cache interface {
 	Get(key string) (reader io.ReadCloser)
-	Set(key string, file io.Reader) (reader io.Reader, err error)
+	MissingKeys(keys []string) []string
+	Set(key string, value interface{}) (err error)
 	SetBytes(key string, value []byte) (err error)
 	Clear() (err error)
 }
@@ -41,18 +42,22 @@ func (fs FSCache) Get(key string) io.ReadCloser {
 	return f
 }
 
-func (fs FSCache) Set(key string, r io.Reader) (io.Reader, error) {
-	filePath := filepath.Join(fs.directory, replacer.Replace(key))
-	if err := os.MkdirAll(fs.directory, os.ModePerm); err != nil {
-		return nil, xerrors.Errorf("failed to mkdir all: %w", err)
-	}
-	cacheFile, err := os.Create(filePath)
-	if err != nil {
-		return r, xerrors.Errorf("failed to create cache file: %w", err)
-	}
+func (fs FSCache) MissingKeys(keys []string) []string {
+	return keys
+}
 
-	tee := io.TeeReader(r, cacheFile)
-	return tee, nil
+func (fs FSCache) Set(key string, value interface{}) error {
+	//filePath := filepath.Join(fs.directory, replacer.Replace(key))
+	//if err := os.MkdirAll(fs.directory, os.ModePerm); err != nil {
+	//	return nil, xerrors.Errorf("failed to mkdir all: %w", err)
+	//}
+	//cacheFile, err := os.Create(filePath)
+	//if err != nil {
+	//	return r, xerrors.Errorf("failed to create cache file: %w", err)
+	//}
+	//
+	//tee := io.TeeReader(r, cacheFile)
+	return nil
 }
 
 func (fs FSCache) SetBytes(key string, b []byte) error {

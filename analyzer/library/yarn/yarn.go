@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"path/filepath"
 
+	"github.com/aquasecurity/fanal/analyzer/library"
+
 	"github.com/aquasecurity/fanal/analyzer"
 	"github.com/aquasecurity/fanal/extractor"
 	"github.com/aquasecurity/fanal/utils"
@@ -43,4 +45,8 @@ func (a yarnLibraryAnalyzer) Analyze(fileMap extractor.FileMap) (map[analyzer.Fi
 
 func (a yarnLibraryAnalyzer) RequiredFiles() []string {
 	return []string{"yarn.lock"}
+}
+
+func (a yarnLibraryAnalyzer) Name() string {
+	return library.Yarn
 }

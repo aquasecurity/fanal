@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"path/filepath"
 
+	"github.com/aquasecurity/fanal/analyzer/library"
+
 	"github.com/aquasecurity/fanal/analyzer"
 	"github.com/aquasecurity/fanal/extractor"
 	"github.com/aquasecurity/fanal/utils"
@@ -40,4 +42,8 @@ func (a npmLibraryAnalyzer) Analyze(fileMap extractor.FileMap) (map[analyzer.Fil
 
 func (a npmLibraryAnalyzer) RequiredFiles() []string {
 	return []string{"package-lock.json"}
+}
+
+func (a npmLibraryAnalyzer) Name() string {
+	return library.Npm
 }

@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"path/filepath"
 
+	"github.com/aquasecurity/fanal/analyzer/library"
+
 	"github.com/aquasecurity/fanal/analyzer"
 	"github.com/aquasecurity/fanal/extractor"
 	"github.com/aquasecurity/fanal/utils"
@@ -40,4 +42,8 @@ func (a poetryLibraryAnalyzer) Analyze(fileMap extractor.FileMap) (map[analyzer.
 
 func (a poetryLibraryAnalyzer) RequiredFiles() []string {
 	return []string{"poetry.lock"}
+}
+
+func (a poetryLibraryAnalyzer) Name() string {
+	return library.Poetry
 }

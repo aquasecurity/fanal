@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"path/filepath"
 
+	"github.com/aquasecurity/fanal/analyzer/library"
+
 	"github.com/aquasecurity/fanal/analyzer"
 	"github.com/aquasecurity/fanal/extractor"
 	"github.com/aquasecurity/fanal/utils"
@@ -40,4 +42,8 @@ func (a composerLibraryAnalyzer) Analyze(fileMap extractor.FileMap) (map[analyze
 
 func (a composerLibraryAnalyzer) RequiredFiles() []string {
 	return []string{"composer.lock"}
+}
+
+func (a composerLibraryAnalyzer) Name() string {
+	return library.Composer
 }

@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"path/filepath"
 
+	"github.com/aquasecurity/fanal/analyzer/library"
+
 	"github.com/aquasecurity/fanal/analyzer"
 	"github.com/aquasecurity/fanal/extractor"
 	"github.com/aquasecurity/fanal/utils"
@@ -40,4 +42,8 @@ func (a pipenvLibraryAnalyzer) Analyze(fileMap extractor.FileMap) (map[analyzer.
 
 func (a pipenvLibraryAnalyzer) RequiredFiles() []string {
 	return []string{"Pipfile.lock"}
+}
+
+func (a pipenvLibraryAnalyzer) Name() string {
+	return library.Pipenv
 }

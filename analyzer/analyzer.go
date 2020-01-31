@@ -3,12 +3,19 @@ package analyzer
 import (
 	"context"
 
+	"github.com/opencontainers/go-digest"
+
+	"github.com/aquasecurity/fanal/cache"
+
 	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/fanal/extractor"
 	"github.com/aquasecurity/fanal/extractor/image"
-	"github.com/aquasecurity/fanal/types"
 	godeptypes "github.com/aquasecurity/go-dep-parser/pkg/types"
+)
+
+const (
+	SchemaVersion = 1
 )
 
 var (
@@ -28,6 +35,7 @@ var (
 
 type Config struct {
 	Extractor extractor.Extractor
+	Cache     cache.Cache
 }
 
 type OSAnalyzer interface {
@@ -48,6 +56,7 @@ type CommandAnalyzer interface {
 type FilePath string
 
 type LibraryAnalyzer interface {
+	Name() string
 	Analyze(extractor.FileMap) (map[FilePath][]godeptypes.Library, error)
 	RequiredFiles() []string
 }
@@ -110,15 +119,97 @@ func RequiredFilenames() []string {
 	return filenames
 }
 
-// TODO: Remove opts as they're no longer needed
-func (ac Config) Analyze(ctx context.Context, imageName string, opts ...types.DockerOption) (fileMap extractor.FileMap, err error) {
-	transports := []string{"docker-daemon:", "docker://"}
-	ref := image.Reference{Name: imageName, IsFile: false}
-	fileMap, err = ac.Extractor.Extract(ctx, ref, transports, RequiredFilenames())
+func (ac Config) Analyze(ctx context.Context, imageName string) ([]string, error) {
+	//transports := []string{"docker-daemon:", "docker://"}
+	//ref := image.Reference{Name: imageName, IsFile: false}
+	layerIDs, err := ac.Extractor.LayerInfos()
 	if err != nil {
-		return nil, xerrors.Errorf("failed to extract files: %w", err)
+		return nil, err
 	}
-	return fileMap, nil
+
+	missingLayers := ac.Cache.MissingKeys(layerIDs)
+	if err = ac.analyzeLayers(ctx, missingLayers); err != nil {
+		return nil, err
+	}
+
+	//fileMap, err = ac.Extractor.Extract(ctx, ref, transports, RequiredFilenames())
+	//if err != nil {
+	//	return nil, xerrors.Errorf("failed to extract files: %w", err)
+	//}
+	return layerIDs, nil
+}
+
+type LayerInfo struct {
+	SchemaVersion int
+	OS            OS
+	Packages      []Package
+	Applications  []Application
+	OpaqueDirs    extractor.OPQDirs
+}
+
+func (ac Config) analyzeLayers(ctx context.Context, layerIDs []string) error {
+	done := make(chan struct{})
+	errCh := make(chan error)
+
+	for _, layerID := range layerIDs {
+		go func(dig digest.Digest) {
+			layerInfo, err := ac.analyzeLayer(ctx, dig)
+			if err != nil {
+				errCh <- xerrors.Errorf("failed to analyze layer: %w", dig, err)
+				return
+			}
+			if err = ac.Cache.Set(string(dig), layerInfo); err != nil {
+				errCh <- xerrors.Errorf("failed to store layer in cache: %w", dig, err)
+				return
+			}
+			done <- struct{}{}
+		}(digest.Digest(layerID))
+	}
+
+	for range layerIDs {
+		select {
+		case <-done:
+		case err := <-errCh:
+			return err
+		case <-ctx.Done():
+			return xerrors.Errorf("timeout: %w", ctx.Err())
+		}
+	}
+
+	return nil
+}
+
+func (ac Config) analyzeLayer(ctx context.Context, dig digest.Digest) (LayerInfo, error) {
+	files, opqDirs, err := ac.Extractor.ExtractLayerFiles(ctx, dig, RequiredFilenames())
+	if err != nil {
+		//errCh <- xerrors.Errorf("failed to get a blob: %w", err)
+		return LayerInfo{}, err
+	}
+
+	os, err := GetOS(files)
+	if err != nil {
+		return LayerInfo{}, err
+	}
+	pkgs, err := GetPackages(files)
+	if err != nil {
+		return LayerInfo{}, err
+	}
+	pkgsFromCommands, err := GetPackagesFromCommands(os, files)
+	if err != nil {
+		return LayerInfo{}, err
+	}
+	mergedPkgs := mergePkgs(pkgs, pkgsFromCommands)
+
+	apps, err := GetLibraries(files)
+
+	layerInfo := LayerInfo{
+		SchemaVersion: SchemaVersion,
+		OS:            os,
+		Packages:      mergedPkgs,
+		Applications:  apps,
+		OpaqueDirs:    opqDirs,
+	}
+	return layerInfo, nil
 }
 
 func (ac Config) AnalyzeFile(ctx context.Context, filePath string) (fileMap extractor.FileMap, err error) {
@@ -173,8 +264,14 @@ func CheckPackage(pkg *Package) bool {
 	return pkg.Name != "" && pkg.Version != ""
 }
 
-func GetLibraries(filesMap extractor.FileMap) (map[FilePath][]godeptypes.Library, error) {
-	results := map[FilePath][]godeptypes.Library{}
+type Application struct {
+	Type      string
+	FilePath  string
+	Libraries []godeptypes.Library
+}
+
+func GetLibraries(filesMap extractor.FileMap) ([]Application, error) {
+	var results []Application
 	for _, analyzer := range libAnalyzers {
 		libMap, err := analyzer.Analyze(filesMap)
 		if err != nil {
@@ -182,8 +279,26 @@ func GetLibraries(filesMap extractor.FileMap) (map[FilePath][]godeptypes.Library
 		}
 
 		for filePath, libs := range libMap {
-			results[filePath] = libs
+			results = append(results, Application{
+				Type:      analyzer.Name(),
+				FilePath:  string(filePath),
+				Libraries: libs,
+			})
 		}
 	}
 	return results, nil
+}
+
+func mergePkgs(pkgs, pkgsFromCommands []Package) []Package {
+	uniqPkgs := map[string]struct{}{}
+	for _, pkg := range pkgs {
+		uniqPkgs[pkg.Name] = struct{}{}
+	}
+	for _, pkg := range pkgsFromCommands {
+		if _, ok := uniqPkgs[pkg.Name]; ok {
+			continue
+		}
+		pkgs = append(pkgs, pkg)
+	}
+	return pkgs
 }
