@@ -2,15 +2,16 @@ package analyzer
 
 import (
 	"context"
+	"encoding/json"
 
-	"github.com/opencontainers/go-digest"
+	digest "github.com/opencontainers/go-digest"
 
 	"github.com/aquasecurity/fanal/cache"
+	"github.com/aquasecurity/fanal/types"
 
 	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/fanal/extractor"
-	"github.com/aquasecurity/fanal/extractor/image"
 	godeptypes "github.com/aquasecurity/go-dep-parser/pkg/types"
 )
 
@@ -33,55 +34,25 @@ var (
 	ErrNoPkgsDetected = xerrors.New("No packages detected")
 )
 
-type Config struct {
-	Extractor extractor.Extractor
-	Cache     cache.Cache
-}
-
 type OSAnalyzer interface {
-	Analyze(extractor.FileMap) (OS, error)
+	Analyze(extractor.FileMap) (types.OS, error)
 	RequiredFiles() []string
 }
 
 type PkgAnalyzer interface {
-	Analyze(extractor.FileMap) ([]Package, error)
+	Analyze(extractor.FileMap) (map[types.FilePath][]types.Package, error)
 	RequiredFiles() []string
 }
 
 type CommandAnalyzer interface {
-	Analyze(OS, extractor.FileMap) ([]Package, error)
+	Analyze(types.OS, extractor.FileMap) ([]types.Package, error)
 	RequiredFiles() []string
 }
-
-type FilePath string
 
 type LibraryAnalyzer interface {
 	Name() string
-	Analyze(extractor.FileMap) (map[FilePath][]godeptypes.Library, error)
+	Analyze(extractor.FileMap) (map[types.FilePath][]godeptypes.Library, error)
 	RequiredFiles() []string
-}
-
-type OS struct {
-	Name   string
-	Family string
-}
-
-type Package struct {
-	Name       string
-	Version    string
-	Release    string
-	Epoch      int
-	Arch       string
-	SrcName    string
-	SrcVersion string
-	SrcRelease string
-	SrcEpoch   int
-}
-
-type SrcPackage struct {
-	Name        string   `json:"name"`
-	Version     string   `json:"version"`
-	BinaryNames []string `json:"binaryNames"`
 }
 
 func RegisterOSAnalyzer(analyzer OSAnalyzer) {
@@ -105,7 +76,7 @@ func AddRequiredFilenames(filenames []string) {
 }
 
 func RequiredFilenames() []string {
-	filenames := []string{}
+	var filenames []string
 	filenames = append(filenames, additionalFiles...)
 	for _, analyzer := range osAnalyzers {
 		filenames = append(filenames, analyzer.RequiredFiles()...)
@@ -119,32 +90,30 @@ func RequiredFilenames() []string {
 	return filenames
 }
 
-func (ac Config) Analyze(ctx context.Context, imageName string) ([]string, error) {
-	//transports := []string{"docker-daemon:", "docker://"}
-	//ref := image.Reference{Name: imageName, IsFile: false}
-	layerIDs, err := ac.Extractor.LayerInfos()
-	if err != nil {
-		return nil, err
-	}
-
-	missingLayers := ac.Cache.MissingKeys(layerIDs)
-	if err = ac.analyzeLayers(ctx, missingLayers); err != nil {
-		return nil, err
-	}
-
-	//fileMap, err = ac.Extractor.Extract(ctx, ref, transports, RequiredFilenames())
-	//if err != nil {
-	//	return nil, xerrors.Errorf("failed to extract files: %w", err)
-	//}
-	return layerIDs, nil
+type Config struct {
+	Extractor extractor.Extractor
+	Cache     cache.Cache
 }
 
-type LayerInfo struct {
-	SchemaVersion int
-	OS            OS
-	Packages      []Package
-	Applications  []Application
-	OpaqueDirs    extractor.OPQDirs
+func New(ext extractor.Extractor, c cache.Cache) Config {
+	return Config{Extractor: ext, Cache: c}
+}
+
+func (ac Config) Analyze(ctx context.Context) (types.ImageInfo, error) {
+	imageID := ac.Extractor.ImageID()
+	layerIDs := ac.Extractor.LayerIDs()
+	missingLayers, err := ac.Cache.MissingLayers(layerIDs)
+	if err != nil {
+		return types.ImageInfo{}, err
+	}
+	if err := ac.analyzeLayers(ctx, missingLayers); err != nil {
+		return types.ImageInfo{}, err
+	}
+
+	return types.ImageInfo{
+		ID:       imageID,
+		LayerIDs: layerIDs,
+	}, nil
 }
 
 func (ac Config) analyzeLayers(ctx context.Context, layerIDs []string) error {
@@ -158,7 +127,7 @@ func (ac Config) analyzeLayers(ctx context.Context, layerIDs []string) error {
 				errCh <- xerrors.Errorf("failed to analyze layer: %w", dig, err)
 				return
 			}
-			if err = ac.Cache.Set(string(dig), layerInfo); err != nil {
+			if err = ac.Cache.PutLayer(string(dig), layerInfo); err != nil {
 				errCh <- xerrors.Errorf("failed to store layer in cache: %w", dig, err)
 				return
 			}
@@ -179,64 +148,76 @@ func (ac Config) analyzeLayers(ctx context.Context, layerIDs []string) error {
 	return nil
 }
 
-func (ac Config) analyzeLayer(ctx context.Context, dig digest.Digest) (LayerInfo, error) {
-	files, opqDirs, err := ac.Extractor.ExtractLayerFiles(ctx, dig, RequiredFilenames())
+func (ac Config) analyzeLayer(ctx context.Context, dig digest.Digest) (types.LayerInfo, error) {
+	files, opqDirs, whFiles, err := ac.Extractor.ExtractLayerFiles(ctx, dig, RequiredFilenames())
 	if err != nil {
-		//errCh <- xerrors.Errorf("failed to get a blob: %w", err)
-		return LayerInfo{}, err
+		return types.LayerInfo{}, err
 	}
 
-	os, err := GetOS(files)
-	if err != nil {
-		return LayerInfo{}, err
-	}
+	os := GetOS(files)
 	pkgs, err := GetPackages(files)
 	if err != nil {
-		return LayerInfo{}, err
+		return types.LayerInfo{}, err
 	}
-	pkgsFromCommands, err := GetPackagesFromCommands(os, files)
-	if err != nil {
-		return LayerInfo{}, err
-	}
-	mergedPkgs := mergePkgs(pkgs, pkgsFromCommands)
-
 	apps, err := GetLibraries(files)
+	if err != nil {
+		return types.LayerInfo{}, err
+	}
 
-	layerInfo := LayerInfo{
+	layerInfo := types.LayerInfo{
 		SchemaVersion: SchemaVersion,
 		OS:            os,
-		Packages:      mergedPkgs,
+		PackageInfos:  pkgs,
 		Applications:  apps,
 		OpaqueDirs:    opqDirs,
+		WhiteoutFiles: whFiles,
 	}
 	return layerInfo, nil
 }
 
-func (ac Config) AnalyzeFile(ctx context.Context, filePath string) (fileMap extractor.FileMap, err error) {
-	transports := []string{"docker-archive:"}
-	ref := image.Reference{Name: filePath, IsFile: true}
-	fileMap, err = ac.Extractor.Extract(ctx, ref, transports, RequiredFilenames())
-	if err != nil {
-		return nil, xerrors.Errorf("failed to extract files: %w", err)
+func (ac Config) ApplyLayers(layerIDs []string) (types.ImageDetail, error) {
+	var layers []types.LayerInfo
+	for _, layerID := range layerIDs {
+		b := ac.Cache.GetLayer(layerID)
+		if b == nil {
+			return types.ImageDetail{}, xerrors.Errorf("layer cache missing: %s", layerID)
+		}
+		var layer types.LayerInfo
+		if err := json.Unmarshal(b, &layer); err != nil {
+			return types.ImageDetail{}, err
+		}
+		layers = append(layers, layer)
 	}
-	return fileMap, nil
+
+	mergedLayer, err := ac.Extractor.ApplyLayers(layers)
+	if err != nil {
+		return types.ImageDetail{}, err
+	}
+
+	if mergedLayer.OS == nil {
+		return types.ImageDetail{}, ErrUnknownOS
+	} else if mergedLayer.Packages == nil {
+		return types.ImageDetail{}, ErrNoPkgsDetected
+	}
+
+	return mergedLayer, nil
 }
 
-func GetOS(filesMap extractor.FileMap) (OS, error) {
+func GetOS(filesMap extractor.FileMap) *types.OS {
 	for _, analyzer := range osAnalyzers {
 		os, err := analyzer.Analyze(filesMap)
 		if err != nil {
 			continue
 		}
-		return os, nil
+		return &os
 	}
-	return OS{}, ErrUnknownOS
-
+	return nil
 }
 
-func GetPackages(filesMap extractor.FileMap) ([]Package, error) {
+func GetPackages(filesMap extractor.FileMap) ([]types.PackageInfo, error) {
+	var results []types.PackageInfo
 	for _, analyzer := range pkgAnalyzers {
-		pkgs, err := analyzer.Analyze(filesMap)
+		pkgMap, err := analyzer.Analyze(filesMap)
 
 		// Differentiate between a package manager not being found and another error
 		if err != nil && err == ErrNoPkgsDetected {
@@ -244,12 +225,19 @@ func GetPackages(filesMap extractor.FileMap) ([]Package, error) {
 		} else if err != nil {
 			return nil, xerrors.Errorf("failed to analyze packages: %w", err)
 		}
-		return pkgs, nil
+
+		for filePath, pkgs := range pkgMap {
+			results = append(results, types.PackageInfo{
+				FilePath: string(filePath),
+				Packages: pkgs,
+			})
+		}
+		return results, nil
 	}
-	return nil, ErrPkgAnalysis
+	return nil, nil
 }
 
-func GetPackagesFromCommands(targetOS OS, filesMap extractor.FileMap) ([]Package, error) {
+func GetPackagesFromCommands(targetOS types.OS, filesMap extractor.FileMap) ([]types.Package, error) {
 	for _, analyzer := range commandAnalyzers {
 		pkgs, err := analyzer.Analyze(targetOS, filesMap)
 		if err != nil {
@@ -260,18 +248,12 @@ func GetPackagesFromCommands(targetOS OS, filesMap extractor.FileMap) ([]Package
 	return nil, nil
 }
 
-func CheckPackage(pkg *Package) bool {
+func CheckPackage(pkg *types.Package) bool {
 	return pkg.Name != "" && pkg.Version != ""
 }
 
-type Application struct {
-	Type      string
-	FilePath  string
-	Libraries []godeptypes.Library
-}
-
-func GetLibraries(filesMap extractor.FileMap) ([]Application, error) {
-	var results []Application
+func GetLibraries(filesMap extractor.FileMap) ([]types.Application, error) {
+	var results []types.Application
 	for _, analyzer := range libAnalyzers {
 		libMap, err := analyzer.Analyze(filesMap)
 		if err != nil {
@@ -279,7 +261,7 @@ func GetLibraries(filesMap extractor.FileMap) ([]Application, error) {
 		}
 
 		for filePath, libs := range libMap {
-			results = append(results, Application{
+			results = append(results, types.Application{
 				Type:      analyzer.Name(),
 				FilePath:  string(filePath),
 				Libraries: libs,
@@ -289,7 +271,7 @@ func GetLibraries(filesMap extractor.FileMap) ([]Application, error) {
 	return results, nil
 }
 
-func mergePkgs(pkgs, pkgsFromCommands []Package) []Package {
+func mergePkgs(pkgs, pkgsFromCommands []types.Package) []types.Package {
 	uniqPkgs := map[string]struct{}{}
 	for _, pkg := range pkgs {
 		uniqPkgs[pkg.Name] = struct{}{}

@@ -9,14 +9,16 @@ import (
 	"strings"
 	"time"
 
+	"github.com/aquasecurity/fanal/extractor/image/token/ecr"
+	"github.com/aquasecurity/fanal/extractor/image/token/gcr"
+	digest "github.com/opencontainers/go-digest"
+
 	"github.com/aquasecurity/fanal/analyzer/library"
-	"github.com/aquasecurity/fanal/cache"
 	"github.com/aquasecurity/fanal/extractor"
 	"github.com/aquasecurity/fanal/extractor/image"
 	"github.com/aquasecurity/fanal/types"
 	"github.com/aquasecurity/fanal/utils"
 	"github.com/knqyf263/nested"
-	"github.com/opencontainers/go-digest"
 	"golang.org/x/xerrors"
 )
 
@@ -47,164 +49,109 @@ type layer struct {
 
 type Extractor struct {
 	option types.DockerOption
-	cache  cache.Cache
 	image  image.Image
 }
 
-func NewDockerExtractor(ctx context.Context, imgRef image.Reference, transports []string,
-	option types.DockerOption, c cache.Cache) (Extractor, error) {
-	//image.RegisterRegistry(&gcr.GCR{})
-	//image.RegisterRegistry(&ecr.ECR{})
+func init() {
+	image.RegisterRegistry(&gcr.GCR{})
+	image.RegisterRegistry(&ecr.ECR{})
+}
+
+func NewDockerExtractor(ctx context.Context, imageName string, option types.DockerOption) (Extractor, error) {
+	ref := image.Reference{Name: imageName, IsFile: false}
+	transports := []string{"docker-daemon:", "docker://"}
+	return newDockerExtractor(ctx, ref, transports, option)
+}
+
+func NewDockerTarExtractor(ctx context.Context, fileName string, option types.DockerOption) (Extractor, error) {
+	ref := image.Reference{Name: fileName, IsFile: true}
+	transports := []string{"docker-archive:"}
+	return newDockerExtractor(ctx, ref, transports, option)
+}
+
+func newDockerExtractor(ctx context.Context, imgRef image.Reference, transports []string,
+	option types.DockerOption) (Extractor, error) {
 	ctx, cancel := context.WithTimeout(ctx, option.Timeout)
 	defer cancel()
 
-	img, err := image.NewImage(ctx, imgRef, transports, option, c)
+	img, err := image.NewImage(ctx, imgRef, transports, option)
 	if err != nil {
 		return Extractor{}, xerrors.Errorf("unable to initialize a image struct: %w", err)
 	}
 
 	return Extractor{
 		option: option,
-		cache:  c,
 		image:  img,
 	}, nil
 }
 
-func applyLayers(layerPaths []string, filesInLayers map[string]extractor.FileMap, opqInLayers map[string]extractor.OPQDirs) (extractor.FileMap, error) {
+func (d Extractor) ApplyLayers(layers []types.LayerInfo) (types.ImageDetail, error) {
 	sep := "/"
 	nestedMap := nested.Nested{}
-	for _, layerPath := range layerPaths {
-		for _, opqDir := range opqInLayers[layerPath] {
-			nestedMap.DeleteByString(opqDir, sep)
+	var mergedLayer types.ImageDetail
+
+	for _, layer := range layers {
+		for _, opqDir := range layer.OpaqueDirs {
+			_ = nestedMap.DeleteByString(opqDir, sep)
+		}
+		for _, whFile := range layer.WhiteoutFiles {
+			_ = nestedMap.DeleteByString(whFile, sep)
 		}
 
-		for filePath, content := range filesInLayers[layerPath] {
-			fileName := filepath.Base(filePath)
-			fileDir := filepath.Dir(filePath)
-			switch {
-			case strings.HasPrefix(fileName, wh):
-				fname := strings.TrimPrefix(fileName, wh)
-				fpath := filepath.Join(fileDir, fname)
-				nestedMap.DeleteByString(fpath, sep)
-			default:
-				nestedMap.SetByString(filePath, sep, content)
-			}
+		if layer.OS != nil {
+			mergedLayer.OS = layer.OS
+		}
+
+		for _, pkgInfo := range layer.PackageInfos {
+			nestedMap.SetByString(pkgInfo.FilePath, sep, pkgInfo)
+		}
+		for _, app := range layer.Applications {
+			nestedMap.SetByString(app.FilePath, sep, app)
 		}
 	}
 
-	fileMap := extractor.FileMap{}
 	walkFn := func(keys []string, value interface{}) error {
-		content, ok := value.([]byte)
-		if !ok {
-			return nil
+		switch v := value.(type) {
+		case types.PackageInfo:
+			mergedLayer.Packages = append(mergedLayer.Packages, v.Packages...)
+		case types.Application:
+			mergedLayer.Applications = append(mergedLayer.Applications, v)
 		}
-		path := strings.Join(keys, "/")
-		fileMap[path] = content
 		return nil
 	}
 	if err := nestedMap.Walk(walkFn); err != nil {
-		return nil, xerrors.Errorf("failed to walk nested map: %w", err)
+		return types.ImageDetail{}, xerrors.Errorf("failed to walk nested map: %w", err)
 	}
-
-	return fileMap, nil
-
+	return mergedLayer, nil
 }
 
-func (d Extractor) LayerInfos() ([]string, error) {
-	layers, err := d.image.LayerInfos()
-	if err != nil {
-		return nil, xerrors.Errorf("unable to get layer information: %w", err)
-	}
-
-	var layerIDs []string
-	for _, l := range layers {
-		layerIDs = append(layerIDs, string(l.Digest))
-	}
-	return layerIDs, nil
+func (d Extractor) LayerIDs() []string {
+	return d.image.LayerIDs()
 }
 
-//func (d Extractor) Extract(ctx context.Context, layerIDs []digest.Digest, filenames []string) (extractor.FileMap, error) {
-//	layerCh := make(chan layer)
-//	errCh := make(chan error)
-//	for _, layerID := range layerIDs {
-//		go func(dig digest.Digest) {
-//			img, cleanup, err := d.image.GetBlob(ctx, dig)
-//			if err != nil {
-//				errCh <- xerrors.Errorf("failed to get a blob: %w", err)
-//				return
-//			}
-//			layerCh <- layer{id: dig, content: img, cleanup: cleanup}
-//		}(layerID)
-//	}
-//
-//	filesInLayers := map[string]extractor.FileMap{}
-//	opqInLayers := map[string]extractor.OPQDirs{}
-//	for i := 0; i < len(layerIDs); i++ {
-//		if err := d.extractLayerFiles(ctx, layerCh, errCh, filesInLayers, opqInLayers, filenames); err != nil {
-//			return nil, xerrors.Errorf("failed to extract files from layer: %w", err)
-//		}
-//	}
-//
-//	//fileMap, err := applyLayers(layerIDs, filesInLayers, opqInLayers)
-//	//if err != nil {
-//	//	return nil, xerrors.Errorf("failed to apply layers: %w", err)
-//	//}
-//
-//	//// download config file
-//	//config, err := img.ConfigBlob(ctx)
-//	//if err != nil {
-//	//	return nil, xerrors.Errorf("failed to get a config blob: %w", err)
-//	//}
-//	//
-//	//// special file for command analyzer
-//	//fileMap["/config"] = config
-//
-//	return fileMap, nil
-//}
+func (d Extractor) ImageID() digest.Digest {
+	return d.image.ConfigInfo().Digest
+}
 
 func (d Extractor) ExtractLayerFiles(ctx context.Context, dig digest.Digest, filenames []string) (
-	extractor.FileMap, extractor.OPQDirs, error) {
-	img, cleanup, err := d.image.GetBlob(ctx, dig)
+	extractor.FileMap, []string, []string, error) {
+	img, err := d.image.GetBlob(ctx, dig)
 	if err != nil {
-		return nil, nil, xerrors.Errorf("failed to get a blob: %w", err)
+		return nil, nil, nil, xerrors.Errorf("failed to get a blob: %w", err)
 	}
-	defer cleanup()
+	defer img.Close()
 
-	files, opqDirs, err := d.extractFiles(img, filenames)
+	files, opqDirs, whFiles, err := d.extractFiles(img, filenames)
 	if err != nil {
-		return nil, nil, xerrors.Errorf("failed to extract files: %w", err)
+		return nil, nil, nil, xerrors.Errorf("failed to extract files: %w", err)
 	}
 
-	return files, opqDirs, nil
+	return files, opqDirs, whFiles, nil
 }
 
-//func (d Extractor) extractLayerFiles(ctx context.Context, layerCh chan layer, errCh chan error,
-//	filesInLayers map[string]extractor.FileMap, opqInLayers map[string]extractor.OPQDirs, filenames []string) error {
-//	var l layer
-//	select {
-//	case l = <-layerCh:
-//	case err := <-errCh:
-//		return err
-//	case <-ctx.Done():
-//		return xerrors.Errorf("timeout: %w", ctx.Err())
-//	}
-//	defer l.cleanup()
-//
-//	files, opqDirs, err := d.extractFiles(l.content, filenames)
-//	if err != nil {
-//		return xerrors.Errorf("failed to extract files: %w", err)
-//	}
-//
-//	layerID := string(l.id)
-//	filesInLayers[layerID] = files
-//	opqInLayers[layerID] = opqDirs
-//
-//	return nil
-//}
-
-func (d Extractor) extractFiles(layer io.Reader, filenames []string) (extractor.FileMap, extractor.OPQDirs, error) {
+func (d Extractor) extractFiles(layer io.Reader, filenames []string) (extractor.FileMap, []string, []string, error) {
 	data := make(map[string][]byte)
-	opqDirs := extractor.OPQDirs{}
+	var opqDirs, whFiles []string
 
 	tr := tar.NewReader(layer)
 	for {
@@ -213,16 +160,23 @@ func (d Extractor) extractFiles(layer io.Reader, filenames []string) (extractor.
 			break
 		}
 		if err != nil {
-			return data, nil, xerrors.Errorf("failed to extract the archive: %w", err)
+			return data, nil, nil, xerrors.Errorf("failed to extract the archive: %w", err)
 		}
 
 		filePath := hdr.Name
 		filePath = strings.TrimLeft(filepath.Clean(filePath), "/")
-		fileName := filepath.Base(filePath)
+		fileDir, fileName := filepath.Split(filePath)
 
 		// e.g. etc/.wh..wh..opq
 		if opq == fileName {
-			opqDirs = append(opqDirs, filepath.Dir(filePath))
+			opqDirs = append(opqDirs, fileDir)
+			continue
+		}
+		// etc/.wh.hostname
+		if strings.HasPrefix(fileName, wh) {
+			name := strings.TrimPrefix(fileName, wh)
+			fpath := filepath.Join(fileDir, name)
+			whFiles = append(whFiles, fpath)
 			continue
 		}
 
@@ -241,7 +195,7 @@ func (d Extractor) extractFiles(layer io.Reader, filenames []string) (extractor.
 				}
 			}
 
-			if s == filePath || s == fileName || strings.HasPrefix(fileName, wh) {
+			if s == filePath || s == fileName {
 				extract = true
 				break
 			}
@@ -254,13 +208,13 @@ func (d Extractor) extractFiles(layer io.Reader, filenames []string) (extractor.
 		if hdr.Typeflag == tar.TypeSymlink || hdr.Typeflag == tar.TypeLink || hdr.Typeflag == tar.TypeReg {
 			d, err := ioutil.ReadAll(tr)
 			if err != nil {
-				return nil, nil, xerrors.Errorf("failed to read file: %w", err)
+				return nil, nil, nil, xerrors.Errorf("failed to read file: %w", err)
 			}
 			data[filePath] = d
 		}
 	}
 
-	return data, opqDirs, nil
+	return data, opqDirs, whFiles, nil
 }
 
 func (d Extractor) isIgnored(filePath string) bool {

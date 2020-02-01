@@ -4,12 +4,14 @@ import (
 	"bytes"
 	"path/filepath"
 
+	"github.com/aquasecurity/fanal/types"
+
 	"github.com/aquasecurity/fanal/analyzer/library"
 
 	"github.com/aquasecurity/fanal/analyzer"
 	"github.com/aquasecurity/fanal/extractor"
 	"github.com/aquasecurity/fanal/utils"
-	"github.com/aquasecurity/go-dep-parser/pkg/types"
+	godeptypes "github.com/aquasecurity/go-dep-parser/pkg/types"
 	"github.com/aquasecurity/go-dep-parser/pkg/yarn"
 	"golang.org/x/xerrors"
 )
@@ -20,8 +22,8 @@ func init() {
 
 type yarnLibraryAnalyzer struct{}
 
-func (a yarnLibraryAnalyzer) Analyze(fileMap extractor.FileMap) (map[analyzer.FilePath][]types.Library, error) {
-	libMap := map[analyzer.FilePath][]types.Library{}
+func (a yarnLibraryAnalyzer) Analyze(fileMap extractor.FileMap) (map[types.FilePath][]godeptypes.Library, error) {
+	libMap := map[types.FilePath][]godeptypes.Library{}
 	requiredFiles := a.RequiredFiles()
 
 	for filename, content := range fileMap {
@@ -37,7 +39,7 @@ func (a yarnLibraryAnalyzer) Analyze(fileMap extractor.FileMap) (map[analyzer.Fi
 		if err != nil {
 			return nil, xerrors.Errorf("invalid yarn.lock format: %w", err)
 		}
-		libMap[analyzer.FilePath(filename)] = libs
+		libMap[types.FilePath(filename)] = libs
 	}
 
 	return libMap, nil

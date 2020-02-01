@@ -4,14 +4,15 @@ import (
 	"bytes"
 	"path/filepath"
 
-	"github.com/aquasecurity/fanal/analyzer/library"
+	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/fanal/analyzer"
+	"github.com/aquasecurity/fanal/analyzer/library"
 	"github.com/aquasecurity/fanal/extractor"
+	"github.com/aquasecurity/fanal/types"
 	"github.com/aquasecurity/fanal/utils"
 	"github.com/aquasecurity/go-dep-parser/pkg/pipenv"
-	"github.com/aquasecurity/go-dep-parser/pkg/types"
-	"golang.org/x/xerrors"
+	godeptypes "github.com/aquasecurity/go-dep-parser/pkg/types"
 )
 
 func init() {
@@ -20,8 +21,8 @@ func init() {
 
 type pipenvLibraryAnalyzer struct{}
 
-func (a pipenvLibraryAnalyzer) Analyze(fileMap extractor.FileMap) (map[analyzer.FilePath][]types.Library, error) {
-	libMap := map[analyzer.FilePath][]types.Library{}
+func (a pipenvLibraryAnalyzer) Analyze(fileMap extractor.FileMap) (map[types.FilePath][]godeptypes.Library, error) {
+	libMap := map[types.FilePath][]godeptypes.Library{}
 	requiredFiles := a.RequiredFiles()
 
 	for filename, content := range fileMap {
@@ -35,7 +36,7 @@ func (a pipenvLibraryAnalyzer) Analyze(fileMap extractor.FileMap) (map[analyzer.
 		if err != nil {
 			return nil, xerrors.Errorf("invalid Pipfile.lock format: %w", err)
 		}
-		libMap[analyzer.FilePath(filename)] = libs
+		libMap[types.FilePath(filename)] = libs
 	}
 	return libMap, nil
 }

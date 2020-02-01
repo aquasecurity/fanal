@@ -6,9 +6,8 @@ import (
 	"io/ioutil"
 	"testing"
 
-	"github.com/opencontainers/go-digest"
-
-	imageTypes "github.com/containers/image/types"
+	imageTypes "github.com/containers/image/v5/types"
+	digest "github.com/opencontainers/go-digest"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/xerrors"

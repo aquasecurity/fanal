@@ -48,12 +48,16 @@ func run() (err error) {
 	clearCache := flag.Bool("clear", false, "clear cache")
 	flag.Parse()
 
-	c := cache.New(utils.CacheDir())
+	c, err := cache.New(utils.CacheDir())
+	if err != nil {
+		return err
+	}
 
 	if *clearCache {
 		if err = c.Clear(); err != nil {
 			return xerrors.Errorf("%w", err)
 		}
+		return nil
 	}
 
 	args := flag.Args()
@@ -63,46 +67,33 @@ func run() (err error) {
 		SkipPing: true,
 	}
 
-	ext := docker.NewDockerExtractor(opt, c)
-	ac := analyzer.Config{Extractor: ext}
-
-	var files extractor.FileMap
+	var ext extractor.Extractor
 	if len(args) > 0 {
-		files, err = ac.Analyze(ctx, args[0])
+		ext, err = docker.NewDockerExtractor(ctx, args[0], opt)
 		if err != nil {
 			return err
 		}
 	} else {
-		files, err = ac.AnalyzeFile(ctx, *tarPath)
+		ext, err = docker.NewDockerTarExtractor(ctx, *tarPath, opt)
 		if err != nil {
 			return err
 		}
 	}
-
-	osFound, err := analyzer.GetOS(files)
+	ac := analyzer.New(ext, c)
+	imageInfo, err := ac.Analyze(ctx)
 	if err != nil {
 		return err
 	}
-	fmt.Printf("%+v\n", osFound)
 
-	pkgs, err := analyzer.GetPackages(files)
+	mergedLayer, err := ac.ApplyLayers(imageInfo.LayerIDs)
 	if err != nil {
 		return err
 	}
-	fmt.Printf("via image Packages: %d\n", len(pkgs))
 
-	pkgs, err = analyzer.GetPackagesFromCommands(osFound, files)
-	if err != nil {
-		return err
-	}
-	fmt.Printf("via file Packages: %d\n", len(pkgs))
-
-	libs, err := analyzer.GetLibraries(files)
-	if err != nil {
-		return err
-	}
-	for filepath, libList := range libs {
-		fmt.Printf("%s: %d\n", filepath, len(libList))
+	fmt.Printf("%+v\n", mergedLayer.OS)
+	fmt.Printf("via image Packages: %d\n", len(mergedLayer.Packages))
+	for _, app := range mergedLayer.Applications {
+		fmt.Printf("%s (%s): %d\n", app.Type, app.FilePath, len(app.Libraries))
 	}
 	return nil
 }
