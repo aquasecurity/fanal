@@ -5,9 +5,9 @@
     "Release": "1.el7",
     "Epoch": 0,
     "Arch": "noarch",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "tzdata",
+    "SrcVersion": "2019b",
+    "SrcRelease": "1.el7",
     "SrcEpoch": 0
   },
   {
@@ -16,9 +16,9 @@
     "Release": "10.el7",
     "Epoch": 0,
     "Arch": "noarch",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "setup",
+    "SrcVersion": "2.8.71",
+    "SrcRelease": "10.el7",
     "SrcEpoch": 0
   },
   {
@@ -27,9 +27,9 @@
     "Release": "7.el7",
     "Epoch": 0,
     "Arch": "noarch",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "basesystem",
+    "SrcVersion": "10.0",
+    "SrcRelease": "7.el7",
     "SrcEpoch": 0
   },
   {
@@ -38,9 +38,9 @@
     "Release": "5.el7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "nss-softokn",
+    "SrcVersion": "3.44.0",
+    "SrcRelease": "5.el7",
     "SrcEpoch": 0
   },
   {
@@ -49,9 +49,9 @@
     "Release": "292.el7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "glibc",
+    "SrcVersion": "2.17",
+    "SrcRelease": "292.el7",
     "SrcEpoch": 0
   },
   {
@@ -60,9 +60,9 @@
     "Release": "3.el7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "nss-util",
+    "SrcVersion": "3.44.0",
+    "SrcRelease": "3.el7",
     "SrcEpoch": 0
   },
   {
@@ -71,9 +71,9 @@
     "Release": "14.20130511.el7_4",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "ncurses",
+    "SrcVersion": "5.9",
+    "SrcRelease": "14.20130511.el7_4",
     "SrcEpoch": 0
   },
   {
@@ -82,9 +82,9 @@
     "Release": "10.el7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "libsepol",
+    "SrcVersion": "2.5",
+    "SrcRelease": "10.el7",
     "SrcEpoch": 0
   },
   {
@@ -93,9 +93,9 @@
     "Release": "14.1.el7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "libselinux",
+    "SrcVersion": "2.5",
+    "SrcRelease": "14.1.el7",
     "SrcEpoch": 0
   },
   {
@@ -104,9 +104,9 @@
     "Release": "5.el7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "texinfo",
+    "SrcVersion": "5.1",
+    "SrcRelease": "5.el7",
     "SrcEpoch": 0
   },
   {
@@ -115,9 +115,9 @@
     "Release": "13.el7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "bzip2",
+    "SrcVersion": "1.0.6",
+    "SrcRelease": "13.el7",
     "SrcEpoch": 0
   },
   {
@@ -126,9 +126,9 @@
     "Release": "16.el7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "popt",
+    "SrcVersion": "1.13",
+    "SrcRelease": "16.el7",
     "SrcEpoch": 0
   },
   {
@@ -137,9 +137,9 @@
     "Release": "18.el7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "libffi",
+    "SrcVersion": "3.0.13",
+    "SrcRelease": "18.el7",
     "SrcEpoch": 0
   },
   {
@@ -148,9 +148,9 @@
     "Release": "13.el7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "attr",
+    "SrcVersion": "2.4.46",
+    "SrcRelease": "13.el7",
     "SrcEpoch": 0
   },
   {
@@ -159,9 +159,9 @@
     "Release": "10.el7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "libcap",
+    "SrcVersion": "2.22",
+    "SrcRelease": "10.el7",
     "SrcEpoch": 0
   },
   {
@@ -170,9 +170,9 @@
     "Release": "14.el7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "libgcrypt",
+    "SrcVersion": "1.5.3",
+    "SrcRelease": "14.el7",
     "SrcEpoch": 0
   },
   {
@@ -181,9 +181,9 @@
     "Release": "11.el7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "readline",
+    "SrcVersion": "6.2",
+    "SrcRelease": "11.el7",
     "SrcEpoch": 0
   },
   {
@@ -192,9 +192,9 @@
     "Release": "5.el7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "sed",
+    "SrcVersion": "4.2.2",
+    "SrcRelease": "5.el7",
     "SrcEpoch": 0
   },
   {
@@ -203,9 +203,9 @@
     "Release": "16.el7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "e2fsprogs",
+    "SrcVersion": "1.42.9",
+    "SrcRelease": "16.el7",
     "SrcEpoch": 0
   },
   {
@@ -214,9 +214,9 @@
     "Release": "27.el7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "cpio",
+    "SrcVersion": "2.11",
+    "SrcRelease": "27.el7",
     "SrcEpoch": 0
   },
   {
@@ -225,9 +225,9 @@
     "Release": "3.el7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "grep",
+    "SrcVersion": "2.20",
+    "SrcRelease": "3.el7",
     "SrcEpoch": 0
   },
   {
@@ -236,9 +236,9 @@
     "Release": "4.el7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "libcap-ng",
+    "SrcVersion": "0.7.5",
+    "SrcRelease": "4.el7",
     "SrcEpoch": 0
   },
   {
@@ -247,9 +247,9 @@
     "Release": "5.el7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "nss-softokn",
+    "SrcVersion": "3.44.0",
+    "SrcRelease": "5.el7",
     "SrcEpoch": 0
   },
   {
@@ -258,9 +258,9 @@
     "Release": "3.el7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "p11-kit",
+    "SrcVersion": "0.23.5",
+    "SrcRelease": "3.el7",
     "SrcEpoch": 0
   },
   {
@@ -269,9 +269,9 @@
     "Release": "4.el7_3.1",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "gawk",
+    "SrcVersion": "4.0.2",
+    "SrcRelease": "4.el7_3.1",
     "SrcEpoch": 0
   },
   {
@@ -280,9 +280,9 @@
     "Release": "35.el7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "file",
+    "SrcVersion": "5.11",
+    "SrcRelease": "35.el7",
     "SrcEpoch": 0
   },
   {
@@ -291,9 +291,9 @@
     "Release": "3.el7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "keyutils",
+    "SrcVersion": "1.5.8",
+    "SrcRelease": "3.el7",
     "SrcEpoch": 0
   },
   {
@@ -302,9 +302,9 @@
     "Release": "14.el7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "acl",
+    "SrcVersion": "2.2.51",
+    "SrcRelease": "14.el7",
     "SrcEpoch": 0
   },
   {
@@ -313,9 +313,9 @@
     "Release": "25.el7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "libdb",
+    "SrcVersion": "5.3.21",
+    "SrcRelease": "25.el7",
     "SrcEpoch": 0
   },
   {
@@ -324,9 +324,9 @@
     "Release": "7.el7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "which",
+    "SrcVersion": "2.20",
+    "SrcRelease": "7.el7",
     "SrcEpoch": 0
   },
   {
@@ -335,9 +335,9 @@
     "Release": "14.20130511.el7_4",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "ncurses",
+    "SrcVersion": "5.9",
+    "SrcRelease": "14.20130511.el7_4",
     "SrcEpoch": 0
   },
   {
@@ -346,9 +346,9 @@
     "Release": "4.el7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "libverto",
+    "SrcVersion": "0.2.5",
+    "SrcRelease": "4.el7",
     "SrcEpoch": 0
   },
   {
@@ -357,9 +357,9 @@
     "Release": "16.el7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "ustr",
+    "SrcVersion": "1.0.4",
+    "SrcRelease": "16.el7",
     "SrcEpoch": 0
   },
   {
@@ -368,10 +368,10 @@
     "Release": "19.el7",
     "Epoch": 1,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
-    "SrcEpoch": 0
+    "SrcName": "hardlink",
+    "SrcVersion": "1.0",
+    "SrcRelease": "19.el7",
+    "SrcEpoch": 1
   },
   {
     "Name": "qrencode-libs",
@@ -379,9 +379,9 @@
     "Release": "3.el7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "qrencode",
+    "SrcVersion": "3.4.1",
+    "SrcRelease": "3.el7",
     "SrcEpoch": 0
   },
   {
@@ -390,9 +390,9 @@
     "Release": "8.el7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "gdbm",
+    "SrcVersion": "1.10",
+    "SrcRelease": "8.el7",
     "SrcEpoch": 0
   },
   {
@@ -401,9 +401,9 @@
     "Release": "3.el7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "p11-kit",
+    "SrcVersion": "0.23.5",
+    "SrcRelease": "3.el7",
     "SrcEpoch": 0
   },
   {
@@ -412,9 +412,9 @@
     "Release": "24.el7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "coreutils",
+    "SrcVersion": "8.22",
+    "SrcRelease": "24.el7",
     "SrcEpoch": 0
   },
   {
@@ -423,9 +423,9 @@
     "Release": "37.el7_7.2",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "krb5",
+    "SrcVersion": "1.15.1",
+    "SrcRelease": "37.el7_7.2",
     "SrcEpoch": 0
   },
   {
@@ -434,9 +434,9 @@
     "Release": "86.el7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "python",
+    "SrcVersion": "2.7.5",
+    "SrcRelease": "86.el7",
     "SrcEpoch": 0
   },
   {
@@ -445,9 +445,9 @@
     "Release": "61.el7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "util-linux",
+    "SrcVersion": "2.23.2",
+    "SrcRelease": "61.el7",
     "SrcEpoch": 0
   },
   {
@@ -456,9 +456,9 @@
     "Release": "4.el7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "shared-mime-info",
+    "SrcVersion": "1.8",
+    "SrcRelease": "4.el7",
     "SrcEpoch": 0
   },
   {
@@ -467,9 +467,9 @@
     "Release": "10.el7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "gzip",
+    "SrcVersion": "1.5",
+    "SrcRelease": "10.el7",
     "SrcEpoch": 0
   },
   {
@@ -478,10 +478,10 @@
     "Release": "5.el7",
     "Epoch": 2,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
-    "SrcEpoch": 0
+    "SrcName": "shadow-utils",
+    "SrcVersion": "4.6",
+    "SrcRelease": "5.el7",
+    "SrcEpoch": 2
   },
   {
     "Name": "libpwquality",
@@ -489,9 +489,9 @@
     "Release": "5.el7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "libpwquality",
+    "SrcVersion": "1.2.3",
+    "SrcRelease": "5.el7",
     "SrcEpoch": 0
   },
   {
@@ -500,9 +500,9 @@
     "Release": "1.el7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "gobject-introspection",
+    "SrcVersion": "1.56.1",
+    "SrcRelease": "1.el7",
     "SrcEpoch": 0
   },
   {
@@ -511,9 +511,9 @@
     "Release": "2.el7",
     "Epoch": 0,
     "Arch": "noarch",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "python-six",
+    "SrcVersion": "1.9.0",
+    "SrcRelease": "2.el7",
     "SrcEpoch": 0
   },
   {
@@ -522,9 +522,9 @@
     "Release": "3.el7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "python-dmidecode",
+    "SrcVersion": "3.12.2",
+    "SrcRelease": "3.el7",
     "SrcEpoch": 0
   },
   {
@@ -533,9 +533,9 @@
     "Release": "4.el7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "libutempter",
+    "SrcVersion": "1.1.6",
+    "SrcRelease": "4.el7",
     "SrcEpoch": 0
   },
   {
@@ -544,9 +544,9 @@
     "Release": "10.el7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "yum-metadata-parser",
+    "SrcVersion": "1.1.4",
+    "SrcRelease": "10.el7",
     "SrcEpoch": 0
   },
   {
@@ -555,9 +555,9 @@
     "Release": "8.el7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "python-backports",
+    "SrcVersion": "1.0",
+    "SrcRelease": "8.el7",
     "SrcEpoch": 0
   },
   {
@@ -566,9 +566,9 @@
     "Release": "2.el7",
     "Epoch": 0,
     "Arch": "noarch",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "python-ipaddress",
+    "SrcVersion": "1.0.16",
+    "SrcRelease": "2.el7",
     "SrcEpoch": 0
   },
   {
@@ -577,9 +577,9 @@
     "Release": "7.el7",
     "Epoch": 0,
     "Arch": "noarch",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "python-setuptools",
+    "SrcVersion": "0.9.8",
+    "SrcRelease": "7.el7",
     "SrcEpoch": 0
   },
   {
@@ -588,9 +588,9 @@
     "Release": "5.el7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "pyxattr",
+    "SrcVersion": "0.5.1",
+    "SrcRelease": "5.el7",
     "SrcEpoch": 0
   },
   {
@@ -599,9 +599,9 @@
     "Release": "3.el7",
     "Epoch": 0,
     "Arch": "noarch",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "python-chardet",
+    "SrcVersion": "2.2.1",
+    "SrcRelease": "3.el7",
     "SrcEpoch": 0
   },
   {
@@ -610,9 +610,9 @@
     "Release": "4.el7",
     "Epoch": 0,
     "Arch": "noarch",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "python-inotify",
+    "SrcVersion": "0.9.4",
+    "SrcRelease": "4.el7",
     "SrcEpoch": 0
   },
   {
@@ -621,9 +621,9 @@
     "Release": "3.el7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "libssh2",
+    "SrcVersion": "1.8.0",
+    "SrcRelease": "3.el7",
     "SrcEpoch": 0
   },
   {
@@ -632,9 +632,9 @@
     "Release": "4.el7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "nss",
+    "SrcVersion": "3.44.0",
+    "SrcRelease": "4.el7",
     "SrcEpoch": 0
   },
   {
@@ -643,9 +643,9 @@
     "Release": "4.el7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "nss",
+    "SrcVersion": "3.44.0",
+    "SrcRelease": "4.el7",
     "SrcEpoch": 0
   },
   {
@@ -654,9 +654,9 @@
     "Release": "54.el7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "curl",
+    "SrcVersion": "7.29.0",
+    "SrcRelease": "54.el7",
     "SrcEpoch": 0
   },
   {
@@ -665,9 +665,9 @@
     "Release": "40.el7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "rpm",
+    "SrcVersion": "4.11.3",
+    "SrcRelease": "40.el7",
     "SrcEpoch": 0
   },
   {
@@ -676,9 +676,9 @@
     "Release": "9.el7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "libuser",
+    "SrcVersion": "0.60",
+    "SrcRelease": "9.el7",
     "SrcEpoch": 0
   },
   {
@@ -687,9 +687,9 @@
     "Release": "19.el7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "python-pycurl",
+    "SrcVersion": "7.19.0",
+    "SrcRelease": "19.el7",
     "SrcEpoch": 0
   },
   {
@@ -698,9 +698,9 @@
     "Release": "41.base.el7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "binutils",
+    "SrcVersion": "2.27",
+    "SrcRelease": "41.base.el7",
     "SrcEpoch": 0
   },
   {
@@ -709,9 +709,9 @@
     "Release": "5.el7_5",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "gnupg2",
+    "SrcVersion": "2.0.22",
+    "SrcRelease": "5.el7_5",
     "SrcEpoch": 0
   },
   {
@@ -720,9 +720,9 @@
     "Release": "40.el7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "rpm",
+    "SrcVersion": "4.11.3",
+    "SrcRelease": "40.el7",
     "SrcEpoch": 0
   },
   {
@@ -731,9 +731,9 @@
     "Release": "9.el7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "pygpgme",
+    "SrcVersion": "0.3",
+    "SrcRelease": "9.el7",
     "SrcEpoch": 0
   },
   {
@@ -742,9 +742,9 @@
     "Release": "4.el7_0",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "json-c",
+    "SrcVersion": "0.11",
+    "SrcRelease": "4.el7_0",
     "SrcEpoch": 0
   },
   {
@@ -753,9 +753,9 @@
     "Release": "26.el7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "procps-ng",
+    "SrcVersion": "3.3.10",
+    "SrcRelease": "26.el7",
     "SrcEpoch": 0
   },
   {
@@ -764,10 +764,10 @@
     "Release": "2.el7",
     "Epoch": 7,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
-    "SrcEpoch": 0
+    "SrcName": "lvm2",
+    "SrcVersion": "2.02.185",
+    "SrcRelease": "2.el7",
+    "SrcEpoch": 7
   },
   {
     "Name": "cryptsetup-libs",
@@ -775,9 +775,9 @@
     "Release": "5.el7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "cryptsetup",
+    "SrcVersion": "2.0.3",
+    "SrcRelease": "5.el7",
     "SrcEpoch": 0
   },
   {
@@ -786,9 +786,9 @@
     "Release": "25.el7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "kmod",
+    "SrcVersion": "20",
+    "SrcRelease": "25.el7",
     "SrcEpoch": 0
   },
   {
@@ -797,9 +797,9 @@
     "Release": "67.el7_7.1",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "systemd",
+    "SrcVersion": "219",
+    "SrcRelease": "67.el7_7.1",
     "SrcEpoch": 0
   },
   {
@@ -808,9 +808,9 @@
     "Release": "67.el7_7.1",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "systemd",
+    "SrcVersion": "219",
+    "SrcRelease": "67.el7_7.1",
     "SrcEpoch": 0
   },
   {
@@ -819,10 +819,10 @@
     "Release": "13.el7_6",
     "Epoch": 1,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
-    "SrcEpoch": 0
+    "SrcName": "dbus",
+    "SrcVersion": "1.10.24",
+    "SrcRelease": "13.el7_6",
+    "SrcEpoch": 1
   },
   {
     "Name": "dbus-python",
@@ -830,9 +830,9 @@
     "Release": "9.el7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "dbus-python",
+    "SrcVersion": "1.1.1",
+    "SrcRelease": "9.el7",
     "SrcEpoch": 0
   },
   {
@@ -841,9 +841,9 @@
     "Release": "6.el7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "usermode",
+    "SrcVersion": "1.111",
+    "SrcRelease": "6.el7",
     "SrcEpoch": 0
   },
   {
@@ -852,9 +852,9 @@
     "Release": "3.el7_7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "subscription-manager",
+    "SrcVersion": "1.24.13",
+    "SrcRelease": "3.el7_7",
     "SrcEpoch": 0
   },
   {
@@ -863,9 +863,9 @@
     "Release": "52.el7",
     "Epoch": 0,
     "Arch": "noarch",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "yum-utils",
+    "SrcVersion": "1.1.31",
+    "SrcRelease": "52.el7",
     "SrcEpoch": 0
   },
   {
@@ -874,9 +874,9 @@
     "Release": "115.el7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "gdb",
+    "SrcVersion": "7.6.1",
+    "SrcRelease": "115.el7",
     "SrcEpoch": 0
   },
   {
@@ -885,9 +885,9 @@
     "Release": "39.el7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "gcc",
+    "SrcVersion": "4.8.5",
+    "SrcRelease": "39.el7",
     "SrcEpoch": 0
   },
   {
@@ -896,9 +896,9 @@
     "Release": "10.el7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "redhat-release-server",
+    "SrcVersion": "7.7",
+    "SrcRelease": "10.el7",
     "SrcEpoch": 0
   },
   {
@@ -907,9 +907,9 @@
     "Release": "25.el7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "filesystem",
+    "SrcVersion": "3.2",
+    "SrcRelease": "25.el7",
     "SrcEpoch": 0
   },
   {
@@ -918,9 +918,9 @@
     "Release": "14.20130511.el7_4",
     "Epoch": 0,
     "Arch": "noarch",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "ncurses",
+    "SrcVersion": "5.9",
+    "SrcRelease": "14.20130511.el7_4",
     "SrcEpoch": 0
   },
   {
@@ -929,9 +929,9 @@
     "Release": "292.el7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "glibc",
+    "SrcVersion": "2.17",
+    "SrcRelease": "292.el7",
     "SrcEpoch": 0
   },
   {
@@ -940,9 +940,9 @@
     "Release": "1.el7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "nspr",
+    "SrcVersion": "4.21.0",
+    "SrcRelease": "1.el7",
     "SrcEpoch": 0
   },
   {
@@ -951,9 +951,9 @@
     "Release": "39.el7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "gcc",
+    "SrcVersion": "4.8.5",
+    "SrcRelease": "39.el7",
     "SrcEpoch": 0
   },
   {
@@ -962,9 +962,9 @@
     "Release": "33.el7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "bash",
+    "SrcVersion": "4.2.46",
+    "SrcRelease": "33.el7",
     "SrcEpoch": 0
   },
   {
@@ -973,9 +973,9 @@
     "Release": "17.el7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "pcre",
+    "SrcVersion": "8.32",
+    "SrcRelease": "17.el7",
     "SrcEpoch": 0
   },
   {
@@ -984,9 +984,9 @@
     "Release": "18.el7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "zlib",
+    "SrcVersion": "1.2.7",
+    "SrcRelease": "18.el7",
     "SrcEpoch": 0
   },
   {
@@ -995,9 +995,9 @@
     "Release": "1.el7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "xz",
+    "SrcVersion": "5.2.2",
+    "SrcRelease": "1.el7",
     "SrcEpoch": 0
   },
   {
@@ -1006,9 +1006,9 @@
     "Release": "25.el7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "libdb",
+    "SrcVersion": "5.3.21",
+    "SrcRelease": "25.el7",
     "SrcEpoch": 0
   },
   {
@@ -1017,9 +1017,9 @@
     "Release": "2.el7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "elfutils",
+    "SrcVersion": "0.176",
+    "SrcRelease": "2.el7",
     "SrcEpoch": 0
   },
   {
@@ -1028,9 +1028,9 @@
     "Release": "3.el7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "libgpg-error",
+    "SrcVersion": "1.12",
+    "SrcRelease": "3.el7",
     "SrcEpoch": 0
   },
   {
@@ -1039,9 +1039,9 @@
     "Release": "14.el7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "acl",
+    "SrcVersion": "2.2.51",
+    "SrcRelease": "14.el7",
     "SrcEpoch": 0
   },
   {
@@ -1050,9 +1050,9 @@
     "Release": "1.el7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "chkconfig",
+    "SrcVersion": "1.7.4",
+    "SrcRelease": "1.el7",
     "SrcEpoch": 0
   },
   {
@@ -1061,9 +1061,9 @@
     "Release": "6.el7_2.3",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "libxml2",
+    "SrcVersion": "2.9.1",
+    "SrcRelease": "6.el7_2.3",
     "SrcEpoch": 0
   },
   {
@@ -1072,9 +1072,9 @@
     "Release": "15.el7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "lua",
+    "SrcVersion": "5.1.4",
+    "SrcRelease": "15.el7",
     "SrcEpoch": 0
   },
   {
@@ -1083,9 +1083,9 @@
     "Release": "61.el7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "util-linux",
+    "SrcVersion": "2.23.2",
+    "SrcRelease": "61.el7",
     "SrcEpoch": 0
   },
   {
@@ -1094,9 +1094,9 @@
     "Release": "8.el7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "sqlite",
+    "SrcVersion": "3.7.17",
+    "SrcRelease": "8.el7",
     "SrcEpoch": 0
   },
   {
@@ -1105,9 +1105,9 @@
     "Release": "5.el7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "diffutils",
+    "SrcVersion": "3.3",
+    "SrcRelease": "5.el7",
     "SrcEpoch": 0
   },
   {
@@ -1116,9 +1116,9 @@
     "Release": "10.el7_3",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "expat",
+    "SrcVersion": "2.1.0",
+    "SrcRelease": "10.el7_3",
     "SrcEpoch": 0
   },
   {
@@ -1127,9 +1127,9 @@
     "Release": "4.el7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "audit",
+    "SrcVersion": "2.8.5",
+    "SrcRelease": "4.el7",
     "SrcEpoch": 0
   },
   {
@@ -1138,9 +1138,9 @@
     "Release": "3.el7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "libassuan",
+    "SrcVersion": "2.1.0",
+    "SrcRelease": "3.el7",
     "SrcEpoch": 0
   },
   {
@@ -1149,9 +1149,9 @@
     "Release": "1.el7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "xz",
+    "SrcVersion": "5.2.2",
+    "SrcRelease": "1.el7",
     "SrcEpoch": 0
   },
   {
@@ -1160,10 +1160,10 @@
     "Release": "6.el7",
     "Epoch": 1,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
-    "SrcEpoch": 0
+    "SrcName": "findutils",
+    "SrcVersion": "4.5.11",
+    "SrcRelease": "6.el7",
+    "SrcEpoch": 1
   },
   {
     "Name": "lz4",
@@ -1171,9 +1171,9 @@
     "Release": "3.el7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "lz4",
+    "SrcVersion": "1.7.5",
+    "SrcRelease": "3.el7",
     "SrcEpoch": 0
   },
   {
@@ -1182,9 +1182,9 @@
     "Release": "17.el7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "pinentry",
+    "SrcVersion": "0.8.1",
+    "SrcRelease": "17.el7",
     "SrcEpoch": 0
   },
   {
@@ -1193,10 +1193,10 @@
     "Release": "35.el7",
     "Epoch": 2,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
-    "SrcEpoch": 0
+    "SrcName": "tar",
+    "SrcVersion": "1.26",
+    "SrcRelease": "35.el7",
+    "SrcEpoch": 2
   },
   {
     "Name": "kmod-libs",
@@ -1204,9 +1204,9 @@
     "Release": "25.el7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "kmod",
+    "SrcVersion": "20",
+    "SrcRelease": "25.el7",
     "SrcEpoch": 0
   },
   {
@@ -1215,9 +1215,9 @@
     "Release": "4.el7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "libidn",
+    "SrcVersion": "1.28",
+    "SrcRelease": "4.el7",
     "SrcEpoch": 0
   },
   {
@@ -1226,10 +1226,10 @@
     "Release": "15.el7",
     "Epoch": 1,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
-    "SrcEpoch": 0
+    "SrcName": "gmp",
+    "SrcVersion": "6.0.0",
+    "SrcRelease": "15.el7",
+    "SrcEpoch": 1
   },
   {
     "Name": "libnl",
@@ -1237,9 +1237,9 @@
     "Release": "3.el7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "libnl",
+    "SrcVersion": "1.1.4",
+    "SrcRelease": "3.el7",
     "SrcEpoch": 0
   },
   {
@@ -1248,9 +1248,9 @@
     "Release": "14.el7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "libsemanage",
+    "SrcVersion": "2.5",
+    "SrcRelease": "14.el7",
     "SrcEpoch": 0
   },
   {
@@ -1259,10 +1259,10 @@
     "Release": "3.el7",
     "Epoch": 1,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
-    "SrcEpoch": 0
+    "SrcName": "dmidecode",
+    "SrcVersion": "3.2",
+    "SrcRelease": "3.el7",
+    "SrcEpoch": 1
   },
   {
     "Name": "libsmartcols",
@@ -1270,9 +1270,9 @@
     "Release": "61.el7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "util-linux",
+    "SrcVersion": "2.23.2",
+    "SrcRelease": "61.el7",
     "SrcEpoch": 0
   },
   {
@@ -1281,9 +1281,9 @@
     "Release": "1.el7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "libtasn1",
+    "SrcVersion": "4.10",
+    "SrcRelease": "1.el7",
     "SrcEpoch": 0
   },
   {
@@ -1292,9 +1292,9 @@
     "Release": "70.0.el7_5",
     "Epoch": 0,
     "Arch": "noarch",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "ca-certificates",
+    "SrcVersion": "2018.2.22",
+    "SrcRelease": "70.0.el7_5",
     "SrcEpoch": 0
   },
   {
@@ -1303,10 +1303,10 @@
     "Release": "19.el7",
     "Epoch": 1,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
-    "SrcEpoch": 0
+    "SrcName": "openssl",
+    "SrcVersion": "1.0.2k",
+    "SrcRelease": "19.el7",
+    "SrcEpoch": 1
   },
   {
     "Name": "python-libs",
@@ -1314,9 +1314,9 @@
     "Release": "86.el7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "python",
+    "SrcVersion": "2.7.5",
+    "SrcRelease": "86.el7",
     "SrcEpoch": 0
   },
   {
@@ -1325,9 +1325,9 @@
     "Release": "61.el7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "util-linux",
+    "SrcVersion": "2.23.2",
+    "SrcRelease": "61.el7",
     "SrcEpoch": 0
   },
   {
@@ -1336,9 +1336,9 @@
     "Release": "5.el7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "glib2",
+    "SrcVersion": "2.56.1",
+    "SrcRelease": "5.el7",
     "SrcEpoch": 0
   },
   {
@@ -1347,9 +1347,9 @@
     "Release": "9.el7",
     "Epoch": 0,
     "Arch": "noarch",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "python-iniparse",
+    "SrcVersion": "0.4",
+    "SrcRelease": "9.el7",
     "SrcEpoch": 0
   },
   {
@@ -1358,9 +1358,9 @@
     "Release": "11.el7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "cracklib",
+    "SrcVersion": "2.9.0",
+    "SrcRelease": "11.el7",
     "SrcEpoch": 0
   },
   {
@@ -1369,9 +1369,9 @@
     "Release": "11.el7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "cracklib",
+    "SrcVersion": "2.9.0",
+    "SrcRelease": "11.el7",
     "SrcEpoch": 0
   },
   {
@@ -1380,9 +1380,9 @@
     "Release": "22.el7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "pam",
+    "SrcVersion": "1.1.8",
+    "SrcRelease": "22.el7",
     "SrcEpoch": 0
   },
   {
@@ -1391,9 +1391,9 @@
     "Release": "7.el7",
     "Epoch": 0,
     "Arch": "noarch",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "python-dateutil",
+    "SrcVersion": "1.5",
+    "SrcRelease": "7.el7",
     "SrcEpoch": 0
   },
   {
@@ -1402,9 +1402,9 @@
     "Release": "6.el7_2.3",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "libxml2",
+    "SrcVersion": "2.9.1",
+    "SrcRelease": "6.el7_2.3",
     "SrcEpoch": 0
   },
   {
@@ -1413,9 +1413,9 @@
     "Release": "1.el7_4.1",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "pygobject3",
+    "SrcVersion": "3.22.0",
+    "SrcRelease": "1.el7_4.1",
     "SrcEpoch": 0
   },
   {
@@ -1424,10 +1424,10 @@
     "Release": "4.el7",
     "Epoch": 1,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
-    "SrcEpoch": 0
+    "SrcName": "pkgconfig",
+    "SrcVersion": "0.27.1",
+    "SrcRelease": "4.el7",
+    "SrcEpoch": 1
   },
   {
     "Name": "python-ethtool",
@@ -1435,9 +1435,9 @@
     "Release": "8.el7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "python-ethtool",
+    "SrcVersion": "0.8",
+    "SrcRelease": "8.el7",
     "SrcEpoch": 0
   },
   {
@@ -1446,9 +1446,9 @@
     "Release": "3.el7",
     "Epoch": 0,
     "Arch": "noarch",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "python-decorator",
+    "SrcVersion": "3.4.0",
+    "SrcRelease": "3.el7",
     "SrcEpoch": 0
   },
   {
@@ -1457,9 +1457,9 @@
     "Release": "1.el7",
     "Epoch": 0,
     "Arch": "noarch",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "python-backports-ssl_match_hostname",
+    "SrcVersion": "3.5.0.1",
+    "SrcRelease": "1.el7",
     "SrcEpoch": 0
   },
   {
@@ -1468,9 +1468,9 @@
     "Release": "11.el7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "pyliblzma",
+    "SrcVersion": "0.5.3",
+    "SrcRelease": "11.el7",
     "SrcEpoch": 0
   },
   {
@@ -1479,9 +1479,9 @@
     "Release": "3.el7_7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "subscription-manager",
+    "SrcVersion": "1.24.13",
+    "SrcRelease": "3.el7_7",
     "SrcEpoch": 0
   },
   {
@@ -1490,9 +1490,9 @@
     "Release": "5.el7",
     "Epoch": 0,
     "Arch": "noarch",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "python-kitchen",
+    "SrcVersion": "1.1.1",
+    "SrcRelease": "5.el7",
     "SrcEpoch": 0
   },
   {
@@ -1501,9 +1501,9 @@
     "Release": "23.el7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "cyrus-sasl",
+    "SrcVersion": "2.1.26",
+    "SrcRelease": "23.el7",
     "SrcEpoch": 0
   },
   {
@@ -1512,9 +1512,9 @@
     "Release": "7.el7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "nss-pem",
+    "SrcVersion": "1.0.3",
+    "SrcRelease": "7.el7",
     "SrcEpoch": 0
   },
   {
@@ -1523,9 +1523,9 @@
     "Release": "4.el7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "nss",
+    "SrcVersion": "3.44.0",
+    "SrcRelease": "4.el7",
     "SrcEpoch": 0
   },
   {
@@ -1534,9 +1534,9 @@
     "Release": "54.el7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "curl",
+    "SrcVersion": "7.29.0",
+    "SrcRelease": "54.el7",
     "SrcEpoch": 0
   },
   {
@@ -1545,9 +1545,9 @@
     "Release": "40.el7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "rpm",
+    "SrcVersion": "4.11.3",
+    "SrcRelease": "40.el7",
     "SrcEpoch": 0
   },
   {
@@ -1556,9 +1556,9 @@
     "Release": "21.el7_6",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "openldap",
+    "SrcVersion": "2.4.44",
+    "SrcRelease": "21.el7_6",
     "SrcEpoch": 0
   },
   {
@@ -1567,9 +1567,9 @@
     "Release": "5.el7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "passwd",
+    "SrcVersion": "0.79",
+    "SrcRelease": "5.el7",
     "SrcEpoch": 0
   },
   {
@@ -1578,9 +1578,9 @@
     "Release": "9.el7",
     "Epoch": 0,
     "Arch": "noarch",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "python-urlgrabber",
+    "SrcVersion": "3.10",
+    "SrcRelease": "9.el7",
     "SrcEpoch": 0
   },
   {
@@ -1589,9 +1589,9 @@
     "Release": "23.el7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "pth",
+    "SrcVersion": "2.0.7",
+    "SrcRelease": "23.el7",
     "SrcEpoch": 0
   },
   {
@@ -1600,9 +1600,9 @@
     "Release": "40.el7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "rpm",
+    "SrcVersion": "4.11.3",
+    "SrcRelease": "40.el7",
     "SrcEpoch": 0
   },
   {
@@ -1611,9 +1611,9 @@
     "Release": "5.el7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "gpgme",
+    "SrcVersion": "1.3.2",
+    "SrcRelease": "5.el7",
     "SrcEpoch": 0
   },
   {
@@ -1622,9 +1622,9 @@
     "Release": "163.el7",
     "Epoch": 0,
     "Arch": "noarch",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "yum",
+    "SrcVersion": "3.4.3",
+    "SrcRelease": "163.el7",
     "SrcEpoch": 0
   },
   {
@@ -1633,9 +1633,9 @@
     "Release": "61.el7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "util-linux",
+    "SrcVersion": "2.23.2",
+    "SrcRelease": "61.el7",
     "SrcEpoch": 0
   },
   {
@@ -1644,9 +1644,9 @@
     "Release": "127.el7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "device-mapper-multipath",
+    "SrcVersion": "0.4.9",
+    "SrcRelease": "127.el7",
     "SrcEpoch": 0
   },
   {
@@ -1655,10 +1655,10 @@
     "Release": "2.el7",
     "Epoch": 7,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
-    "SrcEpoch": 0
+    "SrcName": "lvm2",
+    "SrcVersion": "2.02.185",
+    "SrcRelease": "2.el7",
+    "SrcEpoch": 7
   },
   {
     "Name": "dracut",
@@ -1666,9 +1666,9 @@
     "Release": "564.el7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "dracut",
+    "SrcVersion": "033",
+    "SrcRelease": "564.el7",
     "SrcEpoch": 0
   },
   {
@@ -1677,9 +1677,9 @@
     "Release": "2.el7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "elfutils",
+    "SrcVersion": "0.176",
+    "SrcRelease": "2.el7",
     "SrcEpoch": 0
   },
   {
@@ -1688,10 +1688,10 @@
     "Release": "13.el7_6",
     "Epoch": 1,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
-    "SrcEpoch": 0
+    "SrcName": "dbus",
+    "SrcVersion": "1.10.24",
+    "SrcRelease": "13.el7_6",
+    "SrcEpoch": 1
   },
   {
     "Name": "elfutils-default-yama-scope",
@@ -1699,9 +1699,9 @@
     "Release": "2.el7",
     "Epoch": 0,
     "Arch": "noarch",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "elfutils",
+    "SrcVersion": "0.176",
+    "SrcRelease": "2.el7",
     "SrcEpoch": 0
   },
   {
@@ -1710,9 +1710,9 @@
     "Release": "7.el7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "dbus-glib",
+    "SrcVersion": "0.100",
+    "SrcRelease": "7.el7",
     "SrcEpoch": 0
   },
   {
@@ -1721,9 +1721,9 @@
     "Release": "4.el7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "virt-what",
+    "SrcVersion": "1.18",
+    "SrcRelease": "4.el7",
     "SrcEpoch": 0
   },
   {
@@ -1732,9 +1732,9 @@
     "Release": "3.el7_7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "subscription-manager",
+    "SrcVersion": "1.24.13",
+    "SrcRelease": "3.el7_7",
     "SrcEpoch": 0
   },
   {
@@ -1743,9 +1743,9 @@
     "Release": "3.el7_7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "subscription-manager",
+    "SrcVersion": "1.24.13",
+    "SrcRelease": "3.el7_7",
     "SrcEpoch": 0
   },
   {
@@ -1754,9 +1754,9 @@
     "Release": "52.el7",
     "Epoch": 0,
     "Arch": "noarch",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "yum-utils",
+    "SrcVersion": "1.1.31",
+    "SrcRelease": "52.el7",
     "SrcEpoch": 0
   },
   {
@@ -1765,10 +1765,10 @@
     "Release": "6.el7",
     "Epoch": 2,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
-    "SrcEpoch": 0
+    "SrcName": "vim",
+    "SrcVersion": "7.4.629",
+    "SrcRelease": "6.el7",
+    "SrcEpoch": 2
   },
   {
     "Name": "rootfiles",
@@ -1776,9 +1776,9 @@
     "Release": "11.el7",
     "Epoch": 0,
     "Arch": "noarch",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "rootfiles",
+    "SrcVersion": "8.1",
+    "SrcRelease": "11.el7",
     "SrcEpoch": 0
   }
 ]

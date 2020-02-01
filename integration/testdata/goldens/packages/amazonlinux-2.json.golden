@@ -5,10 +5,10 @@
     "Release": "10.amzn2",
     "Epoch": 1,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
-    "SrcEpoch": 0
+    "SrcName": "system-release",
+    "SrcVersion": "2",
+    "SrcRelease": "10.amzn2",
+    "SrcEpoch": 1
   },
   {
     "Name": "libgcc",
@@ -16,9 +16,9 @@
     "Release": "5.amzn2.0.2",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "gcc",
+    "SrcVersion": "7.3.1",
+    "SrcRelease": "5.amzn2.0.2",
     "SrcEpoch": 0
   },
   {
@@ -27,9 +27,9 @@
     "Release": "32.amzn2.0.1",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "glibc",
+    "SrcVersion": "2.26",
+    "SrcRelease": "32.amzn2.0.1",
     "SrcEpoch": 0
   },
   {
@@ -38,9 +38,9 @@
     "Release": "17.amzn2.0.2",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "pcre",
+    "SrcVersion": "8.32",
+    "SrcRelease": "17.amzn2.0.2",
     "SrcEpoch": 0
   },
   {
@@ -49,9 +49,9 @@
     "Release": "1.amzn2",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "nspr",
+    "SrcVersion": "4.19.0",
+    "SrcRelease": "1.amzn2",
     "SrcEpoch": 0
   },
   {
@@ -60,9 +60,9 @@
     "Release": "13.amzn2.0.2",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "bzip2",
+    "SrcVersion": "1.0.6",
+    "SrcRelease": "13.amzn2.0.2",
     "SrcEpoch": 0
   },
   {
@@ -71,9 +71,9 @@
     "Release": "4.amzn2",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "elfutils",
+    "SrcVersion": "0.170",
+    "SrcRelease": "4.amzn2",
     "SrcEpoch": 0
   },
   {
@@ -82,9 +82,9 @@
     "Release": "14.amzn2",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "acl",
+    "SrcVersion": "2.2.51",
+    "SrcRelease": "14.amzn2",
     "SrcEpoch": 0
   },
   {
@@ -93,9 +93,9 @@
     "Release": "8.amzn2.0.2",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "sqlite",
+    "SrcVersion": "3.7.17",
+    "SrcRelease": "8.amzn2.0.2",
     "SrcEpoch": 0
   },
   {
@@ -104,9 +104,9 @@
     "Release": "5.amzn2",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "nss-softokn",
+    "SrcVersion": "3.36.0",
+    "SrcRelease": "5.amzn2",
     "SrcEpoch": 0
   },
   {
@@ -115,9 +115,9 @@
     "Release": "33.amzn2.0.2",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "file",
+    "SrcVersion": "5.11",
+    "SrcRelease": "33.amzn2.0.2",
     "SrcEpoch": 0
   },
   {
@@ -126,9 +126,9 @@
     "Release": "3.amzn2.0.2",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "keyutils",
+    "SrcVersion": "1.5.8",
+    "SrcRelease": "3.amzn2.0.2",
     "SrcEpoch": 0
   },
   {
@@ -137,10 +137,10 @@
     "Release": "6.amzn2.0.2",
     "Epoch": 1,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
-    "SrcEpoch": 0
+    "SrcName": "gdbm",
+    "SrcVersion": "1.13",
+    "SrcRelease": "6.amzn2.0.2",
+    "SrcEpoch": 1
   },
   {
     "Name": "gawk",
@@ -148,9 +148,9 @@
     "Release": "4.amzn2.1.2",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "gawk",
+    "SrcVersion": "4.0.2",
+    "SrcRelease": "4.amzn2.1.2",
     "SrcEpoch": 0
   },
   {
@@ -159,10 +159,10 @@
     "Release": "15.amzn2.0.2",
     "Epoch": 1,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
-    "SrcEpoch": 0
+    "SrcName": "gmp",
+    "SrcVersion": "6.0.0",
+    "SrcRelease": "15.amzn2.0.2",
+    "SrcEpoch": 1
   },
   {
     "Name": "ca-certificates",
@@ -170,9 +170,9 @@
     "Release": "70.0.amzn2",
     "Epoch": 0,
     "Arch": "noarch",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "ca-certificates",
+    "SrcVersion": "2018.2.22",
+    "SrcRelease": "70.0.amzn2",
     "SrcEpoch": 0
   },
   {
@@ -181,9 +181,9 @@
     "Release": "20.amzn2.0.1",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "krb5",
+    "SrcVersion": "1.15.1",
+    "SrcRelease": "20.amzn2.0.1",
     "SrcEpoch": 0
   },
   {
@@ -192,9 +192,9 @@
     "Release": "58.amzn2.0.4",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "python",
+    "SrcVersion": "2.7.14",
+    "SrcRelease": "58.amzn2.0.4",
     "SrcEpoch": 0
   },
   {
@@ -203,9 +203,9 @@
     "Release": "2.amzn2.0.4",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "util-linux",
+    "SrcVersion": "2.30.2",
+    "SrcRelease": "2.amzn2.0.4",
     "SrcEpoch": 0
   },
   {
@@ -214,9 +214,9 @@
     "Release": "10.amzn2.0.2",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "yum-metadata-parser",
+    "SrcVersion": "1.1.4",
+    "SrcRelease": "10.amzn2.0.2",
     "SrcEpoch": 0
   },
   {
@@ -225,9 +225,9 @@
     "Release": "7.amzn2",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "nss",
+    "SrcVersion": "3.36.0",
+    "SrcRelease": "7.amzn2",
     "SrcEpoch": 0
   },
   {
@@ -236,9 +236,9 @@
     "Release": "9.amzn2.0.1",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "curl",
+    "SrcVersion": "7.61.1",
+    "SrcRelease": "9.amzn2.0.1",
     "SrcEpoch": 0
   },
   {
@@ -247,9 +247,9 @@
     "Release": "5.amzn2.0.3",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "gnupg2",
+    "SrcVersion": "2.0.22",
+    "SrcRelease": "5.amzn2.0.3",
     "SrcEpoch": 0
   },
   {
@@ -258,9 +258,9 @@
     "Release": "9.amzn2.0.2",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "pygpgme",
+    "SrcVersion": "0.3",
+    "SrcRelease": "9.amzn2.0.2",
     "SrcEpoch": 0
   },
   {
@@ -269,9 +269,9 @@
     "Release": "46.amzn2.0.1",
     "Epoch": 0,
     "Arch": "noarch",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "yum-utils",
+    "SrcVersion": "1.1.31",
+    "SrcRelease": "46.amzn2.0.1",
     "SrcEpoch": 0
   },
   {
@@ -280,9 +280,9 @@
     "Release": "32.amzn2.0.1",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "glibc",
+    "SrcVersion": "2.26",
+    "SrcRelease": "32.amzn2.0.1",
     "SrcEpoch": 0
   },
   {
@@ -291,9 +291,9 @@
     "Release": "8.20170212.amzn2.1.2",
     "Epoch": 0,
     "Arch": "noarch",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "ncurses",
+    "SrcVersion": "6.0",
+    "SrcRelease": "8.20170212.amzn2.1.2",
     "SrcEpoch": 0
   },
   {
@@ -302,9 +302,9 @@
     "Release": "7.amzn2.0.1",
     "Epoch": 0,
     "Arch": "noarch",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "basesystem",
+    "SrcVersion": "10.0",
+    "SrcRelease": "7.amzn2.0.1",
     "SrcEpoch": 0
   },
   {
@@ -313,9 +313,9 @@
     "Release": "32.amzn2.0.1",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "glibc",
+    "SrcVersion": "2.26",
+    "SrcRelease": "32.amzn2.0.1",
     "SrcEpoch": 0
   },
   {
@@ -324,9 +324,9 @@
     "Release": "5.amzn2.0.2",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "gcc",
+    "SrcVersion": "7.3.1",
+    "SrcRelease": "5.amzn2.0.2",
     "SrcEpoch": 0
   },
   {
@@ -335,9 +335,9 @@
     "Release": "5.amzn2",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "texinfo",
+    "SrcVersion": "5.1",
+    "SrcRelease": "5.amzn2",
     "SrcEpoch": 0
   },
   {
@@ -346,9 +346,9 @@
     "Release": "1.amzn2.0.2",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "xz",
+    "SrcVersion": "5.2.2",
+    "SrcRelease": "1.amzn2.0.2",
     "SrcEpoch": 0
   },
   {
@@ -357,9 +357,9 @@
     "Release": "15.amzn2.0.2",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "lua",
+    "SrcVersion": "5.1.4",
+    "SrcRelease": "15.amzn2.0.2",
     "SrcEpoch": 0
   },
   {
@@ -368,9 +368,9 @@
     "Release": "12.amzn2.0.2",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "attr",
+    "SrcVersion": "2.4.46",
+    "SrcRelease": "12.amzn2.0.2",
     "SrcEpoch": 0
   },
   {
@@ -379,9 +379,9 @@
     "Release": "1.amzn2.0.2",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "chkconfig",
+    "SrcVersion": "1.7.4",
+    "SrcRelease": "1.amzn2.0.2",
     "SrcEpoch": 0
   },
   {
@@ -390,9 +390,9 @@
     "Release": "6.amzn2.3.2",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "libxml2",
+    "SrcVersion": "2.9.1",
+    "SrcRelease": "6.amzn2.3.2",
     "SrcEpoch": 0
   },
   {
@@ -401,9 +401,9 @@
     "Release": "3.amzn2.0.2",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "grep",
+    "SrcVersion": "2.20",
+    "SrcRelease": "3.amzn2.0.2",
     "SrcEpoch": 0
   },
   {
@@ -412,9 +412,9 @@
     "Release": "32.amzn2.0.1",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "glibc",
+    "SrcVersion": "2.26",
+    "SrcRelease": "32.amzn2.0.1",
     "SrcEpoch": 0
   },
   {
@@ -423,9 +423,9 @@
     "Release": "14.amzn2.0.2",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "libgcrypt",
+    "SrcVersion": "1.5.3",
+    "SrcRelease": "14.amzn2.0.2",
     "SrcEpoch": 0
   },
   {
@@ -434,9 +434,9 @@
     "Release": "27.amzn2",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "cpio",
+    "SrcVersion": "2.11",
+    "SrcRelease": "27.amzn2",
     "SrcEpoch": 0
   },
   {
@@ -445,10 +445,10 @@
     "Release": "5.amzn2.0.2",
     "Epoch": 1,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
-    "SrcEpoch": 0
+    "SrcName": "findutils",
+    "SrcVersion": "4.5.11",
+    "SrcRelease": "5.amzn2.0.2",
+    "SrcEpoch": 1
   },
   {
     "Name": "p11-kit-trust",
@@ -456,9 +456,9 @@
     "Release": "3.amzn2.0.2",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "p11-kit",
+    "SrcVersion": "0.23.5",
+    "SrcRelease": "3.amzn2.0.2",
     "SrcEpoch": 0
   },
   {
@@ -467,9 +467,9 @@
     "Release": "4.amzn2.0.2",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "libverto",
+    "SrcVersion": "0.2.5",
+    "SrcRelease": "4.amzn2.0.2",
     "SrcEpoch": 0
   },
   {
@@ -478,9 +478,9 @@
     "Release": "58.amzn2.0.4",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "python",
+    "SrcVersion": "2.7.14",
+    "SrcRelease": "58.amzn2.0.4",
     "SrcEpoch": 0
   },
   {
@@ -489,9 +489,9 @@
     "Release": "9.amzn2",
     "Epoch": 0,
     "Arch": "noarch",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "python-iniparse",
+    "SrcVersion": "0.4",
+    "SrcRelease": "9.amzn2",
     "SrcEpoch": 0
   },
   {
@@ -500,9 +500,9 @@
     "Release": "4.amzn2",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "shared-mime-info",
+    "SrcVersion": "1.8",
+    "SrcRelease": "4.amzn2",
     "SrcEpoch": 0
   },
   {
@@ -511,9 +511,9 @@
     "Release": "7.amzn2",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "nss",
+    "SrcVersion": "3.36.0",
+    "SrcRelease": "7.amzn2",
     "SrcEpoch": 0
   },
   {
@@ -522,9 +522,9 @@
     "Release": "9.amzn2.0.1",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "curl",
+    "SrcVersion": "7.61.1",
+    "SrcRelease": "9.amzn2.0.1",
     "SrcEpoch": 0
   },
   {
@@ -533,9 +533,9 @@
     "Release": "15.amzn2",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "openldap",
+    "SrcVersion": "2.4.44",
+    "SrcRelease": "15.amzn2",
     "SrcEpoch": 0
   },
   {
@@ -544,9 +544,9 @@
     "Release": "5.amzn2.0.2",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "gpgme",
+    "SrcVersion": "1.3.2",
+    "SrcRelease": "5.amzn2.0.2",
     "SrcEpoch": 0
   },
   {
@@ -555,9 +555,9 @@
     "Release": "158.amzn2.0.2",
     "Epoch": 0,
     "Arch": "noarch",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "yum",
+    "SrcVersion": "3.4.3",
+    "SrcRelease": "158.amzn2.0.2",
     "SrcEpoch": 0
   },
   {
@@ -566,10 +566,10 @@
     "Release": "4.amzn2.0.16",
     "Epoch": 2,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
-    "SrcEpoch": 0
+    "SrcName": "vim",
+    "SrcVersion": "7.4.160",
+    "SrcRelease": "4.amzn2.0.16",
+    "SrcEpoch": 2
   },
   {
     "Name": "tzdata",
@@ -577,9 +577,9 @@
     "Release": "1.amzn2",
     "Epoch": 0,
     "Arch": "noarch",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "tzdata",
+    "SrcVersion": "2018i",
+    "SrcRelease": "1.amzn2",
     "SrcEpoch": 0
   },
   {
@@ -588,9 +588,9 @@
     "Release": "25.amzn2.0.4",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "filesystem",
+    "SrcVersion": "3.2",
+    "SrcRelease": "25.amzn2.0.4",
     "SrcEpoch": 0
   },
   {
@@ -599,9 +599,9 @@
     "Release": "32.amzn2.0.1",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "glibc",
+    "SrcVersion": "2.26",
+    "SrcRelease": "32.amzn2.0.1",
     "SrcEpoch": 0
   },
   {
@@ -610,9 +610,9 @@
     "Release": "8.1.amzn2.0.2",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "libsepol",
+    "SrcVersion": "2.5",
+    "SrcRelease": "8.1.amzn2.0.2",
     "SrcEpoch": 0
   },
   {
@@ -621,9 +621,9 @@
     "Release": "17.amzn2.0.2",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "zlib",
+    "SrcVersion": "1.2.7",
+    "SrcRelease": "17.amzn2.0.2",
     "SrcEpoch": 0
   },
   {
@@ -632,9 +632,9 @@
     "Release": "24.amzn2.0.3",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "libdb",
+    "SrcVersion": "5.3.21",
+    "SrcRelease": "24.amzn2.0.3",
     "SrcEpoch": 0
   },
   {
@@ -643,9 +643,9 @@
     "Release": "16.amzn2.0.2",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "popt",
+    "SrcVersion": "1.13",
+    "SrcRelease": "16.amzn2.0.2",
     "SrcEpoch": 0
   },
   {
@@ -654,9 +654,9 @@
     "Release": "18.amzn2.0.2",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "libffi",
+    "SrcVersion": "3.0.13",
+    "SrcRelease": "18.amzn2.0.2",
     "SrcEpoch": 0
   },
   {
@@ -665,9 +665,9 @@
     "Release": "3.amzn2.0.3",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "libgpg-error",
+    "SrcVersion": "1.12",
+    "SrcRelease": "3.amzn2.0.3",
     "SrcEpoch": 0
   },
   {
@@ -676,9 +676,9 @@
     "Release": "3.amzn2.0.2",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "p11-kit",
+    "SrcVersion": "0.23.5",
+    "SrcRelease": "3.amzn2.0.2",
     "SrcEpoch": 0
   },
   {
@@ -687,9 +687,9 @@
     "Release": "5.amzn2.0.2",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "sed",
+    "SrcVersion": "4.2.2",
+    "SrcRelease": "5.amzn2.0.2",
     "SrcEpoch": 0
   },
   {
@@ -698,9 +698,9 @@
     "Release": "10.amzn2.0.2",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "expat",
+    "SrcVersion": "2.1.0",
+    "SrcRelease": "10.amzn2.0.2",
     "SrcEpoch": 0
   },
   {
@@ -709,9 +709,9 @@
     "Release": "17.amzn2.0.2",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "pinentry",
+    "SrcVersion": "0.8.1",
+    "SrcRelease": "17.amzn2.0.2",
     "SrcEpoch": 0
   },
   {
@@ -720,9 +720,9 @@
     "Release": "4.amzn2.0.2",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "diffutils",
+    "SrcVersion": "3.3",
+    "SrcRelease": "4.amzn2.0.2",
     "SrcEpoch": 0
   },
   {
@@ -731,9 +731,9 @@
     "Release": "1.amzn2.0.2",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "libidn2",
+    "SrcVersion": "2.0.4",
+    "SrcRelease": "1.amzn2.0.2",
     "SrcEpoch": 0
   },
   {
@@ -742,9 +742,9 @@
     "Release": "1.amzn2.0.2",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "libtasn1",
+    "SrcVersion": "4.10",
+    "SrcRelease": "1.amzn2.0.2",
     "SrcEpoch": 0
   },
   {
@@ -753,9 +753,9 @@
     "Release": "1.amzn2.0.2",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "nghttp2",
+    "SrcVersion": "1.31.1",
+    "SrcRelease": "1.amzn2.0.2",
     "SrcEpoch": 0
   },
   {
@@ -764,9 +764,9 @@
     "Release": "21.amzn2",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "coreutils",
+    "SrcVersion": "8.22",
+    "SrcRelease": "21.amzn2",
     "SrcEpoch": 0
   },
   {
@@ -775,9 +775,9 @@
     "Release": "5.amzn2.0.2",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "pyxattr",
+    "SrcVersion": "0.5.1",
+    "SrcRelease": "5.amzn2.0.2",
     "SrcEpoch": 0
   },
   {
@@ -786,9 +786,9 @@
     "Release": "2.amzn2",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "glib2",
+    "SrcVersion": "2.54.2",
+    "SrcRelease": "2.amzn2",
     "SrcEpoch": 0
   },
   {
@@ -797,9 +797,9 @@
     "Release": "7.amzn2",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "nss",
+    "SrcVersion": "3.36.0",
+    "SrcRelease": "7.amzn2",
     "SrcEpoch": 0
   },
   {
@@ -808,9 +808,9 @@
     "Release": "23.amzn2",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "cyrus-sasl",
+    "SrcVersion": "2.1.26",
+    "SrcRelease": "23.amzn2",
     "SrcEpoch": 0
   },
   {
@@ -819,9 +819,9 @@
     "Release": "25.amzn2.0.3",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "rpm",
+    "SrcVersion": "4.11.3",
+    "SrcRelease": "25.amzn2.0.3",
     "SrcEpoch": 0
   },
   {
@@ -830,9 +830,9 @@
     "Release": "25.amzn2.0.3",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "rpm",
+    "SrcVersion": "4.11.3",
+    "SrcRelease": "25.amzn2.0.3",
     "SrcEpoch": 0
   },
   {
@@ -841,9 +841,9 @@
     "Release": "8.amzn2",
     "Epoch": 0,
     "Arch": "noarch",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "python-urlgrabber",
+    "SrcVersion": "3.10",
+    "SrcRelease": "8.amzn2",
     "SrcEpoch": 0
   },
   {
@@ -852,9 +852,9 @@
     "Release": "1.amzn2",
     "Epoch": 0,
     "Arch": "noarch",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "amazon-linux-extras",
+    "SrcVersion": "1.6.7",
+    "SrcRelease": "1.amzn2",
     "SrcEpoch": 0
   },
   {
@@ -874,9 +874,9 @@
     "Release": "10.amzn2",
     "Epoch": 0,
     "Arch": "noarch",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "setup",
+    "SrcVersion": "2.8.71",
+    "SrcRelease": "10.amzn2",
     "SrcEpoch": 0
   },
   {
@@ -885,9 +885,9 @@
     "Release": "30.amzn2",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "bash",
+    "SrcVersion": "4.2.46",
+    "SrcRelease": "30.amzn2",
     "SrcEpoch": 0
   },
   {
@@ -896,9 +896,9 @@
     "Release": "8.20170212.amzn2.1.2",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "ncurses",
+    "SrcVersion": "6.0",
+    "SrcRelease": "8.20170212.amzn2.1.2",
     "SrcEpoch": 0
   },
   {
@@ -907,9 +907,9 @@
     "Release": "12.amzn2.0.2",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "libselinux",
+    "SrcVersion": "2.5",
+    "SrcRelease": "12.amzn2.0.2",
     "SrcEpoch": 0
   },
   {
@@ -918,9 +918,9 @@
     "Release": "1.amzn2",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "nss-util",
+    "SrcVersion": "3.36.0",
+    "SrcRelease": "1.amzn2",
     "SrcEpoch": 0
   },
   {
@@ -929,9 +929,9 @@
     "Release": "10.amzn2.0.2",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "readline",
+    "SrcVersion": "6.2",
+    "SrcRelease": "10.amzn2.0.2",
     "SrcEpoch": 0
   },
   {
@@ -940,9 +940,9 @@
     "Release": "12.amzn2.0.2",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "e2fsprogs",
+    "SrcVersion": "1.42.9",
+    "SrcRelease": "12.amzn2.0.2",
     "SrcEpoch": 0
   },
   {
@@ -951,9 +951,9 @@
     "Release": "9.amzn2.0.2",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "libcap",
+    "SrcVersion": "2.22",
+    "SrcRelease": "9.amzn2.0.2",
     "SrcEpoch": 0
   },
   {
@@ -962,9 +962,9 @@
     "Release": "3.amzn2.0.2",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "libassuan",
+    "SrcVersion": "2.1.0",
+    "SrcRelease": "3.amzn2.0.2",
     "SrcEpoch": 0
   },
   {
@@ -973,9 +973,9 @@
     "Release": "5.amzn2",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "nss-softokn",
+    "SrcVersion": "3.36.0",
+    "SrcRelease": "5.amzn2",
     "SrcEpoch": 0
   },
   {
@@ -984,9 +984,9 @@
     "Release": "2.amzn2.0.4",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "util-linux",
+    "SrcVersion": "2.30.2",
+    "SrcRelease": "2.amzn2.0.4",
     "SrcEpoch": 0
   },
   {
@@ -995,9 +995,9 @@
     "Release": "7.amzn2.0.2",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "libmetalink",
+    "SrcVersion": "0.1.2",
+    "SrcRelease": "7.amzn2.0.2",
     "SrcEpoch": 0
   },
   {
@@ -1006,9 +1006,9 @@
     "Release": "24.amzn2.0.3",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "libdb",
+    "SrcVersion": "5.3.21",
+    "SrcRelease": "24.amzn2.0.3",
     "SrcEpoch": 0
   },
   {
@@ -1017,9 +1017,9 @@
     "Release": "9.amzn2.0.2",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "libunistring",
+    "SrcVersion": "0.9.3",
+    "SrcRelease": "9.amzn2.0.2",
     "SrcEpoch": 0
   },
   {
@@ -1028,9 +1028,9 @@
     "Release": "8.20170212.amzn2.1.2",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "ncurses",
+    "SrcVersion": "6.0",
+    "SrcRelease": "8.20170212.amzn2.1.2",
     "SrcEpoch": 0
   },
   {
@@ -1039,9 +1039,9 @@
     "Release": "23.amzn2.0.2",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "pth",
+    "SrcVersion": "2.0.7",
+    "SrcRelease": "23.amzn2.0.2",
     "SrcEpoch": 0
   },
   {
@@ -1050,10 +1050,10 @@
     "Release": "16.amzn2.1.1",
     "Epoch": 1,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
-    "SrcEpoch": 0
+    "SrcName": "openssl",
+    "SrcVersion": "1.0.2k",
+    "SrcRelease": "16.amzn2.1.1",
+    "SrcEpoch": 1
   },
   {
     "Name": "pyliblzma",
@@ -1061,9 +1061,9 @@
     "Release": "11.amzn2.0.2",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "pyliblzma",
+    "SrcVersion": "0.5.3",
+    "SrcRelease": "11.amzn2.0.2",
     "SrcEpoch": 0
   },
   {
@@ -1072,9 +1072,9 @@
     "Release": "2.amzn2.0.4",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "util-linux",
+    "SrcVersion": "2.30.2",
+    "SrcRelease": "2.amzn2.0.4",
     "SrcEpoch": 0
   },
   {
@@ -1083,9 +1083,9 @@
     "Release": "5.amzn2",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "nss-pem",
+    "SrcVersion": "1.0.3",
+    "SrcRelease": "5.amzn2",
     "SrcEpoch": 0
   },
   {
@@ -1094,9 +1094,9 @@
     "Release": "12.amzn2.2",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "libssh2",
+    "SrcVersion": "1.4.3",
+    "SrcRelease": "12.amzn2.2",
     "SrcEpoch": 0
   },
   {
@@ -1105,9 +1105,9 @@
     "Release": "25.amzn2.0.3",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "rpm",
+    "SrcVersion": "4.11.3",
+    "SrcRelease": "25.amzn2.0.3",
     "SrcEpoch": 0
   },
   {
@@ -1116,9 +1116,9 @@
     "Release": "25.amzn2.0.3",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "rpm",
+    "SrcVersion": "4.11.3",
+    "SrcRelease": "25.amzn2.0.3",
     "SrcEpoch": 0
   },
   {
@@ -1127,9 +1127,9 @@
     "Release": "19.amzn2.0.2",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "python-pycurl",
+    "SrcVersion": "7.19.0",
+    "SrcRelease": "19.amzn2.0.2",
     "SrcEpoch": 0
   },
   {
@@ -1138,9 +1138,9 @@
     "Release": "46.amzn2.0.1",
     "Epoch": 0,
     "Arch": "noarch",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "yum-utils",
+    "SrcVersion": "1.1.31",
+    "SrcRelease": "46.amzn2.0.1",
     "SrcEpoch": 0
   }
 ]

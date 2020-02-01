@@ -29,7 +29,7 @@ import (
 	_ "github.com/aquasecurity/fanal/analyzer/os/suse"
 	_ "github.com/aquasecurity/fanal/analyzer/pkg/apk"
 	_ "github.com/aquasecurity/fanal/analyzer/pkg/dpkg"
-	_ "github.com/aquasecurity/fanal/analyzer/pkg/rpm"
+	_ "github.com/aquasecurity/fanal/analyzer/pkg/rpmcmd"
 	"github.com/aquasecurity/fanal/extractor"
 	"github.com/aquasecurity/fanal/extractor/docker"
 	"github.com/aquasecurity/fanal/types"

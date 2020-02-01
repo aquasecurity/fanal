@@ -5,9 +5,9 @@
     "Release": "lp151.3.69",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "cracklib",
+    "SrcVersion": "2.9.6",
+    "SrcRelease": "lp151.3.69",
     "SrcEpoch": 0
   },
   {
@@ -16,9 +16,9 @@
     "Release": "lp151.4.8",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "libtirpc",
+    "SrcVersion": "1.0.2",
+    "SrcRelease": "lp151.4.8",
     "SrcEpoch": 0
   },
   {
@@ -27,9 +27,9 @@
     "Release": "lp151.3.3.1",
     "Epoch": 0,
     "Arch": "noarch",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "system-user-root",
+    "SrcVersion": "20190513",
+    "SrcRelease": "lp151.3.3.1",
     "SrcEpoch": 0
   },
   {
@@ -38,9 +38,9 @@
     "Release": "lp151.18.7",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "glibc",
+    "SrcVersion": "2.26",
+    "SrcRelease": "lp151.18.7",
     "SrcEpoch": 0
   },
   {
@@ -49,9 +49,9 @@
     "Release": "lp151.4.70",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "libverto",
+    "SrcVersion": "0.2.6",
+    "SrcRelease": "lp151.4.70",
     "SrcEpoch": 0
   },
   {
@@ -60,9 +60,9 @@
     "Release": "lp151.1.36",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "libsepol",
+    "SrcVersion": "2.8",
+    "SrcRelease": "lp151.1.36",
     "SrcEpoch": 0
   },
   {
@@ -71,9 +71,9 @@
     "Release": "lp151.3.67",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "popt",
+    "SrcVersion": "1.16",
+    "SrcRelease": "lp151.3.67",
     "SrcEpoch": 0
   },
   {
@@ -82,9 +82,9 @@
     "Release": "lp151.3.2",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "npth",
+    "SrcVersion": "1.5",
+    "SrcRelease": "lp151.3.2",
     "SrcEpoch": 0
   },
   {
@@ -93,9 +93,9 @@
     "Release": "lp151.3.25",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "lua53",
+    "SrcVersion": "5.3.4",
+    "SrcRelease": "lp151.3.25",
     "SrcEpoch": 0
   },
   {
@@ -104,9 +104,9 @@
     "Release": "lp151.2.4",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "libgpg-error",
+    "SrcVersion": "1.29",
+    "SrcRelease": "lp151.2.4",
     "SrcEpoch": 0
   },
   {
@@ -115,9 +115,9 @@
     "Release": "lp151.1.33",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "gcc8",
+    "SrcVersion": "8.2.1+r264010",
+    "SrcRelease": "lp151.1.33",
     "SrcEpoch": 0
   },
   {
@@ -126,9 +126,9 @@
     "Release": "lp151.3.70",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "libcap",
+    "SrcVersion": "2.25",
+    "SrcRelease": "lp151.3.70",
     "SrcEpoch": 0
   },
   {
@@ -137,9 +137,9 @@
     "Release": "lp151.4.66",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "audit",
+    "SrcVersion": "2.8.1",
+    "SrcRelease": "lp151.4.66",
     "SrcEpoch": 0
   },
   {
@@ -148,9 +148,9 @@
     "Release": "lp151.3.2",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "fillup",
+    "SrcVersion": "1.42",
+    "SrcRelease": "lp151.3.2",
     "SrcEpoch": 0
   },
   {
@@ -159,9 +159,9 @@
     "Release": "lp151.1.30",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "libselinux",
+    "SrcVersion": "2.8",
+    "SrcRelease": "lp151.1.30",
     "SrcEpoch": 0
   },
   {
@@ -170,9 +170,9 @@
     "Release": "lp151.3.3",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "libassuan",
+    "SrcVersion": "2.5.1",
+    "SrcRelease": "lp151.3.3",
     "SrcEpoch": 0
   },
   {
@@ -181,9 +181,9 @@
     "Release": "lp151.1.33",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "gcc8",
+    "SrcVersion": "8.2.1+r264010",
+    "SrcRelease": "lp151.1.33",
     "SrcEpoch": 0
   },
   {
@@ -192,9 +192,9 @@
     "Release": "lp151.4.29",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "acl",
+    "SrcVersion": "2.2.52",
+    "SrcRelease": "lp151.4.29",
     "SrcEpoch": 0
   },
   {
@@ -203,9 +203,9 @@
     "Release": "lp151.5.41",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "ncurses",
+    "SrcVersion": "6.1",
+    "SrcRelease": "lp151.5.41",
     "SrcEpoch": 0
   },
   {
@@ -214,9 +214,9 @@
     "Release": "lp151.4.5",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "boost-base",
+    "SrcVersion": "1.66.0",
+    "SrcRelease": "lp151.4.5",
     "SrcEpoch": 0
   },
   {
@@ -225,9 +225,9 @@
     "Release": "lp151.3.3",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "libproxy",
+    "SrcVersion": "0.4.15",
+    "SrcRelease": "lp151.3.3",
     "SrcEpoch": 0
   },
   {
@@ -236,9 +236,9 @@
     "Release": "lp151.5.41",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "ncurses",
+    "SrcVersion": "6.1",
+    "SrcRelease": "lp151.5.41",
     "SrcEpoch": 0
   },
   {
@@ -247,9 +247,9 @@
     "Release": "lp151.5.3.1",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "zlib",
+    "SrcVersion": "1.2.11",
+    "SrcRelease": "lp151.5.3.1",
     "SrcEpoch": 0
   },
   {
@@ -258,9 +258,9 @@
     "Release": "lp151.2.3.1",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "sqlite3",
+    "SrcVersion": "3.28.0",
+    "SrcRelease": "lp151.2.3.1",
     "SrcEpoch": 0
   },
   {
@@ -269,9 +269,9 @@
     "Release": "lp151.3.3.1",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "nghttp2",
+    "SrcVersion": "1.39.2",
+    "SrcRelease": "lp151.3.3.1",
     "SrcEpoch": 0
   },
   {
@@ -280,9 +280,9 @@
     "Release": "lp151.3.3.1",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "lz4",
+    "SrcVersion": "1.8.0",
+    "SrcRelease": "lp151.3.3.1",
     "SrcEpoch": 0
   },
   {
@@ -291,9 +291,9 @@
     "Release": "lp151.5.9.1",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "bzip2",
+    "SrcVersion": "1.0.6",
+    "SrcRelease": "lp151.5.9.1",
     "SrcEpoch": 0
   },
   {
@@ -302,9 +302,9 @@
     "Release": "lp151.26.4.1",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "systemd",
+    "SrcVersion": "234",
+    "SrcRelease": "lp151.26.4.1",
     "SrcEpoch": 0
   },
   {
@@ -313,9 +313,9 @@
     "Release": "lp151.8.3.1",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "openssl-1_1",
+    "SrcVersion": "1.1.0i",
+    "SrcRelease": "lp151.8.3.1",
     "SrcEpoch": 0
   },
   {
@@ -324,9 +324,9 @@
     "Release": "lp151.5.3.1",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "libxml2",
+    "SrcVersion": "2.9.7",
+    "SrcRelease": "lp151.5.3.1",
     "SrcEpoch": 0
   },
   {
@@ -335,9 +335,9 @@
     "Release": "lp151.26.4.1",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "systemd",
+    "SrcVersion": "234",
+    "SrcRelease": "lp151.26.4.1",
     "SrcEpoch": 0
   },
   {
@@ -346,9 +346,9 @@
     "Release": "lp151.10.3.1",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "openldap2",
+    "SrcVersion": "2.4.46",
+    "SrcRelease": "lp151.10.3.1",
     "SrcEpoch": 0
   },
   {
@@ -357,9 +357,9 @@
     "Release": "lp151.3.3.2",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "util-linux",
+    "SrcVersion": "2.33.1",
+    "SrcRelease": "lp151.3.3.2",
     "SrcEpoch": 0
   },
   {
@@ -368,9 +368,9 @@
     "Release": "lp151.4.3.1",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "elfutils",
+    "SrcVersion": "0.168",
+    "SrcRelease": "lp151.4.3.1",
     "SrcEpoch": 0
   },
   {
@@ -379,9 +379,9 @@
     "Release": "lp151.2.3.1",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "libssh",
+    "SrcVersion": "0.8.7",
+    "SrcRelease": "lp151.2.3.1",
     "SrcEpoch": 0
   },
   {
@@ -390,9 +390,9 @@
     "Release": "lp151.6.3.1",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "procps",
+    "SrcVersion": "3.3.15",
+    "SrcRelease": "lp151.6.3.1",
     "SrcEpoch": 0
   },
   {
@@ -401,9 +401,9 @@
     "Release": "lp151.7.22",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "file",
+    "SrcVersion": "5.32",
+    "SrcRelease": "lp151.7.22",
     "SrcEpoch": 0
   },
   {
@@ -412,9 +412,9 @@
     "Release": "lp151.1.32",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "libsemanage",
+    "SrcVersion": "2.8",
+    "SrcRelease": "lp151.1.32",
     "SrcEpoch": 0
   },
   {
@@ -423,9 +423,9 @@
     "Release": "lp151.2.3",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "augeas",
+    "SrcVersion": "1.10.1",
+    "SrcRelease": "lp151.2.3",
     "SrcEpoch": 0
   },
   {
@@ -434,9 +434,9 @@
     "Release": "lp151.4.8",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "libtirpc",
+    "SrcVersion": "1.0.2",
+    "SrcRelease": "lp151.4.8",
     "SrcEpoch": 0
   },
   {
@@ -445,9 +445,9 @@
     "Release": "lp151.3.69",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "cracklib",
+    "SrcVersion": "2.9.6",
+    "SrcRelease": "lp151.3.69",
     "SrcEpoch": 0
   },
   {
@@ -456,9 +456,9 @@
     "Release": "lp151.3.4",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "sed",
+    "SrcVersion": "4.4",
+    "SrcRelease": "lp151.3.4",
     "SrcEpoch": 0
   },
   {
@@ -467,9 +467,9 @@
     "Release": "lp151.3.71",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "findutils",
+    "SrcVersion": "4.6.0",
+    "SrcRelease": "lp151.3.71",
     "SrcEpoch": 0
   },
   {
@@ -478,9 +478,9 @@
     "Release": "lp151.2.68",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "cpio",
+    "SrcVersion": "2.12",
+    "SrcRelease": "lp151.2.68",
     "SrcEpoch": 0
   },
   {
@@ -489,9 +489,9 @@
     "Release": "lp151.3.67",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "update-alternatives",
+    "SrcVersion": "1.19.0.4",
+    "SrcRelease": "lp151.3.67",
     "SrcEpoch": 0
   },
   {
@@ -500,9 +500,9 @@
     "Release": "lp151.2.70",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "gawk",
+    "SrcVersion": "4.2.1",
+    "SrcRelease": "lp151.2.70",
     "SrcEpoch": 0
   },
   {
@@ -511,9 +511,9 @@
     "Release": "lp151.4.3.1",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "libtasn1",
+    "SrcVersion": "4.13",
+    "SrcRelease": "lp151.4.3.1",
     "SrcEpoch": 0
   },
   {
@@ -522,9 +522,9 @@
     "Release": "lp151.2.3.2",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "libsolv",
+    "SrcVersion": "0.7.6",
+    "SrcRelease": "lp151.2.3.2",
     "SrcEpoch": 0
   },
   {
@@ -533,9 +533,9 @@
     "Release": "lp151.4.3.1",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "libtasn1",
+    "SrcVersion": "4.13",
+    "SrcRelease": "lp151.4.3.1",
     "SrcEpoch": 0
   },
   {
@@ -544,9 +544,9 @@
     "Release": "lp151.6.3.1",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "gpg2",
+    "SrcVersion": "2.2.5",
+    "SrcRelease": "lp151.6.3.1",
     "SrcEpoch": 0
   },
   {
@@ -555,9 +555,9 @@
     "Release": "lp151.4.1",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "gpgme",
+    "SrcVersion": "1.10.0",
+    "SrcRelease": "lp151.4.1",
     "SrcEpoch": 0
   },
   {
@@ -566,9 +566,9 @@
     "Release": "lp151.2.3.2",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "libzypp",
+    "SrcVersion": "17.15.0",
+    "SrcRelease": "lp151.2.3.2",
     "SrcEpoch": 0
   },
   {
@@ -577,9 +577,9 @@
     "Release": "lp151.3.70",
     "Epoch": 0,
     "Arch": "noarch",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "sysuser-tools",
+    "SrcVersion": "2.0",
+    "SrcRelease": "lp151.3.70",
     "SrcEpoch": 0
   },
   {
@@ -588,9 +588,9 @@
     "Release": "lp151.4.70",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "utempter",
+    "SrcVersion": "1.1.6",
+    "SrcRelease": "lp151.4.70",
     "SrcEpoch": 0
   },
   {
@@ -599,9 +599,9 @@
     "Release": "lp151.5.12.1",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "aaa_base",
+    "SrcVersion": "84.87+git20180409.04c9dae",
+    "SrcRelease": "lp151.5.12.1",
     "SrcEpoch": 0
   },
   {
@@ -610,9 +610,9 @@
     "Release": "lp151.3.1",
     "Epoch": 0,
     "Arch": "noarch",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "openSUSE-build-key",
+    "SrcVersion": "1.0",
+    "SrcRelease": "lp151.3.1",
     "SrcEpoch": 0
   },
   {
@@ -621,9 +621,9 @@
     "Release": "lp151.3.3",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "p11-kit",
+    "SrcVersion": "0.23.2",
+    "SrcRelease": "lp151.3.3",
     "SrcEpoch": 0
   },
   {
@@ -632,9 +632,9 @@
     "Release": "lp151.1.1",
     "Epoch": 0,
     "Arch": "noarch",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "openssl",
+    "SrcVersion": "1.1.0i",
+    "SrcRelease": "lp151.1.1",
     "SrcEpoch": 0
   },
   {
@@ -643,9 +643,9 @@
     "Release": "lp151.2.3.1",
     "Epoch": 0,
     "Arch": "noarch",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "ca-certificates-mozilla",
+    "SrcVersion": "2.34",
+    "SrcRelease": "lp151.2.3.1",
     "SrcEpoch": 0
   },
   {
@@ -665,9 +665,9 @@
     "Release": "lp151.4.5",
     "Epoch": 0,
     "Arch": "noarch",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "boost-base",
+    "SrcVersion": "1.66.0",
+    "SrcRelease": "lp151.4.5",
     "SrcEpoch": 0
   },
   {
@@ -676,9 +676,9 @@
     "Release": "lp151.7.22",
     "Epoch": 0,
     "Arch": "noarch",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "file",
+    "SrcVersion": "5.32",
+    "SrcRelease": "lp151.7.22",
     "SrcEpoch": 0
   },
   {
@@ -687,9 +687,9 @@
     "Release": "lp151.301.1",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "openSUSE-release",
+    "SrcVersion": "15.1",
+    "SrcRelease": "lp151.301.1",
     "SrcEpoch": 0
   },
   {
@@ -698,9 +698,9 @@
     "Release": "lp151.9.2",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "filesystem",
+    "SrcVersion": "15.0",
+    "SrcRelease": "lp151.9.2",
     "SrcEpoch": 0
   },
   {
@@ -709,9 +709,9 @@
     "Release": "lp151.8.37",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "perl",
+    "SrcVersion": "5.26.1",
+    "SrcRelease": "lp151.8.37",
     "SrcEpoch": 0
   },
   {
@@ -720,9 +720,9 @@
     "Release": "lp151.2.3",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "libunistring",
+    "SrcVersion": "0.9.9",
+    "SrcRelease": "lp151.2.3",
     "SrcEpoch": 0
   },
   {
@@ -731,9 +731,9 @@
     "Release": "lp151.5.1",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "cyrus-sasl",
+    "SrcVersion": "2.1.26",
+    "SrcRelease": "lp151.5.1",
     "SrcEpoch": 0
   },
   {
@@ -742,9 +742,9 @@
     "Release": "lp151.5.67",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "pcre",
+    "SrcVersion": "8.41",
+    "SrcRelease": "lp151.5.67",
     "SrcEpoch": 0
   },
   {
@@ -753,9 +753,9 @@
     "Release": "lp151.1.1",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "libnettle",
+    "SrcVersion": "3.4.1",
+    "SrcRelease": "lp151.1.1",
     "SrcEpoch": 0
   },
   {
@@ -764,9 +764,9 @@
     "Release": "lp151.4.70",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "keyutils",
+    "SrcVersion": "1.5.10",
+    "SrcRelease": "lp151.4.70",
     "SrcEpoch": 0
   },
   {
@@ -775,9 +775,9 @@
     "Release": "lp151.3.70",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "gmp",
+    "SrcVersion": "6.1.2",
+    "SrcRelease": "lp151.3.70",
     "SrcEpoch": 0
   },
   {
@@ -786,9 +786,9 @@
     "Release": "lp151.5.2",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "libffi",
+    "SrcVersion": "3.2.1.git259",
+    "SrcRelease": "lp151.5.2",
     "SrcEpoch": 0
   },
   {
@@ -797,9 +797,9 @@
     "Release": "lp151.3.39",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "libcap-ng",
+    "SrcVersion": "0.7.9",
+    "SrcRelease": "lp151.3.39",
     "SrcEpoch": 0
   },
   {
@@ -808,9 +808,9 @@
     "Release": "lp151.3.70",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "attr",
+    "SrcVersion": "2.4.47",
+    "SrcRelease": "lp151.3.70",
     "SrcEpoch": 0
   },
   {
@@ -819,9 +819,9 @@
     "Release": "lp151.2.3",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "libidn2",
+    "SrcVersion": "2.0.4",
+    "SrcRelease": "lp151.2.3",
     "SrcEpoch": 0
   },
   {
@@ -830,9 +830,9 @@
     "Release": "lp151.3.3",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "libksba",
+    "SrcVersion": "1.3.5",
+    "SrcRelease": "lp151.3.3",
     "SrcEpoch": 0
   },
   {
@@ -841,9 +841,9 @@
     "Release": "lp151.1.1",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "libnettle",
+    "SrcVersion": "3.4.1",
+    "SrcRelease": "lp151.1.1",
     "SrcEpoch": 0
   },
   {
@@ -852,9 +852,9 @@
     "Release": "lp151.3.3",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "p11-kit",
+    "SrcVersion": "0.23.2",
+    "SrcRelease": "lp151.3.3",
     "SrcEpoch": 0
   },
   {
@@ -863,9 +863,9 @@
     "Release": "lp151.2.43",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "libpsl",
+    "SrcVersion": "0.20.1",
+    "SrcRelease": "lp151.2.43",
     "SrcEpoch": 0
   },
   {
@@ -874,9 +874,9 @@
     "Release": "lp151.2.3",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "libmodman",
+    "SrcVersion": "2.0.1",
+    "SrcRelease": "lp151.2.3",
     "SrcEpoch": 0
   },
   {
@@ -885,9 +885,9 @@
     "Release": "lp151.5.41",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "ncurses",
+    "SrcVersion": "6.1",
+    "SrcRelease": "lp151.5.41",
     "SrcEpoch": 0
   },
   {
@@ -896,9 +896,9 @@
     "Release": "lp151.4.5",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "boost-base",
+    "SrcVersion": "1.66.0",
+    "SrcRelease": "lp151.4.5",
     "SrcEpoch": 0
   },
   {
@@ -907,9 +907,9 @@
     "Release": "lp151.3.3.1",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "zstd",
+    "SrcVersion": "1.4.2",
+    "SrcRelease": "lp151.3.3.1",
     "SrcEpoch": 0
   },
   {
@@ -918,9 +918,9 @@
     "Release": "lp151.3.3.2",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "util-linux",
+    "SrcVersion": "2.33.1",
+    "SrcRelease": "lp151.3.3.2",
     "SrcEpoch": 0
   },
   {
@@ -929,9 +929,9 @@
     "Release": "lp151.3.3.2",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "util-linux",
+    "SrcVersion": "2.33.1",
+    "SrcRelease": "lp151.3.3.2",
     "SrcEpoch": 0
   },
   {
@@ -940,9 +940,9 @@
     "Release": "lp151.4.3.1",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "xz",
+    "SrcVersion": "5.2.3",
+    "SrcRelease": "lp151.4.3.1",
     "SrcEpoch": 0
   },
   {
@@ -951,9 +951,9 @@
     "Release": "lp151.5.6.1",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "e2fsprogs",
+    "SrcVersion": "1.43.8",
+    "SrcRelease": "lp151.5.6.1",
     "SrcEpoch": 0
   },
   {
@@ -962,9 +962,9 @@
     "Release": "lp151.9.4.1",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "libgcrypt",
+    "SrcVersion": "1.8.2",
+    "SrcRelease": "lp151.9.4.1",
     "SrcEpoch": 0
   },
   {
@@ -973,9 +973,9 @@
     "Release": "lp151.10.3.1",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "bash",
+    "SrcVersion": "4.4",
+    "SrcRelease": "lp151.10.3.1",
     "SrcEpoch": 0
   },
   {
@@ -984,9 +984,9 @@
     "Release": "lp151.3.3.2",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "util-linux",
+    "SrcVersion": "2.33.1",
+    "SrcRelease": "lp151.3.3.2",
     "SrcEpoch": 0
   },
   {
@@ -995,9 +995,9 @@
     "Release": "lp151.4.3.1",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "elfutils",
+    "SrcVersion": "0.168",
+    "SrcRelease": "lp151.4.3.1",
     "SrcEpoch": 0
   },
   {
@@ -1006,9 +1006,9 @@
     "Release": "lp151.10.3.1",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "bash",
+    "SrcVersion": "4.4",
+    "SrcRelease": "lp151.10.3.1",
     "SrcEpoch": 0
   },
   {
@@ -1017,9 +1017,9 @@
     "Release": "lp151.2.6.1",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "krb5",
+    "SrcVersion": "1.16.3",
+    "SrcRelease": "lp151.2.6.1",
     "SrcEpoch": 0
   },
   {
@@ -1028,9 +1028,9 @@
     "Release": "lp151.3.3.2",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "util-linux",
+    "SrcVersion": "2.33.1",
+    "SrcRelease": "lp151.3.3.2",
     "SrcEpoch": 0
   },
   {
@@ -1039,9 +1039,9 @@
     "Release": "lp151.6.3.1",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "procps",
+    "SrcVersion": "3.3.15",
+    "SrcRelease": "lp151.6.3.1",
     "SrcEpoch": 0
   },
   {
@@ -1050,9 +1050,9 @@
     "Release": "lp151.4.3.1",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "elfutils",
+    "SrcVersion": "0.168",
+    "SrcRelease": "lp151.4.3.1",
     "SrcEpoch": 0
   },
   {
@@ -1061,9 +1061,9 @@
     "Release": "lp151.5.6.1",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "curl",
+    "SrcVersion": "7.60.0",
+    "SrcRelease": "lp151.5.6.1",
     "SrcEpoch": 0
   },
   {
@@ -1072,9 +1072,9 @@
     "Release": "lp151.3.71",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "libzio",
+    "SrcVersion": "1.06",
+    "SrcRelease": "lp151.3.71",
     "SrcEpoch": 0
   },
   {
@@ -1083,9 +1083,9 @@
     "Release": "lp151.2.3",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "libusb-1_0",
+    "SrcVersion": "1.0.21",
+    "SrcRelease": "lp151.2.3",
     "SrcEpoch": 0
   },
   {
@@ -1094,9 +1094,9 @@
     "Release": "lp151.3.69",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "cracklib",
+    "SrcVersion": "2.9.6",
+    "SrcRelease": "lp151.3.69",
     "SrcEpoch": 0
   },
   {
@@ -1105,9 +1105,9 @@
     "Release": "lp151.5.69",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "texinfo",
+    "SrcVersion": "6.5",
+    "SrcRelease": "lp151.5.69",
     "SrcEpoch": 0
   },
   {
@@ -1116,9 +1116,9 @@
     "Release": "lp151.3.67",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "libnsl",
+    "SrcVersion": "1.2.0",
+    "SrcRelease": "lp151.3.67",
     "SrcEpoch": 0
   },
   {
@@ -1127,9 +1127,9 @@
     "Release": "lp151.3.29",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "grep",
+    "SrcVersion": "3.1",
+    "SrcRelease": "lp151.3.29",
     "SrcEpoch": 0
   },
   {
@@ -1138,9 +1138,9 @@
     "Release": "lp151.3.3",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "diffutils",
+    "SrcVersion": "3.6",
+    "SrcRelease": "lp151.3.3",
     "SrcEpoch": 0
   },
   {
@@ -1149,9 +1149,9 @@
     "Release": "lp151.3.3",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "coreutils",
+    "SrcVersion": "8.29",
+    "SrcRelease": "lp151.3.3",
     "SrcEpoch": 0
   },
   {
@@ -1160,9 +1160,9 @@
     "Release": "lp151.13.10",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "rpm",
+    "SrcVersion": "4.14.1",
+    "SrcRelease": "lp151.13.10",
     "SrcEpoch": 0
   },
   {
@@ -1171,9 +1171,9 @@
     "Release": "lp151.4.3.1",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "pinentry",
+    "SrcVersion": "1.1.0",
+    "SrcRelease": "lp151.4.3.1",
     "SrcEpoch": 0
   },
   {
@@ -1182,9 +1182,9 @@
     "Release": "lp151.4.6.1",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "permissions",
+    "SrcVersion": "20181116",
+    "SrcRelease": "lp151.4.6.1",
     "SrcEpoch": 0
   },
   {
@@ -1193,9 +1193,9 @@
     "Release": "lp151.301.1",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "openSUSE-release",
+    "SrcVersion": "15.1",
+    "SrcRelease": "lp151.301.1",
     "SrcEpoch": 0
   },
   {
@@ -1204,9 +1204,9 @@
     "Release": "lp151.2.3.1",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "gnutls",
+    "SrcVersion": "3.6.7",
+    "SrcRelease": "lp151.2.3.1",
     "SrcEpoch": 0
   },
   {
@@ -1215,9 +1215,9 @@
     "Release": "lp151.7.38",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "pam",
+    "SrcVersion": "1.3.0",
+    "SrcRelease": "lp151.7.38",
     "SrcEpoch": 0
   },
   {
@@ -1226,9 +1226,9 @@
     "Release": "lp151.2.3.2",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "shadow",
+    "SrcVersion": "4.6",
+    "SrcRelease": "lp151.2.3.2",
     "SrcEpoch": 0
   },
   {
@@ -1237,9 +1237,9 @@
     "Release": "lp151.2.3.1",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "zypper",
+    "SrcVersion": "1.14.30",
+    "SrcRelease": "lp151.2.3.1",
     "SrcEpoch": 0
   },
   {
@@ -1248,9 +1248,9 @@
     "Release": "lp151.4.70",
     "Epoch": 0,
     "Arch": "noarch",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "system-users",
+    "SrcVersion": "20170617",
+    "SrcRelease": "lp151.4.70",
     "SrcEpoch": 0
   },
   {
@@ -1259,9 +1259,9 @@
     "Release": "lp151.3.3.2",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "util-linux",
+    "SrcVersion": "2.33.1",
+    "SrcRelease": "lp151.3.3.2",
     "SrcEpoch": 0
   },
   {
@@ -1270,9 +1270,9 @@
     "Release": "lp151.4.1",
     "Epoch": 0,
     "Arch": "noarch",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "kubic-locale-archive",
+    "SrcVersion": "2.26",
+    "SrcRelease": "lp151.4.1",
     "SrcEpoch": 0
   },
   {
@@ -1281,9 +1281,9 @@
     "Release": "lp151.2.2",
     "Epoch": 0,
     "Arch": "noarch",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "netcfg",
+    "SrcVersion": "11.6",
+    "SrcRelease": "lp151.2.2",
     "SrcEpoch": 0
   },
   {
@@ -1292,9 +1292,9 @@
     "Release": "lp151.3.3",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "p11-kit",
+    "SrcVersion": "0.23.2",
+    "SrcRelease": "lp151.3.3",
     "SrcEpoch": 0
   },
   {
@@ -1303,9 +1303,9 @@
     "Release": "lp151.8.3.1",
     "Epoch": 0,
     "Arch": "x86_64",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "openssl-1_1",
+    "SrcVersion": "1.1.0i",
+    "SrcRelease": "lp151.8.3.1",
     "SrcEpoch": 0
   },
   {
@@ -1314,9 +1314,9 @@
     "Release": "lp151.7.1",
     "Epoch": 0,
     "Arch": "noarch",
-    "SrcName": "",
-    "SrcVersion": "",
-    "SrcRelease": "",
+    "SrcName": "ca-certificates",
+    "SrcVersion": "2+git20170807.10b2785",
+    "SrcRelease": "lp151.7.1",
     "SrcEpoch": 0
   },
   {
