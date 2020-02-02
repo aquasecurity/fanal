@@ -2,7 +2,6 @@ package cache
 
 import (
 	"encoding/json"
-	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -15,7 +14,11 @@ import (
 
 const (
 	cacheDirName = "fanal"
-	layerBucket  = "layers"
+
+	// layerBucket stores os, package and library information per layer ID
+	layerBucket = "layer"
+	// decompressedDigestBucket stores a mapping from any digest to an uncompressed digest.
+	decompressedDigestBucket = "decompressed"
 )
 
 var (
@@ -23,12 +26,19 @@ var (
 )
 
 type Cache interface {
-	Get(key string) (reader io.ReadCloser)
-	GetLayer(layerID string) []byte
-	PutLayer(layerID string, layerInfo types.LayerInfo) error
+	LayerCache
+	LocalLayerCache
+}
+
+// LayerCache uses local or remote cache
+type LayerCache interface {
+	PutLayer(layerID, decompressedLayerID string, layerInfo types.LayerInfo) error
 	MissingLayers(layers []string) (missingLayerIDs []string, err error)
-	Set(key string, value interface{}) (err error)
-	SetBytes(key string, value []byte) (err error)
+}
+
+// LocalLayerCache always uses local cache
+type LocalLayerCache interface {
+	GetLayer(layerID string) []byte
 	Clear() (err error)
 }
 
@@ -37,19 +47,19 @@ type FSCache struct {
 	directory string
 }
 
-func New(cacheDir string) (Cache, error) {
+func NewFSCache(cacheDir string) (FSCache, error) {
 	dir := filepath.Join(cacheDir, cacheDirName)
 	if err := os.MkdirAll(dir, 0700); err != nil {
-		return nil, err
+		return FSCache{}, err
 	}
 
 	db, err := bolt.Open(filepath.Join(dir, "fanal.db"), 0600, nil)
 	if err != nil {
-		return nil, err
+		return FSCache{}, err
 	}
 
 	err = db.Update(func(tx *bolt.Tx) error {
-		for _, bucket := range []string{layerBucket} {
+		for _, bucket := range []string{layerBucket, decompressedDigestBucket} {
 			if _, err := tx.CreateBucketIfNotExists([]byte(bucket)); err != nil {
 				return err
 			}
@@ -57,28 +67,25 @@ func New(cacheDir string) (Cache, error) {
 		return nil
 	})
 	if err != nil {
-		return nil, err
+		return FSCache{}, err
 	}
 
-	return &FSCache{
+	return FSCache{
 		db:        db,
 		directory: dir,
 	}, nil
 }
 
-func (fs FSCache) Get(key string) io.ReadCloser {
-	filePath := filepath.Join(fs.directory, replacer.Replace(key))
-	f, err := os.Open(filePath)
-	if err != nil {
-		return nil
-	}
-
-	return f
-}
-
 func (fs FSCache) GetLayer(layerID string) []byte {
 	var b []byte
 	_ = fs.db.View(func(tx *bolt.Tx) error {
+		// get a decompressed layer ID
+		decompressedBucket := tx.Bucket([]byte(decompressedDigestBucket))
+		d := decompressedBucket.Get([]byte(layerID))
+		if d != nil {
+			layerID = string(d)
+		}
+
 		bucket := tx.Bucket([]byte(layerBucket))
 		b = bucket.Get([]byte(layerID))
 		return nil
@@ -86,14 +93,23 @@ func (fs FSCache) GetLayer(layerID string) []byte {
 	return b
 }
 
-func (fs FSCache) PutLayer(layerID string, layerInfo types.LayerInfo) error {
+func (fs FSCache) PutLayer(layerID, decompressedLayerID string, layerInfo types.LayerInfo) error {
 	b, err := json.Marshal(layerInfo)
 	if err != nil {
 		return err
 	}
 	err = fs.db.Update(func(tx *bolt.Tx) error {
-		bucket := tx.Bucket([]byte(layerBucket))
-		err := bucket.Put([]byte(layerID), b)
+		// store a mapping from a layer ID to a decompressed layer ID.
+		if layerID != decompressedLayerID {
+			decompressedBucket := tx.Bucket([]byte(decompressedDigestBucket))
+			err := decompressedBucket.Put([]byte(layerID), []byte(decompressedLayerID))
+			if err != nil {
+				return err
+			}
+		}
+
+		layerBucket := tx.Bucket([]byte(layerBucket))
+		err = layerBucket.Put([]byte(decompressedLayerID), b)
 		if err != nil {
 			return err
 		}
@@ -108,8 +124,15 @@ func (fs FSCache) PutLayer(layerID string, layerInfo types.LayerInfo) error {
 func (fs FSCache) MissingLayers(layerIDs []string) ([]string, error) {
 	var missingLayerIDs []string
 	err := fs.db.View(func(tx *bolt.Tx) error {
+		decompressedBucket := tx.Bucket([]byte(decompressedDigestBucket))
 		bucket := tx.Bucket([]byte(layerBucket))
 		for _, layerID := range layerIDs {
+			// get a decompressed layer ID
+			d := decompressedBucket.Get([]byte(layerID))
+			if d != nil {
+				layerID = string(d)
+			}
+
 			b := bucket.Get([]byte(layerID))
 			if b == nil {
 				missingLayerIDs = append(missingLayerIDs, layerID)
@@ -121,36 +144,6 @@ func (fs FSCache) MissingLayers(layerIDs []string) ([]string, error) {
 		return nil, err
 	}
 	return missingLayerIDs, nil
-}
-
-func (fs FSCache) Set(key string, value interface{}) error {
-	//filePath := filepath.Join(fs.directory, replacer.Replace(key))
-	//if err := os.MkdirAll(fs.directory, os.ModePerm); err != nil {
-	//	return nil, xerrors.Errorf("failed to mkdir all: %w", err)
-	//}
-	//cacheFile, err := os.Create(filePath)
-	//if err != nil {
-	//	return r, xerrors.Errorf("failed to create cache file: %w", err)
-	//}
-	//
-	//tee := io.TeeReader(r, cacheFile)
-	return nil
-}
-
-func (fs FSCache) SetBytes(key string, b []byte) error {
-	filePath := filepath.Join(fs.directory, replacer.Replace(key))
-	if err := os.MkdirAll(fs.directory, os.ModePerm); err != nil {
-		return xerrors.Errorf("failed to mkdir all: %w", err)
-	}
-	cacheFile, err := os.Create(filePath)
-	if err != nil {
-		return xerrors.Errorf("failed to create cache file: %w", err)
-	}
-
-	if _, err := cacheFile.Write(b); err != nil {
-		return xerrors.Errorf("cache write error: %w", err)
-	}
-	return nil
 }
 
 func (fs FSCache) Clear() error {

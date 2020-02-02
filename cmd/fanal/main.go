@@ -48,7 +48,7 @@ func run() (err error) {
 	clearCache := flag.Bool("clear", false, "clear cache")
 	flag.Parse()
 
-	c, err := cache.New(utils.CacheDir())
+	c, err := cache.NewFSCache(utils.CacheDir())
 	if err != nil {
 		return err
 	}
@@ -85,7 +85,8 @@ func run() (err error) {
 		return err
 	}
 
-	mergedLayer, err := ac.ApplyLayers(imageInfo.LayerIDs)
+	a := analyzer.NewApplier(c)
+	mergedLayer, err := a.ApplyLayers(imageInfo.LayerIDs)
 	if err != nil {
 		return err
 	}

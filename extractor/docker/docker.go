@@ -3,6 +3,8 @@ package docker
 import (
 	"archive/tar"
 	"context"
+	"crypto/sha256"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"path/filepath"
@@ -60,6 +62,7 @@ func init() {
 func NewDockerExtractor(ctx context.Context, imageName string, option types.DockerOption) (Extractor, error) {
 	ref := image.Reference{Name: imageName, IsFile: false}
 	transports := []string{"docker-daemon:", "docker://"}
+	//transports := []string{"docker://"}
 	return newDockerExtractor(ctx, ref, transports, option)
 }
 
@@ -85,7 +88,7 @@ func newDockerExtractor(ctx context.Context, imgRef image.Reference, transports 
 	}, nil
 }
 
-func (d Extractor) ApplyLayers(layers []types.LayerInfo) (types.ImageDetail, error) {
+func ApplyLayers(layers []types.LayerInfo) (types.ImageDetail, error) {
 	sep := "/"
 	nestedMap := nested.Nested{}
 	var mergedLayer types.ImageDetail
@@ -125,28 +128,41 @@ func (d Extractor) ApplyLayers(layers []types.LayerInfo) (types.ImageDetail, err
 	return mergedLayer, nil
 }
 
-func (d Extractor) LayerIDs() []string {
-	return d.image.LayerIDs()
+func (d Extractor) ImageName() string {
+	return d.image.Name()
 }
 
 func (d Extractor) ImageID() digest.Digest {
 	return d.image.ConfigInfo().Digest
 }
 
+func (d Extractor) LayerIDs() []string {
+	return d.image.LayerIDs()
+}
+
 func (d Extractor) ExtractLayerFiles(ctx context.Context, dig digest.Digest, filenames []string) (
-	extractor.FileMap, []string, []string, error) {
+	digest.Digest, extractor.FileMap, []string, []string, error) {
 	img, err := d.image.GetBlob(ctx, dig)
 	if err != nil {
-		return nil, nil, nil, xerrors.Errorf("failed to get a blob: %w", err)
+		return "", nil, nil, nil, xerrors.Errorf("failed to get a blob: %w", err)
 	}
 	defer img.Close()
 
-	files, opqDirs, whFiles, err := d.extractFiles(img, filenames)
+	// calculate decompressed layer ID
+	sha256hash := sha256.New()
+	r := io.TeeReader(img, sha256hash)
+
+	files, opqDirs, whFiles, err := d.extractFiles(r, filenames)
 	if err != nil {
-		return nil, nil, nil, xerrors.Errorf("failed to extract files: %w", err)
+		return "", nil, nil, nil, xerrors.Errorf("failed to extract files: %w", err)
 	}
 
-	return files, opqDirs, whFiles, nil
+	decompressedLayerID := digest.NewDigestFromBytes(digest.SHA256, sha256hash.Sum(nil))
+
+	fmt.Printf("Before: %s\n", dig)
+	fmt.Printf("After: %s\n", decompressedLayerID)
+
+	return decompressedLayerID, files, opqDirs, whFiles, nil
 }
 
 func (d Extractor) extractFiles(layer io.Reader, filenames []string) (extractor.FileMap, []string, []string, error) {

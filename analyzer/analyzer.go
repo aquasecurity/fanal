@@ -3,7 +3,9 @@ package analyzer
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 
+	"github.com/aquasecurity/fanal/extractor/docker"
 	digest "github.com/opencontainers/go-digest"
 
 	"github.com/aquasecurity/fanal/cache"
@@ -92,17 +94,17 @@ func RequiredFilenames() []string {
 
 type Config struct {
 	Extractor extractor.Extractor
-	Cache     cache.Cache
+	Cache     cache.LayerCache
 }
 
-func New(ext extractor.Extractor, c cache.Cache) Config {
+func New(ext extractor.Extractor, c cache.LayerCache) Config {
 	return Config{Extractor: ext, Cache: c}
 }
 
 func (ac Config) Analyze(ctx context.Context) (types.ImageInfo, error) {
-	imageID := ac.Extractor.ImageID()
 	layerIDs := ac.Extractor.LayerIDs()
 	missingLayers, err := ac.Cache.MissingLayers(layerIDs)
+	fmt.Printf("missing layers: %v\n", missingLayers)
 	if err != nil {
 		return types.ImageInfo{}, err
 	}
@@ -111,7 +113,8 @@ func (ac Config) Analyze(ctx context.Context) (types.ImageInfo, error) {
 	}
 
 	return types.ImageInfo{
-		ID:       imageID,
+		Name:     ac.Extractor.ImageName(),
+		ID:       ac.Extractor.ImageID(),
 		LayerIDs: layerIDs,
 	}, nil
 }
@@ -122,12 +125,12 @@ func (ac Config) analyzeLayers(ctx context.Context, layerIDs []string) error {
 
 	for _, layerID := range layerIDs {
 		go func(dig digest.Digest) {
-			layerInfo, err := ac.analyzeLayer(ctx, dig)
+			decompressedLayerID, layerInfo, err := ac.analyzeLayer(ctx, dig)
 			if err != nil {
 				errCh <- xerrors.Errorf("failed to analyze layer: %w", dig, err)
 				return
 			}
-			if err = ac.Cache.PutLayer(string(dig), layerInfo); err != nil {
+			if err = ac.Cache.PutLayer(string(dig), string(decompressedLayerID), layerInfo); err != nil {
 				errCh <- xerrors.Errorf("failed to store layer in cache: %w", dig, err)
 				return
 			}
@@ -148,20 +151,20 @@ func (ac Config) analyzeLayers(ctx context.Context, layerIDs []string) error {
 	return nil
 }
 
-func (ac Config) analyzeLayer(ctx context.Context, dig digest.Digest) (types.LayerInfo, error) {
-	files, opqDirs, whFiles, err := ac.Extractor.ExtractLayerFiles(ctx, dig, RequiredFilenames())
+func (ac Config) analyzeLayer(ctx context.Context, dig digest.Digest) (digest.Digest, types.LayerInfo, error) {
+	decompressedLayerID, files, opqDirs, whFiles, err := ac.Extractor.ExtractLayerFiles(ctx, dig, RequiredFilenames())
 	if err != nil {
-		return types.LayerInfo{}, err
+		return "", types.LayerInfo{}, err
 	}
 
 	os := GetOS(files)
 	pkgs, err := GetPackages(files)
 	if err != nil {
-		return types.LayerInfo{}, err
+		return "", types.LayerInfo{}, err
 	}
 	apps, err := GetLibraries(files)
 	if err != nil {
-		return types.LayerInfo{}, err
+		return "", types.LayerInfo{}, err
 	}
 
 	layerInfo := types.LayerInfo{
@@ -172,13 +175,21 @@ func (ac Config) analyzeLayer(ctx context.Context, dig digest.Digest) (types.Lay
 		OpaqueDirs:    opqDirs,
 		WhiteoutFiles: whFiles,
 	}
-	return layerInfo, nil
+	return decompressedLayerID, layerInfo, nil
 }
 
-func (ac Config) ApplyLayers(layerIDs []string) (types.ImageDetail, error) {
+type Applier struct {
+	cache cache.LocalLayerCache
+}
+
+func NewApplier(c cache.LocalLayerCache) Applier {
+	return Applier{cache: c}
+}
+
+func (a Applier) ApplyLayers(layerIDs []string) (types.ImageDetail, error) {
 	var layers []types.LayerInfo
 	for _, layerID := range layerIDs {
-		b := ac.Cache.GetLayer(layerID)
+		b := a.cache.GetLayer(layerID)
 		if b == nil {
 			return types.ImageDetail{}, xerrors.Errorf("layer cache missing: %s", layerID)
 		}
@@ -189,7 +200,7 @@ func (ac Config) ApplyLayers(layerIDs []string) (types.ImageDetail, error) {
 		layers = append(layers, layer)
 	}
 
-	mergedLayer, err := ac.Extractor.ApplyLayers(layers)
+	mergedLayer, err := docker.ApplyLayers(layers)
 	if err != nil {
 		return types.ImageDetail{}, err
 	}

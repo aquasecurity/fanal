@@ -32,6 +32,7 @@ type Reference struct {
 }
 
 type Image struct {
+	name          string // image name or tar file name
 	blobInfoCache imageTypes.BlobInfoCache
 	rawSource     ImageSource
 	src           ImageCloser
@@ -41,6 +42,7 @@ func NewImage(ctx context.Context, image Reference, transports []string, option 
 	var domain string
 	var auth *imageTypes.DockerAuthConfig
 
+	originalName := image.Name
 	if !image.IsFile {
 		named, err := reference.ParseNormalizedNamed(image.Name)
 		if err != nil {
@@ -72,6 +74,7 @@ func NewImage(ctx context.Context, image Reference, transports []string, option 
 	}
 
 	return Image{
+		name:          originalName,
 		blobInfoCache: blobinfocache.DefaultCache(sys),
 		rawSource:     rawSource,
 		src:           src,
@@ -106,6 +109,10 @@ func newSource(ctx context.Context, imageName string, transports []string, sys *
 	}
 	// return only the last error
 	return nil, nil, err
+}
+
+func (img Image) Name() string {
+	return img.name
 }
 
 func (img *Image) LayerIDs() []string {

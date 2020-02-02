@@ -8,8 +8,8 @@ import (
 type FilePath string
 
 type OS struct {
-	Name   string
 	Family string
+	Name   string
 }
 
 type Package struct {
@@ -51,6 +51,7 @@ type LayerInfo struct {
 }
 
 type ImageInfo struct {
+	Name     string // image name or tar file name
 	ID       digest.Digest
 	LayerIDs []string
 }
