@@ -74,7 +74,7 @@ func run() (err error) {
 			return err
 		}
 	} else {
-		ext, err = docker.NewDockerTarExtractor(ctx, *tarPath, opt)
+		ext, err = docker.NewDockerArchiveExtractor(ctx, *tarPath, opt)
 		if err != nil {
 			return err
 		}

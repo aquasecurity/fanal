@@ -5,6 +5,8 @@ import (
 	"bytes"
 	"log"
 
+	"github.com/k0kubun/pp"
+
 	debVersion "github.com/knqyf263/go-deb-version"
 
 	"github.com/aquasecurity/fanal/analyzer"
@@ -78,6 +80,7 @@ func (a alpinePkgAnalyzer) parseApkInfo(scanner *bufio.Scanner) (pkgs []types.Pa
 		pkgs = append(pkgs, pkg)
 	}
 
+	pp.Println(a.uniquePkgs(pkgs))
 	return a.uniquePkgs(pkgs)
 }
 func (a alpinePkgAnalyzer) uniquePkgs(pkgs []types.Package) (uniqPkgs []types.Package) {

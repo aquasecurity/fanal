@@ -32,7 +32,7 @@ type Cache interface {
 
 // LayerCache uses local or remote cache
 type LayerCache interface {
-	PutLayer(layerID, decompressedLayerID string, layerInfo types.LayerInfo) error
+	PutLayer(layerID, decompressedLayerID string, layerInfo types.LayerInfo) (err error)
 	MissingLayers(layers []string) (missingLayerIDs []string, err error)
 }
 

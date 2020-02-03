@@ -66,7 +66,7 @@ func NewDockerExtractor(ctx context.Context, imageName string, option types.Dock
 	return newDockerExtractor(ctx, ref, transports, option)
 }
 
-func NewDockerTarExtractor(ctx context.Context, fileName string, option types.DockerOption) (Extractor, error) {
+func NewDockerArchiveExtractor(ctx context.Context, fileName string, option types.DockerOption) (Extractor, error) {
 	ref := image.Reference{Name: fileName, IsFile: true}
 	transports := []string{"docker-archive:"}
 	return newDockerExtractor(ctx, ref, transports, option)
