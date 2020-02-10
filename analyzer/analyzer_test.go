@@ -6,6 +6,8 @@ import (
 	"io"
 	"testing"
 
+	"github.com/aquasecurity/fanal/types"
+
 	"github.com/stretchr/testify/assert"
 
 	"github.com/aquasecurity/fanal/extractor"
@@ -29,7 +31,7 @@ func (mde mockDockerExtractor) ExtractFiles(layer io.Reader, filenames []string)
 
 type mockOSAnalyzer struct{}
 
-func (m mockOSAnalyzer) Analyze(extractor.FileMap) (OS, error) {
+func (m mockOSAnalyzer) Analyze(extractor.FileMap) (types.OS, error) {
 	panic("implement me")
 }
 

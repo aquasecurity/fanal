@@ -62,7 +62,6 @@ func init() {
 func NewDockerExtractor(ctx context.Context, imageName string, option types.DockerOption) (Extractor, error) {
 	ref := image.Reference{Name: imageName, IsFile: false}
 	transports := []string{"docker-daemon:", "docker://"}
-	//transports := []string{"docker://"}
 	return newDockerExtractor(ctx, ref, transports, option)
 }
 
