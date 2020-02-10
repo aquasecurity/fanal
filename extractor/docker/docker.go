@@ -133,7 +133,7 @@ func (d Extractor) ImageName() string {
 }
 
 func (d Extractor) ImageID() digest.Digest {
-	return d.image.ConfigInfo().Digest
+	return d.image.Config().Digest
 }
 
 func (d Extractor) LayerIDs() []string {
@@ -142,7 +142,7 @@ func (d Extractor) LayerIDs() []string {
 
 func (d Extractor) ExtractLayerFiles(ctx context.Context, dig digest.Digest, filenames []string) (
 	digest.Digest, extractor.FileMap, []string, []string, error) {
-	img, err := d.image.GetBlob(ctx, dig)
+	img, err := d.image.GetLayer(ctx, dig)
 	if err != nil {
 		return "", nil, nil, nil, xerrors.Errorf("failed to get a blob: %w", err)
 	}

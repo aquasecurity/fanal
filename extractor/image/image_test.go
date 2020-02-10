@@ -315,7 +315,7 @@ func TestImage_LayerInfos(t *testing.T) {
 			c.ApplyGetExpectations(tt.cacheGet)
 			c.ApplySetBytesExpectations(tt.cacheSetBytes)
 
-			img := &Image{
+			img := &RealImage{
 				name:       tt.fields.name,
 				isFile:     tt.fields.isFile,
 				transports: tt.fields.transports,
@@ -359,7 +359,7 @@ func TestImage_ConfigBlob(t *testing.T) {
 				isFile:     true,
 				transports: []string{"docker-archive:"},
 			},
-			want: `{"architecture":"amd64","config":{"Hostname":"","Domainname":"","User":"","AttachStdin":false,"AttachStdout":false,"AttachStderr":false,"Tty":false,"OpenStdin":false,"StdinOnce":false,"Env":["PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"],"Cmd":["/bin/sh"],"ArgsEscaped":true,"Image":"sha256:7c41e139ba64dd2eba852a2e963ee86f2e8da3a5bbfaf10cf4349535dbf0ff08","Volumes":null,"WorkingDir":"","Entrypoint":null,"OnBuild":null,"Labels":null},"container":"7f4a36a667d138b079b5ff059485ff65bfbb5ebc48f24a89f983b918e73f4f28","container_config":{"Hostname":"7f4a36a667d1","Domainname":"","User":"","AttachStdin":false,"AttachStdout":false,"AttachStderr":false,"Tty":false,"OpenStdin":false,"StdinOnce":false,"Env":["PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"],"Cmd":["/bin/sh","-c","#(nop) ","CMD [\"/bin/sh\"]"],"ArgsEscaped":true,"Image":"sha256:7c41e139ba64dd2eba852a2e963ee86f2e8da3a5bbfaf10cf4349535dbf0ff08","Volumes":null,"WorkingDir":"","Entrypoint":null,"OnBuild":null,"Labels":{}},"created":"2020-01-23T16:53:06.686519038Z","docker_version":"18.06.1-ce","history":[{"created":"2020-01-23T16:53:06.551172402Z","created_by":"/bin/sh -c #(nop) ADD file:d48cac34fac385cbc1de6adfdd88300f76f9bbe346cd17e64fd834d042a98326 in / "},{"created":"2020-01-23T16:53:06.686519038Z","created_by":"/bin/sh -c #(nop)  CMD [\"/bin/sh\"]","empty_layer":true}],"os":"linux","rootfs":{"type":"layers","diff_ids":["sha256:531743b7098cb2aaf615641007a129173f63ed86ca32fe7b5a246a1c47286028"]}}`,
+			want: `{"architecture":"amd64","config":{"Hostname":"","Domainname":"","User":"","AttachStdin":false,"AttachStdout":false,"AttachStderr":false,"Tty":false,"OpenStdin":false,"StdinOnce":false,"Env":["PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"],"Cmd":["/bin/sh"],"ArgsEscaped":true,"RealImage":"sha256:7c41e139ba64dd2eba852a2e963ee86f2e8da3a5bbfaf10cf4349535dbf0ff08","Volumes":null,"WorkingDir":"","Entrypoint":null,"OnBuild":null,"Labels":null},"container":"7f4a36a667d138b079b5ff059485ff65bfbb5ebc48f24a89f983b918e73f4f28","container_config":{"Hostname":"7f4a36a667d1","Domainname":"","User":"","AttachStdin":false,"AttachStdout":false,"AttachStderr":false,"Tty":false,"OpenStdin":false,"StdinOnce":false,"Env":["PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"],"Cmd":["/bin/sh","-c","#(nop) ","CMD [\"/bin/sh\"]"],"ArgsEscaped":true,"RealImage":"sha256:7c41e139ba64dd2eba852a2e963ee86f2e8da3a5bbfaf10cf4349535dbf0ff08","Volumes":null,"WorkingDir":"","Entrypoint":null,"OnBuild":null,"Labels":{}},"created":"2020-01-23T16:53:06.686519038Z","docker_version":"18.06.1-ce","history":[{"created":"2020-01-23T16:53:06.551172402Z","created_by":"/bin/sh -c #(nop) ADD file:d48cac34fac385cbc1de6adfdd88300f76f9bbe346cd17e64fd834d042a98326 in / "},{"created":"2020-01-23T16:53:06.686519038Z","created_by":"/bin/sh -c #(nop)  CMD [\"/bin/sh\"]","empty_layer":true}],"os":"linux","rootfs":{"type":"layers","diff_ids":["sha256:531743b7098cb2aaf615641007a129173f63ed86ca32fe7b5a246a1c47286028"]}}`,
 		},
 		{
 			name: "happy path with cache",
@@ -401,7 +401,7 @@ func TestImage_ConfigBlob(t *testing.T) {
 					Returns: cache.SetBytesReturns{Err: xerrors.New("error")},
 				},
 			},
-			want: `{"architecture":"amd64","config":{"Hostname":"","Domainname":"","User":"","AttachStdin":false,"AttachStdout":false,"AttachStderr":false,"Tty":false,"OpenStdin":false,"StdinOnce":false,"Env":["PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"],"Cmd":["/bin/sh"],"ArgsEscaped":true,"Image":"sha256:7c41e139ba64dd2eba852a2e963ee86f2e8da3a5bbfaf10cf4349535dbf0ff08","Volumes":null,"WorkingDir":"","Entrypoint":null,"OnBuild":null,"Labels":null},"container":"7f4a36a667d138b079b5ff059485ff65bfbb5ebc48f24a89f983b918e73f4f28","container_config":{"Hostname":"7f4a36a667d1","Domainname":"","User":"","AttachStdin":false,"AttachStdout":false,"AttachStderr":false,"Tty":false,"OpenStdin":false,"StdinOnce":false,"Env":["PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"],"Cmd":["/bin/sh","-c","#(nop) ","CMD [\"/bin/sh\"]"],"ArgsEscaped":true,"Image":"sha256:7c41e139ba64dd2eba852a2e963ee86f2e8da3a5bbfaf10cf4349535dbf0ff08","Volumes":null,"WorkingDir":"","Entrypoint":null,"OnBuild":null,"Labels":{}},"created":"2020-01-23T16:53:06.686519038Z","docker_version":"18.06.1-ce","history":[{"created":"2020-01-23T16:53:06.551172402Z","created_by":"/bin/sh -c #(nop) ADD file:d48cac34fac385cbc1de6adfdd88300f76f9bbe346cd17e64fd834d042a98326 in / "},{"created":"2020-01-23T16:53:06.686519038Z","created_by":"/bin/sh -c #(nop)  CMD [\"/bin/sh\"]","empty_layer":true}],"os":"linux","rootfs":{"type":"layers","diff_ids":["sha256:531743b7098cb2aaf615641007a129173f63ed86ca32fe7b5a246a1c47286028"]}}`,
+			want: `{"architecture":"amd64","config":{"Hostname":"","Domainname":"","User":"","AttachStdin":false,"AttachStdout":false,"AttachStderr":false,"Tty":false,"OpenStdin":false,"StdinOnce":false,"Env":["PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"],"Cmd":["/bin/sh"],"ArgsEscaped":true,"RealImage":"sha256:7c41e139ba64dd2eba852a2e963ee86f2e8da3a5bbfaf10cf4349535dbf0ff08","Volumes":null,"WorkingDir":"","Entrypoint":null,"OnBuild":null,"Labels":null},"container":"7f4a36a667d138b079b5ff059485ff65bfbb5ebc48f24a89f983b918e73f4f28","container_config":{"Hostname":"7f4a36a667d1","Domainname":"","User":"","AttachStdin":false,"AttachStdout":false,"AttachStderr":false,"Tty":false,"OpenStdin":false,"StdinOnce":false,"Env":["PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"],"Cmd":["/bin/sh","-c","#(nop) ","CMD [\"/bin/sh\"]"],"ArgsEscaped":true,"RealImage":"sha256:7c41e139ba64dd2eba852a2e963ee86f2e8da3a5bbfaf10cf4349535dbf0ff08","Volumes":null,"WorkingDir":"","Entrypoint":null,"OnBuild":null,"Labels":{}},"created":"2020-01-23T16:53:06.686519038Z","docker_version":"18.06.1-ce","history":[{"created":"2020-01-23T16:53:06.551172402Z","created_by":"/bin/sh -c #(nop) ADD file:d48cac34fac385cbc1de6adfdd88300f76f9bbe346cd17e64fd834d042a98326 in / "},{"created":"2020-01-23T16:53:06.686519038Z","created_by":"/bin/sh -c #(nop)  CMD [\"/bin/sh\"]","empty_layer":true}],"os":"linux","rootfs":{"type":"layers","diff_ids":["sha256:531743b7098cb2aaf615641007a129173f63ed86ca32fe7b5a246a1c47286028"]}}`,
 		},
 		{
 			name: "sad path: no such tar file",
@@ -419,7 +419,7 @@ func TestImage_ConfigBlob(t *testing.T) {
 			c.ApplyGetExpectations(tt.cacheGet)
 			c.ApplySetBytesExpectations(tt.cacheSetBytes)
 
-			img := &Image{
+			img := &RealImage{
 				name:       tt.fields.name,
 				isFile:     tt.fields.isFile,
 				transports: tt.fields.transports,
@@ -570,7 +570,7 @@ func TestImage_GetBlob(t *testing.T) {
 			c.ApplyGetExpectations(tt.cacheGet)
 			c.ApplySetExpectations(tt.cacheSet)
 
-			img := &Image{
+			img := &RealImage{
 				name:       tt.fields.name,
 				isFile:     tt.fields.isFile,
 				transports: tt.fields.transports,

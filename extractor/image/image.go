@@ -31,14 +31,21 @@ type Reference struct {
 	IsFile bool
 }
 
-type Image struct {
+type Image interface {
+	Name() (name string)
+	LayerIDs() (layerIDs []string)
+	Config() imageTypes.BlobInfo
+	GetLayer(ctx context.Context, dig digest.Digest) (reader io.ReadCloser, err error)
+}
+
+type RealImage struct {
 	name          string // image name or tar file name
 	blobInfoCache imageTypes.BlobInfoCache
 	rawSource     ImageSource
 	src           ImageCloser
 }
 
-func NewImage(ctx context.Context, image Reference, transports []string, option types.DockerOption) (Image, error) {
+func NewImage(ctx context.Context, image Reference, transports []string, option types.DockerOption) (RealImage, error) {
 	var domain string
 	var auth *imageTypes.DockerAuthConfig
 
@@ -46,7 +53,7 @@ func NewImage(ctx context.Context, image Reference, transports []string, option 
 	if !image.IsFile {
 		named, err := reference.ParseNormalizedNamed(image.Name)
 		if err != nil {
-			return Image{}, xerrors.Errorf("invalid image name: %w", err)
+			return RealImage{}, xerrors.Errorf("invalid image name: %w", err)
 		}
 
 		// add 'latest' tag
@@ -70,10 +77,10 @@ func NewImage(ctx context.Context, image Reference, transports []string, option 
 
 	rawSource, src, err := newSource(ctx, image.Name, transports, sys)
 	if err != nil {
-		return Image{}, err
+		return RealImage{}, err
 	}
 
-	return Image{
+	return RealImage{
 		name:          originalName,
 		blobInfoCache: blobinfocache.DefaultCache(sys),
 		rawSource:     rawSource,
@@ -111,11 +118,11 @@ func newSource(ctx context.Context, imageName string, transports []string, sys *
 	return nil, nil, err
 }
 
-func (img Image) Name() string {
+func (img RealImage) Name() string {
 	return img.name
 }
 
-func (img *Image) LayerIDs() []string {
+func (img RealImage) LayerIDs() []string {
 	var layerIDs []string
 	for _, l := range img.src.LayerInfos() {
 		layerIDs = append(layerIDs, string(l.Digest))
@@ -123,11 +130,11 @@ func (img *Image) LayerIDs() []string {
 	return layerIDs
 }
 
-func (img *Image) ConfigInfo() imageTypes.BlobInfo {
+func (img RealImage) Config() imageTypes.BlobInfo {
 	return img.src.ConfigInfo()
 }
 
-func (img *Image) GetBlob(ctx context.Context, dig digest.Digest) (io.ReadCloser, error) {
+func (img RealImage) GetLayer(ctx context.Context, dig digest.Digest) (io.ReadCloser, error) {
 	rc, _, err := img.rawSource.GetBlob(ctx, imageTypes.BlobInfo{Digest: dig, Size: -1}, img.blobInfoCache)
 	if err != nil {
 		return nil, xerrors.Errorf("failed to download the layer(%s): %w", dig, err)
