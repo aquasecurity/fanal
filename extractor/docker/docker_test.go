@@ -8,7 +8,9 @@ import (
 	"reflect"
 	"testing"
 
-	"gotest.tools/assert"
+	godeptypes "github.com/aquasecurity/go-dep-parser/pkg/types"
+
+	"github.com/stretchr/testify/assert"
 
 	"github.com/opencontainers/go-digest"
 
@@ -153,7 +155,7 @@ func TestExtractor_ExtractLayerFiles(t *testing.T) {
 			actualDigest, actualFileMap, actualOpqDirs, actualWhFiles, err := d.ExtractLayerFiles(tt.args.ctx, tt.args.dig, tt.args.filenames)
 			if tt.wantErr != "" {
 				require.NotNil(t, err, tt.name)
-				assert.ErrorContains(t, err, tt.wantErr, tt.name)
+				assert.Contains(t, err.Error(), tt.wantErr, tt.name)
 				return
 			} else {
 				require.NoError(t, err, tt.name)
@@ -173,4 +175,118 @@ func TestExtractor_ExtractLayerFiles(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestApplyLayers(t *testing.T) {
+	testCases := []struct {
+		name                string
+		inputLayers         []types.LayerInfo
+		expectedImageDetail types.ImageDetail
+		expectedError       error
+	}{
+		{
+			name: "happy path",
+			inputLayers: []types.LayerInfo{
+				{
+					SchemaVersion: 1,
+					OS: &types.OS{
+						Family: "alpine",
+						Name:   "3.10",
+					},
+					PackageInfos: []types.PackageInfo{
+						{
+							FilePath: "lib/apk/db/installed",
+							Packages: []types.Package{
+								{
+									Name:    "openssl",
+									Version: "1.2.3",
+									Release: "4.5.6",
+								},
+							},
+						},
+					},
+					Applications: []types.Application{
+						{
+							Type:     "gem",
+							FilePath: "app/Gemfile.lock",
+							Libraries: []godeptypes.Library{
+								{
+									Name:    "gemlibrary1",
+									Version: "1.2.3",
+								},
+							},
+						},
+						{
+							Type:     "composer",
+							FilePath: "app/composer.lock",
+							Libraries: []godeptypes.Library{
+								{
+									Name:    "phplibrary1",
+									Version: "6.6.6",
+								},
+							},
+						},
+					},
+				},
+				{
+					SchemaVersion: 1,
+					PackageInfos: []types.PackageInfo{
+						{
+							FilePath: "lib/apk/db/installed",
+							Packages: []types.Package{
+								{
+									Name:    "openssl",
+									Version: "1.2.3",
+									Release: "4.5.6",
+								},
+								{
+									Name:    "musl",
+									Version: "1.2.3",
+									Release: "4.5.6",
+								},
+							},
+						},
+					},
+					WhiteoutFiles: []string{"app/composer.lock"},
+				},
+			},
+			expectedImageDetail: types.ImageDetail{
+				OS: &types.OS{
+					Family: "alpine",
+					Name:   "3.10",
+				},
+				Packages: []types.Package{
+					{
+						Name:    "openssl",
+						Version: "1.2.3",
+						Release: "4.5.6",
+					},
+					{
+						Name:    "musl",
+						Version: "1.2.3",
+						Release: "4.5.6",
+					},
+				},
+				Applications: []types.Application{
+					{
+						Type:     "gem",
+						FilePath: "app/Gemfile.lock",
+						Libraries: []godeptypes.Library{
+							{
+								Name:    "gemlibrary1",
+								Version: "1.2.3",
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		gotImageDetail, gotError := ApplyLayers(tc.inputLayers)
+		assert.Equal(t, tc.expectedError, gotError, tc.name)
+		assert.Equal(t, tc.expectedImageDetail, gotImageDetail, tc.name)
+	}
+
 }
