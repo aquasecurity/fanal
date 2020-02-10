@@ -113,7 +113,7 @@ func ApplyLayers(layers []types.LayerInfo) (types.ImageDetail, error) {
 		}
 	}
 
-	walkFn := func(keys []string, value interface{}) error {
+	_ = nestedMap.Walk(func(keys []string, value interface{}) error {
 		switch v := value.(type) {
 		case types.PackageInfo:
 			mergedLayer.Packages = append(mergedLayer.Packages, v.Packages...)
@@ -121,10 +121,8 @@ func ApplyLayers(layers []types.LayerInfo) (types.ImageDetail, error) {
 			mergedLayer.Applications = append(mergedLayer.Applications, v)
 		}
 		return nil
-	}
-	if err := nestedMap.Walk(walkFn); err != nil {
-		return types.ImageDetail{}, xerrors.Errorf("failed to walk nested map: %w", err)
-	}
+	})
+
 	return mergedLayer, nil
 }
 

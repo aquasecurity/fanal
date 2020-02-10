@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"reflect"
+	"sort"
 	"testing"
 
 	godeptypes "github.com/aquasecurity/go-dep-parser/pkg/types"
@@ -241,8 +242,8 @@ func TestApplyLayers(t *testing.T) {
 								},
 								{
 									Name:    "musl",
-									Version: "1.2.3",
-									Release: "4.5.6",
+									Version: "1.2.4",
+									Release: "4.5.7",
 								},
 							},
 						},
@@ -257,12 +258,12 @@ func TestApplyLayers(t *testing.T) {
 				},
 				Packages: []types.Package{
 					{
-						Name:    "openssl",
-						Version: "1.2.3",
-						Release: "4.5.6",
+						Name:    "musl",
+						Version: "1.2.4",
+						Release: "4.5.7",
 					},
 					{
-						Name:    "musl",
+						Name:    "openssl",
 						Version: "1.2.3",
 						Release: "4.5.6",
 					},
@@ -281,12 +282,84 @@ func TestApplyLayers(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "happy path with status.d",
+			inputLayers: []types.LayerInfo{
+				{
+					SchemaVersion: 1,
+					OS: &types.OS{
+						Family: "debian",
+						Name:   "8",
+					},
+					PackageInfos: []types.PackageInfo{
+						{
+							FilePath: "var/lib/dpkg/status.d/openssl",
+							Packages: []types.Package{
+								{
+									Name:    "openssl",
+									Version: "1.2.3",
+									Release: "4.5.6",
+								},
+							},
+						},
+					},
+					Applications: []types.Application{
+						{
+							Type:     "composer",
+							FilePath: "app/composer.lock",
+							Libraries: []godeptypes.Library{
+								{
+									Name:    "phplibrary1",
+									Version: "6.6.6",
+								},
+							},
+						},
+					},
+				},
+				{
+					SchemaVersion: 1,
+					PackageInfos: []types.PackageInfo{
+						{
+							FilePath: "var/lib/dpkg/status.d/libc",
+							Packages: []types.Package{
+								{
+									Name:    "libc",
+									Version: "1.2.4",
+									Release: "4.5.7",
+								},
+							},
+						},
+					},
+					OpaqueDirs: []string{"app"},
+				},
+			},
+			expectedImageDetail: types.ImageDetail{
+				OS: &types.OS{
+					Family: "debian",
+					Name:   "8",
+				},
+				Packages: []types.Package{
+					{
+						Name:    "libc",
+						Version: "1.2.4",
+						Release: "4.5.7",
+					},
+					{
+						Name:    "openssl",
+						Version: "1.2.3",
+						Release: "4.5.6",
+					},
+				},
+			},
+		},
 	}
 
 	for _, tc := range testCases {
 		gotImageDetail, gotError := ApplyLayers(tc.inputLayers)
+		sort.Slice(gotImageDetail.Packages, func(i, j int) bool {
+			return gotImageDetail.Packages[i].Name < gotImageDetail.Packages[j].Name
+		})
 		assert.Equal(t, tc.expectedError, gotError, tc.name)
 		assert.Equal(t, tc.expectedImageDetail, gotImageDetail, tc.name)
 	}
-
 }
