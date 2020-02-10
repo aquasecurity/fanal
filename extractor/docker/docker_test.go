@@ -2,10 +2,13 @@ package docker
 
 import (
 	"context"
+	"errors"
 	"io"
 	"os"
 	"reflect"
 	"testing"
+
+	"gotest.tools/assert"
 
 	"github.com/opencontainers/go-digest"
 
@@ -358,7 +361,7 @@ func TestExtractor_ExtractLayerFiles(t *testing.T) {
 		expectedOpqDirs     []string
 		expectedWhFiles     []string
 		getLayerExpectation image.GetLayerExpectation
-		wantErr             bool
+		wantErr             string
 	}{
 		{
 			name: "happy path",
@@ -416,6 +419,28 @@ func TestExtractor_ExtractLayerFiles(t *testing.T) {
 				"var/foo",
 			},
 		},
+		{
+			name: "sad path with GetLayer fails",
+			getLayerExpectation: image.GetLayerExpectation{
+				Args: image.GetLayerArgs{
+					CtxAnything: true,
+					Dig:         "sha256:da550bbd659298750df72fc8c1eafe8df272935e1b287bf072f5a630a98a57b4",
+				},
+				Returns: image.GetLayerReturns{
+					Err: errors.New("GetLayer failed"),
+				},
+			},
+			args: args{
+				ctx:       nil,
+				dig:       "sha256:da550bbd659298750df72fc8c1eafe8df272935e1b287bf072f5a630a98a57b4",
+				filenames: []string{"var/foo"},
+			},
+			expectedDigest: "sha256:f75441026d68038ca80e92f342fb8f3c0f1faeec67b5a80c98f033a65beaef5a",
+			expectedFileMap: extractor.FileMap{
+				"var/foo": []byte(""),
+			},
+			wantErr: "GetLayer failed",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -427,10 +452,14 @@ func TestExtractor_ExtractLayerFiles(t *testing.T) {
 				image:  mockImg,
 			}
 			actualDigest, actualFileMap, actualOpqDirs, actualWhFiles, err := d.ExtractLayerFiles(tt.args.ctx, tt.args.dig, tt.args.filenames)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("ExtractLayerFiles() error = %v, wantErr %v", err, tt.wantErr)
+			if tt.wantErr != "" {
+				require.NotNil(t, err, tt.name)
+				assert.ErrorContains(t, err, tt.wantErr, tt.name)
 				return
+			} else {
+				require.NoError(t, err, tt.name)
 			}
+
 			if actualDigest != tt.expectedDigest {
 				t.Errorf("ExtractLayerFiles() actualDigest = %v, expectedDigest %v", actualDigest, tt.expectedDigest)
 			}
