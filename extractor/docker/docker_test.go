@@ -441,6 +441,28 @@ func TestExtractor_ExtractLayerFiles(t *testing.T) {
 			},
 			wantErr: "GetLayer failed",
 		},
+		{
+			name: "sad path with extractFiles fails due to invalid file",
+			getLayerExpectation: image.GetLayerExpectation{
+				Args: image.GetLayerArgs{
+					CtxAnything: true,
+					Dig:         "sha256:da550bbd659298750df72fc8c1eafe8df272935e1b287bf072f5a630a98a57b4",
+				},
+				Returns: image.GetLayerReturns{
+					Reader: func() io.ReadCloser {
+						f, err := os.Open("testdata/invalidgzvalidtar.tar.gz")
+						require.NoError(t, err)
+						return f
+					}(),
+				},
+			},
+			args: args{
+				ctx:       nil,
+				dig:       "sha256:da550bbd659298750df72fc8c1eafe8df272935e1b287bf072f5a630a98a57b4",
+				filenames: []string{"var/foo"},
+			},
+			wantErr: "unexpected EOF",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
