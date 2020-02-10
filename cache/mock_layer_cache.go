@@ -11,8 +11,8 @@ type MockLayerCache struct {
 }
 
 type MissingLayersArgs struct {
-	Layers         []string
-	LayersAnything bool
+	LayerIDs         []string
+	LayerIDsAnything bool
 }
 
 type MissingLayersReturns struct {
