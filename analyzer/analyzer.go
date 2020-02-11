@@ -233,7 +233,7 @@ func GetPackages(filesMap extractor.FileMap) ([]types.PackageInfo, error) {
 		// Differentiate between a package manager not being found and another error
 		if err != nil && err == ErrNoPkgsDetected {
 			continue
-		} else if err != nil {
+		} else if err != nil { // TODO: Create a broken package index tar.gz file
 			return nil, xerrors.Errorf("failed to analyze packages: %w", err)
 		}
 

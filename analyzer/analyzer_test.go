@@ -1,9 +1,19 @@
-package analyzer
+package analyzer_test
 
 import (
 	"context"
 	"reflect"
 	"testing"
+
+	"github.com/aquasecurity/fanal/analyzer"
+
+	_ "github.com/aquasecurity/fanal/analyzer/command/apk"
+	_ "github.com/aquasecurity/fanal/analyzer/os/alpine"
+
+	//_ "github.com/aquasecurity/fanal/analyzer/pkg/apk"
+
+	"github.com/aquasecurity/fanal/extractor/docker"
+	"github.com/stretchr/testify/assert"
 
 	"github.com/aquasecurity/fanal/cache"
 	"github.com/aquasecurity/fanal/extractor"
@@ -127,81 +137,44 @@ func TestConfig_Analyze(t *testing.T) {
 		ctx context.Context
 	}
 	tests := []struct {
-		name                         string
-		fields                       fields
-		args                         args
-		layerIDsExpectation          extractor.LayerIDsExpectation
-		missingLayerExpectation      cache.MissingLayersExpectation
-		putLayerExpectation          cache.PutLayerExpectation
-		extractLayerFilesExpectation extractor.ExtractLayerFilesExpectation
-		applyImageNameExpectation    extractor.ImageNameExpectation
-		applyImageIDExpectation      extractor.ImageIDExpectation
-		want                         types.ImageInfo
-		wantErr                      bool
+		name                    string
+		imagePath               string
+		fields                  fields
+		args                    args
+		missingLayerExpectation cache.MissingLayersExpectation
+		putLayerExpectation     cache.PutLayerExpectation
+		want                    types.ImageInfo
+		wantErr                 bool
 	}{
 		{
-			name: "happy path",
-			layerIDsExpectation: extractor.LayerIDsExpectation{
-				Returns: extractor.LayerIDsReturns{
-					LayerIDs: []string{"sha256:abcd", "sha256:efgh"},
-				},
-			},
+			name:      "happy path",
+			imagePath: "testdata/alpine.tar.gz",
 			missingLayerExpectation: cache.MissingLayersExpectation{
 				Args: cache.MissingLayersArgs{
-					LayerIDs: []string{"sha256:abcd", "sha256:efgh"},
+					LayerIDs: []string{"sha256:77cae8ab23bf486355d1b3191259705374f4a11d483b24964d2f729dd8c076a0"},
 				},
 				Returns: cache.MissingLayersReturns{
-					MissingLayerIDs: []string{"sha256:efgh"},
+					MissingLayerIDs: []string{"sha256:77cae8ab23bf486355d1b3191259705374f4a11d483b24964d2f729dd8c076a0"},
 				},
 			},
 			putLayerExpectation: cache.PutLayerExpectation{
 				Args: cache.PutLayerArgs{
-					LayerID:             "sha256:efgh",
-					DecompressedLayerID: "sha256:wxyz",
+					LayerID:             "sha256:77cae8ab23bf486355d1b3191259705374f4a11d483b24964d2f729dd8c076a0",
+					DecompressedLayerID: "sha256:77cae8ab23bf486355d1b3191259705374f4a11d483b24964d2f729dd8c076a0",
 					LayerInfo: types.LayerInfo{
 						SchemaVersion: 1,
-						//OS: &types.OS{
-						//	Family: "alpine",
-						//	Name:   "3.10",
-						//},
-						//PackageInfos: nil,
-						//Applications: []types.Application{
-						//	{
-						//		Type:     "Gemfile",
-						//		FilePath: "/var/lib/gemfile",
-						//	},
-						//},
-						OpaqueDirs:    []string{"foo.opqdir"},
-						WhiteoutFiles: []string{"bar.whfiles"},
+						OS: &types.OS{
+							Family: "alpine",
+							Name:   "3.10.3",
+						},
 					},
 				},
 				Returns: cache.PutLayerReturns{},
 			},
 			want: types.ImageInfo{
-				Name:     "alpine:3.10",
-				ID:       "sha256:efgh",
-				LayerIDs: []string{"sha256:abcd", "sha256:efgh"},
-			},
-			extractLayerFilesExpectation: extractor.ExtractLayerFilesExpectation{
-				Args: extractor.ExtractLayerFilesArgs{
-					CtxAnything: true,
-					Dig:         "sha256:efgh",
-				},
-				Returns: extractor.ExtractLayerFilesReturns{
-					DecompressedLayerId: "sha256:wxyz",
-					Files: extractor.FileMap{
-						"var/lib/foo": []byte("foo"),
-						"var/lib/bar": []byte("bar"),
-					},
-					OpqDirs: []string{"foo.opqdir"},
-					WhFiles: []string{"bar.whfiles"},
-				},
-			},
-			applyImageNameExpectation: extractor.ImageNameExpectation{
-				Returns: extractor.ImageNameReturns{ImageName: "alpine:3.10"},
-			},
-			applyImageIDExpectation: extractor.ImageIDExpectation{
-				Returns: extractor.ImageIDReturns{ImageDigest: "sha256:efgh"},
+				Name:     "testdata/alpine.tar.gz",
+				ID:       "sha256:965ea09ff2ebd2b9eeec88cd822ce156f6674c7e99be082c7efac3c62f3ff652",
+				LayerIDs: []string{"sha256:77cae8ab23bf486355d1b3191259705374f4a11d483b24964d2f729dd8c076a0"},
 			},
 		},
 	}
@@ -211,14 +184,11 @@ func TestConfig_Analyze(t *testing.T) {
 			mockCache.ApplyMissingLayersExpectation(tt.missingLayerExpectation)
 			mockCache.ApplyPutLayerExpectation(tt.putLayerExpectation)
 
-			mockExtractor := new(extractor.MockExtractor)
-			mockExtractor.ApplyLayerIDsExpectation(tt.layerIDsExpectation)
-			mockExtractor.ApplyExtractLayerFilesExpectation(tt.extractLayerFilesExpectation)
-			mockExtractor.ApplyImageNameExpectation(tt.applyImageNameExpectation)
-			mockExtractor.ApplyImageIDExpectation(tt.applyImageIDExpectation)
+			d, err := docker.NewDockerArchiveExtractor(context.Background(), tt.imagePath, types.DockerOption{})
+			assert.NoError(t, err, tt.name)
 
-			ac := Config{
-				Extractor: mockExtractor,
+			ac := analyzer.Config{
+				Extractor: d,
 				Cache:     mockCache,
 			}
 			got, err := ac.Analyze(context.Background())
