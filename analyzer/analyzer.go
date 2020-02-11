@@ -127,11 +127,11 @@ func (ac Config) analyzeLayers(ctx context.Context, layerIDs []string) error {
 		go func(dig digest.Digest) {
 			decompressedLayerID, layerInfo, err := ac.analyzeLayer(ctx, dig)
 			if err != nil {
-				errCh <- xerrors.Errorf("failed to analyze layer: %w", dig, err)
+				errCh <- xerrors.Errorf("failed to analyze layer: %s : %w", dig, err)
 				return
 			}
 			if err = ac.Cache.PutLayer(string(dig), string(decompressedLayerID), layerInfo); err != nil {
-				errCh <- xerrors.Errorf("failed to store layer in cache: %w", dig, err)
+				errCh <- xerrors.Errorf("failed to store layer: %s in cache: %w", dig, err)
 				return
 			}
 			done <- struct{}{}

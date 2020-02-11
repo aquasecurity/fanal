@@ -2,8 +2,11 @@ package analyzer_test
 
 import (
 	"context"
+	"errors"
 	"reflect"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 
 	"github.com/aquasecurity/fanal/analyzer"
 
@@ -144,7 +147,7 @@ func TestConfig_Analyze(t *testing.T) {
 		missingLayerExpectation cache.MissingLayersExpectation
 		putLayerExpectation     cache.PutLayerExpectation
 		want                    types.ImageInfo
-		wantErr                 bool
+		wantErr                 string
 	}{
 		{
 			name:      "happy path",
@@ -177,6 +180,48 @@ func TestConfig_Analyze(t *testing.T) {
 				LayerIDs: []string{"sha256:77cae8ab23bf486355d1b3191259705374f4a11d483b24964d2f729dd8c076a0"},
 			},
 		},
+		{
+			name:      "sad path, MissingLayers returns an error",
+			imagePath: "testdata/alpine.tar.gz",
+			missingLayerExpectation: cache.MissingLayersExpectation{
+				Args: cache.MissingLayersArgs{
+					LayerIDs: []string{"sha256:77cae8ab23bf486355d1b3191259705374f4a11d483b24964d2f729dd8c076a0"},
+				},
+				Returns: cache.MissingLayersReturns{
+					Err: errors.New("MissingLayers failed"),
+				},
+			},
+			wantErr: "MissingLayers failed",
+		},
+		{
+			name:      "sad path, PutLayer returns an error",
+			imagePath: "testdata/alpine.tar.gz",
+			missingLayerExpectation: cache.MissingLayersExpectation{
+				Args: cache.MissingLayersArgs{
+					LayerIDs: []string{"sha256:77cae8ab23bf486355d1b3191259705374f4a11d483b24964d2f729dd8c076a0"},
+				},
+				Returns: cache.MissingLayersReturns{
+					MissingLayerIDs: []string{"sha256:77cae8ab23bf486355d1b3191259705374f4a11d483b24964d2f729dd8c076a0"},
+				},
+			},
+			putLayerExpectation: cache.PutLayerExpectation{
+				Args: cache.PutLayerArgs{
+					LayerID:             "sha256:77cae8ab23bf486355d1b3191259705374f4a11d483b24964d2f729dd8c076a0",
+					DecompressedLayerID: "sha256:77cae8ab23bf486355d1b3191259705374f4a11d483b24964d2f729dd8c076a0",
+					LayerInfo: types.LayerInfo{
+						SchemaVersion: 1,
+						OS: &types.OS{
+							Family: "alpine",
+							Name:   "3.10.3",
+						},
+					},
+				},
+				Returns: cache.PutLayerReturns{
+					Err: errors.New("put layer failed"),
+				},
+			},
+			wantErr: "put layer failed",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -192,9 +237,10 @@ func TestConfig_Analyze(t *testing.T) {
 				Cache:     mockCache,
 			}
 			got, err := ac.Analyze(context.Background())
-			if (err != nil) != tt.wantErr {
-				t.Errorf("Analyze() error = %v, wantErr %v", err, tt.wantErr)
-				return
+			if tt.wantErr != "" {
+				assert.Contains(t, err.Error(), tt.wantErr, tt.name)
+			} else {
+				require.NoError(t, err, tt.name)
 			}
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("Analyze() got = %v, want %v", got, tt.want)
