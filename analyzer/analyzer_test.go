@@ -6,10 +6,8 @@ import (
 	"testing"
 
 	"github.com/aquasecurity/fanal/cache"
-
-	"github.com/aquasecurity/fanal/types"
-
 	"github.com/aquasecurity/fanal/extractor"
+	"github.com/aquasecurity/fanal/types"
 )
 
 //type mockDockerExtractor struct {
@@ -73,7 +71,7 @@ import (
 //		osAnalyzers = []OSAnalyzer{}
 //	}
 //}
-//
+
 //func TestConfig_AnalyzeFile(t *testing.T) {
 //	testCases := []struct {
 //		name            string
@@ -120,7 +118,7 @@ import (
 //
 //}
 
-func TestConfig_Analyze1(t *testing.T) {
+func TestConfig_Analyze(t *testing.T) {
 	type fields struct {
 		Extractor extractor.Extractor
 		Cache     cache.LayerCache
@@ -129,15 +127,25 @@ func TestConfig_Analyze1(t *testing.T) {
 		ctx context.Context
 	}
 	tests := []struct {
-		name                    string
-		fields                  fields
-		args                    args
-		missingLayerExpectation cache.MissingLayersExpectation
-		want                    types.ImageInfo
-		wantErr                 bool
+		name                         string
+		fields                       fields
+		args                         args
+		layerIDsExpectation          extractor.LayerIDsExpectation
+		missingLayerExpectation      cache.MissingLayersExpectation
+		putLayerExpectation          cache.PutLayerExpectation
+		extractLayerFilesExpectation extractor.ExtractLayerFilesExpectation
+		applyImageNameExpectation    extractor.ImageNameExpectation
+		applyImageIDExpectation      extractor.ImageIDExpectation
+		want                         types.ImageInfo
+		wantErr                      bool
 	}{
 		{
 			name: "happy path",
+			layerIDsExpectation: extractor.LayerIDsExpectation{
+				Returns: extractor.LayerIDsReturns{
+					LayerIDs: []string{"sha256:abcd", "sha256:efgh"},
+				},
+			},
 			missingLayerExpectation: cache.MissingLayersExpectation{
 				Args: cache.MissingLayersArgs{
 					LayerIDs: []string{"sha256:abcd", "sha256:efgh"},
@@ -146,18 +154,74 @@ func TestConfig_Analyze1(t *testing.T) {
 					MissingLayerIDs: []string{"sha256:efgh"},
 				},
 			},
+			putLayerExpectation: cache.PutLayerExpectation{
+				Args: cache.PutLayerArgs{
+					LayerID:             "sha256:efgh",
+					DecompressedLayerID: "sha256:wxyz",
+					LayerInfo: types.LayerInfo{
+						SchemaVersion: 1,
+						//OS: &types.OS{
+						//	Family: "alpine",
+						//	Name:   "3.10",
+						//},
+						//PackageInfos: nil,
+						//Applications: []types.Application{
+						//	{
+						//		Type:     "Gemfile",
+						//		FilePath: "/var/lib/gemfile",
+						//	},
+						//},
+						OpaqueDirs:    []string{"foo.opqdir"},
+						WhiteoutFiles: []string{"bar.whfiles"},
+					},
+				},
+				Returns: cache.PutLayerReturns{},
+			},
+			want: types.ImageInfo{
+				Name:     "alpine:3.10",
+				ID:       "sha256:efgh",
+				LayerIDs: []string{"sha256:abcd", "sha256:efgh"},
+			},
+			extractLayerFilesExpectation: extractor.ExtractLayerFilesExpectation{
+				Args: extractor.ExtractLayerFilesArgs{
+					CtxAnything: true,
+					Dig:         "sha256:efgh",
+				},
+				Returns: extractor.ExtractLayerFilesReturns{
+					DecompressedLayerId: "sha256:wxyz",
+					Files: extractor.FileMap{
+						"var/lib/foo": []byte("foo"),
+						"var/lib/bar": []byte("bar"),
+					},
+					OpqDirs: []string{"foo.opqdir"},
+					WhFiles: []string{"bar.whfiles"},
+				},
+			},
+			applyImageNameExpectation: extractor.ImageNameExpectation{
+				Returns: extractor.ImageNameReturns{ImageName: "alpine:3.10"},
+			},
+			applyImageIDExpectation: extractor.ImageIDExpectation{
+				Returns: extractor.ImageIDReturns{ImageDigest: "sha256:efgh"},
+			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mockCache := new(cache.MockLayerCache)
 			mockCache.ApplyMissingLayersExpectation(tt.missingLayerExpectation)
+			mockCache.ApplyPutLayerExpectation(tt.putLayerExpectation)
+
+			mockExtractor := new(extractor.MockExtractor)
+			mockExtractor.ApplyLayerIDsExpectation(tt.layerIDsExpectation)
+			mockExtractor.ApplyExtractLayerFilesExpectation(tt.extractLayerFilesExpectation)
+			mockExtractor.ApplyImageNameExpectation(tt.applyImageNameExpectation)
+			mockExtractor.ApplyImageIDExpectation(tt.applyImageIDExpectation)
 
 			ac := Config{
-				Extractor: tt.fields.Extractor,
-				Cache:     tt.fields.Cache,
+				Extractor: mockExtractor,
+				Cache:     mockCache,
 			}
-			got, err := ac.Analyze(tt.args.ctx)
+			got, err := ac.Analyze(context.Background())
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Analyze() error = %v, wantErr %v", err, tt.wantErr)
 				return

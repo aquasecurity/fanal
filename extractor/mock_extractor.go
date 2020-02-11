@@ -21,11 +21,11 @@ type ExtractLayerFilesArgs struct {
 }
 
 type ExtractLayerFilesReturns struct {
-	_a0 digest.Digest
-	_a1 FileMap
-	_a2 []string
-	_a3 []string
-	_a4 error
+	DecompressedLayerId digest.Digest
+	Files               FileMap
+	OpqDirs             []string
+	WhFiles             []string
+	Err                 error
 }
 
 type ExtractLayerFilesExpectation struct {
@@ -50,7 +50,7 @@ func (_m *MockExtractor) ApplyExtractLayerFilesExpectation(e ExtractLayerFilesEx
 	} else {
 		args = append(args, e.Args.Filenames)
 	}
-	_m.On("ExtractLayerFiles", args...).Return(e.Returns._a0, e.Returns._a1, e.Returns._a2, e.Returns._a3, e.Returns._a4)
+	_m.On("ExtractLayerFiles", args...).Return(e.Returns.DecompressedLayerId, e.Returns.Files, e.Returns.OpqDirs, e.Returns.WhFiles, e.Returns.Err)
 }
 
 func (_m *MockExtractor) ApplyExtractLayerFilesExpectations(expectations []ExtractLayerFilesExpectation) {
@@ -108,7 +108,7 @@ func (_m *MockExtractor) ExtractLayerFiles(ctx context.Context, dig digest.Diges
 }
 
 type ImageIDReturns struct {
-	_a0 digest.Digest
+	ImageDigest digest.Digest
 }
 
 type ImageIDExpectation struct {
@@ -117,7 +117,7 @@ type ImageIDExpectation struct {
 
 func (_m *MockExtractor) ApplyImageIDExpectation(e ImageIDExpectation) {
 	var args []interface{}
-	_m.On("ImageID", args...).Return(e.Returns._a0)
+	_m.On("ImageID", args...).Return(e.Returns.ImageDigest)
 }
 
 func (_m *MockExtractor) ApplyImageIDExpectations(expectations []ImageIDExpectation) {
@@ -141,7 +141,7 @@ func (_m *MockExtractor) ImageID() digest.Digest {
 }
 
 type ImageNameReturns struct {
-	_a0 string
+	ImageName string
 }
 
 type ImageNameExpectation struct {
@@ -150,7 +150,7 @@ type ImageNameExpectation struct {
 
 func (_m *MockExtractor) ApplyImageNameExpectation(e ImageNameExpectation) {
 	var args []interface{}
-	_m.On("ImageName", args...).Return(e.Returns._a0)
+	_m.On("ImageName", args...).Return(e.Returns.ImageName)
 }
 
 func (_m *MockExtractor) ApplyImageNameExpectations(expectations []ImageNameExpectation) {
@@ -174,7 +174,7 @@ func (_m *MockExtractor) ImageName() string {
 }
 
 type LayerIDsReturns struct {
-	_a0 []string
+	LayerIDs []string
 }
 
 type LayerIDsExpectation struct {
@@ -183,7 +183,7 @@ type LayerIDsExpectation struct {
 
 func (_m *MockExtractor) ApplyLayerIDsExpectation(e LayerIDsExpectation) {
 	var args []interface{}
-	_m.On("LayerIDs", args...).Return(e.Returns._a0)
+	_m.On("LayerIDs", args...).Return(e.Returns.LayerIDs)
 }
 
 func (_m *MockExtractor) ApplyLayerIDsExpectations(expectations []LayerIDsExpectation) {
