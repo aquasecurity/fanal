@@ -32,5 +32,6 @@ require (
 	golang.org/x/time v0.0.0-20190308202827-9d24e82272b4 // indirect
 	golang.org/x/xerrors v0.0.0-20190717185122-a985d3407aa7
 	google.golang.org/genproto v0.0.0-20190502173448-54afdca5d873 // indirect
+	gotest.tools v2.2.0+incompatible
 	k8s.io/client-go v11.0.0+incompatible // indirect
 )
