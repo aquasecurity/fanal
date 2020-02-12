@@ -155,7 +155,7 @@ func teardown(b *testing.B, ctx context.Context, imageName string, cli *client.C
 
 func setup(b *testing.B, tc testCase, cacheDir string) (context.Context, string, cache.Cache, *client.Client, analyzer.Config) {
 	ctx := context.Background()
-	c := cache.New(cacheDir)
+	c := cache.NewFSCache(cacheDir)
 
 	opt := types.DockerOption{
 		Timeout:  600 * time.Second,

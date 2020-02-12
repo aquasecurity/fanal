@@ -130,7 +130,7 @@ func TestFanal_Library_DockerMode(t *testing.T) {
 			ctx := context.Background()
 			d, _ := ioutil.TempDir("", "TestFanal_Library_*")
 			defer os.RemoveAll(d)
-			c, err := cache.New(d)
+			c, err := cache.NewFSCache(d)
 			require.NoError(t, err)
 			opt := types.DockerOption{
 				Timeout:  600 * time.Second,
@@ -183,7 +183,7 @@ func TestFanal_Library_TarMode(t *testing.T) {
 			d, _ := ioutil.TempDir("", "TestFanal_Library_*")
 			defer os.RemoveAll(d)
 
-			c, err := cache.New(d)
+			c, err := cache.NewFSCache(d)
 			require.NoError(t, err)
 
 			opt := types.DockerOption{
