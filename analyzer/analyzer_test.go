@@ -6,14 +6,15 @@ import (
 	"reflect"
 	"testing"
 
+	"golang.org/x/xerrors"
+
 	"github.com/stretchr/testify/require"
 
 	"github.com/aquasecurity/fanal/analyzer"
 
 	_ "github.com/aquasecurity/fanal/analyzer/command/apk"
 	_ "github.com/aquasecurity/fanal/analyzer/os/alpine"
-
-	//_ "github.com/aquasecurity/fanal/analyzer/pkg/apk"
+	_ "github.com/aquasecurity/fanal/analyzer/pkg/apk"
 
 	"github.com/aquasecurity/fanal/extractor/docker"
 	"github.com/stretchr/testify/assert"
@@ -22,114 +23,6 @@ import (
 	"github.com/aquasecurity/fanal/extractor"
 	"github.com/aquasecurity/fanal/types"
 )
-
-//type mockDockerExtractor struct {
-//	extract func(ctx context.Context, imageRef image.Reference, transports, filenames []string) (extractor.FileMap, error)
-//}
-//
-//func (mde mockDockerExtractor) Extract(ctx context.Context, imageRef image.Reference, transports, filenames []string) (extractor.FileMap, error) {
-//	if mde.extract != nil {
-//		return mde.extract(ctx, imageRef, transports, filenames)
-//	}
-//	return extractor.FileMap{}, nil
-//}
-//
-//func (mde mockDockerExtractor) ExtractFiles(layer io.Reader, filenames []string) (extractor.FileMap, extractor.OPQDirs, error) {
-//	panic("implement me")
-//}
-//
-//type mockOSAnalyzer struct{}
-//
-//func (m mockOSAnalyzer) Analyze(extractor.FileMap) (types.OS, error) {
-//	panic("implement me")
-//}
-//
-//func (m mockOSAnalyzer) RequiredFiles() []string {
-//	return []string{"file1", "file2"}
-//}
-//
-//func TestConfig_Analyze(t *testing.T) {
-//	testCases := []struct {
-//		name            string
-//		extractFunc     func(ctx context.Context, imageRef image.Reference, transports, filenames []string) (extractor.FileMap, error)
-//		expectedError   error
-//		expectedFileMap extractor.FileMap
-//	}{
-//		{
-//			name: "happy path with no docker installed or no image found",
-//			extractFunc: func(ctx context.Context, imageRef image.Reference, transports, filenames []string) (maps extractor.FileMap, e error) {
-//				return extractor.FileMap{
-//					"file1": []byte{0x1, 0x2, 0x3},
-//					"file2": []byte{0x4, 0x5, 0x6},
-//				}, nil
-//			},
-//			expectedFileMap: extractor.FileMap{
-//				"file1": []byte{0x1, 0x2, 0x3},
-//				"file2": []byte{0x4, 0x5, 0x6},
-//			},
-//		},
-//	}
-//
-//	for _, tc := range testCases {
-//		RegisterOSAnalyzer(mockOSAnalyzer{})
-//
-//		ac := Config{Extractor: mockDockerExtractor{
-//			extract: tc.extractFunc,
-//		}}
-//		fm, err := ac.Analyze(context.TODO(), "fooimage")
-//		assert.Equal(t, tc.expectedError, err, tc.name)
-//		assert.Equal(t, tc.expectedFileMap, fm, tc.name)
-//
-//		// reset the gnarly global state
-//		osAnalyzers = []OSAnalyzer{}
-//	}
-//}
-
-//func TestConfig_AnalyzeFile(t *testing.T) {
-//	testCases := []struct {
-//		name            string
-//		extractFunc     func(ctx context.Context, imageReference image.Reference, transports, filenames []string) (extractor.FileMap, error)
-//		inputFile       string
-//		expectedError   error
-//		expectedFileMap extractor.FileMap
-//	}{
-//		{
-//			name:            "happy path, valid tar.gz file",
-//			inputFile:       "testdata/alpine.tar.gz",
-//			expectedFileMap: extractor.FileMap{},
-//		},
-//		{
-//			name:            "happy path, valid tar file",
-//			expectedFileMap: extractor.FileMap{},
-//			inputFile:       "../utils/testdata/test.tar",
-//		},
-//		{
-//			name:          "sad path, valid file but ExtractFromFile fails",
-//			expectedError: errors.New("failed to extract files: extract from file failed"),
-//			extractFunc: func(ctx context.Context, imageRef image.Reference, transports, filenames []string) (fileMap extractor.FileMap, err error) {
-//				return nil, errors.New("extract from file failed")
-//			},
-//		},
-//	}
-//
-//	for _, tc := range testCases {
-//		ac := Config{
-//			Extractor: mockDockerExtractor{
-//				extract: tc.extractFunc,
-//			},
-//		}
-//
-//		fm, err := ac.AnalyzeFile(context.Background(), tc.inputFile)
-//		switch {
-//		case tc.expectedError != nil:
-//			assert.Equal(t, tc.expectedError.Error(), err.Error(), tc.name)
-//		default:
-//			assert.NoError(t, err, tc.name)
-//		}
-//		assert.Equal(t, tc.expectedFileMap, fm, tc.name)
-//	}
-//
-//}
 
 func TestConfig_Analyze(t *testing.T) {
 	type fields struct {
@@ -170,6 +63,10 @@ func TestConfig_Analyze(t *testing.T) {
 							Family: "alpine",
 							Name:   "3.10.3",
 						},
+						PackageInfos:  []types.PackageInfo{{FilePath: "lib/apk/db/installed", Packages: []types.Package{{Name: "musl", Version: "1.1.22-r3", Release: "", Epoch: 0, Arch: "", SrcName: "", SrcVersion: "", SrcRelease: "", SrcEpoch: 0}, {Name: "busybox", Version: "1.30.1-r2", Release: "", Epoch: 0, Arch: "", SrcName: "", SrcVersion: "", SrcRelease: "", SrcEpoch: 0}, {Name: "alpine-baselayout", Version: "3.1.2-r0", Release: "", Epoch: 0, Arch: "", SrcName: "", SrcVersion: "", SrcRelease: "", SrcEpoch: 0}, {Name: "alpine-keys", Version: "2.1-r2", Release: "", Epoch: 0, Arch: "", SrcName: "", SrcVersion: "", SrcRelease: "", SrcEpoch: 0}, {Name: "openssl", Version: "1.1.1d-r0", Release: "", Epoch: 0, Arch: "", SrcName: "", SrcVersion: "", SrcRelease: "", SrcEpoch: 0}, {Name: "libcrypto1.1", Version: "1.1.1d-r0", Release: "", Epoch: 0, Arch: "", SrcName: "", SrcVersion: "", SrcRelease: "", SrcEpoch: 0}, {Name: "libssl1.1", Version: "1.1.1d-r0", Release: "", Epoch: 0, Arch: "", SrcName: "", SrcVersion: "", SrcRelease: "", SrcEpoch: 0}, {Name: "ca-certificates", Version: "20190108-r0", Release: "", Epoch: 0, Arch: "", SrcName: "", SrcVersion: "", SrcRelease: "", SrcEpoch: 0}, {Name: "ca-certificates-cacert", Version: "20190108-r0", Release: "", Epoch: 0, Arch: "", SrcName: "", SrcVersion: "", SrcRelease: "", SrcEpoch: 0}, {Name: "libtls-standalone", Version: "2.9.1-r0", Release: "", Epoch: 0, Arch: "", SrcName: "", SrcVersion: "", SrcRelease: "", SrcEpoch: 0}, {Name: "ssl_client", Version: "1.30.1-r2", Release: "", Epoch: 0, Arch: "", SrcName: "", SrcVersion: "", SrcRelease: "", SrcEpoch: 0}, {Name: "zlib", Version: "1.2.11-r1", Release: "", Epoch: 0, Arch: "", SrcName: "", SrcVersion: "", SrcRelease: "", SrcEpoch: 0}, {Name: "apk-tools", Version: "2.10.4-r2", Release: "", Epoch: 0, Arch: "", SrcName: "", SrcVersion: "", SrcRelease: "", SrcEpoch: 0}, {Name: "pax-utils", Version: "1.2.3-r0", Release: "", Epoch: 0, Arch: "", SrcName: "", SrcVersion: "", SrcRelease: "", SrcEpoch: 0}, {Name: "scanelf", Version: "1.2.3-r0", Release: "", Epoch: 0, Arch: "", SrcName: "", SrcVersion: "", SrcRelease: "", SrcEpoch: 0}, {Name: "musl-utils", Version: "1.1.22-r3", Release: "", Epoch: 0, Arch: "", SrcName: "", SrcVersion: "", SrcRelease: "", SrcEpoch: 0}, {Name: "libc-dev", Version: "0.7.1-r0", Release: "", Epoch: 0, Arch: "", SrcName: "", SrcVersion: "", SrcRelease: "", SrcEpoch: 0}, {Name: "libc-utils", Version: "0.7.1-r0", Release: "", Epoch: 0, Arch: "", SrcName: "", SrcVersion: "", SrcRelease: "", SrcEpoch: 0}}}},
+						Applications:  []types.Application(nil),
+						OpaqueDirs:    []string(nil),
+						WhiteoutFiles: []string(nil),
 					},
 				},
 				Returns: cache.PutLayerReturns{},
@@ -188,7 +85,7 @@ func TestConfig_Analyze(t *testing.T) {
 					LayerIDs: []string{"sha256:77cae8ab23bf486355d1b3191259705374f4a11d483b24964d2f729dd8c076a0"},
 				},
 				Returns: cache.MissingLayersReturns{
-					Err: errors.New("MissingLayers failed"),
+					Err: xerrors.New("MissingLayers failed"),
 				},
 			},
 			wantErr: "MissingLayers failed",
@@ -214,6 +111,10 @@ func TestConfig_Analyze(t *testing.T) {
 							Family: "alpine",
 							Name:   "3.10.3",
 						},
+						PackageInfos:  []types.PackageInfo{{FilePath: "lib/apk/db/installed", Packages: []types.Package{{Name: "musl", Version: "1.1.22-r3", Release: "", Epoch: 0, Arch: "", SrcName: "", SrcVersion: "", SrcRelease: "", SrcEpoch: 0}, {Name: "busybox", Version: "1.30.1-r2", Release: "", Epoch: 0, Arch: "", SrcName: "", SrcVersion: "", SrcRelease: "", SrcEpoch: 0}, {Name: "alpine-baselayout", Version: "3.1.2-r0", Release: "", Epoch: 0, Arch: "", SrcName: "", SrcVersion: "", SrcRelease: "", SrcEpoch: 0}, {Name: "alpine-keys", Version: "2.1-r2", Release: "", Epoch: 0, Arch: "", SrcName: "", SrcVersion: "", SrcRelease: "", SrcEpoch: 0}, {Name: "openssl", Version: "1.1.1d-r0", Release: "", Epoch: 0, Arch: "", SrcName: "", SrcVersion: "", SrcRelease: "", SrcEpoch: 0}, {Name: "libcrypto1.1", Version: "1.1.1d-r0", Release: "", Epoch: 0, Arch: "", SrcName: "", SrcVersion: "", SrcRelease: "", SrcEpoch: 0}, {Name: "libssl1.1", Version: "1.1.1d-r0", Release: "", Epoch: 0, Arch: "", SrcName: "", SrcVersion: "", SrcRelease: "", SrcEpoch: 0}, {Name: "ca-certificates", Version: "20190108-r0", Release: "", Epoch: 0, Arch: "", SrcName: "", SrcVersion: "", SrcRelease: "", SrcEpoch: 0}, {Name: "ca-certificates-cacert", Version: "20190108-r0", Release: "", Epoch: 0, Arch: "", SrcName: "", SrcVersion: "", SrcRelease: "", SrcEpoch: 0}, {Name: "libtls-standalone", Version: "2.9.1-r0", Release: "", Epoch: 0, Arch: "", SrcName: "", SrcVersion: "", SrcRelease: "", SrcEpoch: 0}, {Name: "ssl_client", Version: "1.30.1-r2", Release: "", Epoch: 0, Arch: "", SrcName: "", SrcVersion: "", SrcRelease: "", SrcEpoch: 0}, {Name: "zlib", Version: "1.2.11-r1", Release: "", Epoch: 0, Arch: "", SrcName: "", SrcVersion: "", SrcRelease: "", SrcEpoch: 0}, {Name: "apk-tools", Version: "2.10.4-r2", Release: "", Epoch: 0, Arch: "", SrcName: "", SrcVersion: "", SrcRelease: "", SrcEpoch: 0}, {Name: "pax-utils", Version: "1.2.3-r0", Release: "", Epoch: 0, Arch: "", SrcName: "", SrcVersion: "", SrcRelease: "", SrcEpoch: 0}, {Name: "scanelf", Version: "1.2.3-r0", Release: "", Epoch: 0, Arch: "", SrcName: "", SrcVersion: "", SrcRelease: "", SrcEpoch: 0}, {Name: "musl-utils", Version: "1.1.22-r3", Release: "", Epoch: 0, Arch: "", SrcName: "", SrcVersion: "", SrcRelease: "", SrcEpoch: 0}, {Name: "libc-dev", Version: "0.7.1-r0", Release: "", Epoch: 0, Arch: "", SrcName: "", SrcVersion: "", SrcRelease: "", SrcEpoch: 0}, {Name: "libc-utils", Version: "0.7.1-r0", Release: "", Epoch: 0, Arch: "", SrcName: "", SrcVersion: "", SrcRelease: "", SrcEpoch: 0}}}},
+						Applications:  []types.Application(nil),
+						OpaqueDirs:    []string(nil),
+						WhiteoutFiles: []string(nil),
 					},
 				},
 				Returns: cache.PutLayerReturns{
