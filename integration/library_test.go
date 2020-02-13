@@ -155,9 +155,11 @@ func TestFanal_Library_DockerMode(t *testing.T) {
 			require.NoError(t, err)
 			ac := analyzer.New(ext, c)
 
+			applier := analyzer.NewApplier(c)
+
 			// run tests twice, one without cache and with cache
 			for i := 1; i <= 2; i++ {
-				runChecks(t, ctx, ac, tc)
+				runChecks(t, ctx, ac, applier, tc)
 			}
 
 			// clear Cache
@@ -186,15 +188,17 @@ func TestFanal_Library_TarMode(t *testing.T) {
 			c, err := cache.NewFSCache(d)
 			require.NoError(t, err)
 
+			applier := analyzer.NewApplier(c)
+
 			opt := types.DockerOption{
 				Timeout:  600 * time.Second,
 				SkipPing: true,
 			}
 
-			ext, err := docker.NewDockerTarExtractor(ctx, tc.imageFile, opt)
+			ext, err := docker.NewDockerArchiveExtractor(ctx, tc.imageFile, opt)
 			require.NoError(t, err)
 			ac := analyzer.New(ext, c)
-			runChecks(t, ctx, ac, tc)
+			runChecks(t, ctx, ac, applier, tc)
 
 			// clear Cache
 			require.NoError(t, c.Clear(), tc.name)
@@ -202,10 +206,10 @@ func TestFanal_Library_TarMode(t *testing.T) {
 	}
 }
 
-func runChecks(t *testing.T, ctx context.Context, ac analyzer.Config, tc testCase) {
+func runChecks(t *testing.T, ctx context.Context, ac analyzer.Config, applier analyzer.Applier, tc testCase) {
 	imageInfo, err := ac.Analyze(ctx)
 	require.NoError(t, err, tc.name)
-	imageDetail, err := ac.ApplyLayers(imageInfo.LayerIDs)
+	imageDetail, err := applier.ApplyLayers(imageInfo.LayerIDs)
 	require.NoError(t, err, tc.name)
 	commonChecks(t, imageDetail, tc)
 }

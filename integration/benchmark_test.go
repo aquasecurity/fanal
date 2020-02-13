@@ -86,8 +86,7 @@ func run(b *testing.B, ctx context.Context, imageName string, ac analyzer.Config
 	actualFiles, err := ac.Analyze(ctx, imageName)
 	require.NoError(b, err)
 
-	osFound, err := analyzer.GetOS(actualFiles)
-	require.NoError(b, err)
+	osFound := analyzer.GetOS(actualFiles)
 
 	_, err = analyzer.GetPackages(actualFiles)
 	require.NoError(b, err)
@@ -155,7 +154,8 @@ func teardown(b *testing.B, ctx context.Context, imageName string, cli *client.C
 
 func setup(b *testing.B, tc testCase, cacheDir string) (context.Context, string, cache.Cache, *client.Client, analyzer.Config) {
 	ctx := context.Background()
-	c := cache.NewFSCache(cacheDir)
+	c, err := cache.NewFSCache(cacheDir)
+	require.NoError(t, err)
 
 	opt := types.DockerOption{
 		Timeout:  600 * time.Second,
@@ -179,7 +179,9 @@ func setup(b *testing.B, tc testCase, cacheDir string) (context.Context, string,
 	err = cli.ImageTag(ctx, tc.imageName, imageName)
 	require.NoError(b, err, tc.name)
 
-	ext := docker.NewDockerExtractor(opt, c)
+	ext, err := docker.NewDockerExtractor(opt, c)
+	require.NoError(t, err)
+
 	ac := analyzer.Config{Extractor: ext}
 	return ctx, imageName, c, cli, ac
 }
