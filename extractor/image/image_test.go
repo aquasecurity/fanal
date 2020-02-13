@@ -10,41 +10,47 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/containers/image/v5/docker"
-
 	"github.com/aquasecurity/fanal/types"
-	imageTypes "github.com/containers/image/v5/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-func TestReferenceNewImage(t *testing.T) {
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		//fmt.Fprintln(w, "Hello, client")
-		panic("woo hoo!")
-	}))
-	defer ts.Close()
-
-	tsurl := strings.TrimPrefix(ts.URL, "http:")
-
-	ref, err := docker.ParseReference(fmt.Sprintf("%s/foobar", tsurl))
-	require.NoError(t, err)
-	img, err := ref.NewImage(context.Background(), &imageTypes.SystemContext{
-		RegistriesDirPath:           "/this/doesnt/exist",
-		DockerPerHostCertDirPath:    "/this/doesnt/exist",
-		ArchitectureChoice:          "amd64",
-		OSChoice:                    "linux",
-		DockerInsecureSkipTLSVerify: imageTypes.NewOptionalBool(true),
-	})
-	require.NoError(t, err)
-	defer img.Close()
-}
+//func TestReferenceNewImage(t *testing.T) {
+//	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+//		//fmt.Fprintln(w, "Hello, client")
+//		panic("woo hoo!")
+//	}))
+//	defer ts.Close()
+//
+//	tsurl := strings.TrimPrefix(ts.URL, "http:")
+//
+//	ref, err := docker.ParseReference(fmt.Sprintf("%s/foobar", tsurl))
+//	require.NoError(t, err)
+//	img, err := ref.NewImage(context.Background(), &imageTypes.SystemContext{
+//		RegistriesDirPath:           "/this/doesnt/exist",
+//		DockerPerHostCertDirPath:    "/this/doesnt/exist",
+//		ArchitectureChoice:          "amd64",
+//		OSChoice:                    "linux",
+//		DockerInsecureSkipTLSVerify: imageTypes.NewOptionalBool(true),
+//	})
+//	require.NoError(t, err)
+//	defer img.Close()
+//}
 
 func TestNewImage(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		b, _ := ioutil.ReadFile("testdata/manifest.json")
-		w.Write(b)
-		//panic("woo hoo!")
+		switch {
+		case strings.Contains(r.URL.String(), "unknown"):
+			w.WriteHeader(404)
+			return
+		case strings.Contains(r.URL.String(), "invalid_json"):
+			w.Header().Set("Content-Type", "application/vnd.docker.distribution.manifest.v2+json")
+			w.Write([]byte(`{invalid}`))
+		default:
+			b, _ := ioutil.ReadFile("testdata/manifest.json")
+			w.Header().Set("Content-Type", "application/vnd.docker.distribution.manifest.v2+json")
+			w.Write(b)
+		}
 	}))
 	defer ts.Close()
 
@@ -64,34 +70,26 @@ func TestNewImage(t *testing.T) {
 		name      string
 		args      args
 		wantImage image
-		//wantSystemContext *imageTypes.SystemContext
-		wantErr string
+		wantErr   string
 	}{
 		{
 			name: "happy path",
 			args: args{
 				image: Reference{
-					Name:   "alpine:3.10",
+					Name:   fmt.Sprintf("%s/foobar", tsurl),
 					IsFile: false,
 				},
-				transports: []string{"docker-daemon:"},
+				transports: []string{"docker://"},
 				option: types.DockerOption{
 					SkipPing:              true,
 					InsecureSkipTLSVerify: true,
 				},
 			},
 			wantImage: image{
-				name:       "alpine:3.10",
+				name:       fmt.Sprintf("%s/foobar", tsurl),
 				isFile:     false,
-				transports: []string{"docker-daemon:"},
+				transports: []string{"docker://"},
 			},
-			//wantSystemContext: &imageTypes.SystemContext{
-			//	OSChoice:                          "linux",
-			//	OCIInsecureSkipTLSVerify:          true,
-			//	DockerInsecureSkipTLSVerify:       imageTypes.NewOptionalBool(true),
-			//	DockerDisableV1Ping:               true,
-			//	DockerDaemonInsecureSkipTLSVerify: true,
-			//},
 		},
 		{
 			name: "happy path without latest tag",
@@ -106,34 +104,11 @@ func TestNewImage(t *testing.T) {
 				},
 			},
 			wantImage: image{
-				name:       "docker.io/library/alpine:latest",
+				name:       fmt.Sprintf("%s/foobar", tsurl),
 				isFile:     false,
-				transports: []string{"docker-daemon:"},
+				transports: []string{"docker://"},
 			},
-			//wantSystemContext: &imageTypes.SystemContext{
-			//	OSChoice:                    "linux",
-			//	DockerInsecureSkipTLSVerify: imageTypes.NewOptionalBool(true),
-			//},
 		},
-		//{ // FIXME: Add test server
-		//	name: "happy path with quay.io",
-		//	args: args{
-		//		image: Reference{
-		//			Name:   "quay.io/prometheus/node-exporter:v0.18.1",
-		//			IsFile: false,
-		//		},
-		//		transports: []string{"docker-daemon:", "docker://"},
-		//	},
-		//	wantImage: image{
-		//		name:       "quay.io/prometheus/node-exporter:v0.18.1",
-		//		isFile:     false,
-		//		transports: []string{"docker-daemon:", "docker://"},
-		//	},
-		//	wantSystemContext: &imageTypes.SystemContext{
-		//		OSChoice:                    "linux",
-		//		DockerInsecureSkipTLSVerify: imageTypes.NewOptionalBool(false),
-		//	},
-		//},
 		{
 			name: "happy path with a tar file",
 			args: args{
@@ -148,10 +123,6 @@ func TestNewImage(t *testing.T) {
 				isFile:     true,
 				transports: []string{"docker-archive:"},
 			},
-			//wantSystemContext: &imageTypes.SystemContext{
-			//	OSChoice:                    "linux",
-			//	DockerInsecureSkipTLSVerify: imageTypes.NewOptionalBool(false),
-			//},
 		},
 		{
 			name: "sad path: invalid image name",
@@ -162,16 +133,48 @@ func TestNewImage(t *testing.T) {
 				},
 				transports: []string{"docker-archive:"},
 			},
-			wantImage: image{
-				name:       "/tmp/alpine-3.10.tar",
-				isFile:     true,
-				transports: []string{"docker-archive:"},
-			},
-			//wantSystemContext: &imageTypes.SystemContext{
-			//	OSChoice:                    "linux",
-			//	DockerInsecureSkipTLSVerify: imageTypes.NewOptionalBool(false),
-			//},
 			wantErr: "invalid image name",
+		},
+		{
+			name: "sad path: invalid image name",
+			args: args{
+				image: Reference{
+					Name:   "alpine:3.10",
+					IsFile: false,
+				},
+				transports: []string{"invalid:"},
+			},
+			wantErr: `unknown transport "invalid"`,
+		},
+		{
+			name: "sad path: non-existed image name",
+			args: args{
+				image: Reference{
+					Name:   fmt.Sprintf("%s/unknown:3.10", tsurl),
+					IsFile: false,
+				},
+				transports: []string{"docker://"},
+				option: types.DockerOption{
+					SkipPing:              true,
+					InsecureSkipTLSVerify: true,
+				},
+			},
+			wantErr: `unexpected end of JSON input`,
+		},
+		{
+			name: "sad path: invalid manifest JSON",
+			args: args{
+				image: Reference{
+					Name:   fmt.Sprintf("%s/invalid_json:3.10", tsurl),
+					IsFile: false,
+				},
+				transports: []string{"docker://"},
+				option: types.DockerOption{
+					SkipPing:              true,
+					InsecureSkipTLSVerify: true,
+				},
+			},
+			wantErr: `failed to initialize: invalid character`,
 		},
 	}
 	for _, tt := range tests {
