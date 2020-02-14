@@ -102,18 +102,20 @@ func runChecksBench(b *testing.B, ac analyzer.Config, c cache.Cache, ctx context
 	for i := 0; i < b.N; i++ {
 		run(ac, ctx, tc, b)
 		if c != nil {
-			c.Clear()
+			_ = c.Clear()
 		}
 	}
 }
 
-func BenchmarkFanal_Library_DockerMode_WithoutCache(b *testing.B) {
-	benchCache, _ := ioutil.TempDir("", "BenchmarkFanal_Library_DockerMode_WithoutCache_*")
-	defer os.RemoveAll(benchCache)
-
+func BenchmarkDockerMode_WithoutCache(b *testing.B) {
 	for _, tc := range testCases {
-		ctx, c, _, ac := setup(b, tc, benchCache)
 		b.Run(tc.name, func(b *testing.B) {
+			benchCache, err := ioutil.TempDir("", "DockerMode_WithoutCache_")
+			require.NoError(b, err)
+			defer os.RemoveAll(benchCache)
+
+			ctx, c, _, ac := setup(b, tc, benchCache)
+
 			b.ReportAllocs()
 			b.ResetTimer()
 			runChecksBench(b, ac, c, ctx, tc)
@@ -124,16 +126,18 @@ func BenchmarkFanal_Library_DockerMode_WithoutCache(b *testing.B) {
 	}
 }
 
-func BenchmarkFanal_Library_DockerMode_WithCache(b *testing.B) {
-	benchCache, _ := ioutil.TempDir("", "BenchmarkFanal_Library_DockerMode_WithCache_*")
-	defer os.RemoveAll(benchCache)
-
+func BenchmarkDockerMode_WithCache(b *testing.B) {
 	for _, tc := range testCases {
-		ctx, _, _, ac := setup(b, tc, benchCache)
-		// run once to generate cache
-		run(ac, ctx, tc, b)
-
+		tc := tc
 		b.Run(tc.name, func(b *testing.B) {
+			benchCache, err := ioutil.TempDir("", "DockerMode_WithCache_")
+			require.NoError(b, err)
+			defer os.RemoveAll(benchCache)
+
+			ctx, _, _, ac := setup(b, tc, benchCache)
+			// run once to generate cache
+			run(ac, ctx, tc, b)
+
 			b.ReportAllocs()
 			b.ResetTimer()
 			runChecksBench(b, ac, nil, context.Background(), tc)
@@ -149,6 +153,12 @@ func teardown(b *testing.B, tc testCase, ctx context.Context) {
 	require.NoError(b, err, tc.name)
 
 	_, err = cli.ImageRemove(ctx, tc.imageFile, dtypes.ImageRemoveOptions{
+		Force:         true,
+		PruneChildren: true,
+	})
+	assert.NoError(b, err, tc.name)
+
+	_, err = cli.ImageRemove(ctx, tc.imageName, dtypes.ImageRemoveOptions{
 		Force:         true,
 		PruneChildren: true,
 	})
@@ -173,11 +183,11 @@ func setup(b *testing.B, tc testCase, cacheDir string) (context.Context, cache.C
 		PruneChildren: true,
 	})
 
-	testfile, err := os.Open(tc.imageFile)
+	testFile, err := os.Open(tc.imageFile)
 	require.NoError(b, err)
 
 	// load image into docker engine
-	_, err = cli.ImageLoad(ctx, testfile, true)
+	_, err = cli.ImageLoad(ctx, testFile, true)
 	require.NoError(b, err, tc.name)
 
 	// tag our image to something unique
