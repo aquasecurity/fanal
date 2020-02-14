@@ -112,7 +112,7 @@ func TestFanal_Library_DockerMode(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 			ctx := context.Background()
-			d, _ := ioutil.TempDir("", "TestFanal_Library_*")
+			d, _ := ioutil.TempDir("", "TestFanal_Library_")
 			defer os.RemoveAll(d)
 			c := cache.Initialize(d)
 
@@ -153,6 +153,14 @@ func TestFanal_Library_DockerMode(t *testing.T) {
 				PruneChildren: true,
 			})
 			assert.NoError(t, err, tc.name)
+			_, err = cli.ImageRemove(ctx, tc.imageName, dtypes.ImageRemoveOptions{
+				Force:         true,
+				PruneChildren: true,
+			})
+			assert.NoError(t, err, tc.name)
+
+			// clear Cache
+			require.NoError(t, c.Clear(), tc.name)
 		})
 	}
 }
@@ -164,7 +172,7 @@ func TestFanal_Library_TarMode(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 			ctx := context.Background()
-			d, _ := ioutil.TempDir("", "TestFanal_Library_*")
+			d, _ := ioutil.TempDir("", "TestFanal_Library_")
 			defer os.RemoveAll(d)
 			c := cache.Initialize(d)
 
