@@ -5,12 +5,14 @@ package integration
 import (
 	"context"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"os"
 	"syscall"
 	"testing"
 	"time"
 
+	"github.com/aquasecurity/fanal/analyzer"
 	_ "github.com/aquasecurity/fanal/analyzer/command/apk"
 	_ "github.com/aquasecurity/fanal/analyzer/library/bundler"
 	_ "github.com/aquasecurity/fanal/analyzer/library/cargo"
@@ -28,8 +30,6 @@ import (
 	_ "github.com/aquasecurity/fanal/analyzer/pkg/apk"
 	_ "github.com/aquasecurity/fanal/analyzer/pkg/dpkg"
 	_ "github.com/aquasecurity/fanal/analyzer/pkg/rpm"
-
-	"github.com/aquasecurity/fanal/analyzer"
 	"github.com/aquasecurity/fanal/cache"
 	"github.com/aquasecurity/fanal/extractor/docker"
 	"github.com/aquasecurity/fanal/types"
@@ -113,6 +113,8 @@ func BenchmarkDockerMode_WithoutCache(b *testing.B) {
 	for _, tc := range testCases {
 		tc := tc
 		b.Run(tc.name, func(b *testing.B) {
+			fmt.Println(tc.name)
+
 			benchCache, err := ioutil.TempDir("", "DockerMode_WithoutCache_")
 			require.NoError(b, err)
 			defer os.RemoveAll(benchCache)
@@ -185,7 +187,7 @@ func setup(b *testing.B, tc testCase, cacheDir string) (context.Context, string,
 	require.NoError(b, err, tc.name)
 
 	// ensure image doesnt already exists
-	_, _ = cli.ImageRemove(ctx, tc.imageFile, dtypes.ImageRemoveOptions{
+	_, _ = cli.ImageRemove(ctx, tc.imageName, dtypes.ImageRemoveOptions{
 		Force:         true,
 		PruneChildren: true,
 	})
@@ -197,14 +199,26 @@ func setup(b *testing.B, tc testCase, cacheDir string) (context.Context, string,
 	showUsage()
 
 	// load image into docker engine
-	_, err = cli.ImageLoad(ctx, testFile, false)
+	resp, err := cli.ImageLoad(ctx, testFile, false)
+	io.Copy(ioutil.Discard, resp.Body)
+
 	require.NoError(b, err, tc.name)
+	require.NoError(b, resp.Body.Close())
 
 	fmt.Println("After ImageLoad")
 	showUsage()
 
 	imageName := fmt.Sprintf("%s-%s", tc.imageName, nextRandom())
 	fmt.Println(imageName)
+
+	imgs, err := cli.ImageList(ctx, dtypes.ImageListOptions{
+		All: true,
+	})
+
+	require.NoError(b, err)
+	for _, img := range imgs {
+		fmt.Println(img.RepoTags)
+	}
 
 	// tag our image to something unique
 	err = cli.ImageTag(ctx, tc.imageName, imageName)
