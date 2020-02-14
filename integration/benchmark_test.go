@@ -8,7 +8,6 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
-	"syscall"
 	"testing"
 	"time"
 
@@ -113,8 +112,6 @@ func BenchmarkDockerMode_WithoutCache(b *testing.B) {
 	for _, tc := range testCases {
 		tc := tc
 		b.Run(tc.name, func(b *testing.B) {
-			fmt.Println(tc.name)
-
 			benchCache, err := ioutil.TempDir("", "DockerMode_WithoutCache_")
 			require.NoError(b, err)
 			defer os.RemoveAll(benchCache)
@@ -155,9 +152,6 @@ func BenchmarkDockerMode_WithCache(b *testing.B) {
 }
 
 func teardown(b *testing.B, ctx context.Context, originalImageName, imageName string, cli *client.Client) {
-	fmt.Println("Before ImageRemove")
-	showUsage()
-
 	_, err := cli.ImageRemove(ctx, originalImageName, dtypes.ImageRemoveOptions{
 		Force:         true,
 		PruneChildren: true,
@@ -169,9 +163,6 @@ func teardown(b *testing.B, ctx context.Context, originalImageName, imageName st
 		PruneChildren: true,
 	})
 	assert.NoError(b, err)
-
-	fmt.Println("After ImageRemove")
-	showUsage()
 }
 
 func setup(b *testing.B, tc testCase, cacheDir string) (context.Context, string, cache.Cache, *client.Client, analyzer.Config) {
@@ -195,30 +186,15 @@ func setup(b *testing.B, tc testCase, cacheDir string) (context.Context, string,
 	testFile, err := os.Open(tc.imageFile)
 	require.NoError(b, err)
 
-	fmt.Println("Before ImageLoad")
-	showUsage()
-
 	// load image into docker engine
 	resp, err := cli.ImageLoad(ctx, testFile, false)
-	io.Copy(ioutil.Discard, resp.Body)
-
 	require.NoError(b, err, tc.name)
+
+	// ensure an image has finished being loaded.
+	io.Copy(ioutil.Discard, resp.Body)
 	require.NoError(b, resp.Body.Close())
 
-	fmt.Println("After ImageLoad")
-	showUsage()
-
 	imageName := fmt.Sprintf("%s-%s", tc.imageName, nextRandom())
-	fmt.Println(imageName)
-
-	imgs, err := cli.ImageList(ctx, dtypes.ImageListOptions{
-		All: true,
-	})
-
-	require.NoError(b, err)
-	for _, img := range imgs {
-		fmt.Println(img.RepoTags)
-	}
 
 	// tag our image to something unique
 	err = cli.ImageTag(ctx, tc.imageName, imageName)
@@ -227,38 +203,4 @@ func setup(b *testing.B, tc testCase, cacheDir string) (context.Context, string,
 	ext := docker.NewDockerExtractor(opt, c)
 	ac := analyzer.Config{Extractor: ext}
 	return ctx, imageName, c, cli, ac
-}
-
-type DiskStatus struct {
-	All  uint64 `json:"all"`
-	Used uint64 `json:"used"`
-	Free uint64 `json:"free"`
-}
-
-// disk usage of path/disk
-func DiskUsage(path string) (disk DiskStatus) {
-	fs := syscall.Statfs_t{}
-	err := syscall.Statfs(path, &fs)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	disk.All = fs.Blocks * uint64(fs.Bsize)
-	disk.Free = fs.Bfree * uint64(fs.Bsize)
-	disk.Used = disk.All - disk.Free
-	return
-}
-
-const (
-	B  = 1
-	KB = 1024 * B
-	MB = 1024 * KB
-	GB = 1024 * MB
-)
-
-func showUsage() {
-	disk := DiskUsage("/")
-	fmt.Printf("All: %.2f GB\n", float64(disk.All)/float64(GB))
-	fmt.Printf("Used: %.2f GB\n", float64(disk.Used)/float64(GB))
-	fmt.Printf("Free: %.2f GB\n", float64(disk.Free)/float64(GB))
 }
