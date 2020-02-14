@@ -4,6 +4,7 @@ package integration
 
 import (
 	"context"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"testing"
@@ -81,8 +82,8 @@ var testCases = []testCase{
 	},
 }
 
-func run(ac analyzer.Config, ctx context.Context, tc testCase, b *testing.B) {
-	actualFiles, err := ac.Analyze(ctx, tc.imageFile)
+func run(b *testing.B, ctx context.Context, imageName string, ac analyzer.Config) {
+	actualFiles, err := ac.Analyze(ctx, imageName)
 	require.NoError(b, err)
 
 	osFound, err := analyzer.GetOS(actualFiles)
@@ -98,9 +99,9 @@ func run(ac analyzer.Config, ctx context.Context, tc testCase, b *testing.B) {
 	require.NoError(b, err)
 }
 
-func runChecksBench(b *testing.B, ac analyzer.Config, c cache.Cache, ctx context.Context, tc testCase) {
+func runChecksBench(b *testing.B, ctx context.Context, imageName string, ac analyzer.Config, c cache.Cache) {
 	for i := 0; i < b.N; i++ {
-		run(ac, ctx, tc, b)
+		run(b, ctx, imageName, ac)
 		if c != nil {
 			_ = c.Clear()
 		}
@@ -114,45 +115,42 @@ func BenchmarkDockerMode_WithoutCache(b *testing.B) {
 			require.NoError(b, err)
 			defer os.RemoveAll(benchCache)
 
-			ctx, c, _, ac := setup(b, tc, benchCache)
+			ctx, c, _, ac, cli := setup(b, tc, benchCache)
 
 			b.ReportAllocs()
 			b.ResetTimer()
-			runChecksBench(b, ac, c, ctx, tc)
+			runChecksBench(b, ctx, imageName, ac, c)
 			b.StopTimer()
 		})
 
-		teardown(b, tc, context.Background())
+		teardown(b, ctx, imageName, cli)
 	}
 }
 
 func BenchmarkDockerMode_WithCache(b *testing.B) {
 	for _, tc := range testCases {
-		tc := tc
 		b.Run(tc.name, func(b *testing.B) {
 			benchCache, err := ioutil.TempDir("", "DockerMode_WithCache_")
 			require.NoError(b, err)
 			defer os.RemoveAll(benchCache)
 
-			ctx, _, _, ac := setup(b, tc, benchCache)
+			ctx, _, _, ac, cli := setup(b, tc, benchCache)
 			// run once to generate cache
 			run(ac, ctx, tc, b)
 
 			b.ReportAllocs()
 			b.ResetTimer()
-			runChecksBench(b, ac, nil, context.Background(), tc)
+			runChecksBench(b, ctx, imageName, ac, nil)
 			b.StopTimer()
+
+			teardown(b, ctx, imageName, cli)
 		})
 
-		teardown(b, tc, context.Background())
 	}
 }
 
-func teardown(b *testing.B, tc testCase, ctx context.Context) {
-	cli, err := client.NewClientWithOpts(client.FromEnv)
-	require.NoError(b, err, tc.name)
-
-	_, err = cli.ImageRemove(ctx, tc.imageFile, dtypes.ImageRemoveOptions{
+func teardown(b *testing.B, ctx context.Context, imageName string, cli *client.Client) {
+	_, err := cli.ImageRemove(ctx, imageName, dtypes.ImageRemoveOptions{
 		Force:         true,
 		PruneChildren: true,
 	})
@@ -165,9 +163,9 @@ func teardown(b *testing.B, tc testCase, ctx context.Context) {
 	assert.NoError(b, err, tc.name)
 }
 
-func setup(b *testing.B, tc testCase, cacheDir string) (context.Context, cache.Cache, *client.Client, analyzer.Config) {
+func setup(b *testing.B, tc testCase, cacheDir string) (context.Context, string, cache.Cache, *client.Client, analyzer.Config) {
 	ctx := context.Background()
-	c := cache.Initialize(cacheDir)
+	c := cache.New(cacheDir)
 
 	opt := types.DockerOption{
 		Timeout:  600 * time.Second,
@@ -190,12 +188,14 @@ func setup(b *testing.B, tc testCase, cacheDir string) (context.Context, cache.C
 	_, err = cli.ImageLoad(ctx, testFile, true)
 	require.NoError(b, err, tc.name)
 
+	imageName := fmt.Sprintf("%s-%s", tc.imageName, nextRandom())
+	fmt.Println(imageName)
+
 	// tag our image to something unique
-	err = cli.ImageTag(ctx, tc.imageName, tc.imageFile)
+	err = cli.ImageTag(ctx, tc.imageName, imageName)
 	require.NoError(b, err, tc.name)
 
-	ext, err := docker.NewDockerExtractor(opt, c)
-	require.NoError(b, err, tc.name)
+	ext := docker.NewDockerExtractor(opt, c)
 	ac := analyzer.Config{Extractor: ext}
-	return ctx, c, cli, ac
+	return ctx, imageName, c, cli, ac
 }
