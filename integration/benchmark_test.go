@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"syscall"
 	"testing"
 	"time"
 
@@ -46,37 +47,37 @@ type testCase struct {
 
 var testCases = []testCase{
 	{
-		name:      "happy path, alpine:3.10",
+		name:      "happy path alpine:3.10",
 		imageName: "alpine:3.10",
 		imageFile: "testdata/fixtures/alpine-310.tar.gz",
 	},
 	{
-		name:      "happy path, amazonlinux:2",
+		name:      "happy path amazonlinux:2",
 		imageName: "amazonlinux:2",
 		imageFile: "testdata/fixtures/amazon-2.tar.gz",
 	},
 	{
-		name:      "happy path, debian:buster",
+		name:      "happy path debian:buster",
 		imageName: "debian:buster",
 		imageFile: "testdata/fixtures/debian-buster.tar.gz",
 	},
 	{
-		name:      "happy path, photon:1.0",
+		name:      "happy path photon:1.0",
 		imageName: "photon:1.0-20190823",
 		imageFile: "testdata/fixtures/photon-10.tar.gz",
 	},
 	{
-		name:      "happy path, registry.redhat.io/ubi7",
+		name:      "happy path registry.redhat.io/ubi7",
 		imageName: "registry.redhat.io/ubi7",
 		imageFile: "testdata/fixtures/ubi-7.tar.gz",
 	},
 	{
-		name:      "happy path, opensuse leap 15.1",
+		name:      "happy path opensuse leap 15.1",
 		imageName: "opensuse/leap:latest",
 		imageFile: "testdata/fixtures/opensuse-leap-151.tar.gz",
 	},
 	{
-		name:      "happy path, vulnimage with lock files",
+		name:      "happy path vulnimage with lock files",
 		imageName: "knqyf263/vuln-image:1.2.3",
 		imageFile: "testdata/fixtures/vulnimage.tar.gz",
 	},
@@ -152,6 +153,9 @@ func BenchmarkDockerMode_WithCache(b *testing.B) {
 }
 
 func teardown(b *testing.B, ctx context.Context, originalImageName, imageName string, cli *client.Client) {
+	fmt.Println("Before ImageRemove")
+	showUsage()
+
 	_, err := cli.ImageRemove(ctx, originalImageName, dtypes.ImageRemoveOptions{
 		Force:         true,
 		PruneChildren: true,
@@ -163,6 +167,9 @@ func teardown(b *testing.B, ctx context.Context, originalImageName, imageName st
 		PruneChildren: true,
 	})
 	assert.NoError(b, err)
+
+	fmt.Println("After ImageRemove")
+	showUsage()
 }
 
 func setup(b *testing.B, tc testCase, cacheDir string) (context.Context, string, cache.Cache, *client.Client, analyzer.Config) {
@@ -186,9 +193,15 @@ func setup(b *testing.B, tc testCase, cacheDir string) (context.Context, string,
 	testFile, err := os.Open(tc.imageFile)
 	require.NoError(b, err)
 
+	fmt.Println("Before ImageLoad")
+	showUsage()
+
 	// load image into docker engine
-	_, err = cli.ImageLoad(ctx, testFile, true)
+	_, err = cli.ImageLoad(ctx, testFile, false)
 	require.NoError(b, err, tc.name)
+
+	fmt.Println("After ImageLoad")
+	showUsage()
 
 	imageName := fmt.Sprintf("%s-%s", tc.imageName, nextRandom())
 	fmt.Println(imageName)
@@ -200,4 +213,38 @@ func setup(b *testing.B, tc testCase, cacheDir string) (context.Context, string,
 	ext := docker.NewDockerExtractor(opt, c)
 	ac := analyzer.Config{Extractor: ext}
 	return ctx, imageName, c, cli, ac
+}
+
+type DiskStatus struct {
+	All  uint64 `json:"all"`
+	Used uint64 `json:"used"`
+	Free uint64 `json:"free"`
+}
+
+// disk usage of path/disk
+func DiskUsage(path string) (disk DiskStatus) {
+	fs := syscall.Statfs_t{}
+	err := syscall.Statfs(path, &fs)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	disk.All = fs.Blocks * uint64(fs.Bsize)
+	disk.Free = fs.Bfree * uint64(fs.Bsize)
+	disk.Used = disk.All - disk.Free
+	return
+}
+
+const (
+	B  = 1
+	KB = 1024 * B
+	MB = 1024 * KB
+	GB = 1024 * MB
+)
+
+func showUsage() {
+	disk := DiskUsage("/")
+	fmt.Printf("All: %.2f GB\n", float64(disk.All)/float64(GB))
+	fmt.Printf("Used: %.2f GB\n", float64(disk.Used)/float64(GB))
+	fmt.Printf("Free: %.2f GB\n", float64(disk.Free)/float64(GB))
 }
