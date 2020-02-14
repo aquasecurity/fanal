@@ -6,6 +6,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"os"
 	"strings"
@@ -127,8 +128,9 @@ func TestFanal_Library_DockerMode(t *testing.T) {
 			require.NoError(t, err)
 
 			// load image into docker engine
-			_, err = cli.ImageLoad(ctx, testfile, true)
+			resp, err := cli.ImageLoad(ctx, testfile, true)
 			require.NoError(t, err, tc.name)
+			io.Copy(ioutil.Discard, resp.Body)
 
 			// tag our image to something unique
 			err = cli.ImageTag(ctx, tc.imageName, tc.imageFile)
