@@ -110,57 +110,59 @@ func runChecksBench(b *testing.B, ctx context.Context, imageName string, ac anal
 
 func BenchmarkDockerMode_WithoutCache(b *testing.B) {
 	for _, tc := range testCases {
+		tc := tc
 		b.Run(tc.name, func(b *testing.B) {
 			benchCache, err := ioutil.TempDir("", "DockerMode_WithoutCache_")
 			require.NoError(b, err)
 			defer os.RemoveAll(benchCache)
 
-			ctx, c, _, ac, cli := setup(b, tc, benchCache)
+			ctx, imageName, c, cli, ac := setup(b, tc, benchCache)
 
 			b.ReportAllocs()
 			b.ResetTimer()
 			runChecksBench(b, ctx, imageName, ac, c)
 			b.StopTimer()
-		})
 
-		teardown(b, ctx, imageName, cli)
+			teardown(b, ctx, tc.imageName, imageName, cli)
+		})
 	}
 }
 
 func BenchmarkDockerMode_WithCache(b *testing.B) {
 	for _, tc := range testCases {
+		tc := tc
 		b.Run(tc.name, func(b *testing.B) {
 			benchCache, err := ioutil.TempDir("", "DockerMode_WithCache_")
 			require.NoError(b, err)
 			defer os.RemoveAll(benchCache)
 
-			ctx, _, _, ac, cli := setup(b, tc, benchCache)
+			ctx, imageName, _, cli, ac := setup(b, tc, benchCache)
 			// run once to generate cache
-			run(ac, ctx, tc, b)
+			run(b, ctx, imageName, ac)
 
 			b.ReportAllocs()
 			b.ResetTimer()
 			runChecksBench(b, ctx, imageName, ac, nil)
 			b.StopTimer()
 
-			teardown(b, ctx, imageName, cli)
+			teardown(b, ctx, tc.imageName, imageName, cli)
 		})
 
 	}
 }
 
-func teardown(b *testing.B, ctx context.Context, imageName string, cli *client.Client) {
-	_, err := cli.ImageRemove(ctx, imageName, dtypes.ImageRemoveOptions{
+func teardown(b *testing.B, ctx context.Context, originalImageName, imageName string, cli *client.Client) {
+	_, err := cli.ImageRemove(ctx, originalImageName, dtypes.ImageRemoveOptions{
 		Force:         true,
 		PruneChildren: true,
 	})
-	assert.NoError(b, err, tc.name)
+	assert.NoError(b, err)
 
-	_, err = cli.ImageRemove(ctx, tc.imageName, dtypes.ImageRemoveOptions{
+	_, err = cli.ImageRemove(ctx, imageName, dtypes.ImageRemoveOptions{
 		Force:         true,
 		PruneChildren: true,
 	})
-	assert.NoError(b, err, tc.name)
+	assert.NoError(b, err)
 }
 
 func setup(b *testing.B, tc testCase, cacheDir string) (context.Context, string, cache.Cache, *client.Client, analyzer.Config) {
