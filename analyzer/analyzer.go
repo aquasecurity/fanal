@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"sort"
 
 	"github.com/aquasecurity/fanal/extractor/docker"
 	digest "github.com/opencontainers/go-digest"
@@ -243,6 +244,10 @@ func GetPackages(filesMap extractor.FileMap) ([]types.PackageInfo, error) {
 				Packages: pkgs,
 			})
 		}
+		// for testability
+		sort.Slice(results, func(i, j int) bool {
+			return results[i].FilePath < results[j].FilePath
+		})
 		return results, nil
 	}
 	return nil, nil
