@@ -23,7 +23,6 @@ func TestApplyLayers(t *testing.T) {
 		name                string
 		inputLayers         []types.LayerInfo
 		expectedImageDetail types.ImageDetail
-		expectedError       error
 	}{
 		{
 			name: "happy path",
@@ -195,11 +194,10 @@ func TestApplyLayers(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		gotImageDetail, gotError := ApplyLayers(tc.inputLayers)
+		gotImageDetail := ApplyLayers(tc.inputLayers)
 		sort.Slice(gotImageDetail.Packages, func(i, j int) bool {
 			return gotImageDetail.Packages[i].Name < gotImageDetail.Packages[j].Name
 		})
-		assert.Equal(t, tc.expectedError, gotError, tc.name)
 		assert.Equal(t, tc.expectedImageDetail, gotImageDetail, tc.name)
 	}
 }

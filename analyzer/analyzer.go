@@ -196,16 +196,12 @@ func (a Applier) ApplyLayers(layerIDs []string) (types.ImageDetail, error) {
 		}
 		var layer types.LayerInfo
 		if err := json.Unmarshal(b, &layer); err != nil {
-			return types.ImageDetail{}, err
+			return types.ImageDetail{}, xerrors.Errorf("invalid JSON: %w", err)
 		}
 		layers = append(layers, layer)
 	}
 
-	mergedLayer, err := docker.ApplyLayers(layers)
-	if err != nil {
-		return types.ImageDetail{}, err
-	}
-
+	mergedLayer := docker.ApplyLayers(layers)
 	if mergedLayer.OS == nil {
 		return types.ImageDetail{}, ErrUnknownOS
 	} else if mergedLayer.Packages == nil {
@@ -253,6 +249,7 @@ func GetPackages(filesMap extractor.FileMap) ([]types.PackageInfo, error) {
 	return nil, nil
 }
 
+// TODO: support this feature
 func GetPackagesFromCommands(targetOS types.OS, filesMap extractor.FileMap) ([]types.Package, error) {
 	for _, analyzer := range commandAnalyzers {
 		pkgs, err := analyzer.Analyze(targetOS, filesMap)

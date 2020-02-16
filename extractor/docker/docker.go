@@ -87,7 +87,7 @@ func newDockerExtractor(ctx context.Context, imgRef image.Reference, transports 
 	}, nil
 }
 
-func ApplyLayers(layers []types.LayerInfo) (types.ImageDetail, error) {
+func ApplyLayers(layers []types.LayerInfo) types.ImageDetail {
 	sep := "/"
 	nestedMap := nested.Nested{}
 	var mergedLayer types.ImageDetail
@@ -122,7 +122,7 @@ func ApplyLayers(layers []types.LayerInfo) (types.ImageDetail, error) {
 		return nil
 	})
 
-	return mergedLayer, nil
+	return mergedLayer
 }
 
 func (d Extractor) ImageName() string {

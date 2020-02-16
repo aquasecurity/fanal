@@ -38,7 +38,7 @@ type LayerCache interface {
 
 // LocalLayerCache always uses local cache
 type LocalLayerCache interface {
-	GetLayer(layerID string) []byte
+	GetLayer(layerID string) (layerBlob []byte)
 	Clear() (err error)
 }
 

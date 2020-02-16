@@ -48,7 +48,7 @@ type GetLayerArgs struct {
 }
 
 type GetLayerReturns struct {
-	_a0 []byte
+	LayerBlob []byte
 }
 
 type GetLayerExpectation struct {
@@ -63,7 +63,7 @@ func (_m *MockLocalLayerCache) ApplyGetLayerExpectation(e GetLayerExpectation) {
 	} else {
 		args = append(args, e.Args.LayerID)
 	}
-	_m.On("GetLayer", args...).Return(e.Returns._a0)
+	_m.On("GetLayer", args...).Return(e.Returns.LayerBlob)
 }
 
 func (_m *MockLocalLayerCache) ApplyGetLayerExpectations(expectations []GetLayerExpectation) {

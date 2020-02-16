@@ -3,6 +3,7 @@ package analyzer_test
 import (
 	"context"
 	"errors"
+	"sort"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -198,6 +199,245 @@ func TestConfig_Analyze(t *testing.T) {
 				assert.Contains(t, err.Error(), tt.wantErr, tt.name)
 			} else {
 				require.NoError(t, err, tt.name)
+			}
+			assert.Equal(t, tt.want, got)
+		})
+	}
+}
+
+func TestApplier_ApplyLayers(t *testing.T) {
+	type args struct {
+		layerIDs []string
+	}
+	tests := []struct {
+		name                 string
+		args                 args
+		getLayerExpectations []cache.GetLayerExpectation
+		want                 types.ImageDetail
+		wantErr              string
+	}{
+		{
+			name: "happy path",
+			args: args{
+				layerIDs: []string{
+					"sha256:932da51564135c98a49a34a193d6cd363d8fa4184d957fde16c9d8527b3f3b02",
+					"sha256:dffd9992ca398466a663c87c92cfea2a2db0ae0cf33fcb99da60eec52addbfc5",
+					"sha256:24df0d4e20c0f42d3703bf1f1db2bdd77346c7956f74f423603d651e8e5ae8a7",
+				},
+			},
+			getLayerExpectations: []cache.GetLayerExpectation{
+				{
+					Args: cache.GetLayerArgs{
+						LayerID: "sha256:932da51564135c98a49a34a193d6cd363d8fa4184d957fde16c9d8527b3f3b02",
+					},
+					Returns: cache.GetLayerReturns{
+						LayerBlob: []byte(`
+						{
+							"SchemaVersion": 1,
+							"OS": {
+								"Family": "debian",
+								"Name": "9.9"
+							},
+							"PackageInfos": [
+								{
+									"FilePath": "var/lib/dpkg/status.d/tzdata",
+									"Packages": [
+										{
+											"Name": "tzdata",
+											"Version": "2019a-0+deb9u1",
+											"Release": "",
+											"Epoch": 0,
+											"Arch": "",
+											"SrcName": "tzdata",
+											"SrcVersion": "2019a-0+deb9u1",
+											"SrcRelease": "",
+											"SrcEpoch": 0
+										}
+									]
+								}
+							]
+						}`),
+					},
+				},
+				{
+					Args: cache.GetLayerArgs{
+						LayerID: "sha256:dffd9992ca398466a663c87c92cfea2a2db0ae0cf33fcb99da60eec52addbfc5",
+					},
+					Returns: cache.GetLayerReturns{
+						LayerBlob: []byte(`
+							{
+								"SchemaVersion": 1,
+								"PackageInfos": [
+									{
+										"FilePath": "var/lib/dpkg/status.d/libc6",
+										"Packages": [
+											{
+												"Name": "libc6",
+												"Version": "2.24-11+deb9u4",
+												"Release": "",
+												"Epoch": 0,
+												"Arch": "",
+												"SrcName": "glibc",
+												"SrcVersion": "2.24-11+deb9u4",
+												"SrcRelease": "",
+												"SrcEpoch": 0
+											}
+										]
+									}
+								]
+							}`),
+					},
+				},
+				{
+					Args: cache.GetLayerArgs{
+						LayerID: "sha256:24df0d4e20c0f42d3703bf1f1db2bdd77346c7956f74f423603d651e8e5ae8a7",
+					},
+					Returns: cache.GetLayerReturns{
+						LayerBlob: []byte(`
+							{
+							  "SchemaVersion": 1,
+							  "Applications": [
+							    {
+							      "Type": "composer",
+							      "FilePath": "php-app/composer.lock",
+							      "Libraries": [
+							        {
+							          "Name": "guzzlehttp/guzzle",
+							          "Version": "6.2.0"
+							        },
+							        {
+							          "Name": "symfony/process",
+							          "Version": "v4.2.7"
+							        }
+							      ]
+							    }
+							  ],
+							  "OpaqueDirs": [
+							    "php-app/"
+							  ]
+							} `),
+					},
+				},
+			},
+			want: types.ImageDetail{
+				OS: &types.OS{
+					Family: "debian",
+					Name:   "9.9",
+				},
+				Packages: []types.Package{
+					{Name: "libc6", Version: "2.24-11+deb9u4", SrcName: "glibc", SrcVersion: "2.24-11+deb9u4"},
+					{Name: "tzdata", Version: "2019a-0+deb9u1", SrcName: "tzdata", SrcVersion: "2019a-0+deb9u1"},
+				},
+				Applications: []types.Application{
+					{
+						Type: "composer", FilePath: "php-app/composer.lock",
+						Libraries: []depTypes.Library{{Name: "guzzlehttp/guzzle", Version: "6.2.0"},
+							{Name: "symfony/process", Version: "v4.2.7"},
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "sad path GetLayer returns an error",
+			args: args{
+				layerIDs: []string{
+					"sha256:932da51564135c98a49a34a193d6cd363d8fa4184d957fde16c9d8527b3f3b02",
+				},
+			},
+			getLayerExpectations: []cache.GetLayerExpectation{
+				{
+					Args: cache.GetLayerArgs{
+						LayerID: "sha256:932da51564135c98a49a34a193d6cd363d8fa4184d957fde16c9d8527b3f3b02",
+					},
+					Returns: cache.GetLayerReturns{LayerBlob: nil},
+				},
+			},
+			wantErr: "layer cache missing",
+		},
+		{
+			name: "sad path GetLayer returns invalid JSON",
+			args: args{
+				layerIDs: []string{
+					"sha256:932da51564135c98a49a34a193d6cd363d8fa4184d957fde16c9d8527b3f3b02",
+				},
+			},
+			getLayerExpectations: []cache.GetLayerExpectation{
+				{
+					Args: cache.GetLayerArgs{
+						LayerID: "sha256:932da51564135c98a49a34a193d6cd363d8fa4184d957fde16c9d8527b3f3b02",
+					},
+					Returns: cache.GetLayerReturns{LayerBlob: []byte(`invalid`)},
+				},
+			},
+			wantErr: "invalid JSON",
+		},
+		{
+			name: "sad path unknown OS",
+			args: args{
+				layerIDs: []string{
+					"sha256:932da51564135c98a49a34a193d6cd363d8fa4184d957fde16c9d8527b3f3b02",
+				},
+			},
+			getLayerExpectations: []cache.GetLayerExpectation{
+				{
+					Args: cache.GetLayerArgs{
+						LayerID: "sha256:932da51564135c98a49a34a193d6cd363d8fa4184d957fde16c9d8527b3f3b02",
+					},
+					Returns: cache.GetLayerReturns{LayerBlob: []byte(`{}`)},
+				},
+			},
+			wantErr: "Unknown OS",
+		},
+		{
+			name: "sad path no package detected",
+			args: args{
+				layerIDs: []string{
+					"sha256:932da51564135c98a49a34a193d6cd363d8fa4184d957fde16c9d8527b3f3b02",
+				},
+			},
+			getLayerExpectations: []cache.GetLayerExpectation{
+				{
+					Args: cache.GetLayerArgs{
+						LayerID: "sha256:932da51564135c98a49a34a193d6cd363d8fa4184d957fde16c9d8527b3f3b02",
+					},
+					Returns: cache.GetLayerReturns{
+						LayerBlob: []byte(`
+						{
+							"SchemaVersion": 1,
+							"OS": {
+								"Family": "debian",
+								"Name": "9.9"
+							}
+						}`),
+					},
+				},
+			},
+			wantErr: "No packages detected",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := new(cache.MockLocalLayerCache)
+			c.ApplyGetLayerExpectations(tt.getLayerExpectations)
+
+			a := analyzer.NewApplier(c)
+
+			got, err := a.ApplyLayers(tt.args.layerIDs)
+			if tt.wantErr != "" {
+				require.NotNil(t, err)
+				assert.Contains(t, err.Error(), tt.wantErr, tt.name)
+			} else {
+				require.NoError(t, err, tt.name)
+			}
+
+			sort.Slice(got.Packages, func(i, j int) bool {
+				return got.Packages[i].Name < got.Packages[j].Name
+			})
+			for _, app := range got.Applications {
+				sort.Slice(app.Libraries, func(i, j int) bool {
+					return app.Libraries[i].Name < app.Libraries[j].Name
+				})
 			}
 			assert.Equal(t, tt.want, got)
 		})
