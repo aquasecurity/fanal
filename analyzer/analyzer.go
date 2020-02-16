@@ -286,17 +286,3 @@ func GetLibraries(filesMap extractor.FileMap) ([]types.Application, error) {
 	}
 	return results, nil
 }
-
-func mergePkgs(pkgs, pkgsFromCommands []types.Package) []types.Package {
-	uniqPkgs := map[string]struct{}{}
-	for _, pkg := range pkgs {
-		uniqPkgs[pkg.Name] = struct{}{}
-	}
-	for _, pkg := range pkgsFromCommands {
-		if _, ok := uniqPkgs[pkg.Name]; ok {
-			continue
-		}
-		pkgs = append(pkgs, pkg)
-	}
-	return pkgs
-}
