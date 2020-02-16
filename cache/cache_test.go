@@ -376,6 +376,18 @@ func TestFSCache_MissingLayers(t *testing.T) {
 				"sha256:24df0d4e20c0f42d3703bf1f1db2bdd77346c7956f74f423603d651e8e5ae8a7",
 			},
 		},
+		{
+			name:   "happy path: broken JSON",
+			dbPath: "testdata/fanal-broken.db",
+			args: args{
+				layerIDs: []string{
+					"sha256:24df0d4e20c0f42d3703bf1f1db2bdd77346c7956f74f423603d651e8e5ae8a7",
+				},
+			},
+			want: []string{
+				"sha256:24df0d4e20c0f42d3703bf1f1db2bdd77346c7956f74f423603d651e8e5ae8a7",
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

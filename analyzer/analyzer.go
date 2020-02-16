@@ -18,10 +18,6 @@ import (
 	godeptypes "github.com/aquasecurity/go-dep-parser/pkg/types"
 )
 
-const (
-	SchemaVersion = 1
-)
-
 var (
 	osAnalyzers      []OSAnalyzer
 	pkgAnalyzers     []PkgAnalyzer
@@ -169,7 +165,7 @@ func (ac Config) analyzeLayer(ctx context.Context, dig digest.Digest) (digest.Di
 	}
 
 	layerInfo := types.LayerInfo{
-		SchemaVersion: SchemaVersion,
+		SchemaVersion: types.LayerJSONSchemaVersion,
 		OS:            os,
 		PackageInfos:  pkgs,
 		Applications:  apps,

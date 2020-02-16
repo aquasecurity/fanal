@@ -136,7 +136,19 @@ func (fs FSCache) MissingLayers(layerIDs []string) ([]string, error) {
 			b := bucket.Get([]byte(layerID))
 			if b == nil {
 				missingLayerIDs = append(missingLayerIDs, layerID)
+				continue
 			}
+
+			// check schema version in JSON
+			var l types.LayerInfo
+			if err := json.Unmarshal(b, &l); err != nil {
+				missingLayerIDs = append(missingLayerIDs, layerID)
+				continue
+			}
+			if l.SchemaVersion != types.LayerJSONSchemaVersion {
+				missingLayerIDs = append(missingLayerIDs, layerID)
+			}
+
 		}
 		return nil
 	})
