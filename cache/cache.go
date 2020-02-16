@@ -104,7 +104,7 @@ func (fs FSCache) PutLayer(layerID, decompressedLayerID string, layerInfo types.
 			decompressedBucket := tx.Bucket([]byte(decompressedDigestBucket))
 			err := decompressedBucket.Put([]byte(layerID), []byte(decompressedLayerID))
 			if err != nil {
-				return err
+				return xerrors.Errorf("unable to store a pair of compressed/decompressed layer IDs: %w", err)
 			}
 		}
 
