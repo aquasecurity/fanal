@@ -159,7 +159,9 @@ func (fs FSCache) MissingLayers(layerIDs []string) ([]string, error) {
 }
 
 func (fs FSCache) Clear() error {
-	_ = fs.db.Close()
+	if err := fs.db.Close(); err != nil {
+		return err
+	}
 	if err := os.RemoveAll(fs.directory); err != nil {
 		return xerrors.New("failed to remove cache")
 	}
