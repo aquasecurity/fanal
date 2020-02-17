@@ -187,12 +187,9 @@ func TestConfig_Analyze(t *testing.T) {
 			mockCache.ApplyPutLayerExpectations(tt.putLayerExpectations)
 
 			d, err := docker.NewDockerArchiveExtractor(context.Background(), tt.imagePath, types.DockerOption{})
-			assert.NoError(t, err, tt.name)
+			require.NoError(t, err, tt.name)
 
-			ac := analyzer.Config{
-				Extractor: d,
-				Cache:     mockCache,
-			}
+			ac := analyzer.New(d, mockCache)
 			got, err := ac.Analyze(context.Background())
 			if tt.wantErr != "" {
 				require.NotNil(t, err)
