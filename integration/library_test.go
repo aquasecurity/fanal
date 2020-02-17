@@ -248,9 +248,6 @@ func checkLibraries(detail types.ImageDetail, t *testing.T, tc testCase) {
 		var expectedLibraries map[types.FilePath][]godeptypes.Library
 		json.Unmarshal(data, &expectedLibraries)
 		require.Equal(t, len(expectedLibraries), len(detail.Applications), tc.name)
-		//for l := range expectedLibraries {
-		//	assert.Contains(t, actualLibs, l, tc.name)
-		//}
 	} else {
 		assert.Nil(t, detail.Applications, tc.name)
 	}
