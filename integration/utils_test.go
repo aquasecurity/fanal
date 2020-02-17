@@ -3,7 +3,6 @@
 package integration
 
 import (
-	"fmt"
 	"os"
 	"strconv"
 	"sync"
@@ -22,7 +21,6 @@ func nextRandom() string {
 	r := rand
 	if r == 0 {
 		r = reseed()
-		fmt.Println(r)
 	}
 	r = r*1664525 + 1013904223 // constants from Numerical Recipes
 	rand = r

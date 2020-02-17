@@ -3,7 +3,6 @@ package analyzer
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"sort"
 
 	"github.com/aquasecurity/fanal/extractor/docker"
@@ -101,7 +100,6 @@ func New(ext extractor.Extractor, c cache.LayerCache) Config {
 func (ac Config) Analyze(ctx context.Context) (types.ImageInfo, error) {
 	layerIDs := ac.Extractor.LayerIDs()
 	missingLayers, err := ac.Cache.MissingLayers(layerIDs)
-	fmt.Printf("missing layers: %v\n", missingLayers)
 	if err != nil {
 		return types.ImageInfo{}, err
 	}

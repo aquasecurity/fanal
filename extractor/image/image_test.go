@@ -167,10 +167,7 @@ func TestNewImage(t *testing.T) {
 				require.NoError(t, err, tt.name)
 			}
 
-			//assert.Equal(t, tt.wantSystemContext, got.systemContext, tt.name)
 			assert.Equal(t, tt.wantImage.name, got.name, tt.name)
-			//assert.Equal(t, tt.wantImage.isFile, got.isFile, tt.name)
-			//assert.Equal(t, tt.wantImage.transports, got.transports, tt.name)
 		})
 	}
 }

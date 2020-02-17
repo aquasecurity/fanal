@@ -173,7 +173,6 @@ func setup(b *testing.B, tc testCase, cacheDir string) (context.Context, string,
 	require.NoError(b, err, tc.name)
 
 	imageName := fmt.Sprintf("%s-%s", tc.imageName, nextRandom())
-	fmt.Println(imageName)
 
 	// tag our image to something unique
 	err = cli.ImageTag(ctx, tc.imageName, imageName)

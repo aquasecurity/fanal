@@ -4,7 +4,6 @@ import (
 	"archive/tar"
 	"context"
 	"crypto/sha256"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"path/filepath"
@@ -41,12 +40,6 @@ type containerConfig struct {
 type History struct {
 	Created   time.Time
 	CreatedBy string `json:"created_by"`
-}
-
-type layer struct {
-	id      digest.Digest
-	content io.ReadCloser
-	cleanup func()
 }
 
 type Extractor struct {
@@ -155,9 +148,6 @@ func (d Extractor) ExtractLayerFiles(ctx context.Context, dig digest.Digest, fil
 	}
 
 	decompressedLayerID := digest.NewDigestFromBytes(digest.SHA256, sha256hash.Sum(nil))
-
-	fmt.Printf("Before: %s\n", dig)
-	fmt.Printf("After: %s\n", decompressedLayerID)
 
 	return decompressedLayerID, files, opqDirs, whFiles, nil
 }
