@@ -80,7 +80,7 @@ func TestFSCache_GetLayer(t *testing.T) {
 			},
 			want: `
 				{
-				  "SchemaVersion": 1,
+				  "SchemaVersion": 2,
 				  "OS": {
 				    "Family": "alpine",
 				    "Name": "3.10"
@@ -358,6 +358,7 @@ func TestFSCache_MissingLayers(t *testing.T) {
 				},
 			},
 			want: []string{
+				"sha256:24df0d4e20c0f42d3703bf1f1db2bdd77346c7956f74f423603d651e8e5ae8a7",
 				"sha256:dffd9992ca398466a663c87c92cfea2a2db0ae0cf33fcb99da60eec52addbfc5",
 				"sha256:dab15cac9ebd43beceeeda3ce95c574d6714ed3d3969071caead678c065813ec",
 			},

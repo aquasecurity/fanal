@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/aquasecurity/fanal/types"
 
@@ -19,10 +18,6 @@ const (
 	layerBucket = "layer"
 	// decompressedDigestBucket stores a mapping from any digest to an uncompressed digest.
 	decompressedDigestBucket = "decompressed"
-)
-
-var (
-	replacer = strings.NewReplacer("/", "_")
 )
 
 type Cache interface {
