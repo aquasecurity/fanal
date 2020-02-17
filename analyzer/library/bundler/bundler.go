@@ -35,7 +35,7 @@ func (a bundlerLibraryAnalyzer) Analyze(fileMap extractor.FileMap) (map[types.Fi
 		r := bytes.NewBuffer(content)
 		libs, err := bundler.Parse(r)
 		if err != nil {
-			return nil, xerrors.Errorf("invalid Gemfile.lock format: %w", err)
+			return nil, xerrors.Errorf("error with %s: %w", filename, err)
 		}
 		libMap[types.FilePath(filename)] = libs
 	}

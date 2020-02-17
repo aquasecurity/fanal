@@ -225,7 +225,7 @@ func GetPackages(filesMap extractor.FileMap) ([]types.PackageInfo, error) {
 		if err != nil && err == ErrNoPkgsDetected {
 			continue
 		} else if err != nil { // TODO: Create a broken package index tar.gz file
-			return nil, xerrors.Errorf("failed to analyze packages: %w", err)
+			return nil, xerrors.Errorf("failed to get packages: %w", err)
 		}
 
 		for filePath, pkgs := range pkgMap {
@@ -264,7 +264,7 @@ func GetLibraries(filesMap extractor.FileMap) ([]types.Application, error) {
 	for _, analyzer := range libAnalyzers {
 		libMap, err := analyzer.Analyze(filesMap)
 		if err != nil {
-			return nil, xerrors.Errorf("failed to analyze libraries: %w", err)
+			return nil, xerrors.Errorf("failed to get libraries: %w", err)
 		}
 
 		for filePath, libs := range libMap {

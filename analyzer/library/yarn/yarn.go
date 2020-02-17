@@ -37,7 +37,7 @@ func (a yarnLibraryAnalyzer) Analyze(fileMap extractor.FileMap) (map[types.FileP
 		r := bytes.NewBuffer(content)
 		libs, err := yarn.Parse(r)
 		if err != nil {
-			return nil, xerrors.Errorf("invalid yarn.lock format: %w", err)
+			return nil, xerrors.Errorf("error with %s: %w", filename, err)
 		}
 		libMap[types.FilePath(filename)] = libs
 	}

@@ -34,7 +34,7 @@ func (a pipenvLibraryAnalyzer) Analyze(fileMap extractor.FileMap) (map[types.Fil
 		r := bytes.NewBuffer(content)
 		libs, err := pipenv.Parse(r)
 		if err != nil {
-			return nil, xerrors.Errorf("invalid Pipfile.lock format: %w", err)
+			return nil, xerrors.Errorf("error with %s: %w", filename, err)
 		}
 		libMap[types.FilePath(filename)] = libs
 	}

@@ -34,7 +34,7 @@ func (a composerLibraryAnalyzer) Analyze(fileMap extractor.FileMap) (map[types.F
 		r := bytes.NewBuffer(content)
 		libs, err := composer.Parse(r)
 		if err != nil {
-			return nil, xerrors.Errorf("invalid composer.lock format: %w", err)
+			return nil, xerrors.Errorf("error with %s: %w", filename, err)
 		}
 		libMap[types.FilePath(filename)] = libs
 	}
