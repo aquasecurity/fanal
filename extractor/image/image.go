@@ -18,12 +18,13 @@ import (
 
 type ImageSource interface {
 	GetBlob(ctx context.Context, info imageTypes.BlobInfo, cache imageTypes.BlobInfoCache) (reader io.ReadCloser, n int64, err error)
+	Close() error
 }
 
 type ImageCloser interface {
 	LayerInfos() (layerInfos []imageTypes.BlobInfo)
-	ConfigBlob(ctx context.Context) (blob []byte, err error)
 	ConfigInfo() imageTypes.BlobInfo
+	Close() error
 }
 
 type Reference struct {
@@ -146,4 +147,13 @@ func (img RealImage) GetLayer(ctx context.Context, dig digest.Digest) (io.ReadCl
 	}
 
 	return stream, nil
+}
+
+func (img RealImage) Close() {
+	if img.src != nil {
+		img.src.Close()
+	}
+	if img.rawSource != nil {
+		img.rawSource.Close()
+	}
 }

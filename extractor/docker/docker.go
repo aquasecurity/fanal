@@ -13,6 +13,7 @@ import (
 	"github.com/aquasecurity/fanal/extractor/image/token/ecr"
 	"github.com/aquasecurity/fanal/extractor/image/token/gcr"
 	digest "github.com/opencontainers/go-digest"
+	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/fanal/analyzer/library"
 	"github.com/aquasecurity/fanal/extractor"
@@ -20,7 +21,6 @@ import (
 	"github.com/aquasecurity/fanal/types"
 	"github.com/aquasecurity/fanal/utils"
 	"github.com/knqyf263/nested"
-	"golang.org/x/xerrors"
 )
 
 const (
