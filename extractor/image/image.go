@@ -73,6 +73,8 @@ func NewImage(ctx context.Context, image Reference, transports []string, option 
 		DockerDisableV1Ping:               option.SkipPing,
 		DockerInsecureSkipTLSVerify:       imageTypes.NewOptionalBool(option.InsecureSkipTLSVerify),
 		OCIInsecureSkipTLSVerify:          option.InsecureSkipTLSVerify,
+		DockerDaemonCertPath:              option.DockerDaemonCertPath,
+		DockerDaemonHost:                  option.DockerDaemonHost,
 		DockerDaemonInsecureSkipTLSVerify: option.InsecureSkipTLSVerify,
 	}
 
