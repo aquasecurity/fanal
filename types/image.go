@@ -13,15 +13,15 @@ type OS struct {
 }
 
 type Package struct {
-	Name       string
-	Version    string
-	Release    string
-	Epoch      int
-	Arch       string
-	SrcName    string
-	SrcVersion string
-	SrcRelease string
-	SrcEpoch   int
+	Name       string `json:",omitempty"`
+	Version    string `json:",omitempty"`
+	Release    string `json:",omitempty"`
+	Epoch      int    `json:",omitempty"`
+	Arch       string `json:",omitempty"`
+	SrcName    string `json:",omitempty"`
+	SrcVersion string `json:",omitempty"`
+	SrcRelease string `json:",omitempty"`
+	SrcEpoch   int    `json:",omitempty"`
 }
 
 type SrcPackage struct {
