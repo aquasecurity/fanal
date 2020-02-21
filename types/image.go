@@ -53,15 +53,20 @@ type ImageDetail struct {
 	OS           *OS           `json:",omitempty"`
 	Packages     []Package     `json:",omitempty"`
 	Applications []Application `json:",omitempty"`
+
+	// HistoryPackages are packages extracted from RUN instructions
+	HistoryPackages []Package `json:",omitempty"`
 }
 
 // ImageInfo is stored in cache
 type ImageInfo struct {
-	SchemaVersion   int
-	Architecture    string
-	Created         time.Time
-	DockerVersion   string
-	OS              string
+	SchemaVersion int
+	Architecture  string
+	Created       time.Time
+	DockerVersion string
+	OS            string
+
+	// HistoryPackages are packages extracted from RUN instructions
 	HistoryPackages []Package
 }
 

@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	digest "github.com/opencontainers/go-digest"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/xerrors"
@@ -226,7 +227,7 @@ func TestConfig_Analyze(t *testing.T) {
 
 func TestApplier_ApplyLayers(t *testing.T) {
 	type args struct {
-		imageID  string
+		imageID  digest.Digest
 		layerIDs []string
 	}
 	tests := []struct {
@@ -423,16 +424,20 @@ func TestApplier_ApplyLayers(t *testing.T) {
 					Name:   "3.10.4",
 				},
 				Packages: []types.Package{
-					{Name: "bash", Version: "5.0.0-r0"},
 					{Name: "busybox", Version: "1.30.1-r3"},
 					{Name: "libcrypto1.1", Version: "1.1.1d-r2"},
 					{Name: "libssl1.1", Version: "1.1.1d-r2"},
 					{Name: "musl", Version: "1.1.22-r3"},
-					{Name: "ncurses", Version: "6.1_p20190518-r0"},
-					{Name: "ncurses-libs", Version: "6.1_p20190518-r0"},
-					{Name: "ncurses-terminfo", Version: "6.1_p20190518-r0"},
-					{Name: "ncurses-terminfo-base", Version: "6.1_p20190518-r0"},
 					{Name: "openssl", Version: "1.1.1d-r2"},
+				},
+				HistoryPackages: []types.Package{
+					{Name: "musl", Version: "1.1.23"},
+					{Name: "busybox", Version: "1.31"},
+					{Name: "ncurses-libs", Version: "6.1_p20190518-r0"},
+					{Name: "ncurses-terminfo-base", Version: "6.1_p20190518-r0"},
+					{Name: "ncurses", Version: "6.1_p20190518-r0"},
+					{Name: "ncurses-terminfo", Version: "6.1_p20190518-r0"},
+					{Name: "bash", Version: "5.0.0-r0"},
 					{Name: "readline", Version: "8.0.0-r0"},
 				},
 			},

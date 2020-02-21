@@ -32,7 +32,6 @@ import (
 	_ "github.com/aquasecurity/fanal/analyzer/pkg/dpkg"
 	_ "github.com/aquasecurity/fanal/analyzer/pkg/rpmcmd"
 	"github.com/aquasecurity/fanal/cache"
-	"github.com/aquasecurity/fanal/extractor"
 	"github.com/aquasecurity/fanal/extractor/docker"
 	"github.com/aquasecurity/fanal/types"
 	godeptypes "github.com/aquasecurity/go-dep-parser/pkg/types"
@@ -226,12 +225,12 @@ func runChecks(t *testing.T, ctx context.Context, ac analyzer.Config, applier an
 
 func commonChecks(t *testing.T, detail types.ImageDetail, tc testCase) {
 	assert.Equal(t, tc.expectedOS, *detail.OS, tc.name)
-	checkPackages(detail, t, tc)
-	//checkPackageFromCommands(t, actualFiles, osFound, tc)
+	checkPackages(t, detail, tc)
+	checkPackageFromCommands(t, detail, tc)
 	checkLibraries(detail, t, tc)
 }
 
-func checkPackages(detail types.ImageDetail, t *testing.T, tc testCase) {
+func checkPackages(t *testing.T, detail types.ImageDetail, tc testCase) {
 	r := strings.NewReplacer("/", "-", ":", "-")
 	goldenFile := fmt.Sprintf("testdata/goldens/packages/%s.json.golden", r.Replace(tc.imageName))
 
@@ -253,15 +252,13 @@ func checkLibraries(detail types.ImageDetail, t *testing.T, tc testCase) {
 	}
 }
 
-func checkPackageFromCommands(t *testing.T, actualFiles extractor.FileMap, osFound types.OS, tc testCase) {
-	actualPkgsFromCmds, err := analyzer.GetPackagesFromCommands(osFound, actualFiles)
-	require.NoError(t, err)
+func checkPackageFromCommands(t *testing.T, detail types.ImageDetail, tc testCase) {
 	if tc.expectedPkgsFromCmds != "" {
 		data, _ := ioutil.ReadFile(tc.expectedPkgsFromCmds)
 		var expectedPkgsFromCmds []types.Package
 		json.Unmarshal(data, &expectedPkgsFromCmds)
-		assert.ElementsMatch(t, expectedPkgsFromCmds, actualPkgsFromCmds, tc.name)
+		assert.ElementsMatch(t, expectedPkgsFromCmds, detail.HistoryPackages, tc.name)
 	} else {
-		assert.Equal(t, []types.Package(nil), actualPkgsFromCmds, tc.name)
+		assert.Equal(t, []types.Package(nil), detail.HistoryPackages, tc.name)
 	}
 }

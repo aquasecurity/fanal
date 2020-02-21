@@ -245,7 +245,7 @@ func (a Applier) ApplyLayers(imageID digest.Digest, layerIDs []string) (types.Im
 	}
 
 	imageInfo, _ := a.cache.GetImage(string(imageID))
-	mergedLayer.Packages = mergePkgs(mergedLayer.Packages, imageInfo.HistoryPackages)
+	mergedLayer.HistoryPackages = imageInfo.HistoryPackages
 
 	return mergedLayer, nil
 }
