@@ -1,6 +1,8 @@
 package types
 
 import (
+	"time"
+
 	godeptypes "github.com/aquasecurity/go-dep-parser/pkg/types"
 	digest "github.com/opencontainers/go-digest"
 )
@@ -41,16 +43,7 @@ type Application struct {
 	Libraries []godeptypes.Library
 }
 
-type LayerInfo struct {
-	SchemaVersion int
-	OS            *OS           `json:",omitempty"`
-	PackageInfos  []PackageInfo `json:",omitempty"`
-	Applications  []Application `json:",omitempty"`
-	OpaqueDirs    []string      `json:",omitempty"`
-	WhiteoutFiles []string      `json:",omitempty"`
-}
-
-type ImageInfo struct {
+type ImageReference struct {
 	Name     string // image name or tar file name
 	ID       digest.Digest
 	LayerIDs []string
@@ -60,4 +53,24 @@ type ImageDetail struct {
 	OS           *OS           `json:",omitempty"`
 	Packages     []Package     `json:",omitempty"`
 	Applications []Application `json:",omitempty"`
+}
+
+// ImageInfo is stored in cache
+type ImageInfo struct {
+	SchemaVersion   int
+	Architecture    string
+	Created         time.Time
+	DockerVersion   string
+	OS              string
+	HistoryPackages []Package
+}
+
+// LayerInfo is stored in cache
+type LayerInfo struct {
+	SchemaVersion int
+	OS            *OS           `json:",omitempty"`
+	PackageInfos  []PackageInfo `json:",omitempty"`
+	Applications  []Application `json:",omitempty"`
+	OpaqueDirs    []string      `json:",omitempty"`
+	WhiteoutFiles []string      `json:",omitempty"`
 }
