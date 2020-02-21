@@ -79,6 +79,7 @@ func run() (err error) {
 			return err
 		}
 	}
+
 	ac := analyzer.New(ext, c)
 	imageInfo, err := ac.Analyze(ctx)
 	if err != nil {
@@ -86,7 +87,7 @@ func run() (err error) {
 	}
 
 	a := analyzer.NewApplier(c)
-	mergedLayer, err := a.ApplyLayers(imageInfo.LayerIDs)
+	mergedLayer, err := a.ApplyLayers(imageInfo.ID, imageInfo.LayerIDs)
 	if err != nil {
 		return err
 	}

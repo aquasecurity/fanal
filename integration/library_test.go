@@ -219,7 +219,7 @@ func TestFanal_Library_TarMode(t *testing.T) {
 func runChecks(t *testing.T, ctx context.Context, ac analyzer.Config, applier analyzer.Applier, tc testCase) {
 	imageInfo, err := ac.Analyze(ctx)
 	require.NoError(t, err, tc.name)
-	imageDetail, err := applier.ApplyLayers(imageInfo.LayerIDs)
+	imageDetail, err := applier.ApplyLayers(imageInfo.ID, imageInfo.LayerIDs)
 	require.NoError(t, err, tc.name)
 	commonChecks(t, imageDetail, tc)
 }
