@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -70,7 +71,7 @@ func TestFSCache_GetLayer(t *testing.T) {
 		name   string
 		dbPath string
 		args   args
-		want   string
+		want   types.LayerInfo
 	}{
 		{
 			name:   "happy path",
@@ -78,69 +79,56 @@ func TestFSCache_GetLayer(t *testing.T) {
 			args: args{
 				layerID: "sha256:24df0d4e20c0f42d3703bf1f1db2bdd77346c7956f74f423603d651e8e5ae8a7",
 			},
-			want: `
-				{
-				  "SchemaVersion": 2,
-				  "OS": {
-				    "Family": "alpine",
-				    "Name": "3.10"
-				  }
-				}`,
+			want: types.LayerInfo{
+				SchemaVersion: 2,
+				OS: &types.OS{
+					Family: "alpine",
+					Name:   "3.10",
+				},
+			},
 		},
 		{
 			name:   "happy path: different decompressed layer ID",
-			dbPath: "testdata/fanal-decompressed-layer-id.db",
+			dbPath: "testdata/decompressed-layer-id.db",
 			args: args{
 				layerID: "sha256:dffd9992ca398466a663c87c92cfea2a2db0ae0cf33fcb99da60eec52addbfc5",
 			},
-			want: `
-				{
-				  "SchemaVersion": 1,
-				  "OS": {
-				    "Family": "alpine",
-				    "Name": "3.10"
-				  },
-				  "PackageInfos": [
-				    {
-				      "FilePath": "lib/apk/db/installed",
-				      "Packages": [
-				        {
-				          "Name": "musl",
-				          "Version": "1.1.22-r3",
-				          "Release": "",
-				          "Epoch": 0,
-				          "Arch": "",
-				          "SrcName": "",
-				          "SrcVersion": "",
-				          "SrcRelease": "",
-				          "SrcEpoch": 0
-				        }
-				      ]
-				    }
-				  ],
-				  "Applications": [
-				    {
-				      "Type": "composer",
-				      "FilePath": "php-app/composer.lock",
-				      "Libraries": [
-				        {
-				          "Name": "guzzlehttp/guzzle",
-				          "Version": "6.2.0"
-				        },
-				        {
-				          "Name": "guzzlehttp/promises",
-				          "Version": "v1.3.1"
-				        }
-				      ]
-				    }
-				  ],
-				  "OpaqueDirs": [
-				    "php-app/"
-				  ],
-				  "WhiteoutFiles": [
-				    "etc/foobar"
-				  ]
-				}`,
+			want: types.LayerInfo{
+				SchemaVersion: 1,
+				OS: &types.OS{
+					Family: "alpine",
+					Name:   "3.10",
+				},
+				PackageInfos: []types.PackageInfo{
+					{
+						FilePath: "lib/apk/db/installed",
+						Packages: []types.Package{
+							{
+								Name:    "musl",
+								Version: "1.1.22-r3",
+							},
+						},
+					},
+				},
+				Applications: []types.Application{
+					{
+						Type:     "composer",
+						FilePath: "php-app/composer.lock",
+						Libraries: []depTypes.Library{
+							{
+								Name:    "guzzlehttp/guzzle",
+								Version: "6.2.0",
+							},
+							{
+								Name:    "guzzlehttp/promises",
+								Version: "v1.3.1",
+							},
+						},
+					},
+				},
+				OpaqueDirs:    []string{"php-app/"},
+				WhiteoutFiles: []string{"etc/foobar"},
+			},
 		},
 	}
 	for _, tt := range tests {
@@ -154,7 +142,7 @@ func TestFSCache_GetLayer(t *testing.T) {
 			defer fs.Clear()
 
 			got := fs.GetLayer(tt.args.layerID)
-			assert.JSONEq(t, tt.want, string(got))
+			assert.Equal(t, tt.want, got)
 		})
 	}
 }
@@ -249,14 +237,7 @@ func TestFSCache_PutLayer(t *testing.T) {
 				      "Packages": [
 				        {
 				          "Name": "musl",
-				          "Version": "1.1.22-r3",
-				          "Release": "",
-				          "Epoch": 0,
-				          "Arch": "",
-				          "SrcName": "",
-				          "SrcVersion": "",
-				          "SrcRelease": "",
-				          "SrcEpoch": 0
+				          "Version": "1.1.22-r3"
 				        }
 				      ]
 				    }
@@ -336,28 +317,109 @@ func TestFSCache_PutLayer(t *testing.T) {
 	}
 }
 
-func TestFSCache_MissingLayers(t *testing.T) {
+func TestFSCache_PutImage(t *testing.T) {
 	type args struct {
-		layerIDs []string
+		imageID     string
+		imageConfig types.ImageInfo
 	}
 	tests := []struct {
 		name    string
-		dbPath  string
 		args    args
-		want    []string
+		want    string
 		wantErr string
+	}{
+		{
+			name: "happy path",
+			args: args{
+				imageID: "sha256:58701fd185bda36cab0557bb6438661831267aa4a9e0b54211c4d5317a48aff4",
+				imageConfig: types.ImageInfo{
+					SchemaVersion: 1,
+					Architecture:  "amd64",
+					Created:       time.Date(2020, 1, 2, 3, 4, 5, 0, time.UTC),
+					DockerVersion: "18.06.1-ce",
+					OS:            "linux",
+					HistoryPackages: []types.Package{
+						{
+							Name:    "musl",
+							Version: "1.2.3",
+						},
+					},
+				},
+			},
+			want: `
+				{
+				  "SchemaVersion": 1,
+				  "Architecture": "amd64",
+				  "Created": "2020-01-02T03:04:05Z",
+				  "DockerVersion": "18.06.1-ce",
+				  "OS": "linux",
+				  "HistoryPackages": [
+				    {
+				      "Name": "musl",
+				      "Version": "1.2.3"
+				    }
+				  ]
+				}
+				`,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tmpDir, err := newTempDB("")
+			require.NoError(t, err)
+			defer os.RemoveAll(tmpDir)
+
+			fs, err := NewFSCache(tmpDir)
+			require.NoError(t, err)
+			//defer fs.Clear()
+
+			err = fs.PutImage(tt.args.imageID, tt.args.imageConfig)
+			if tt.wantErr != "" {
+				require.NotNil(t, err)
+				assert.Contains(t, err.Error(), tt.wantErr, tt.name)
+				return
+			} else {
+				require.NoError(t, err, tt.name)
+			}
+
+			fs.db.View(func(tx *bolt.Tx) error {
+				// check decompressedDigestBucket
+				imageBucket := tx.Bucket([]byte(imageBucket))
+				b := imageBucket.Get([]byte(tt.args.imageID))
+				assert.JSONEq(t, tt.want, string(b))
+
+				return nil
+			})
+		})
+	}
+}
+
+func TestFSCache_MissingLayers(t *testing.T) {
+	type args struct {
+		imageID  string
+		layerIDs []string
+	}
+	tests := []struct {
+		name                string
+		dbPath              string
+		args                args
+		wantMissingImage    bool
+		wantMissingLayerIDs []string
+		wantErr             string
 	}{
 		{
 			name:   "happy path",
 			dbPath: "testdata/fanal.db",
 			args: args{
+				imageID: "sha256:58701fd185bda36cab0557bb6438661831267aa4a9e0b54211c4d5317a48aff4",
 				layerIDs: []string{
 					"sha256:24df0d4e20c0f42d3703bf1f1db2bdd77346c7956f74f423603d651e8e5ae8a7",
 					"sha256:dffd9992ca398466a663c87c92cfea2a2db0ae0cf33fcb99da60eec52addbfc5",
 					"sha256:dab15cac9ebd43beceeeda3ce95c574d6714ed3d3969071caead678c065813ec",
 				},
 			},
-			want: []string{
+			wantMissingImage: false,
+			wantMissingLayerIDs: []string{
 				"sha256:24df0d4e20c0f42d3703bf1f1db2bdd77346c7956f74f423603d651e8e5ae8a7",
 				"sha256:dffd9992ca398466a663c87c92cfea2a2db0ae0cf33fcb99da60eec52addbfc5",
 				"sha256:dab15cac9ebd43beceeeda3ce95c574d6714ed3d3969071caead678c065813ec",
@@ -365,27 +427,59 @@ func TestFSCache_MissingLayers(t *testing.T) {
 		},
 		{
 			name:   "happy path: different decompressed layer ID",
-			dbPath: "testdata/fanal-decompressed-layer-id.db",
+			dbPath: "testdata/decompressed-layer-id.db",
 			args: args{
+				imageID: "sha256:58701fd185bda36cab0557bb6438661831267aa4a9e0b54211c4d5317a48aff4",
 				layerIDs: []string{
 					"sha256:24df0d4e20c0f42d3703bf1f1db2bdd77346c7956f74f423603d651e8e5ae8a7",
 					"sha256:dffd9992ca398466a663c87c92cfea2a2db0ae0cf33fcb99da60eec52addbfc5",
 					"sha256:dab15cac9ebd43beceeeda3ce95c574d6714ed3d3969071caead678c065813ec",
 				},
 			},
-			want: []string{
+			wantMissingImage: true,
+			wantMissingLayerIDs: []string{
 				"sha256:24df0d4e20c0f42d3703bf1f1db2bdd77346c7956f74f423603d651e8e5ae8a7",
 			},
 		},
 		{
-			name:   "happy path: broken JSON",
-			dbPath: "testdata/fanal-broken.db",
+			name:   "happy path: broken layer JSON",
+			dbPath: "testdata/broken-layer.db",
 			args: args{
+				imageID: "sha256:58701fd185bda36cab0557bb6438661831267aa4a9e0b54211c4d5317a48aff4",
 				layerIDs: []string{
 					"sha256:24df0d4e20c0f42d3703bf1f1db2bdd77346c7956f74f423603d651e8e5ae8a7",
 				},
 			},
-			want: []string{
+			wantMissingImage: true,
+			wantMissingLayerIDs: []string{
+				"sha256:24df0d4e20c0f42d3703bf1f1db2bdd77346c7956f74f423603d651e8e5ae8a7",
+			},
+		},
+		{
+			name:   "happy path: broken image JSON",
+			dbPath: "testdata/broken-image.db",
+			args: args{
+				imageID: "sha256:58701fd185bda36cab0557bb6438661831267aa4a9e0b54211c4d5317a48aff4",
+				layerIDs: []string{
+					"sha256:24df0d4e20c0f42d3703bf1f1db2bdd77346c7956f74f423603d651e8e5ae8a7",
+				},
+			},
+			wantMissingImage: true,
+			wantMissingLayerIDs: []string{
+				"sha256:24df0d4e20c0f42d3703bf1f1db2bdd77346c7956f74f423603d651e8e5ae8a7",
+			},
+		},
+		{
+			name:   "happy path: the schema version of image JSON doesn't match",
+			dbPath: "testdata/different-image-schema.db",
+			args: args{
+				imageID: "sha256:58701fd185bda36cab0557bb6438661831267aa4a9e0b54211c4d5317a48aff4",
+				layerIDs: []string{
+					"sha256:24df0d4e20c0f42d3703bf1f1db2bdd77346c7956f74f423603d651e8e5ae8a7",
+				},
+			},
+			wantMissingImage: true,
+			wantMissingLayerIDs: []string{
 				"sha256:24df0d4e20c0f42d3703bf1f1db2bdd77346c7956f74f423603d651e8e5ae8a7",
 			},
 		},
@@ -400,7 +494,7 @@ func TestFSCache_MissingLayers(t *testing.T) {
 			require.NoError(t, err)
 			defer fs.Clear()
 
-			got, err := fs.MissingLayers(tt.args.layerIDs)
+			gotMissingImage, gotMissingLayerIDs, err := fs.MissingLayers(tt.args.imageID, tt.args.layerIDs)
 			if tt.wantErr != "" {
 				require.NotNil(t, err, tt.name)
 				assert.Contains(t, err.Error(), tt.wantErr, tt.name)
@@ -409,7 +503,8 @@ func TestFSCache_MissingLayers(t *testing.T) {
 				require.NoError(t, err, tt.name)
 			}
 
-			assert.Equal(t, tt.want, got, tt.name)
+			assert.Equal(t, tt.wantMissingImage, gotMissingImage, tt.name)
+			assert.Equal(t, tt.wantMissingLayerIDs, gotMissingLayerIDs, tt.name)
 		})
 	}
 }
