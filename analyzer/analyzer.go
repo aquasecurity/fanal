@@ -90,34 +90,37 @@ func RequiredFilenames() []string {
 
 type Config struct {
 	Extractor extractor.Extractor
-	Cache     cache.LayerCache
+	Cache     cache.ImageCache
 }
 
-func New(ext extractor.Extractor, c cache.LayerCache) Config {
+func New(ext extractor.Extractor, c cache.ImageCache) Config {
 	return Config{Extractor: ext, Cache: c}
 }
 
-func (ac Config) Analyze(ctx context.Context) (types.ImageInfo, error) {
+func (ac Config) Analyze(ctx context.Context) (types.ImageReference, error) {
+	imageID := ac.Extractor.ImageID()
 	layerIDs := ac.Extractor.LayerIDs()
-	missingLayers, err := ac.Cache.MissingLayers(layerIDs)
+	missingImage, missingLayers, err := ac.Cache.MissingLayers(string(imageID), layerIDs)
 	if err != nil {
-		return types.ImageInfo{}, err
-	}
-	if err := ac.analyzeLayers(ctx, missingLayers); err != nil {
-		return types.ImageInfo{}, err
+		return types.ImageReference{}, err
 	}
 
-	return types.ImageInfo{
+	if err := ac.analyze(ctx, missingImage, missingLayers); err != nil {
+		return types.ImageReference{}, err
+	}
+
+	return types.ImageReference{
 		Name:     ac.Extractor.ImageName(),
-		ID:       ac.Extractor.ImageID(),
+		ID:       imageID,
 		LayerIDs: layerIDs,
 	}, nil
 }
 
-func (ac Config) analyzeLayers(ctx context.Context, layerIDs []string) error {
+func (ac Config) analyze(ctx context.Context, missingImage bool, layerIDs []string) error {
 	done := make(chan struct{})
 	errCh := make(chan error)
 
+	var osFound types.OS
 	for _, layerID := range layerIDs {
 		go func(dig digest.Digest) {
 			decompressedLayerID, layerInfo, err := ac.analyzeLayer(ctx, dig)
@@ -128,6 +131,9 @@ func (ac Config) analyzeLayers(ctx context.Context, layerIDs []string) error {
 			if err = ac.Cache.PutLayer(string(dig), string(decompressedLayerID), layerInfo); err != nil {
 				errCh <- xerrors.Errorf("failed to store layer: %s in cache: %w", dig, err)
 				return
+			}
+			if layerInfo.OS != nil {
+				osFound = *layerInfo.OS
 			}
 			done <- struct{}{}
 		}(digest.Digest(layerID))
@@ -140,6 +146,12 @@ func (ac Config) analyzeLayers(ctx context.Context, layerIDs []string) error {
 			return err
 		case <-ctx.Done():
 			return xerrors.Errorf("timeout: %w", ctx.Err())
+		}
+	}
+
+	if missingImage {
+		if err := ac.analyzeConfig(ctx, osFound); err != nil {
+			return err
 		}
 	}
 
@@ -173,24 +185,53 @@ func (ac Config) analyzeLayer(ctx context.Context, dig digest.Digest) (digest.Di
 	return decompressedLayerID, layerInfo, nil
 }
 
-type Applier struct {
-	cache cache.LocalLayerCache
+func (ac Config) analyzeConfig(ctx context.Context, osFound types.OS) error {
+	configBlob, err := ac.Extractor.ConfigBlob(ctx)
+	if err != nil {
+		return err
+	}
+
+	// special file for config
+	files := extractor.FileMap{
+		"/config": configBlob,
+	}
+	pkgs, _ := GetPackagesFromCommands(osFound, files)
+
+	var s1 manifest.Schema2V1Image
+	if err := json.Unmarshal(configBlob, &s1); err != nil {
+		return err
+	}
+
+	info := types.ImageInfo{
+		SchemaVersion:   types.ImageJSONSchemaVersion,
+		Architecture:    s1.Architecture,
+		Created:         s1.Created,
+		DockerVersion:   s1.DockerVersion,
+		OS:              s1.OS,
+		HistoryPackages: pkgs,
+	}
+
+	if err := ac.Cache.PutImage(string(ac.Extractor.ImageID()), info); err != nil {
+		return err
+	}
+
+	return nil
 }
 
-func NewApplier(c cache.LocalLayerCache) Applier {
+type Applier struct {
+	cache cache.LocalImageCache
+}
+
+func NewApplier(c cache.LocalImageCache) Applier {
 	return Applier{cache: c}
 }
 
-func (a Applier) ApplyLayers(layerIDs []string) (types.ImageDetail, error) {
+func (a Applier) ApplyLayers(imageID digest.Digest, layerIDs []string) (types.ImageDetail, error) {
 	var layers []types.LayerInfo
 	for _, layerID := range layerIDs {
-		b := a.cache.GetLayer(layerID)
-		if b == nil {
+		layer := a.cache.GetLayer(layerID)
+		if layer.SchemaVersion == 0 {
 			return types.ImageDetail{}, xerrors.Errorf("layer cache missing: %s", layerID)
-		}
-		var layer types.LayerInfo
-		if err := json.Unmarshal(b, &layer); err != nil {
-			return types.ImageDetail{}, xerrors.Errorf("invalid JSON: %w", err)
 		}
 		layers = append(layers, layer)
 	}
@@ -201,6 +242,9 @@ func (a Applier) ApplyLayers(layerIDs []string) (types.ImageDetail, error) {
 	} else if mergedLayer.Packages == nil {
 		return types.ImageDetail{}, ErrNoPkgsDetected
 	}
+
+	imageInfo, _ := a.cache.GetImage(string(imageID))
+	mergedLayer.Packages = mergePkgs(mergedLayer.Packages, imageInfo.HistoryPackages)
 
 	return mergedLayer, nil
 }
@@ -276,4 +320,19 @@ func GetLibraries(filesMap extractor.FileMap) ([]types.Application, error) {
 		}
 	}
 	return results, nil
+}
+
+func mergePkgs(pkgs, pkgsFromCommands []types.Package) []types.Package {
+	// pkg has priority over pkgsFromCommands
+	uniqPkgs := map[string]struct{}{}
+	for _, pkg := range pkgs {
+		uniqPkgs[pkg.Name] = struct{}{}
+	}
+	for _, pkg := range pkgsFromCommands {
+		if _, ok := uniqPkgs[pkg.Name]; ok {
+			continue
+		}
+		pkgs = append(pkgs, pkg)
+	}
+	return pkgs
 }

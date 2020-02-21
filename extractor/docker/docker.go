@@ -123,7 +123,11 @@ func (d Extractor) ImageName() string {
 }
 
 func (d Extractor) ImageID() digest.Digest {
-	return d.image.Config().Digest
+	return d.image.ConfigInfo().Digest
+}
+
+func (d Extractor) ConfigBlob(ctx context.Context) ([]byte, error) {
+	return d.image.ConfigBlob(ctx)
 }
 
 func (d Extractor) LayerIDs() []string {

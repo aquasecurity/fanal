@@ -24,6 +24,7 @@ type ImageSource interface {
 type ImageCloser interface {
 	LayerInfos() (layerInfos []imageTypes.BlobInfo)
 	ConfigInfo() imageTypes.BlobInfo
+	ConfigBlob(context.Context) ([]byte, error)
 	Close() error
 }
 
@@ -35,7 +36,8 @@ type Reference struct {
 type Image interface {
 	Name() (name string)
 	LayerIDs() (layerIDs []string)
-	Config() imageTypes.BlobInfo
+	ConfigInfo() imageTypes.BlobInfo
+	ConfigBlob(context.Context) ([]byte, error)
 	GetLayer(ctx context.Context, dig digest.Digest) (reader io.ReadCloser, err error)
 }
 
@@ -133,8 +135,16 @@ func (img RealImage) LayerIDs() []string {
 	return layerIDs
 }
 
-func (img RealImage) Config() imageTypes.BlobInfo {
+func (img RealImage) ConfigInfo() imageTypes.BlobInfo {
 	return img.src.ConfigInfo()
+}
+
+func (img RealImage) ConfigBlob(ctx context.Context) ([]byte, error) {
+	b, err := img.src.ConfigBlob(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return b, nil
 }
 
 func (img RealImage) GetLayer(ctx context.Context, dig digest.Digest) (io.ReadCloser, error) {
