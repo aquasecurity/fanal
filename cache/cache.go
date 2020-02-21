@@ -14,6 +14,8 @@ import (
 const (
 	cacheDirName = "fanal"
 
+	// imageBucket stores image information with image ID
+	imageBucket = "image"
 	// layerBucket stores os, package and library information per layer ID
 	layerBucket = "layer"
 	// decompressedDigestBucket stores a mapping from any digest to an uncompressed digest.
@@ -21,19 +23,21 @@ const (
 )
 
 type Cache interface {
-	LayerCache
-	LocalLayerCache
+	ImageCache
+	LocalImageCache
 }
 
-// LayerCache uses local or remote cache
-type LayerCache interface {
-	MissingLayers(layerIDs []string) (missingLayerIDs []string, err error)
+// ImageCache uses local or remote cache
+type ImageCache interface {
+	MissingLayers(imageID string, layerIDs []string) (missingImage bool, missingLayerIDs []string, err error)
+	PutImage(imageID string, imageConfig types.ImageInfo) (err error)
 	PutLayer(layerID, decompressedLayerID string, layerInfo types.LayerInfo) (err error)
 }
 
-// LocalLayerCache always uses local cache
-type LocalLayerCache interface {
-	GetLayer(layerID string) (layerBlob []byte)
+// LocalImageCache always uses local cache
+type LocalImageCache interface {
+	GetImage(imageID string) (imageConfig types.ImageInfo, err error)
+	GetLayer(layerID string) (layerInfo types.LayerInfo)
 	Clear() (err error)
 }
 
@@ -54,7 +58,7 @@ func NewFSCache(cacheDir string) (FSCache, error) {
 	}
 
 	err = db.Update(func(tx *bolt.Tx) error {
-		for _, bucket := range []string{layerBucket, decompressedDigestBucket} {
+		for _, bucket := range []string{imageBucket, layerBucket, decompressedDigestBucket} {
 			if _, err := tx.CreateBucketIfNotExists([]byte(bucket)); err != nil {
 				return err
 			}
@@ -117,6 +121,45 @@ func (fs FSCache) PutLayer(layerID, decompressedLayerID string, layerInfo types.
 }
 
 func (fs FSCache) MissingLayers(layerIDs []string) ([]string, error) {
+func (fs FSCache) GetImage(imageID string) (types.ImageInfo, error) {
+	var blob []byte
+	err := fs.db.View(func(tx *bolt.Tx) error {
+		imageBucket := tx.Bucket([]byte(imageBucket))
+		blob = imageBucket.Get([]byte(imageID))
+		return nil
+	})
+	if err != nil {
+		return types.ImageInfo{}, err
+	}
+
+	var info types.ImageInfo
+	if err := json.Unmarshal(blob, &info); err != nil {
+		return types.ImageInfo{}, err
+	}
+	return info, nil
+}
+
+func (fs FSCache) PutImage(imageID string, imageConfig types.ImageInfo) (err error) {
+	b, err := json.Marshal(imageConfig)
+	if err != nil {
+		return err
+	}
+
+	err = fs.db.Update(func(tx *bolt.Tx) error {
+		imageBucket := tx.Bucket([]byte(imageBucket))
+		err = imageBucket.Put([]byte(imageID), b)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+	return nil
+}
+func (fs FSCache) MissingLayers(imageID string, layerIDs []string) (bool, []string, error) {
+	var missingImage bool
 	var missingLayerIDs []string
 	err := fs.db.View(func(tx *bolt.Tx) error {
 		decompressedBucket := tx.Bucket([]byte(decompressedDigestBucket))
@@ -149,8 +192,20 @@ func (fs FSCache) MissingLayers(layerIDs []string) ([]string, error) {
 	})
 	if err != nil {
 		return nil, err
+		return false, nil, err
 	}
 	return missingLayerIDs, nil
+
+	// get image info
+	imageInfo, err := fs.GetImage(imageID)
+	if err != nil {
+		// error means cache missed image info
+		return true, missingLayerIDs, nil
+	}
+	if imageInfo.SchemaVersion != types.ImageJSONSchemaVersion {
+		missingImage = true
+	}
+	return missingImage, missingLayerIDs, nil
 }
 
 func (fs FSCache) Clear() error {
