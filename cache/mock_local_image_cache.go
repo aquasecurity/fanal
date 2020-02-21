@@ -49,8 +49,8 @@ type LocalImageCacheGetImageArgs struct {
 }
 
 type LocalImageCacheGetImageReturns struct {
-	ImageConfig types.ImageInfo
-	Err         error
+	ImageInfo types.ImageInfo
+	Err       error
 }
 
 type LocalImageCacheGetImageExpectation struct {
@@ -65,7 +65,7 @@ func (_m *MockLocalImageCache) ApplyGetImageExpectation(e LocalImageCacheGetImag
 	} else {
 		args = append(args, e.Args.ImageID)
 	}
-	_m.On("GetImage", args...).Return(e.Returns.ImageConfig, e.Returns.Err)
+	_m.On("GetImage", args...).Return(e.Returns.ImageInfo, e.Returns.Err)
 }
 
 func (_m *MockLocalImageCache) ApplyGetImageExpectations(expectations []LocalImageCacheGetImageExpectation) {

@@ -80,10 +80,10 @@ func (_m *MockImageCache) MissingLayers(imageID string, layerIDs []string) (bool
 }
 
 type ImageCachePutImageArgs struct {
-	ImageID             string
-	ImageIDAnything     bool
-	ImageConfig         types.ImageInfo
-	ImageConfigAnything bool
+	ImageID           string
+	ImageIDAnything   bool
+	ImageInfo         types.ImageInfo
+	ImageInfoAnything bool
 }
 
 type ImageCachePutImageReturns struct {
@@ -102,10 +102,10 @@ func (_m *MockImageCache) ApplyPutImageExpectation(e ImageCachePutImageExpectati
 	} else {
 		args = append(args, e.Args.ImageID)
 	}
-	if e.Args.ImageConfigAnything {
+	if e.Args.ImageInfoAnything {
 		args = append(args, mock.Anything)
 	} else {
-		args = append(args, e.Args.ImageConfig)
+		args = append(args, e.Args.ImageInfo)
 	}
 	_m.On("PutImage", args...).Return(e.Returns.Err)
 }
@@ -116,13 +116,13 @@ func (_m *MockImageCache) ApplyPutImageExpectations(expectations []ImageCachePut
 	}
 }
 
-// PutImage provides a mock function with given fields: imageID, imageConfig
-func (_m *MockImageCache) PutImage(imageID string, imageConfig types.ImageInfo) error {
-	ret := _m.Called(imageID, imageConfig)
+// PutImage provides a mock function with given fields: imageID, imageInfo
+func (_m *MockImageCache) PutImage(imageID string, imageInfo types.ImageInfo) error {
+	ret := _m.Called(imageID, imageInfo)
 
 	var r0 error
 	if rf, ok := ret.Get(0).(func(string, types.ImageInfo) error); ok {
-		r0 = rf(imageID, imageConfig)
+		r0 = rf(imageID, imageInfo)
 	} else {
 		r0 = ret.Error(0)
 	}

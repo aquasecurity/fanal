@@ -83,7 +83,7 @@ func TestConfig_Analyze(t *testing.T) {
 				{
 					Args: cache.ImageCachePutImageArgs{
 						ImageID: "sha256:965ea09ff2ebd2b9eeec88cd822ce156f6674c7e99be082c7efac3c62f3ff652",
-						ImageConfig: types.ImageInfo{
+						ImageInfo: types.ImageInfo{
 							SchemaVersion: 1,
 							Architecture:  "amd64",
 							Created:       time.Date(2019, 10, 21, 17, 21, 42, 387111039, time.UTC),
@@ -335,7 +335,7 @@ func TestApplier_ApplyLayers(t *testing.T) {
 						ImageID: "sha256:4791503518dff090d6a82f7a5c1fd71c41146920e2562fb64308e17ab6834b7e",
 					},
 					Returns: cache.LocalImageCacheGetImageReturns{
-						ImageConfig: types.ImageInfo{
+						ImageInfo: types.ImageInfo{
 							SchemaVersion: 1,
 						},
 					},
@@ -402,7 +402,7 @@ func TestApplier_ApplyLayers(t *testing.T) {
 						ImageID: "sha256:3bb70bd5fb37e05b8ecaaace5d6a6b5ec7834037c07ecb5907355c23ab70352d",
 					},
 					Returns: cache.LocalImageCacheGetImageReturns{
-						ImageConfig: types.ImageInfo{
+						ImageInfo: types.ImageInfo{
 							SchemaVersion: 1,
 							HistoryPackages: []types.Package{
 								{Name: "musl", Version: "1.1.23"},

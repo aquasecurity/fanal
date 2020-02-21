@@ -30,13 +30,13 @@ type Cache interface {
 // ImageCache uses local or remote cache
 type ImageCache interface {
 	MissingLayers(imageID string, layerIDs []string) (missingImage bool, missingLayerIDs []string, err error)
-	PutImage(imageID string, imageConfig types.ImageInfo) (err error)
+	PutImage(imageID string, imageInfo types.ImageInfo) (err error)
 	PutLayer(layerID, decompressedLayerID string, layerInfo types.LayerInfo) (err error)
 }
 
 // LocalImageCache always uses local cache
 type LocalImageCache interface {
-	GetImage(imageID string) (imageConfig types.ImageInfo, err error)
+	GetImage(imageID string) (imageInfo types.ImageInfo, err error)
 	GetLayer(layerID string) (layerInfo types.LayerInfo, err error)
 	Clear() (err error)
 }
