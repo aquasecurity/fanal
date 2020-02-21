@@ -75,21 +75,32 @@ func NewFSCache(cacheDir string) (FSCache, error) {
 	}, nil
 }
 
-func (fs FSCache) GetLayer(layerID string) []byte {
-	var b []byte
+func (fs FSCache) GetLayer(layerID string) types.LayerInfo {
+	var layerInfo types.LayerInfo
 	_ = fs.db.View(func(tx *bolt.Tx) error {
 		// get a decompressed layer ID
 		decompressedBucket := tx.Bucket([]byte(decompressedDigestBucket))
-		d := decompressedBucket.Get([]byte(layerID))
-		if d != nil {
-			layerID = string(d)
-		}
-
-		bucket := tx.Bucket([]byte(layerBucket))
-		b = bucket.Get([]byte(layerID))
+		layerBucket := tx.Bucket([]byte(layerBucket))
+		layerInfo, _ = fs.getLayer(decompressedBucket, layerBucket, layerID)
 		return nil
 	})
-	return b
+	return layerInfo
+}
+
+func (fs FSCache) getLayer(decompressedBucket, layerBucket *bolt.Bucket, layerID string) (types.LayerInfo, error) {
+	// get a decompressed layer ID
+	d := decompressedBucket.Get([]byte(layerID))
+	if d != nil {
+		layerID = string(d)
+	}
+
+	b := layerBucket.Get([]byte(layerID))
+
+	var l types.LayerInfo
+	if err := json.Unmarshal(b, &l); err != nil {
+		return types.LayerInfo{}, err
+	}
+	return l, nil
 }
 
 func (fs FSCache) PutLayer(layerID, decompressedLayerID string, layerInfo types.LayerInfo) error {
@@ -120,7 +131,6 @@ func (fs FSCache) PutLayer(layerID, decompressedLayerID string, layerInfo types.
 	return nil
 }
 
-func (fs FSCache) MissingLayers(layerIDs []string) ([]string, error) {
 func (fs FSCache) GetImage(imageID string) (types.ImageInfo, error) {
 	var blob []byte
 	err := fs.db.View(func(tx *bolt.Tx) error {
@@ -158,43 +168,29 @@ func (fs FSCache) PutImage(imageID string, imageConfig types.ImageInfo) (err err
 	}
 	return nil
 }
+
 func (fs FSCache) MissingLayers(imageID string, layerIDs []string) (bool, []string, error) {
 	var missingImage bool
 	var missingLayerIDs []string
 	err := fs.db.View(func(tx *bolt.Tx) error {
 		decompressedBucket := tx.Bucket([]byte(decompressedDigestBucket))
-		bucket := tx.Bucket([]byte(layerBucket))
+		layerBucket := tx.Bucket([]byte(layerBucket))
 		for _, layerID := range layerIDs {
-			// get a decompressed layer ID
-			d := decompressedBucket.Get([]byte(layerID))
-			if d != nil {
-				layerID = string(d)
-			}
-
-			b := bucket.Get([]byte(layerID))
-			if b == nil {
+			layerInfo, err := fs.getLayer(decompressedBucket, layerBucket, layerID)
+			if err != nil {
+				// error means cache missed layer info
 				missingLayerIDs = append(missingLayerIDs, layerID)
 				continue
 			}
-
-			// check schema version in JSON
-			var l types.LayerInfo
-			if err := json.Unmarshal(b, &l); err != nil {
-				missingLayerIDs = append(missingLayerIDs, layerID)
-				continue
-			}
-			if l.SchemaVersion != types.LayerJSONSchemaVersion {
+			if layerInfo.SchemaVersion != types.LayerJSONSchemaVersion {
 				missingLayerIDs = append(missingLayerIDs, layerID)
 			}
-
 		}
 		return nil
 	})
 	if err != nil {
-		return nil, err
 		return false, nil, err
 	}
-	return missingLayerIDs, nil
 
 	// get image info
 	imageInfo, err := fs.GetImage(imageID)
