@@ -5,6 +5,7 @@ import (
 	"errors"
 	"sort"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -28,7 +29,7 @@ import (
 func TestConfig_Analyze(t *testing.T) {
 	type fields struct {
 		Extractor extractor.Extractor
-		Cache     cache.LayerCache
+		Cache     cache.ImageCache
 	}
 	type args struct {
 		ctx context.Context
@@ -38,25 +39,28 @@ func TestConfig_Analyze(t *testing.T) {
 		imagePath               string
 		fields                  fields
 		args                    args
-		missingLayerExpectation cache.MissingLayersExpectation
-		putLayerExpectations    []cache.PutLayerExpectation
-		want                    types.ImageInfo
+		missingLayerExpectation cache.ImageCacheMissingLayersExpectation
+		putLayerExpectations    []cache.ImageCachePutLayerExpectation
+		putImageExpectations    []cache.ImageCachePutImageExpectation
+		want                    types.ImageReference
 		wantErr                 string
 	}{
 		{
 			name:      "happy path",
 			imagePath: "testdata/alpine.tar.gz",
-			missingLayerExpectation: cache.MissingLayersExpectation{
-				Args: cache.MissingLayersArgs{
+			missingLayerExpectation: cache.ImageCacheMissingLayersExpectation{
+				Args: cache.ImageCacheMissingLayersArgs{
+					ImageID:  "sha256:965ea09ff2ebd2b9eeec88cd822ce156f6674c7e99be082c7efac3c62f3ff652",
 					LayerIDs: []string{"sha256:77cae8ab23bf486355d1b3191259705374f4a11d483b24964d2f729dd8c076a0"},
 				},
-				Returns: cache.MissingLayersReturns{
+				Returns: cache.ImageCacheMissingLayersReturns{
+					MissingImage:    true,
 					MissingLayerIDs: []string{"sha256:77cae8ab23bf486355d1b3191259705374f4a11d483b24964d2f729dd8c076a0"},
 				},
 			},
-			putLayerExpectations: []cache.PutLayerExpectation{
+			putLayerExpectations: []cache.ImageCachePutLayerExpectation{
 				{
-					Args: cache.PutLayerArgs{
+					Args: cache.ImageCachePutLayerArgs{
 						LayerID:             "sha256:77cae8ab23bf486355d1b3191259705374f4a11d483b24964d2f729dd8c076a0",
 						DecompressedLayerID: "sha256:77cae8ab23bf486355d1b3191259705374f4a11d483b24964d2f729dd8c076a0",
 						LayerInfo: types.LayerInfo{
@@ -71,10 +75,24 @@ func TestConfig_Analyze(t *testing.T) {
 							WhiteoutFiles: []string(nil),
 						},
 					},
-					Returns: cache.PutLayerReturns{},
+					Returns: cache.ImageCachePutLayerReturns{},
 				},
 			},
-			want: types.ImageInfo{
+			putImageExpectations: []cache.ImageCachePutImageExpectation{
+				{
+					Args: cache.ImageCachePutImageArgs{
+						ImageID: "sha256:965ea09ff2ebd2b9eeec88cd822ce156f6674c7e99be082c7efac3c62f3ff652",
+						ImageConfig: types.ImageInfo{
+							SchemaVersion: 1,
+							Architecture:  "amd64",
+							Created:       time.Date(2019, 10, 21, 17, 21, 42, 387111039, time.UTC),
+							DockerVersion: "18.06.1-ce",
+							OS:            "linux",
+						},
+					},
+				},
+			},
+			want: types.ImageReference{
 				Name:     "testdata/alpine.tar.gz",
 				ID:       "sha256:965ea09ff2ebd2b9eeec88cd822ce156f6674c7e99be082c7efac3c62f3ff652",
 				LayerIDs: []string{"sha256:77cae8ab23bf486355d1b3191259705374f4a11d483b24964d2f729dd8c076a0"},
@@ -83,17 +101,18 @@ func TestConfig_Analyze(t *testing.T) {
 		{
 			name:      "happy path: include lock files",
 			imagePath: "testdata/vuln-image.tar.gz",
-			missingLayerExpectation: cache.MissingLayersExpectation{
-				Args: cache.MissingLayersArgs{
+			missingLayerExpectation: cache.ImageCacheMissingLayersExpectation{
+				Args: cache.ImageCacheMissingLayersArgs{
+					ImageID:  "sha256:58701fd185bda36cab0557bb6438661831267aa4a9e0b54211c4d5317a48aff4",
 					LayerIDs: []string{"sha256:932da51564135c98a49a34a193d6cd363d8fa4184d957fde16c9d8527b3f3b02", "sha256:dffd9992ca398466a663c87c92cfea2a2db0ae0cf33fcb99da60eec52addbfc5", "sha256:24df0d4e20c0f42d3703bf1f1db2bdd77346c7956f74f423603d651e8e5ae8a7", "sha256:a4595c43a874856bf95f3bfc4fbf78bbaa04c92c726276d4f64193a47ced0566"},
 				},
-				Returns: cache.MissingLayersReturns{
+				Returns: cache.ImageCacheMissingLayersReturns{
 					MissingLayerIDs: []string{"sha256:932da51564135c98a49a34a193d6cd363d8fa4184d957fde16c9d8527b3f3b02", "sha256:dffd9992ca398466a663c87c92cfea2a2db0ae0cf33fcb99da60eec52addbfc5", "sha256:24df0d4e20c0f42d3703bf1f1db2bdd77346c7956f74f423603d651e8e5ae8a7"},
 				},
 			},
-			putLayerExpectations: []cache.PutLayerExpectation{
+			putLayerExpectations: []cache.ImageCachePutLayerExpectation{
 				{
-					Args: cache.PutLayerArgs{
+					Args: cache.ImageCachePutLayerArgs{
 						LayerID:             "sha256:932da51564135c98a49a34a193d6cd363d8fa4184d957fde16c9d8527b3f3b02",
 						DecompressedLayerID: "sha256:d9441f7754ba1423ee11793b5db6390256e44097c2fc25e75a5fab19e6dc7911",
 						LayerInfo: types.LayerInfo{
@@ -104,7 +123,7 @@ func TestConfig_Analyze(t *testing.T) {
 					},
 				},
 				{
-					Args: cache.PutLayerArgs{
+					Args: cache.ImageCachePutLayerArgs{
 						LayerID:             "sha256:dffd9992ca398466a663c87c92cfea2a2db0ae0cf33fcb99da60eec52addbfc5",
 						DecompressedLayerID: "sha256:dab15cac9ebd43beceeeda3ce95c574d6714ed3d3969071caead678c065813ec",
 						LayerInfo: types.LayerInfo{
@@ -114,7 +133,7 @@ func TestConfig_Analyze(t *testing.T) {
 					},
 				},
 				{
-					Args: cache.PutLayerArgs{
+					Args: cache.ImageCachePutLayerArgs{
 						LayerID:             "sha256:24df0d4e20c0f42d3703bf1f1db2bdd77346c7956f74f423603d651e8e5ae8a7",
 						DecompressedLayerID: "sha256:24df0d4e20c0f42d3703bf1f1db2bdd77346c7956f74f423603d651e8e5ae8a7",
 						LayerInfo: types.LayerInfo{
@@ -125,7 +144,7 @@ func TestConfig_Analyze(t *testing.T) {
 					},
 				},
 			},
-			want: types.ImageInfo{
+			want: types.ImageReference{
 				Name:     "testdata/vuln-image.tar.gz",
 				ID:       "sha256:58701fd185bda36cab0557bb6438661831267aa4a9e0b54211c4d5317a48aff4",
 				LayerIDs: []string{"sha256:932da51564135c98a49a34a193d6cd363d8fa4184d957fde16c9d8527b3f3b02", "sha256:dffd9992ca398466a663c87c92cfea2a2db0ae0cf33fcb99da60eec52addbfc5", "sha256:24df0d4e20c0f42d3703bf1f1db2bdd77346c7956f74f423603d651e8e5ae8a7", "sha256:a4595c43a874856bf95f3bfc4fbf78bbaa04c92c726276d4f64193a47ced0566"},
@@ -134,11 +153,12 @@ func TestConfig_Analyze(t *testing.T) {
 		{
 			name:      "sad path, MissingLayers returns an error",
 			imagePath: "testdata/alpine.tar.gz",
-			missingLayerExpectation: cache.MissingLayersExpectation{
-				Args: cache.MissingLayersArgs{
+			missingLayerExpectation: cache.ImageCacheMissingLayersExpectation{
+				Args: cache.ImageCacheMissingLayersArgs{
+					ImageID:  "sha256:965ea09ff2ebd2b9eeec88cd822ce156f6674c7e99be082c7efac3c62f3ff652",
 					LayerIDs: []string{"sha256:77cae8ab23bf486355d1b3191259705374f4a11d483b24964d2f729dd8c076a0"},
 				},
-				Returns: cache.MissingLayersReturns{
+				Returns: cache.ImageCacheMissingLayersReturns{
 					Err: xerrors.New("MissingLayers failed"),
 				},
 			},
@@ -147,17 +167,18 @@ func TestConfig_Analyze(t *testing.T) {
 		{
 			name:      "sad path, PutLayer returns an error",
 			imagePath: "testdata/alpine.tar.gz",
-			missingLayerExpectation: cache.MissingLayersExpectation{
-				Args: cache.MissingLayersArgs{
+			missingLayerExpectation: cache.ImageCacheMissingLayersExpectation{
+				Args: cache.ImageCacheMissingLayersArgs{
+					ImageID:  "sha256:965ea09ff2ebd2b9eeec88cd822ce156f6674c7e99be082c7efac3c62f3ff652",
 					LayerIDs: []string{"sha256:77cae8ab23bf486355d1b3191259705374f4a11d483b24964d2f729dd8c076a0"},
 				},
-				Returns: cache.MissingLayersReturns{
+				Returns: cache.ImageCacheMissingLayersReturns{
 					MissingLayerIDs: []string{"sha256:77cae8ab23bf486355d1b3191259705374f4a11d483b24964d2f729dd8c076a0"},
 				},
 			},
-			putLayerExpectations: []cache.PutLayerExpectation{
+			putLayerExpectations: []cache.ImageCachePutLayerExpectation{
 				{
-					Args: cache.PutLayerArgs{
+					Args: cache.ImageCachePutLayerArgs{
 						LayerID:             "sha256:77cae8ab23bf486355d1b3191259705374f4a11d483b24964d2f729dd8c076a0",
 						DecompressedLayerID: "sha256:77cae8ab23bf486355d1b3191259705374f4a11d483b24964d2f729dd8c076a0",
 						LayerInfo: types.LayerInfo{
@@ -172,7 +193,7 @@ func TestConfig_Analyze(t *testing.T) {
 							WhiteoutFiles: []string(nil),
 						},
 					},
-					Returns: cache.PutLayerReturns{
+					Returns: cache.ImageCachePutLayerReturns{
 						Err: errors.New("put layer failed"),
 					},
 				},
@@ -182,9 +203,10 @@ func TestConfig_Analyze(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mockCache := new(cache.MockLayerCache)
+			mockCache := new(cache.MockImageCache)
 			mockCache.ApplyMissingLayersExpectation(tt.missingLayerExpectation)
 			mockCache.ApplyPutLayerExpectations(tt.putLayerExpectations)
+			mockCache.ApplyPutImageExpectations(tt.putImageExpectations)
 
 			d, err := docker.NewDockerArchiveExtractor(context.Background(), tt.imagePath, types.DockerOption{})
 			require.NoError(t, err, tt.name)
@@ -204,115 +226,117 @@ func TestConfig_Analyze(t *testing.T) {
 
 func TestApplier_ApplyLayers(t *testing.T) {
 	type args struct {
+		imageID  string
 		layerIDs []string
 	}
 	tests := []struct {
 		name                 string
 		args                 args
-		getLayerExpectations []cache.GetLayerExpectation
+		getLayerExpectations []cache.LocalImageCacheGetLayerExpectation
+		getImageExpectations []cache.LocalImageCacheGetImageExpectation
 		want                 types.ImageDetail
 		wantErr              string
 	}{
 		{
 			name: "happy path",
 			args: args{
+				imageID: "sha256:4791503518dff090d6a82f7a5c1fd71c41146920e2562fb64308e17ab6834b7e",
 				layerIDs: []string{
 					"sha256:932da51564135c98a49a34a193d6cd363d8fa4184d957fde16c9d8527b3f3b02",
 					"sha256:dffd9992ca398466a663c87c92cfea2a2db0ae0cf33fcb99da60eec52addbfc5",
 					"sha256:24df0d4e20c0f42d3703bf1f1db2bdd77346c7956f74f423603d651e8e5ae8a7",
 				},
 			},
-			getLayerExpectations: []cache.GetLayerExpectation{
+			getLayerExpectations: []cache.LocalImageCacheGetLayerExpectation{
 				{
-					Args: cache.GetLayerArgs{
+					Args: cache.LocalImageCacheGetLayerArgs{
 						LayerID: "sha256:932da51564135c98a49a34a193d6cd363d8fa4184d957fde16c9d8527b3f3b02",
 					},
-					Returns: cache.GetLayerReturns{
-						LayerBlob: []byte(`
-						{
-							"SchemaVersion": 1,
-							"OS": {
-								"Family": "debian",
-								"Name": "9.9"
+					Returns: cache.LocalImageCacheGetLayerReturns{
+						LayerInfo: types.LayerInfo{
+							SchemaVersion: 1,
+							OS: &types.OS{
+								Family: "debian",
+								Name:   "9.9",
 							},
-							"PackageInfos": [
+							PackageInfos: []types.PackageInfo{
 								{
-									"FilePath": "var/lib/dpkg/status.d/tzdata",
-									"Packages": [
+									FilePath: "var/lib/dpkg/status.d/tzdata",
+									Packages: []types.Package{
 										{
-											"Name": "tzdata",
-											"Version": "2019a-0+deb9u1",
-											"Release": "",
-											"Epoch": 0,
-											"Arch": "",
-											"SrcName": "tzdata",
-											"SrcVersion": "2019a-0+deb9u1",
-											"SrcRelease": "",
-											"SrcEpoch": 0
-										}
-									]
-								}
-							]
-						}`),
+											Name:       "tzdata",
+											Version:    "2019a-0+deb9u1",
+											SrcName:    "tzdata",
+											SrcVersion: "2019a-0+deb9u1",
+										},
+									},
+								},
+							},
+						},
 					},
 				},
 				{
-					Args: cache.GetLayerArgs{
+					Args: cache.LocalImageCacheGetLayerArgs{
 						LayerID: "sha256:dffd9992ca398466a663c87c92cfea2a2db0ae0cf33fcb99da60eec52addbfc5",
 					},
-					Returns: cache.GetLayerReturns{
-						LayerBlob: []byte(`
-							{
-								"SchemaVersion": 1,
-								"PackageInfos": [
-									{
-										"FilePath": "var/lib/dpkg/status.d/libc6",
-										"Packages": [
-											{
-												"Name": "libc6",
-												"Version": "2.24-11+deb9u4",
-												"Release": "",
-												"Epoch": 0,
-												"Arch": "",
-												"SrcName": "glibc",
-												"SrcVersion": "2.24-11+deb9u4",
-												"SrcRelease": "",
-												"SrcEpoch": 0
-											}
-										]
-									}
-								]
-							}`),
+					Returns: cache.LocalImageCacheGetLayerReturns{
+						LayerInfo: types.LayerInfo{
+							SchemaVersion: 1,
+							PackageInfos: []types.PackageInfo{
+								{
+									FilePath: "var/lib/dpkg/status.d/libc6",
+									Packages: []types.Package{
+										{
+											Name:       "libc6",
+											Version:    "2.24-11+deb9u4",
+											SrcName:    "glibc",
+											SrcVersion: "2.24-11+deb9u4",
+										},
+									},
+								},
+							},
+							Applications:  nil,
+							OpaqueDirs:    nil,
+							WhiteoutFiles: nil,
+						},
 					},
 				},
 				{
-					Args: cache.GetLayerArgs{
+					Args: cache.LocalImageCacheGetLayerArgs{
 						LayerID: "sha256:24df0d4e20c0f42d3703bf1f1db2bdd77346c7956f74f423603d651e8e5ae8a7",
 					},
-					Returns: cache.GetLayerReturns{
-						LayerBlob: []byte(`
-							{
-							  "SchemaVersion": 1,
-							  "Applications": [
-							    {
-							      "Type": "composer",
-							      "FilePath": "php-app/composer.lock",
-							      "Libraries": [
-							        {
-							          "Name": "guzzlehttp/guzzle",
-							          "Version": "6.2.0"
-							        },
-							        {
-							          "Name": "symfony/process",
-							          "Version": "v4.2.7"
-							        }
-							      ]
-							    }
-							  ],
-							  "OpaqueDirs": [
-							    "php-app/"
-							  ]
-							} `),
+					Returns: cache.LocalImageCacheGetLayerReturns{
+						LayerInfo: types.LayerInfo{
+							SchemaVersion: 1,
+							Applications: []types.Application{
+								{
+									Type:     "composer",
+									FilePath: "php-app/composer.lock",
+									Libraries: []depTypes.Library{
+										{
+											Name:    "guzzlehttp/guzzle",
+											Version: "6.2.0",
+										},
+										{
+											Name:    "symfony/process",
+											Version: "v4.2.7",
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			getImageExpectations: []cache.LocalImageCacheGetImageExpectation{
+				{
+					Args: cache.LocalImageCacheGetImageArgs{
+						ImageID: "sha256:4791503518dff090d6a82f7a5c1fd71c41146920e2562fb64308e17ab6834b7e",
+					},
+					Returns: cache.LocalImageCacheGetImageReturns{
+						ImageConfig: types.ImageInfo{
+							SchemaVersion: 1,
+						},
 					},
 				},
 			},
@@ -336,38 +360,116 @@ func TestApplier_ApplyLayers(t *testing.T) {
 			},
 		},
 		{
+			name: "happy path with history packages",
+			args: args{
+				imageID: "sha256:3bb70bd5fb37e05b8ecaaace5d6a6b5ec7834037c07ecb5907355c23ab70352d",
+				layerIDs: []string{
+					"sha256:531743b7098cb2aaf615641007a129173f63ed86ca32fe7b5a246a1c47286028",
+				},
+			},
+			getLayerExpectations: []cache.LocalImageCacheGetLayerExpectation{
+				{
+					Args: cache.LocalImageCacheGetLayerArgs{
+						LayerID: "sha256:531743b7098cb2aaf615641007a129173f63ed86ca32fe7b5a246a1c47286028",
+					},
+					Returns: cache.LocalImageCacheGetLayerReturns{
+						LayerInfo: types.LayerInfo{
+							SchemaVersion: 1,
+							OS: &types.OS{
+								Family: "alpine",
+								Name:   "3.10.4",
+							},
+							PackageInfos: []types.PackageInfo{
+								{
+									FilePath: "lib/apk/db/installed",
+									Packages: []types.Package{
+										{Name: "musl", Version: "1.1.22-r3"},
+										{Name: "busybox", Version: "1.30.1-r3"},
+										{Name: "openssl", Version: "1.1.1d-r2"},
+										{Name: "libcrypto1.1", Version: "1.1.1d-r2"},
+										{Name: "libssl1.1", Version: "1.1.1d-r2"},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			getImageExpectations: []cache.LocalImageCacheGetImageExpectation{
+				{
+					Args: cache.LocalImageCacheGetImageArgs{
+						ImageID: "sha256:3bb70bd5fb37e05b8ecaaace5d6a6b5ec7834037c07ecb5907355c23ab70352d",
+					},
+					Returns: cache.LocalImageCacheGetImageReturns{
+						ImageConfig: types.ImageInfo{
+							SchemaVersion: 1,
+							HistoryPackages: []types.Package{
+								{Name: "musl", Version: "1.1.23"},
+								{Name: "busybox", Version: "1.31"},
+								{Name: "ncurses-libs", Version: "6.1_p20190518-r0"},
+								{Name: "ncurses-terminfo-base", Version: "6.1_p20190518-r0"},
+								{Name: "ncurses", Version: "6.1_p20190518-r0"},
+								{Name: "ncurses-terminfo", Version: "6.1_p20190518-r0"},
+								{Name: "bash", Version: "5.0.0-r0"},
+								{Name: "readline", Version: "8.0.0-r0"},
+							},
+						},
+					},
+				},
+			},
+			want: types.ImageDetail{
+				OS: &types.OS{
+					Family: "alpine",
+					Name:   "3.10.4",
+				},
+				Packages: []types.Package{
+					{Name: "bash", Version: "5.0.0-r0"},
+					{Name: "busybox", Version: "1.30.1-r3"},
+					{Name: "libcrypto1.1", Version: "1.1.1d-r2"},
+					{Name: "libssl1.1", Version: "1.1.1d-r2"},
+					{Name: "musl", Version: "1.1.22-r3"},
+					{Name: "ncurses", Version: "6.1_p20190518-r0"},
+					{Name: "ncurses-libs", Version: "6.1_p20190518-r0"},
+					{Name: "ncurses-terminfo", Version: "6.1_p20190518-r0"},
+					{Name: "ncurses-terminfo-base", Version: "6.1_p20190518-r0"},
+					{Name: "openssl", Version: "1.1.1d-r2"},
+					{Name: "readline", Version: "8.0.0-r0"},
+				},
+			},
+		},
+		{
 			name: "sad path GetLayer returns an error",
 			args: args{
 				layerIDs: []string{
 					"sha256:932da51564135c98a49a34a193d6cd363d8fa4184d957fde16c9d8527b3f3b02",
 				},
 			},
-			getLayerExpectations: []cache.GetLayerExpectation{
+			getLayerExpectations: []cache.LocalImageCacheGetLayerExpectation{
 				{
-					Args: cache.GetLayerArgs{
+					Args: cache.LocalImageCacheGetLayerArgs{
 						LayerID: "sha256:932da51564135c98a49a34a193d6cd363d8fa4184d957fde16c9d8527b3f3b02",
 					},
-					Returns: cache.GetLayerReturns{LayerBlob: nil},
+					Returns: cache.LocalImageCacheGetLayerReturns{LayerInfo: types.LayerInfo{}},
 				},
 			},
 			wantErr: "layer cache missing",
 		},
 		{
-			name: "sad path GetLayer returns invalid JSON",
+			name: "sad path GetLayer returns empty layer info",
 			args: args{
 				layerIDs: []string{
 					"sha256:932da51564135c98a49a34a193d6cd363d8fa4184d957fde16c9d8527b3f3b02",
 				},
 			},
-			getLayerExpectations: []cache.GetLayerExpectation{
+			getLayerExpectations: []cache.LocalImageCacheGetLayerExpectation{
 				{
-					Args: cache.GetLayerArgs{
+					Args: cache.LocalImageCacheGetLayerArgs{
 						LayerID: "sha256:932da51564135c98a49a34a193d6cd363d8fa4184d957fde16c9d8527b3f3b02",
 					},
-					Returns: cache.GetLayerReturns{LayerBlob: []byte(`invalid`)},
+					Returns: cache.LocalImageCacheGetLayerReturns{LayerInfo: types.LayerInfo{}},
 				},
 			},
-			wantErr: "invalid JSON",
+			wantErr: "layer cache missing",
 		},
 		{
 			name: "sad path unknown OS",
@@ -376,15 +478,19 @@ func TestApplier_ApplyLayers(t *testing.T) {
 					"sha256:932da51564135c98a49a34a193d6cd363d8fa4184d957fde16c9d8527b3f3b02",
 				},
 			},
-			getLayerExpectations: []cache.GetLayerExpectation{
+			getLayerExpectations: []cache.LocalImageCacheGetLayerExpectation{
 				{
-					Args: cache.GetLayerArgs{
+					Args: cache.LocalImageCacheGetLayerArgs{
 						LayerID: "sha256:932da51564135c98a49a34a193d6cd363d8fa4184d957fde16c9d8527b3f3b02",
 					},
-					Returns: cache.GetLayerReturns{LayerBlob: []byte(`{}`)},
+					Returns: cache.LocalImageCacheGetLayerReturns{
+						LayerInfo: types.LayerInfo{
+							SchemaVersion: 1,
+						},
+					},
 				},
 			},
-			wantErr: "Unknown OS",
+			wantErr: "unknown OS",
 		},
 		{
 			name: "sad path no package detected",
@@ -393,34 +499,34 @@ func TestApplier_ApplyLayers(t *testing.T) {
 					"sha256:932da51564135c98a49a34a193d6cd363d8fa4184d957fde16c9d8527b3f3b02",
 				},
 			},
-			getLayerExpectations: []cache.GetLayerExpectation{
+			getLayerExpectations: []cache.LocalImageCacheGetLayerExpectation{
 				{
-					Args: cache.GetLayerArgs{
+					Args: cache.LocalImageCacheGetLayerArgs{
 						LayerID: "sha256:932da51564135c98a49a34a193d6cd363d8fa4184d957fde16c9d8527b3f3b02",
 					},
-					Returns: cache.GetLayerReturns{
-						LayerBlob: []byte(`
-						{
-							"SchemaVersion": 1,
-							"OS": {
-								"Family": "debian",
-								"Name": "9.9"
-							}
-						}`),
+					Returns: cache.LocalImageCacheGetLayerReturns{
+						LayerInfo: types.LayerInfo{
+							SchemaVersion: 1,
+							OS: &types.OS{
+								Family: "debian",
+								Name:   "9.9",
+							},
+						},
 					},
 				},
 			},
-			wantErr: "No packages detected",
+			wantErr: "no packages detected",
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			c := new(cache.MockLocalLayerCache)
+			c := new(cache.MockLocalImageCache)
 			c.ApplyGetLayerExpectations(tt.getLayerExpectations)
+			c.ApplyGetImageExpectations(tt.getImageExpectations)
 
 			a := analyzer.NewApplier(c)
 
-			got, err := a.ApplyLayers(tt.args.layerIDs)
+			got, err := a.ApplyLayers(tt.args.imageID, tt.args.layerIDs)
 			if tt.wantErr != "" {
 				require.NotNil(t, err)
 				assert.Contains(t, err.Error(), tt.wantErr, tt.name)
@@ -437,6 +543,7 @@ func TestApplier_ApplyLayers(t *testing.T) {
 				})
 			}
 			assert.Equal(t, tt.want, got)
+			c.AssertExpectations(t)
 		})
 	}
 }
