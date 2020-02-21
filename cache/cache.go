@@ -37,7 +37,7 @@ type ImageCache interface {
 // LocalImageCache always uses local cache
 type LocalImageCache interface {
 	GetImage(imageID string) (imageConfig types.ImageInfo, err error)
-	GetLayer(layerID string) (layerInfo types.LayerInfo)
+	GetLayer(layerID string) (layerInfo types.LayerInfo, err error)
 	Clear() (err error)
 }
 
@@ -75,16 +75,24 @@ func NewFSCache(cacheDir string) (FSCache, error) {
 	}, nil
 }
 
-func (fs FSCache) GetLayer(layerID string) types.LayerInfo {
+func (fs FSCache) GetLayer(layerID string) (types.LayerInfo, error) {
 	var layerInfo types.LayerInfo
-	_ = fs.db.View(func(tx *bolt.Tx) error {
+	err := fs.db.View(func(tx *bolt.Tx) error {
 		// get a decompressed layer ID
 		decompressedBucket := tx.Bucket([]byte(decompressedDigestBucket))
 		layerBucket := tx.Bucket([]byte(layerBucket))
-		layerInfo, _ = fs.getLayer(decompressedBucket, layerBucket, layerID)
+
+		var err error
+		layerInfo, err = fs.getLayer(decompressedBucket, layerBucket, layerID)
+		if err != nil {
+			return err
+		}
 		return nil
 	})
-	return layerInfo
+	if err != nil {
+		return types.LayerInfo{}, err
+	}
+	return layerInfo, nil
 }
 
 func (fs FSCache) getLayer(decompressedBucket, layerBucket *bolt.Bucket, layerID string) (types.LayerInfo, error) {

@@ -141,7 +141,8 @@ func TestFSCache_GetLayer(t *testing.T) {
 			require.NoError(t, err)
 			defer fs.Clear()
 
-			got := fs.GetLayer(tt.args.layerID)
+			got, err := fs.GetLayer(tt.args.layerID)
+			assert.NoError(t, err)
 			assert.Equal(t, tt.want, got)
 		})
 	}

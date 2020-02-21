@@ -102,6 +102,7 @@ type LocalImageCacheGetLayerArgs struct {
 
 type LocalImageCacheGetLayerReturns struct {
 	LayerInfo types.LayerInfo
+	Err       error
 }
 
 type LocalImageCacheGetLayerExpectation struct {
@@ -116,7 +117,7 @@ func (_m *MockLocalImageCache) ApplyGetLayerExpectation(e LocalImageCacheGetLaye
 	} else {
 		args = append(args, e.Args.LayerID)
 	}
-	_m.On("GetLayer", args...).Return(e.Returns.LayerInfo)
+	_m.On("GetLayer", args...).Return(e.Returns.LayerInfo, e.Returns.Err)
 }
 
 func (_m *MockLocalImageCache) ApplyGetLayerExpectations(expectations []LocalImageCacheGetLayerExpectation) {
@@ -126,7 +127,7 @@ func (_m *MockLocalImageCache) ApplyGetLayerExpectations(expectations []LocalIma
 }
 
 // GetLayer provides a mock function with given fields: layerID
-func (_m *MockLocalImageCache) GetLayer(layerID string) types.LayerInfo {
+func (_m *MockLocalImageCache) GetLayer(layerID string) (types.LayerInfo, error) {
 	ret := _m.Called(layerID)
 
 	var r0 types.LayerInfo
@@ -136,5 +137,12 @@ func (_m *MockLocalImageCache) GetLayer(layerID string) types.LayerInfo {
 		r0 = ret.Get(0).(types.LayerInfo)
 	}
 
-	return r0
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(layerID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
 }

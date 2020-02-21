@@ -230,7 +230,7 @@ func NewApplier(c cache.LocalImageCache) Applier {
 func (a Applier) ApplyLayers(imageID digest.Digest, layerIDs []string) (types.ImageDetail, error) {
 	var layers []types.LayerInfo
 	for _, layerID := range layerIDs {
-		layer := a.cache.GetLayer(layerID)
+		layer, _ := a.cache.GetLayer(layerID)
 		if layer.SchemaVersion == 0 {
 			return types.ImageDetail{}, xerrors.Errorf("layer cache missing: %s", layerID)
 		}
