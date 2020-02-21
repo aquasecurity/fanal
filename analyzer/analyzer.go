@@ -6,6 +6,7 @@ import (
 	"sort"
 
 	"github.com/aquasecurity/fanal/extractor/docker"
+	"github.com/containers/image/v5/manifest"
 	digest "github.com/opencontainers/go-digest"
 
 	"github.com/aquasecurity/fanal/cache"
@@ -25,11 +26,11 @@ var (
 	additionalFiles  []string
 
 	// ErrUnknownOS occurs when unknown OS is analyzed.
-	ErrUnknownOS = xerrors.New("Unknown OS")
+	ErrUnknownOS = xerrors.New("unknown OS")
 	// ErrPkgAnalysis occurs when the analysis of packages is failed.
-	ErrPkgAnalysis = xerrors.New("Failed to analyze packages")
+	ErrPkgAnalysis = xerrors.New("failed to analyze packages")
 	// ErrNoPkgsDetected occurs when the required files for an OS package manager are not detected
-	ErrNoPkgsDetected = xerrors.New("No packages detected")
+	ErrNoPkgsDetected = xerrors.New("no packages detected")
 )
 
 type OSAnalyzer interface {
