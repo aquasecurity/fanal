@@ -72,6 +72,7 @@ type ImageInfo struct {
 
 // LayerInfo is stored in cache
 type LayerInfo struct {
+	ID            digest.Digest `json:",omitempty"`
 	SchemaVersion int
 	OS            *OS           `json:",omitempty"`
 	PackageInfos  []PackageInfo `json:",omitempty"`
