@@ -260,6 +260,7 @@ func TestApplier_ApplyLayers(t *testing.T) {
 					},
 					Returns: cache.LocalImageCacheGetLayerReturns{
 						LayerInfo: types.LayerInfo{
+							ID:            "sha256:932da51564135c98a49a34a193d6cd363d8fa4184d957fde16c9d8527b3f3b02",
 							SchemaVersion: 1,
 							OS: &types.OS{
 								Family: "debian",
@@ -270,6 +271,7 @@ func TestApplier_ApplyLayers(t *testing.T) {
 									FilePath: "var/lib/dpkg/status.d/tzdata",
 									Packages: []types.Package{
 										{
+											LayerID:    "sha256:932da51564135c98a49a34a193d6cd363d8fa4184d957fde16c9d8527b3f3b02",
 											Name:       "tzdata",
 											Version:    "2019a-0+deb9u1",
 											SrcName:    "tzdata",
@@ -293,6 +295,7 @@ func TestApplier_ApplyLayers(t *testing.T) {
 									FilePath: "var/lib/dpkg/status.d/libc6",
 									Packages: []types.Package{
 										{
+											// LayerID is intentionally missing to be added by the business logic
 											Name:       "libc6",
 											Version:    "2.24-11+deb9u4",
 											SrcName:    "glibc",
@@ -352,13 +355,20 @@ func TestApplier_ApplyLayers(t *testing.T) {
 					Name:   "9.9",
 				},
 				Packages: []types.Package{
-					{Name: "libc6", Version: "2.24-11+deb9u4", SrcName: "glibc", SrcVersion: "2.24-11+deb9u4"},
-					{Name: "tzdata", Version: "2019a-0+deb9u1", SrcName: "tzdata", SrcVersion: "2019a-0+deb9u1"},
+					{
+						Name: "libc6", Version: "2.24-11+deb9u4", SrcName: "glibc", SrcVersion: "2.24-11+deb9u4",
+						//LayerID: "sha256:dffd9992ca398466a663c87c92cfea2a2db0ae0cf33fcb99da60eec52addbfc5",
+					},
+					{
+						Name: "tzdata", Version: "2019a-0+deb9u1", SrcName: "tzdata", SrcVersion: "2019a-0+deb9u1",
+						LayerID: "sha256:932da51564135c98a49a34a193d6cd363d8fa4184d957fde16c9d8527b3f3b02",
+					},
 				},
 				Applications: []types.Application{
 					{
 						Type: "composer", FilePath: "php-app/composer.lock",
-						Libraries: []depTypes.Library{{Name: "guzzlehttp/guzzle", Version: "6.2.0"},
+						Libraries: []depTypes.Library{
+							{Name: "guzzlehttp/guzzle", Version: "6.2.0"},
 							{Name: "symfony/process", Version: "v4.2.7"},
 						},
 					},
