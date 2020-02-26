@@ -235,6 +235,10 @@ func (a Applier) ApplyLayers(imageID digest.Digest, layerIDs []string) (types.Im
 		if layer.SchemaVersion == 0 {
 			return types.ImageDetail{}, xerrors.Errorf("layer cache missing: %s", layerID)
 		}
+		// TODO: Should we handle this?
+		//if layer.ID == "" {
+		//	layer.ID = imageID
+		//}
 		layers = append(layers, layer)
 	}
 

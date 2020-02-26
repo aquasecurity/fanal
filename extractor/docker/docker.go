@@ -98,7 +98,15 @@ func ApplyLayers(layers []types.LayerInfo) types.ImageDetail {
 		}
 
 		for _, pkgInfo := range layer.PackageInfos {
-			nestedMap.SetByString(pkgInfo.FilePath, sep, pkgInfo)
+			var pkgs []types.Package
+			for _, pkg := range pkgInfo.Packages {
+				pkg.LayerID = layer.ID
+				pkgs = append(pkgs, pkg)
+			}
+			nestedMap.SetByString(pkgInfo.FilePath, sep, types.PackageInfo{
+				FilePath: pkgInfo.FilePath,
+				Packages: pkgs,
+			})
 		}
 		for _, app := range layer.Applications {
 			nestedMap.SetByString(app.FilePath, sep, app)
