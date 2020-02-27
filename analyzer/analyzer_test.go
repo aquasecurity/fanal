@@ -255,7 +255,6 @@ func TestApplier_ApplyLayers(t *testing.T) {
 					},
 					Returns: cache.LocalImageCacheGetLayerReturns{
 						LayerInfo: types.LayerInfo{
-							ID:            "sha256:932da51564135c98a49a34a193d6cd363d8fa4184d957fde16c9d8527b3f3b02",
 							SchemaVersion: 1,
 							OS: &types.OS{
 								Family: "debian",
@@ -290,7 +289,6 @@ func TestApplier_ApplyLayers(t *testing.T) {
 									FilePath: "var/lib/dpkg/status.d/libc6",
 									Packages: []types.Package{
 										{
-											// LayerID is intentionally missing to be added by the business logic
 											Name:       "libc6",
 											Version:    "2.24-11+deb9u4",
 											SrcName:    "glibc",
