@@ -176,7 +176,6 @@ func (ac Config) analyzeLayer(ctx context.Context, dig digest.Digest) (digest.Di
 	}
 
 	layerInfo := types.LayerInfo{
-		ID:            dig,
 		SchemaVersion: types.LayerJSONSchemaVersion,
 		OS:            os,
 		PackageInfos:  pkgs,
