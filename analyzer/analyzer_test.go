@@ -352,7 +352,7 @@ func TestApplier_ApplyLayers(t *testing.T) {
 				Packages: []types.Package{
 					{
 						Name: "libc6", Version: "2.24-11+deb9u4", SrcName: "glibc", SrcVersion: "2.24-11+deb9u4",
-						//LayerID: "sha256:dffd9992ca398466a663c87c92cfea2a2db0ae0cf33fcb99da60eec52addbfc5",
+						LayerID: "sha256:dffd9992ca398466a663c87c92cfea2a2db0ae0cf33fcb99da60eec52addbfc5",
 					},
 					{
 						Name: "tzdata", Version: "2019a-0+deb9u1", SrcName: "tzdata", SrcVersion: "2019a-0+deb9u1",
@@ -394,11 +394,11 @@ func TestApplier_ApplyLayers(t *testing.T) {
 								{
 									FilePath: "lib/apk/db/installed",
 									Packages: []types.Package{
-										{Name: "musl", Version: "1.1.22-r3"},
-										{Name: "busybox", Version: "1.30.1-r3"},
-										{Name: "openssl", Version: "1.1.1d-r2"},
-										{Name: "libcrypto1.1", Version: "1.1.1d-r2"},
-										{Name: "libssl1.1", Version: "1.1.1d-r2"},
+										{Name: "musl", Version: "1.1.22-r3", LayerID: "sha256:531743b7098cb2aaf615641007a129173f63ed86ca32fe7b5a246a1c47286028"},
+										{Name: "busybox", Version: "1.30.1-r3", LayerID: "sha256:531743b7098cb2aaf615641007a129173f63ed86ca32fe7b5a246a1c47286028"},
+										{Name: "openssl", Version: "1.1.1d-r2", LayerID: "sha256:531743b7098cb2aaf615641007a129173f63ed86ca32fe7b5a246a1c47286028"},
+										{Name: "libcrypto1.1", Version: "1.1.1d-r2", LayerID: "sha256:531743b7098cb2aaf615641007a129173f63ed86ca32fe7b5a246a1c47286028"},
+										{Name: "libssl1.1", Version: "1.1.1d-r2", LayerID: "sha256:531743b7098cb2aaf615641007a129173f63ed86ca32fe7b5a246a1c47286028"},
 									},
 								},
 							},
@@ -434,11 +434,11 @@ func TestApplier_ApplyLayers(t *testing.T) {
 					Name:   "3.10.4",
 				},
 				Packages: []types.Package{
-					{Name: "busybox", Version: "1.30.1-r3"},
-					{Name: "libcrypto1.1", Version: "1.1.1d-r2"},
-					{Name: "libssl1.1", Version: "1.1.1d-r2"},
-					{Name: "musl", Version: "1.1.22-r3"},
-					{Name: "openssl", Version: "1.1.1d-r2"},
+					{Name: "busybox", Version: "1.30.1-r3", LayerID: "sha256:531743b7098cb2aaf615641007a129173f63ed86ca32fe7b5a246a1c47286028"},
+					{Name: "libcrypto1.1", Version: "1.1.1d-r2", LayerID: "sha256:531743b7098cb2aaf615641007a129173f63ed86ca32fe7b5a246a1c47286028"},
+					{Name: "libssl1.1", Version: "1.1.1d-r2", LayerID: "sha256:531743b7098cb2aaf615641007a129173f63ed86ca32fe7b5a246a1c47286028"},
+					{Name: "musl", Version: "1.1.22-r3", LayerID: "sha256:531743b7098cb2aaf615641007a129173f63ed86ca32fe7b5a246a1c47286028"},
+					{Name: "openssl", Version: "1.1.1d-r2", LayerID: "sha256:531743b7098cb2aaf615641007a129173f63ed86ca32fe7b5a246a1c47286028"},
 				},
 				HistoryPackages: []types.Package{
 					{Name: "musl", Version: "1.1.23"},
