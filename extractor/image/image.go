@@ -82,7 +82,7 @@ func NewImage(ctx context.Context, image Reference, transports []string, option 
 
 	rawSource, src, err := newSource(ctx, image.Name, transports, sys)
 	if err != nil {
-		return RealImage{}, err
+		return RealImage{}, xerrors.Errorf("failed to initialize source: %w", err)
 	}
 
 	return RealImage{

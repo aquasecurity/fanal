@@ -49,24 +49,24 @@ type FSCache struct {
 func NewFSCache(cacheDir string) (FSCache, error) {
 	dir := filepath.Join(cacheDir, cacheDirName)
 	if err := os.MkdirAll(dir, 0700); err != nil {
-		return FSCache{}, err
+		return FSCache{}, xerrors.Errorf("failed to create cache dir: %w", err)
 	}
 
 	db, err := bolt.Open(filepath.Join(dir, "fanal.db"), 0600, nil)
 	if err != nil {
-		return FSCache{}, err
+		return FSCache{}, xerrors.Errorf("unable to open DB: %w", err)
 	}
 
 	err = db.Update(func(tx *bolt.Tx) error {
 		for _, bucket := range []string{imageBucket, layerBucket, decompressedDigestBucket} {
 			if _, err := tx.CreateBucketIfNotExists([]byte(bucket)); err != nil {
-				return err
+				return xerrors.Errorf("unable to create %s bucket: %w", err)
 			}
 		}
 		return nil
 	})
 	if err != nil {
-		return FSCache{}, err
+		return FSCache{}, xerrors.Errorf("DB error: %w", err)
 	}
 
 	return FSCache{
@@ -85,12 +85,12 @@ func (fs FSCache) GetLayer(layerID string) (types.LayerInfo, error) {
 		var err error
 		layerInfo, err = fs.getLayer(decompressedBucket, layerBucket, layerID)
 		if err != nil {
-			return err
+			return xerrors.Errorf("failed to get layer from the cache: %w", err)
 		}
 		return nil
 	})
 	if err != nil {
-		return types.LayerInfo{}, err
+		return types.LayerInfo{}, xerrors.Errorf("DB error: %w", err)
 	}
 	return layerInfo, nil
 }
@@ -106,7 +106,7 @@ func (fs FSCache) getLayer(decompressedBucket, layerBucket *bolt.Bucket, layerID
 
 	var l types.LayerInfo
 	if err := json.Unmarshal(b, &l); err != nil {
-		return types.LayerInfo{}, err
+		return types.LayerInfo{}, xerrors.Errorf("JSON unmarshal error: %w", err)
 	}
 	return l, nil
 }
@@ -147,12 +147,12 @@ func (fs FSCache) GetImage(imageID string) (types.ImageInfo, error) {
 		return nil
 	})
 	if err != nil {
-		return types.ImageInfo{}, err
+		return types.ImageInfo{}, xerrors.Errorf("DB error: %w", err)
 	}
 
 	var info types.ImageInfo
 	if err := json.Unmarshal(blob, &info); err != nil {
-		return types.ImageInfo{}, err
+		return types.ImageInfo{}, xerrors.Errorf("JSON unmarshal error: %w", err)
 	}
 	return info, nil
 }
@@ -197,7 +197,7 @@ func (fs FSCache) MissingLayers(imageID string, layerIDs []string) (bool, []stri
 		return nil
 	})
 	if err != nil {
-		return false, nil, err
+		return false, nil, xerrors.Errorf("DB error: %w", err)
 	}
 
 	// get image info
@@ -214,10 +214,10 @@ func (fs FSCache) MissingLayers(imageID string, layerIDs []string) (bool, []stri
 
 func (fs FSCache) Clear() error {
 	if err := fs.db.Close(); err != nil {
-		return err
+		return xerrors.Errorf("unable to close DB: %w", err)
 	}
 	if err := os.RemoveAll(fs.directory); err != nil {
-		return xerrors.New("failed to remove cache")
+		return xerrors.Errorf("failed to remove cache: %w", err)
 	}
 	return nil
 }

@@ -103,11 +103,11 @@ func (ac Config) Analyze(ctx context.Context) (types.ImageReference, error) {
 	layerIDs := ac.Extractor.LayerIDs()
 	missingImage, missingLayers, err := ac.Cache.MissingLayers(string(imageID), layerIDs)
 	if err != nil {
-		return types.ImageReference{}, err
+		return types.ImageReference{}, xerrors.Errorf("unable to get missing layers: %w", err)
 	}
 
 	if err := ac.analyze(ctx, missingImage, missingLayers); err != nil {
-		return types.ImageReference{}, err
+		return types.ImageReference{}, xerrors.Errorf("analyze error: %w", err)
 	}
 
 	return types.ImageReference{
@@ -152,7 +152,7 @@ func (ac Config) analyze(ctx context.Context, missingImage bool, layerIDs []stri
 
 	if missingImage {
 		if err := ac.analyzeConfig(ctx, osFound); err != nil {
-			return err
+			return xerrors.Errorf("unable to analyze config: %w", err)
 		}
 	}
 
@@ -162,17 +162,17 @@ func (ac Config) analyze(ctx context.Context, missingImage bool, layerIDs []stri
 func (ac Config) analyzeLayer(ctx context.Context, dig digest.Digest) (digest.Digest, types.LayerInfo, error) {
 	decompressedLayerID, files, opqDirs, whFiles, err := ac.Extractor.ExtractLayerFiles(ctx, dig, RequiredFilenames())
 	if err != nil {
-		return "", types.LayerInfo{}, err
+		return "", types.LayerInfo{}, xerrors.Errorf("unable to extract files from layer %s: %w", dig, err)
 	}
 
 	os := GetOS(files)
 	pkgs, err := GetPackages(files)
 	if err != nil {
-		return "", types.LayerInfo{}, err
+		return "", types.LayerInfo{}, xerrors.Errorf("failed to get packages: %w", err)
 	}
 	apps, err := GetLibraries(files)
 	if err != nil {
-		return "", types.LayerInfo{}, err
+		return "", types.LayerInfo{}, xerrors.Errorf("failed to get libraries: %w", err)
 	}
 
 	layerInfo := types.LayerInfo{
@@ -189,7 +189,7 @@ func (ac Config) analyzeLayer(ctx context.Context, dig digest.Digest) (digest.Di
 func (ac Config) analyzeConfig(ctx context.Context, osFound types.OS) error {
 	configBlob, err := ac.Extractor.ConfigBlob(ctx)
 	if err != nil {
-		return err
+		return xerrors.Errorf("unable to get config blob: %w", err)
 	}
 
 	// special file for config
@@ -200,7 +200,7 @@ func (ac Config) analyzeConfig(ctx context.Context, osFound types.OS) error {
 
 	var s1 manifest.Schema2V1Image
 	if err := json.Unmarshal(configBlob, &s1); err != nil {
-		return err
+		return xerrors.Errorf("json marshal error: %w", err)
 	}
 
 	info := types.ImageInfo{
@@ -213,7 +213,7 @@ func (ac Config) analyzeConfig(ctx context.Context, osFound types.OS) error {
 	}
 
 	if err := ac.Cache.PutImage(string(ac.Extractor.ImageID()), info); err != nil {
-		return err
+		return xerrors.Errorf("failed to put image info into the cache: %w", err)
 	}
 
 	return nil
