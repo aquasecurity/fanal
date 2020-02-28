@@ -387,12 +387,14 @@ func TestApplier_ApplyLayers(t *testing.T) {
 									Name:    "guzzlehttp/guzzle",
 									Version: "6.2.0",
 								},
+								LayerID: "sha256:24df0d4e20c0f42d3703bf1f1db2bdd77346c7956f74f423603d651e8e5ae8a7",
 							},
 							{
 								Library: depTypes.Library{
 									Name:    "symfony/process",
 									Version: "v4.2.7",
 								},
+								LayerID: "sha256:24df0d4e20c0f42d3703bf1f1db2bdd77346c7956f74f423603d651e8e5ae8a7",
 							},
 						},
 					},
