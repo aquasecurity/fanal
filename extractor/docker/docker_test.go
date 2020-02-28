@@ -58,12 +58,6 @@ func TestApplyLayers(t *testing.T) {
 									},
 								},
 							},
-							//Libraries: []godeptypes.Library{
-							//	{
-							//		Name:    "gemlibrary1",
-							//		Version: "1.2.3",
-							//	},
-							//},
 						},
 						{
 							Type:     "composer",
@@ -131,6 +125,7 @@ func TestApplyLayers(t *testing.T) {
 									Name:    "gemlibrary1",
 									Version: "1.2.3",
 								},
+								LayerID: "sha256:932da51564135c98a49a34a193d6cd363d8fa4184d957fde16c9d8527b3f3b02",
 							},
 						},
 					},
