@@ -15,7 +15,6 @@ import (
 	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/fanal/extractor"
-	godeptypes "github.com/aquasecurity/go-dep-parser/pkg/types"
 )
 
 var (
@@ -50,7 +49,7 @@ type CommandAnalyzer interface {
 
 type LibraryAnalyzer interface {
 	Name() string
-	Analyze(extractor.FileMap) (map[types.FilePath][]godeptypes.Library, error)
+	Analyze(extractor.FileMap) (map[types.FilePath][]types.LibraryInfo, error)
 	RequiredFiles() []string
 }
 

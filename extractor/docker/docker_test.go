@@ -50,20 +50,30 @@ func TestApplyLayers(t *testing.T) {
 						{
 							Type:     "gem",
 							FilePath: "app/Gemfile.lock",
-							Libraries: []godeptypes.Library{
+							Libraries: []types.LibraryInfo{
 								{
-									Name:    "gemlibrary1",
-									Version: "1.2.3",
+									Library: godeptypes.Library{
+										Name:    "gemlibrary1",
+										Version: "1.2.3",
+									},
 								},
 							},
+							//Libraries: []godeptypes.Library{
+							//	{
+							//		Name:    "gemlibrary1",
+							//		Version: "1.2.3",
+							//	},
+							//},
 						},
 						{
 							Type:     "composer",
 							FilePath: "app/composer.lock",
-							Libraries: []godeptypes.Library{
+							Libraries: []types.LibraryInfo{
 								{
-									Name:    "phplibrary1",
-									Version: "6.6.6",
+									Library: godeptypes.Library{
+										Name:    "phplibrary1",
+										Version: "6.6.6",
+									},
 								},
 							},
 						},
@@ -115,10 +125,12 @@ func TestApplyLayers(t *testing.T) {
 					{
 						Type:     "gem",
 						FilePath: "app/Gemfile.lock",
-						Libraries: []godeptypes.Library{
+						Libraries: []types.LibraryInfo{
 							{
-								Name:    "gemlibrary1",
-								Version: "1.2.3",
+								Library: godeptypes.Library{
+									Name:    "gemlibrary1",
+									Version: "1.2.3",
+								},
 							},
 						},
 					},
@@ -151,10 +163,12 @@ func TestApplyLayers(t *testing.T) {
 						{
 							Type:     "composer",
 							FilePath: "app/composer.lock",
-							Libraries: []godeptypes.Library{
+							Libraries: []types.LibraryInfo{
 								{
-									Name:    "phplibrary1",
-									Version: "6.6.6",
+									Library: godeptypes.Library{
+										Name:    "phplibrary1",
+										Version: "6.6.6",
+									},
 								},
 							},
 						},

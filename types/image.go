@@ -38,10 +38,15 @@ type PackageInfo struct {
 	Packages []Package
 }
 
+type LibraryInfo struct {
+	Library godeptypes.Library
+	LayerID digest.Digest
+}
+
 type Application struct {
 	Type      string
 	FilePath  string
-	Libraries []godeptypes.Library
+	Libraries []LibraryInfo
 }
 
 type ImageReference struct {
