@@ -139,8 +139,25 @@ func TestConfig_Analyze(t *testing.T) {
 						DecompressedLayerID: "sha256:24df0d4e20c0f42d3703bf1f1db2bdd77346c7956f74f423603d651e8e5ae8a7",
 						LayerInfo: types.LayerInfo{
 							SchemaVersion: 1,
-							Applications:  []types.Application{{Type: "composer", FilePath: "php-app/composer.lock", Libraries: []depTypes.Library{{Name: "guzzlehttp/guzzle", Version: "6.2.0"}, {Name: "guzzlehttp/promises", Version: "v1.3.1"}, {Name: "guzzlehttp/psr7", Version: "1.5.2"}, {Name: "laravel/installer", Version: "v2.0.1"}, {Name: "pear/log", Version: "1.13.1"}, {Name: "pear/pear_exception", Version: "v1.0.0"}, {Name: "psr/http-message", Version: "1.0.1"}, {Name: "ralouphie/getallheaders", Version: "2.0.5"}, {Name: "symfony/console", Version: "v4.2.7"}, {Name: "symfony/contracts", Version: "v1.0.2"}, {Name: "symfony/filesystem", Version: "v4.2.7"}, {Name: "symfony/polyfill-ctype", Version: "v1.11.0"}, {Name: "symfony/polyfill-mbstring", Version: "v1.11.0"}, {Name: "symfony/process", Version: "v4.2.7"}}}},
-							OpaqueDirs:    []string{"php-app/"},
+							Applications: []types.Application{{Type: "composer", FilePath: "php-app/composer.lock",
+								Libraries: []types.LibraryInfo{
+									{Library: depTypes.Library{Name: "guzzlehttp/guzzle", Version: "6.2.0"}},
+									{Library: depTypes.Library{Name: "guzzlehttp/promises", Version: "v1.3.1"}},
+									{Library: depTypes.Library{Name: "guzzlehttp/psr7", Version: "1.5.2"}},
+									{Library: depTypes.Library{Name: "laravel/installer", Version: "v2.0.1"}},
+									{Library: depTypes.Library{Name: "pear/log", Version: "1.13.1"}},
+									{Library: depTypes.Library{Name: "pear/pear_exception", Version: "v1.0.0"}},
+									{Library: depTypes.Library{Name: "psr/http-message", Version: "1.0.1"}},
+									{Library: depTypes.Library{Name: "ralouphie/getallheaders", Version: "2.0.5"}},
+									{Library: depTypes.Library{Name: "symfony/console", Version: "v4.2.7"}},
+									{Library: depTypes.Library{Name: "symfony/contracts", Version: "v1.0.2"}},
+									{Library: depTypes.Library{Name: "symfony/filesystem", Version: "v4.2.7"}},
+									{Library: depTypes.Library{Name: "symfony/polyfill-ctype", Version: "v1.11.0"}},
+									{Library: depTypes.Library{Name: "symfony/polyfill-mbstring", Version: "v1.11.0"}},
+									{Library: depTypes.Library{Name: "symfony/process", Version: "v4.2.7"}},
+								},
+							}},
+							OpaqueDirs: []string{"php-app/"},
 						},
 					},
 				},
@@ -314,14 +331,18 @@ func TestApplier_ApplyLayers(t *testing.T) {
 								{
 									Type:     "composer",
 									FilePath: "php-app/composer.lock",
-									Libraries: []depTypes.Library{
+									Libraries: []types.LibraryInfo{
 										{
-											Name:    "guzzlehttp/guzzle",
-											Version: "6.2.0",
+											Library: depTypes.Library{
+												Name:    "guzzlehttp/guzzle",
+												Version: "6.2.0",
+											},
 										},
 										{
-											Name:    "symfony/process",
-											Version: "v4.2.7",
+											Library: depTypes.Library{
+												Name:    "symfony/process",
+												Version: "v4.2.7",
+											},
 										},
 									},
 								},
@@ -360,9 +381,19 @@ func TestApplier_ApplyLayers(t *testing.T) {
 				Applications: []types.Application{
 					{
 						Type: "composer", FilePath: "php-app/composer.lock",
-						Libraries: []depTypes.Library{
-							{Name: "guzzlehttp/guzzle", Version: "6.2.0"},
-							{Name: "symfony/process", Version: "v4.2.7"},
+						Libraries: []types.LibraryInfo{
+							{
+								Library: depTypes.Library{
+									Name:    "guzzlehttp/guzzle",
+									Version: "6.2.0",
+								},
+							},
+							{
+								Library: depTypes.Library{
+									Name:    "symfony/process",
+									Version: "v4.2.7",
+								},
+							},
 						},
 					},
 				},
@@ -552,7 +583,7 @@ func TestApplier_ApplyLayers(t *testing.T) {
 			})
 			for _, app := range got.Applications {
 				sort.Slice(app.Libraries, func(i, j int) bool {
-					return app.Libraries[i].Name < app.Libraries[j].Name
+					return app.Libraries[i].Library.Name < app.Libraries[j].Library.Name
 				})
 			}
 			assert.Equal(t, tt.want, got)

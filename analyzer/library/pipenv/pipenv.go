@@ -12,7 +12,6 @@ import (
 	"github.com/aquasecurity/fanal/types"
 	"github.com/aquasecurity/fanal/utils"
 	"github.com/aquasecurity/go-dep-parser/pkg/pipenv"
-	godeptypes "github.com/aquasecurity/go-dep-parser/pkg/types"
 )
 
 func init() {
@@ -21,8 +20,8 @@ func init() {
 
 type pipenvLibraryAnalyzer struct{}
 
-func (a pipenvLibraryAnalyzer) Analyze(fileMap extractor.FileMap) (map[types.FilePath][]godeptypes.Library, error) {
-	libMap := map[types.FilePath][]godeptypes.Library{}
+func (a pipenvLibraryAnalyzer) Analyze(fileMap extractor.FileMap) (map[types.FilePath][]types.LibraryInfo, error) {
+	libMap := map[types.FilePath][]types.LibraryInfo{}
 	requiredFiles := a.RequiredFiles()
 
 	for filename, content := range fileMap {
@@ -36,7 +35,11 @@ func (a pipenvLibraryAnalyzer) Analyze(fileMap extractor.FileMap) (map[types.Fil
 		if err != nil {
 			return nil, xerrors.Errorf("error with %s: %w", filename, err)
 		}
-		libMap[types.FilePath(filename)] = libs
+		for _, lib := range libs {
+			libMap[types.FilePath(filename)] = append(libMap[types.FilePath(filename)], types.LibraryInfo{
+				Library: lib,
+			})
+		}
 	}
 	return libMap, nil
 }

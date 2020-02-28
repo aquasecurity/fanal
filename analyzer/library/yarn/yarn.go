@@ -11,7 +11,6 @@ import (
 	"github.com/aquasecurity/fanal/analyzer"
 	"github.com/aquasecurity/fanal/extractor"
 	"github.com/aquasecurity/fanal/utils"
-	godeptypes "github.com/aquasecurity/go-dep-parser/pkg/types"
 	"github.com/aquasecurity/go-dep-parser/pkg/yarn"
 	"golang.org/x/xerrors"
 )
@@ -22,8 +21,8 @@ func init() {
 
 type yarnLibraryAnalyzer struct{}
 
-func (a yarnLibraryAnalyzer) Analyze(fileMap extractor.FileMap) (map[types.FilePath][]godeptypes.Library, error) {
-	libMap := map[types.FilePath][]godeptypes.Library{}
+func (a yarnLibraryAnalyzer) Analyze(fileMap extractor.FileMap) (map[types.FilePath][]types.LibraryInfo, error) {
+	libMap := map[types.FilePath][]types.LibraryInfo{}
 	requiredFiles := a.RequiredFiles()
 
 	for filename, content := range fileMap {
@@ -39,7 +38,11 @@ func (a yarnLibraryAnalyzer) Analyze(fileMap extractor.FileMap) (map[types.FileP
 		if err != nil {
 			return nil, xerrors.Errorf("error with %s: %w", filename, err)
 		}
-		libMap[types.FilePath(filename)] = libs
+		for _, lib := range libs {
+			libMap[types.FilePath(filename)] = append(libMap[types.FilePath(filename)], types.LibraryInfo{
+				Library: lib,
+			})
+		}
 	}
 
 	return libMap, nil
