@@ -35,7 +35,6 @@ import (
 	"github.com/aquasecurity/fanal/types"
 	dtypes "github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -51,36 +50,36 @@ var testCases = []testCase{
 		imageName: "alpine:3.10",
 		imageFile: "testdata/fixtures/alpine-310.tar.gz",
 	},
-	{
-		name:      "happy path amazonlinux:2",
-		imageName: "amazonlinux:2",
-		imageFile: "testdata/fixtures/amazon-2.tar.gz",
-	},
-	{
-		name:      "happy path debian:buster",
-		imageName: "debian:buster",
-		imageFile: "testdata/fixtures/debian-buster.tar.gz",
-	},
-	{
-		name:      "happy path photon:1.0",
-		imageName: "photon:1.0-20190823",
-		imageFile: "testdata/fixtures/photon-10.tar.gz",
-	},
-	{
-		name:      "happy path registry.redhat.io/ubi7",
-		imageName: "registry.redhat.io/ubi7",
-		imageFile: "testdata/fixtures/ubi-7.tar.gz",
-	},
-	{
-		name:      "happy path opensuse leap 15.1",
-		imageName: "opensuse/leap:latest",
-		imageFile: "testdata/fixtures/opensuse-leap-151.tar.gz",
-	},
-	{
-		name:      "happy path vulnimage with lock files",
-		imageName: "knqyf263/vuln-image:1.2.3",
-		imageFile: "testdata/fixtures/vulnimage.tar.gz",
-	},
+	//{
+	//	name:      "happy path amazonlinux:2",
+	//	imageName: "amazonlinux:2",
+	//	imageFile: "testdata/fixtures/amazon-2.tar.gz",
+	//},
+	//{
+	//	name:      "happy path debian:buster",
+	//	imageName: "debian:buster",
+	//	imageFile: "testdata/fixtures/debian-buster.tar.gz",
+	//},
+	//{
+	//	name:      "happy path photon:1.0",
+	//	imageName: "photon:1.0-20190823",
+	//	imageFile: "testdata/fixtures/photon-10.tar.gz",
+	//},
+	//{
+	//	name:      "happy path registry.redhat.io/ubi7",
+	//	imageName: "registry.redhat.io/ubi7",
+	//	imageFile: "testdata/fixtures/ubi-7.tar.gz",
+	//},
+	//{
+	//	name:      "happy path opensuse leap 15.1",
+	//	imageName: "opensuse/leap:latest",
+	//	imageFile: "testdata/fixtures/opensuse-leap-151.tar.gz",
+	//},
+	//{
+	//	name:      "happy path vulnimage with lock files",
+	//	imageName: "knqyf263/vuln-image:1.2.3",
+	//	imageFile: "testdata/fixtures/vulnimage.tar.gz",
+	//},
 }
 
 func run(b *testing.B, ctx context.Context, ac analyzer.Config) {
@@ -102,7 +101,7 @@ func runChecksBench(b *testing.B, ctx context.Context, imageName, cacheDir strin
 
 func BenchmarkDockerMode_WithoutCache(b *testing.B) {
 	for _, tc := range testCases {
-		tc := tc
+		//tc := tc
 		b.Run(tc.name, func(b *testing.B) {
 			benchCache, err := ioutil.TempDir("", "DockerMode_WithoutCache_")
 			require.NoError(b, err)
@@ -122,7 +121,7 @@ func BenchmarkDockerMode_WithoutCache(b *testing.B) {
 
 func BenchmarkDockerMode_WithCache(b *testing.B) {
 	for _, tc := range testCases {
-		tc := tc
+		//tc := tc
 		b.Run(tc.name, func(b *testing.B) {
 			benchCache, err := ioutil.TempDir("", "DockerMode_WithCache_")
 			require.NoError(b, err)
@@ -148,13 +147,13 @@ func teardown(b *testing.B, ctx context.Context, originalImageName, imageName st
 		Force:         true,
 		PruneChildren: true,
 	})
-	assert.NoError(b, err)
+	require.NoError(b, err)
 
 	_, err = cli.ImageRemove(ctx, imageName, dtypes.ImageRemoveOptions{
 		Force:         true,
 		PruneChildren: true,
 	})
-	assert.NoError(b, err)
+	require.NoError(b, err)
 }
 
 func setup(b *testing.B, tc testCase, cacheDir string) (context.Context, string, cache.Cache, *client.Client, analyzer.Config) {
