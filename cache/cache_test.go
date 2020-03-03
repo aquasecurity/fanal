@@ -265,15 +265,13 @@ func TestFSCache_PutLayer(t *testing.T) {
                "Library":{
                   "Name":"guzzlehttp/guzzle",
                   "Version":"6.2.0"
-               },
-               "LayerID":""
+               }
             },
             {
                "Library":{
                   "Name":"guzzlehttp/promises",
                   "Version":"v1.3.1"
-               },
-               "LayerID":""
+               }
             }
          ]
       }
