@@ -285,8 +285,9 @@ func TestExtractor_ExtractLayerFiles(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			d, err := NewDockerArchiveExtractor(context.Background(), tt.imagePath, types.DockerOption{})
+			d, cleanup, err := NewDockerArchiveExtractor(context.Background(), tt.imagePath, types.DockerOption{})
 			require.NoError(t, err)
+			defer cleanup()
 
 			actualDigest, actualFileMap, actualOpqDirs, actualWhFiles, err := d.ExtractLayerFiles(tt.args.ctx, tt.args.dig, tt.args.filenames)
 			if tt.wantErr != "" {

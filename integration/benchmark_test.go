@@ -50,36 +50,36 @@ var testCases = []testCase{
 		imageName: "alpine:3.10",
 		imageFile: "testdata/fixtures/alpine-310.tar.gz",
 	},
-	//{
-	//	name:      "happy path amazonlinux:2",
-	//	imageName: "amazonlinux:2",
-	//	imageFile: "testdata/fixtures/amazon-2.tar.gz",
-	//},
-	//{
-	//	name:      "happy path debian:buster",
-	//	imageName: "debian:buster",
-	//	imageFile: "testdata/fixtures/debian-buster.tar.gz",
-	//},
-	//{
-	//	name:      "happy path photon:1.0",
-	//	imageName: "photon:1.0-20190823",
-	//	imageFile: "testdata/fixtures/photon-10.tar.gz",
-	//},
-	//{
-	//	name:      "happy path registry.redhat.io/ubi7",
-	//	imageName: "registry.redhat.io/ubi7",
-	//	imageFile: "testdata/fixtures/ubi-7.tar.gz",
-	//},
-	//{
-	//	name:      "happy path opensuse leap 15.1",
-	//	imageName: "opensuse/leap:latest",
-	//	imageFile: "testdata/fixtures/opensuse-leap-151.tar.gz",
-	//},
-	//{
-	//	name:      "happy path vulnimage with lock files",
-	//	imageName: "knqyf263/vuln-image:1.2.3",
-	//	imageFile: "testdata/fixtures/vulnimage.tar.gz",
-	//},
+	{
+		name:      "happy path amazonlinux:2",
+		imageName: "amazonlinux:2",
+		imageFile: "testdata/fixtures/amazon-2.tar.gz",
+	},
+	{
+		name:      "happy path debian:buster",
+		imageName: "debian:buster",
+		imageFile: "testdata/fixtures/debian-buster.tar.gz",
+	},
+	{
+		name:      "happy path photon:1.0",
+		imageName: "photon:1.0-20190823",
+		imageFile: "testdata/fixtures/photon-10.tar.gz",
+	},
+	{
+		name:      "happy path registry.redhat.io/ubi7",
+		imageName: "registry.redhat.io/ubi7",
+		imageFile: "testdata/fixtures/ubi-7.tar.gz",
+	},
+	{
+		name:      "happy path opensuse leap 15.1",
+		imageName: "opensuse/leap:latest",
+		imageFile: "testdata/fixtures/opensuse-leap-151.tar.gz",
+	},
+	{
+		name:      "happy path vulnimage with lock files",
+		imageName: "knqyf263/vuln-image:1.2.3",
+		imageFile: "testdata/fixtures/vulnimage.tar.gz",
+	},
 }
 
 func run(b *testing.B, ctx context.Context, ac analyzer.Config) {
@@ -87,33 +87,31 @@ func run(b *testing.B, ctx context.Context, ac analyzer.Config) {
 	require.NoError(b, err)
 }
 
-func runChecksBench(b *testing.B, ctx context.Context, imageName, cacheDir string, ac analyzer.Config, c cache.Cache) {
-	for i := 0; i < b.N; i++ {
-		run(b, ctx, ac)
-		if c != nil {
-			b.StopTimer()
-			_ = c.Clear()
-			ac, c = initializeAnalyzer(b, ctx, imageName, cacheDir)
-			b.StartTimer()
-		}
-	}
-}
-
 func BenchmarkDockerMode_WithoutCache(b *testing.B) {
 	for _, tc := range testCases {
-		//tc := tc
 		b.Run(tc.name, func(b *testing.B) {
 			benchCache, err := ioutil.TempDir("", "DockerMode_WithoutCache_")
 			require.NoError(b, err)
 			defer os.RemoveAll(benchCache)
 
-			ctx, imageName, c, cli, ac := setup(b, tc, benchCache)
+			ctx, imageName, cli := setup(b, tc)
 
 			b.ReportAllocs()
 			b.ResetTimer()
-			runChecksBench(b, ctx, imageName, benchCache, ac, c)
-			b.StopTimer()
+			for i := 0; i < b.N; i++ {
+				b.StopTimer()
+				ac, c, cleanup := initializeAnalyzer(b, ctx, imageName, benchCache)
+				b.StartTimer()
 
+				run(b, ctx, ac)
+
+				b.StopTimer()
+				cleanup()
+				_ = c.Clear()
+				b.StartTimer()
+			}
+
+			b.StopTimer()
 			teardown(b, ctx, tc.imageName, imageName, cli)
 		})
 	}
@@ -121,19 +119,24 @@ func BenchmarkDockerMode_WithoutCache(b *testing.B) {
 
 func BenchmarkDockerMode_WithCache(b *testing.B) {
 	for _, tc := range testCases {
-		//tc := tc
 		b.Run(tc.name, func(b *testing.B) {
 			benchCache, err := ioutil.TempDir("", "DockerMode_WithCache_")
 			require.NoError(b, err)
 			defer os.RemoveAll(benchCache)
 
-			ctx, imageName, _, cli, ac := setup(b, tc, benchCache)
+			ctx, imageName, cli := setup(b, tc)
+
+			ac, _, cleanup := initializeAnalyzer(b, ctx, imageName, benchCache)
+			defer cleanup()
+
 			// run once to generate cache
 			run(b, ctx, ac)
 
 			b.ReportAllocs()
 			b.ResetTimer()
-			runChecksBench(b, ctx, imageName, benchCache, ac, nil)
+			for i := 0; i < b.N; i++ {
+				run(b, ctx, ac)
+			}
 			b.StopTimer()
 
 			teardown(b, ctx, tc.imageName, imageName, cli)
@@ -156,7 +159,7 @@ func teardown(b *testing.B, ctx context.Context, originalImageName, imageName st
 	require.NoError(b, err)
 }
 
-func setup(b *testing.B, tc testCase, cacheDir string) (context.Context, string, cache.Cache, *client.Client, analyzer.Config) {
+func setup(b *testing.B, tc testCase) (context.Context, string, *client.Client) {
 	ctx := context.Background()
 
 	cli, err := client.NewClientWithOpts(client.FromEnv)
@@ -186,12 +189,10 @@ func setup(b *testing.B, tc testCase, cacheDir string) (context.Context, string,
 	err = cli.ImageTag(ctx, tc.imageName, imageName)
 	require.NoError(b, err, tc.name)
 
-	ac, c := initializeAnalyzer(b, ctx, imageName, cacheDir)
-
-	return ctx, imageName, c, cli, ac
+	return ctx, imageName, cli
 }
 
-func initializeAnalyzer(b *testing.B, ctx context.Context, imageName, cacheDir string) (analyzer.Config, cache.Cache) {
+func initializeAnalyzer(b *testing.B, ctx context.Context, imageName, cacheDir string) (analyzer.Config, cache.Cache, func()) {
 	c, err := cache.NewFSCache(cacheDir)
 	require.NoError(b, err)
 
@@ -200,9 +201,9 @@ func initializeAnalyzer(b *testing.B, ctx context.Context, imageName, cacheDir s
 		SkipPing: true,
 	}
 
-	ext, err := docker.NewDockerExtractor(ctx, imageName, opt)
+	ext, cleanup, err := docker.NewDockerExtractor(ctx, imageName, opt)
 	require.NoError(b, err)
 
 	ac := analyzer.New(ext, c)
-	return ac, c
+	return ac, c, cleanup
 }
