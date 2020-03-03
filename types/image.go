@@ -39,8 +39,8 @@ type PackageInfo struct {
 }
 
 type LibraryInfo struct {
-	Library godeptypes.Library
-	LayerID digest.Digest
+	Library godeptypes.Library `json:",omitempty"`
+	LayerID digest.Digest      `json:",omitempty"`
 }
 
 type Application struct {
