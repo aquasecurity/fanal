@@ -73,20 +73,20 @@ func TestFSCache_GetLayer(t *testing.T) {
 		args   args
 		want   types.LayerInfo
 	}{
-		//{
-		//	name:   "happy path",
-		//	dbPath: "testdata/fanal.db",
-		//	args: args{
-		//		layerID: "sha256:24df0d4e20c0f42d3703bf1f1db2bdd77346c7956f74f423603d651e8e5ae8a7",
-		//	},
-		//	want: types.LayerInfo{
-		//		SchemaVersion: 2,
-		//		OS: &types.OS{
-		//			Family: "alpine",
-		//			Name:   "3.10",
-		//		},
-		//	},
-		//},
+		{
+			name:   "happy path",
+			dbPath: "testdata/fanal.db",
+			args: args{
+				layerID: "sha256:24df0d4e20c0f42d3703bf1f1db2bdd77346c7956f74f423603d651e8e5ae8a7",
+			},
+			want: types.LayerInfo{
+				SchemaVersion: 2,
+				OS: &types.OS{
+					Family: "alpine",
+					Name:   "3.10",
+				},
+			},
+		},
 		{
 			name:   "happy path: different decompressed layer ID",
 			dbPath: "testdata/decompressed-layer-id.db",
