@@ -2,7 +2,6 @@ package image
 
 import (
 	"context"
-	"fmt"
 	"io"
 
 	"github.com/containers/image/v5/image"
@@ -109,7 +108,6 @@ func newSource(ctx context.Context, imageName string, transports []string, sys *
 		var rawSource imageTypes.ImageSource
 		rawSource, err = ref.NewImageSource(ctx, sys)
 		if err != nil {
-			fmt.Println(">>> ref.NewImageSource failed: ", err)
 			// try next transport
 			continue
 		}
