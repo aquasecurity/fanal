@@ -5,18 +5,15 @@ import (
 	"encoding/json"
 	"sort"
 
-	godeptypes "github.com/aquasecurity/go-dep-parser/pkg/types"
-
-	"github.com/aquasecurity/fanal/extractor/docker"
 	"github.com/containers/image/v5/manifest"
 	digest "github.com/opencontainers/go-digest"
-
-	"github.com/aquasecurity/fanal/cache"
-	"github.com/aquasecurity/fanal/types"
-
 	"golang.org/x/xerrors"
 
+	"github.com/aquasecurity/fanal/cache"
 	"github.com/aquasecurity/fanal/extractor"
+	"github.com/aquasecurity/fanal/extractor/docker"
+	"github.com/aquasecurity/fanal/types"
+	godeptypes "github.com/aquasecurity/go-dep-parser/pkg/types"
 )
 
 var (
