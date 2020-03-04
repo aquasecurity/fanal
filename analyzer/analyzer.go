@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"sort"
 
+	godeptypes "github.com/aquasecurity/go-dep-parser/pkg/types"
+
 	"github.com/aquasecurity/fanal/extractor/docker"
 	"github.com/containers/image/v5/manifest"
 	digest "github.com/opencontainers/go-digest"
@@ -49,7 +51,7 @@ type CommandAnalyzer interface {
 
 type LibraryAnalyzer interface {
 	Name() string
-	Analyze(extractor.FileMap) (map[types.FilePath][]types.LibraryInfo, error)
+	Analyze(extractor.FileMap) (map[types.FilePath][]godeptypes.Library, error)
 	RequiredFiles() []string
 }
 
@@ -312,11 +314,18 @@ func GetLibraries(filesMap extractor.FileMap) ([]types.Application, error) {
 			return nil, xerrors.Errorf("failed to get libraries: %w", err)
 		}
 
+		var lis []types.LibraryInfo
 		for filePath, libs := range libMap {
+			for _, lib := range libs {
+				lis = append(lis, types.LibraryInfo{
+					Library: lib,
+				})
+			}
+
 			results = append(results, types.Application{
 				Type:      analyzer.Name(),
 				FilePath:  string(filePath),
-				Libraries: libs,
+				Libraries: lis,
 			})
 		}
 	}

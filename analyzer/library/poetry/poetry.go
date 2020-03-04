@@ -12,6 +12,7 @@ import (
 	"github.com/aquasecurity/fanal/extractor"
 	"github.com/aquasecurity/fanal/utils"
 	"github.com/aquasecurity/go-dep-parser/pkg/poetry"
+	godeptypes "github.com/aquasecurity/go-dep-parser/pkg/types"
 	"golang.org/x/xerrors"
 )
 
@@ -21,8 +22,8 @@ func init() {
 
 type poetryLibraryAnalyzer struct{}
 
-func (a poetryLibraryAnalyzer) Analyze(fileMap extractor.FileMap) (map[types.FilePath][]types.LibraryInfo, error) {
-	libMap := map[types.FilePath][]types.LibraryInfo{}
+func (a poetryLibraryAnalyzer) Analyze(fileMap extractor.FileMap) (map[types.FilePath][]godeptypes.Library, error) {
+	libMap := map[types.FilePath][]godeptypes.Library{}
 	requiredFiles := a.RequiredFiles()
 
 	for filename, content := range fileMap {
@@ -36,11 +37,7 @@ func (a poetryLibraryAnalyzer) Analyze(fileMap extractor.FileMap) (map[types.Fil
 		if err != nil {
 			return nil, xerrors.Errorf("error with %s: %w", filename, err)
 		}
-		for _, lib := range libs {
-			libMap[types.FilePath(filename)] = append(libMap[types.FilePath(filename)], types.LibraryInfo{
-				Library: lib,
-			})
-		}
+		libMap[types.FilePath(filename)] = libs
 	}
 	return libMap, nil
 }
