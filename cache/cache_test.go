@@ -327,7 +327,6 @@ func TestFSCache_PutLayer(t *testing.T) {
 
 				layerBucket := tx.Bucket([]byte(layerBucket))
 				b := layerBucket.Get([]byte(tt.args.decompressedLayerID))
-				fmt.Println(">> ", string(b))
 				assert.JSONEq(t, tt.want, string(b))
 
 				return nil
