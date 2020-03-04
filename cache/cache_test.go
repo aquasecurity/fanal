@@ -239,50 +239,51 @@ func TestFSCache_PutLayer(t *testing.T) {
 					WhiteoutFiles: []string{"etc/foobar"},
 				},
 			},
-			want: `{
-   "SchemaVersion":1,
-   "OS":{
-      "Family":"alpine",
-      "Name":"3.10"
-   },
-   "PackageInfos":[
-      {
-         "FilePath":"lib/apk/db/installed",
-         "Packages":[
-            {
-               "Name":"musl",
-               "Version":"1.1.22-r3"
-            }
-         ]
-      }
-   ],
-   "Applications":[
-      {
-         "Type":"composer",
-         "FilePath":"php-app/composer.lock",
-         "Libraries":[
-            {
-               "Library":{
-                  "Name":"guzzlehttp/guzzle",
-                  "Version":"6.2.0"
-               }
-            },
-            {
-               "Library":{
-                  "Name":"guzzlehttp/promises",
-                  "Version":"v1.3.1"
-               }
-            }
-         ]
-      }
-   ],
-   "OpaqueDirs":[
-      "php-app/"
-   ],
-   "WhiteoutFiles":[
-      "etc/foobar"
-   ]
-}`,
+			want: `
+				{
+				  "SchemaVersion": 1,
+				  "OS": {
+				    "Family": "alpine",
+				    "Name": "3.10"
+				  },
+				  "PackageInfos": [
+				    {
+				      "FilePath": "lib/apk/db/installed",
+				      "Packages": [
+				        {
+				          "Name": "musl",
+				          "Version": "1.1.22-r3"
+				        }
+				      ]
+				    }
+				  ],
+				  "Applications": [
+				    {
+				      "Type": "composer",
+				      "FilePath": "php-app/composer.lock",
+				      "Libraries": [
+                        {
+                           "Library":{
+                              "Name":"guzzlehttp/guzzle",
+                              "Version":"6.2.0"
+                           }
+                        },
+                        {
+                           "Library":{
+                              "Name":"guzzlehttp/promises",
+                              "Version":"v1.3.1"
+                           }
+                        }
+				      ]
+				    }
+				  ],
+				  "OpaqueDirs": [
+				    "php-app/"
+				  ],
+				  "WhiteoutFiles": [
+				    "etc/foobar"
+				  ]
+				}`,
 			wantLayerID: "sha256:dab15cac9ebd43beceeeda3ce95c574d6714ed3d3969071caead678c065813ec",
 		},
 		{
