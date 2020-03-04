@@ -52,6 +52,12 @@ func init() {
 	image.RegisterRegistry(&ecr.ECR{})
 }
 
+func CleanupDockerExtractorFn(img image.RealImage) func() {
+	return func() {
+		_ = img.Close()
+	}
+}
+
 func NewDockerExtractor(ctx context.Context, imageName string, option types.DockerOption) (Extractor, func(), error) {
 	ref := image.Reference{Name: imageName, IsFile: false}
 	transports := []string{"docker-daemon:", "docker://"}
@@ -74,14 +80,10 @@ func newDockerExtractor(ctx context.Context, imgRef image.Reference, transports 
 		return Extractor{}, nil, xerrors.Errorf("unable to initialize a image struct: %w", err)
 	}
 
-	cleanup := func() {
-		_ = img.Close()
-	}
-
 	return Extractor{
 		option: option,
 		image:  img,
-	}, cleanup, nil
+	}, CleanupDockerExtractorFn(img), nil
 }
 
 func ApplyLayers(layers []types.LayerInfo) types.ImageDetail {
