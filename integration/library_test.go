@@ -9,6 +9,7 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"sort"
 	"strings"
 	"testing"
 	"time"
@@ -100,8 +101,8 @@ var testCases = []testCase{
 		dockerlessImageName:  "knqyf263/vuln-image:1.2.3",
 		imageFile:            "testdata/fixtures/vulnimage.tar.gz",
 		expectedOS:           types.OS{Name: "3.7.1", Family: "alpine"},
-		expectedLibraries:    "testdata/goldens/knqyf263vuln-image1.2.3.expectedlibs.golden",
-		expectedPkgsFromCmds: "testdata/goldens/knqyf263vuln-image1.2.3.expectedpkgsfromcmds.golden",
+		expectedLibraries:    "testdata/goldens/vuln-image1.2.3.expectedlibs.golden",
+		expectedPkgsFromCmds: "testdata/goldens/vuln-image1.2.3.expectedpkgsfromcmds.golden",
 	},
 }
 
@@ -262,14 +263,21 @@ func commonChecks(t *testing.T, detail types.ImageDetail, tc testCase) {
 func checkPackages(t *testing.T, detail types.ImageDetail, tc testCase) {
 	r := strings.NewReplacer("/", "-", ":", "-")
 	goldenFile := fmt.Sprintf("testdata/goldens/packages/%s.json.golden", r.Replace(tc.imageName))
-	//goldenFile := fmt.Sprintf("testdata/goldens/packages/%s.json.golden", r.Replace(tc.dockerlessImageName))
 	data, err := ioutil.ReadFile(goldenFile)
 	require.NoError(t, err, tc.name)
 
 	var expectedPkgs []types.Package
 	err = json.Unmarshal(data, &expectedPkgs)
 	require.NoError(t, err)
-	assert.ElementsMatch(t, expectedPkgs, detail.Packages, tc.name)
+
+	require.Equal(t, len(expectedPkgs), len(detail.Packages), tc.name)
+	sort.Slice(expectedPkgs, func(i, j int) bool { return expectedPkgs[i].Name < expectedPkgs[j].Name })
+	sort.Slice(detail.Packages, func(i, j int) bool { return detail.Packages[i].Name < detail.Packages[j].Name })
+
+	for i := 0; i < len(expectedPkgs); i++ {
+		require.Equal(t, expectedPkgs[i].Name, detail.Packages[i].Name, tc.name)
+		require.Equal(t, expectedPkgs[i].Version, detail.Packages[i].Version, tc.name)
+	}
 }
 
 func checkLibraries(detail types.ImageDetail, t *testing.T, tc testCase) {
