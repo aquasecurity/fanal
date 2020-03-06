@@ -1,5 +1,0 @@
-[
-  "configblob::docker.io_testdata_fixtures_amazon-2.tar.gz:latest",
-  "layerinfos::docker.io_testdata_fixtures_amazon-2.tar.gz:latest",
-  "sha256:f387c8b346c85cae37abd1f1a63015acb69f593dc425d0269f57d1012c3a81f6"
-]

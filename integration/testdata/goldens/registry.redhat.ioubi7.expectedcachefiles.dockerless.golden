@@ -1,6 +1,0 @@
-[
-  "configblob::docker.io_knqyf263_registry.redhat.io-ubi7:latest",
-  "layerinfos::docker.io_knqyf263_registry.redhat.io-ubi7:latest",
-  "sha256:7b1c937e0f6794db2535be6e4cb6d60a0b668ef78c2576611a3fb9c97a95ccdf",
-  "sha256:bff3b73cbcc496de1de4ea51df88b7249169d0b6eb7d677169eaf90b8a92240e"
-]

@@ -1,5 +1,0 @@
-[
-  "configblob::docker.io_testdata_fixtures_photon-10.tar.gz:latest",
-  "layerinfos::docker.io_testdata_fixtures_photon-10.tar.gz:latest",
-  "sha256:9740df1ac227d21600b22524f869c9bec2d8c13446d1c8579a6195b6d855ae2b"
-]
