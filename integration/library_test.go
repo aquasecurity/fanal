@@ -1,4 +1,4 @@
-// +rbuild integration
+// +build integration
 
 package integration
 
@@ -59,50 +59,50 @@ var testCases = []testCase{
 		imageFile:           "testdata/fixtures/alpine-310.tar.gz",
 		expectedOS:          types.OS{Name: "3.10.2", Family: "alpine"},
 	},
-	//{
-	//	name:                "happy path, amazonlinux:2",
-	//	imageName:           "amazonlinux:2",
-	//	dockerlessImageName: "knqyf263/amazonlinux:2",
-	//	imageFile:           "testdata/fixtures/amazon-2.tar.gz",
-	//	expectedOS:          types.OS{Name: "2 (Karoo)", Family: "amazon"},
-	//},
-	//{
-	//	name:                "happy path, debian:buster",
-	//	imageName:           "debian:buster",
-	//	dockerlessImageName: "knqyf263/debian:buster",
-	//	imageFile:           "testdata/fixtures/debian-buster.tar.gz",
-	//	expectedOS:          types.OS{Name: "10.1", Family: "debian"},
-	//},
-	//{
-	//	name:                "happy path, photon:1.0",
-	//	imageName:           "photon:1.0-20190823",
-	//	dockerlessImageName: "knqyf263/photon:1.0-20190823",
-	//	imageFile:           "testdata/fixtures/photon-10.tar.gz",
-	//	expectedOS:          types.OS{Name: "1.0", Family: "photon"},
-	//},
-	//{
-	//	name:                "happy path, registry.redhat.io/ubi7",
-	//	imageName:           "registry.redhat.io/ubi7",
-	//	dockerlessImageName: "knqyf263/registry.redhat.io-ubi7:latest",
-	//	imageFile:           "testdata/fixtures/ubi-7.tar.gz",
-	//	expectedOS:          types.OS{Name: "7.7", Family: "redhat"},
-	//},
-	//{
-	//	name:                "happy path, opensuse leap 15.1",
-	//	imageName:           "opensuse/leap:latest",
-	//	dockerlessImageName: "knqyf263/opensuse-leap:latest",
-	//	imageFile:           "testdata/fixtures/opensuse-leap-151.tar.gz",
-	//	expectedOS:          types.OS{Name: "15.1", Family: "opensuse.leap"},
-	//},
-	//{
-	//	name:                 "happy path, vulnimage with lock files",
-	//	imageName:            "knqyf263/vuln-image:1.2.3",
-	//	dockerlessImageName:  "knqyf263/vuln-image:1.2.3",
-	//	imageFile:            "testdata/fixtures/vulnimage.tar.gz",
-	//	expectedOS:           types.OS{Name: "3.7.1", Family: "alpine"},
-	//	expectedLibraries:    "testdata/goldens/knqyf263vuln-image1.2.3.expectedlibs.golden",
-	//	expectedPkgsFromCmds: "testdata/goldens/knqyf263vuln-image1.2.3.expectedpkgsfromcmds.golden",
-	//},
+	{
+		name:                "happy path, amazonlinux:2",
+		imageName:           "amazonlinux:2",
+		dockerlessImageName: "knqyf263/amazonlinux:2",
+		imageFile:           "testdata/fixtures/amazon-2.tar.gz",
+		expectedOS:          types.OS{Name: "2 (Karoo)", Family: "amazon"},
+	},
+	{
+		name:                "happy path, debian:buster",
+		imageName:           "debian:buster",
+		dockerlessImageName: "knqyf263/debian:buster",
+		imageFile:           "testdata/fixtures/debian-buster.tar.gz",
+		expectedOS:          types.OS{Name: "10.1", Family: "debian"},
+	},
+	{
+		name:                "happy path, photon:1.0",
+		imageName:           "photon:1.0-20190823",
+		dockerlessImageName: "knqyf263/photon:1.0-20190823",
+		imageFile:           "testdata/fixtures/photon-10.tar.gz",
+		expectedOS:          types.OS{Name: "1.0", Family: "photon"},
+	},
+	{
+		name:                "happy path, registry.redhat.io/ubi7",
+		imageName:           "registry.redhat.io/ubi7",
+		dockerlessImageName: "knqyf263/registry.redhat.io-ubi7:latest",
+		imageFile:           "testdata/fixtures/ubi-7.tar.gz",
+		expectedOS:          types.OS{Name: "7.7", Family: "redhat"},
+	},
+	{
+		name:                "happy path, opensuse leap 15.1",
+		imageName:           "opensuse/leap:latest",
+		dockerlessImageName: "knqyf263/opensuse-leap:latest",
+		imageFile:           "testdata/fixtures/opensuse-leap-151.tar.gz",
+		expectedOS:          types.OS{Name: "15.1", Family: "opensuse.leap"},
+	},
+	{
+		name:                 "happy path, vulnimage with lock files",
+		imageName:            "knqyf263/vuln-image:1.2.3",
+		dockerlessImageName:  "knqyf263/vuln-image:1.2.3",
+		imageFile:            "testdata/fixtures/vulnimage.tar.gz",
+		expectedOS:           types.OS{Name: "3.7.1", Family: "alpine"},
+		expectedLibraries:    "testdata/goldens/knqyf263vuln-image1.2.3.expectedlibs.golden",
+		expectedPkgsFromCmds: "testdata/goldens/knqyf263vuln-image1.2.3.expectedpkgsfromcmds.golden",
+	},
 }
 
 func TestFanal_Library_DockerLessMode(t *testing.T) {
