@@ -54,51 +54,51 @@ type testCase struct {
 
 var testCases = []testCase{
 	{
-		name:                "happy path, alpine:3.10",
-		imageName:           "alpine:3.10",
-		dockerlessImageName: "knqyf263/alpine:3.10",
-		imageFile:           "testdata/fixtures/alpine-310.tar.gz",
-		expectedOS:          types.OS{Name: "3.10.2", Family: "alpine"},
+		name:            "happy path, alpine:3.10",
+		imageName:       "alpine:3.10",
+		remoteImageName: "knqyf263/alpine:3.10",
+		imageFile:       "testdata/fixtures/alpine-310.tar.gz",
+		expectedOS:      types.OS{Name: "3.10.2", Family: "alpine"},
 	},
 	{
-		name:                "happy path, amazonlinux:2",
-		imageName:           "amazonlinux:2",
-		dockerlessImageName: "knqyf263/amazonlinux:2",
-		imageFile:           "testdata/fixtures/amazon-2.tar.gz",
-		expectedOS:          types.OS{Name: "2 (Karoo)", Family: "amazon"},
+		name:            "happy path, amazonlinux:2",
+		imageName:       "amazonlinux:2",
+		remoteImageName: "knqyf263/amazonlinux:2",
+		imageFile:       "testdata/fixtures/amazon-2.tar.gz",
+		expectedOS:      types.OS{Name: "2 (Karoo)", Family: "amazon"},
 	},
 	{
-		name:                "happy path, debian:buster",
-		imageName:           "debian:buster",
-		dockerlessImageName: "knqyf263/debian:buster",
-		imageFile:           "testdata/fixtures/debian-buster.tar.gz",
-		expectedOS:          types.OS{Name: "10.1", Family: "debian"},
+		name:            "happy path, debian:buster",
+		imageName:       "debian:buster",
+		remoteImageName: "knqyf263/debian:buster",
+		imageFile:       "testdata/fixtures/debian-buster.tar.gz",
+		expectedOS:      types.OS{Name: "10.1", Family: "debian"},
 	},
 	{
-		name:                "happy path, photon:1.0",
-		imageName:           "photon:1.0-20190823",
-		dockerlessImageName: "knqyf263/photon:1.0-20190823",
-		imageFile:           "testdata/fixtures/photon-10.tar.gz",
-		expectedOS:          types.OS{Name: "1.0", Family: "photon"},
+		name:            "happy path, photon:1.0",
+		imageName:       "photon:1.0-20190823",
+		remoteImageName: "knqyf263/photon:1.0-20190823",
+		imageFile:       "testdata/fixtures/photon-10.tar.gz",
+		expectedOS:      types.OS{Name: "1.0", Family: "photon"},
 	},
 	{
-		name:                "happy path, registry.redhat.io/ubi7",
-		imageName:           "registry.redhat.io/ubi7",
-		dockerlessImageName: "knqyf263/registry.redhat.io-ubi7:latest",
-		imageFile:           "testdata/fixtures/ubi-7.tar.gz",
-		expectedOS:          types.OS{Name: "7.7", Family: "redhat"},
+		name:            "happy path, registry.redhat.io/ubi7",
+		imageName:       "registry.redhat.io/ubi7",
+		remoteImageName: "knqyf263/registry.redhat.io-ubi7:latest",
+		imageFile:       "testdata/fixtures/ubi-7.tar.gz",
+		expectedOS:      types.OS{Name: "7.7", Family: "redhat"},
 	},
 	{
-		name:                "happy path, opensuse leap 15.1",
-		imageName:           "opensuse/leap:latest",
-		dockerlessImageName: "knqyf263/opensuse-leap:latest",
-		imageFile:           "testdata/fixtures/opensuse-leap-151.tar.gz",
-		expectedOS:          types.OS{Name: "15.1", Family: "opensuse.leap"},
+		name:            "happy path, opensuse leap 15.1",
+		imageName:       "opensuse/leap:latest",
+		remoteImageName: "knqyf263/opensuse-leap:latest",
+		imageFile:       "testdata/fixtures/opensuse-leap-151.tar.gz",
+		expectedOS:      types.OS{Name: "15.1", Family: "opensuse.leap"},
 	},
 	{
 		name:                 "happy path, vulnimage with lock files",
 		imageName:            "knqyf263/vuln-image:1.2.3",
-		dockerlessImageName:  "knqyf263/vuln-image:1.2.3",
+		remoteImageName:      "knqyf263/vuln-image:1.2.3",
 		imageFile:            "testdata/fixtures/vulnimage.tar.gz",
 		expectedOS:           types.OS{Name: "3.7.1", Family: "alpine"},
 		expectedLibraries:    "testdata/goldens/vuln-image1.2.3.expectedlibs.golden",
@@ -127,12 +127,12 @@ func TestFanal_Library_DockerLessMode(t *testing.T) {
 			require.NoError(t, err, tc.name)
 
 			// remove existing Image if any
-			_, _ = cli.ImageRemove(ctx, tc.dockerlessImageName, dtypes.ImageRemoveOptions{
+			_, _ = cli.ImageRemove(ctx, tc.remoteImageName, dtypes.ImageRemoveOptions{
 				Force:         true,
 				PruneChildren: true,
 			})
 
-			ext, cleanup, err := docker.NewDockerExtractor(ctx, tc.dockerlessImageName, opt)
+			ext, cleanup, err := docker.NewDockerExtractor(ctx, tc.remoteImageName, opt)
 			require.NoError(t, err, tc.name)
 			defer cleanup()
 
