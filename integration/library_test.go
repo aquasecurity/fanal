@@ -45,7 +45,7 @@ import (
 type testCase struct {
 	name                 string
 	imageName            string
-	dockerlessImageName  string
+	remoteImageName      string
 	imageFile            string
 	expectedOS           types.OS
 	expectedPkgsFromCmds string
