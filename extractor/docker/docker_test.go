@@ -29,7 +29,7 @@ func TestApplyLayers(t *testing.T) {
 			inputLayers: []types.LayerInfo{
 				{
 					SchemaVersion: 1,
-					ID:            "sha256:932da51564135c98a49a34a193d6cd363d8fa4184d957fde16c9d8527b3f3b02",
+					ID:            "sha256:opensslandapps",
 					OS: &types.OS{
 						Family: "alpine",
 						Name:   "3.10",
@@ -75,7 +75,7 @@ func TestApplyLayers(t *testing.T) {
 				},
 				{
 					SchemaVersion: 1,
-					ID:            "sha256:24df0d4e20c0f42d3703bf1f1db2bdd77346c7956f74f423603d651e8e5ae8a7",
+					ID:            "sha256:opensslandmusl",
 					PackageInfos: []types.PackageInfo{
 						{
 							FilePath: "lib/apk/db/installed",
@@ -97,7 +97,7 @@ func TestApplyLayers(t *testing.T) {
 				},
 				{
 					SchemaVersion: 1,
-					ID:            "sha256:8jf1341564135c98a49a34a193d6cd363d8fa4184d957fde16c087djsa0d9asj",
+					ID:            "sha256:opensslandmuslandcurl",
 					PackageInfos: []types.PackageInfo{
 						{
 							FilePath: "lib/apk/db/installed",
@@ -124,7 +124,7 @@ func TestApplyLayers(t *testing.T) {
 				},
 				{
 					SchemaVersion: 1,
-					ID:            "sha256:7juh89564135c98a49a34a193d6cd363d8fa4184d957fde16c087djs901234",
+					ID:            "sha256:opensslandmuslcurlremoved",
 					PackageInfos: []types.PackageInfo{
 						{
 							FilePath: "lib/apk/db/installed",
@@ -152,16 +152,22 @@ func TestApplyLayers(t *testing.T) {
 				},
 				Packages: []types.Package{
 					{
+						Name:    "curl",
+						Version: "9.8.7",
+						Release: "6.5.4",
+						LayerID: "sha256:opensslandmuslandcurl",
+					},
+					{
 						Name:    "musl",
 						Version: "1.2.4",
 						Release: "4.5.7",
-						LayerID: "sha256:24df0d4e20c0f42d3703bf1f1db2bdd77346c7956f74f423603d651e8e5ae8a7",
+						LayerID: "sha256:opensslandmusl",
 					},
 					{
 						Name:    "openssl",
 						Version: "1.2.3",
 						Release: "4.5.6",
-						LayerID: "sha256:932da51564135c98a49a34a193d6cd363d8fa4184d957fde16c9d8527b3f3b02",
+						LayerID: "sha256:opensslandapps",
 					},
 				},
 				Applications: []types.Application{
@@ -174,7 +180,7 @@ func TestApplyLayers(t *testing.T) {
 									Name:    "gemlibrary1",
 									Version: "1.2.3",
 								},
-								LayerID: "sha256:932da51564135c98a49a34a193d6cd363d8fa4184d957fde16c9d8527b3f3b02",
+								LayerID: "sha256:opensslandapps",
 							},
 						},
 					},

@@ -84,17 +84,58 @@ func newDockerExtractor(ctx context.Context, imgRef image.Reference, transports 
 	}, cleanup, nil
 }
 
+func containsPackage(s []types.Package, e types.Package) bool {
+	for _, a := range s {
+		if a.Name == e.Name && a.Version == e.Version {
+			return true
+		}
+	}
+	return false
+}
+
+func containsApplication(s []types.Application, e types.Application) bool {
+	for _, a := range s {
+		if a.Type == e.Type && a.FilePath == e.FilePath {
+			return true
+		}
+	}
+	return false
+}
+
+func containsWhFile(s []string, e string) bool {
+	for _, a := range s {
+		if a == e {
+			return true
+		}
+	}
+	return false
+}
+
+func containsOpqDir(s []string, e string) bool {
+	for _, a := range s {
+		if strings.HasPrefix(e, a) {
+			return true
+		}
+	}
+	return false
+}
+
 func ApplyLayers(layers []types.LayerInfo) types.ImageDetail {
 	sep := "/"
-	nestedMap := nested.Nested{}
+	nestedMaps := make([]nested.Nested, len(layers))
+	var opqDirs []string
+	var whFiles []string
 	var mergedLayer types.ImageDetail
 
-	for _, layer := range layers {
+	for i, layer := range layers {
+		nestedMaps[i] = nested.Nested{}
 		for _, opqDir := range layer.OpaqueDirs {
-			_ = nestedMap.DeleteByString(opqDir, sep)
+			_ = nestedMaps[i].DeleteByString(opqDir, sep)
+			opqDirs = append(opqDirs, opqDir)
 		}
 		for _, whFile := range layer.WhiteoutFiles {
-			_ = nestedMap.DeleteByString(whFile, sep)
+			_ = nestedMaps[i].DeleteByString(whFile, sep)
+			whFiles = append(whFiles, whFile)
 		}
 
 		if layer.OS != nil {
@@ -105,25 +146,37 @@ func ApplyLayers(layers []types.LayerInfo) types.ImageDetail {
 			for i := range pkgInfo.Packages {
 				pkgInfo.Packages[i].LayerID = layer.ID
 			}
-			nestedMap.SetByString(pkgInfo.FilePath, sep, pkgInfo)
+			nestedMaps[i].SetByString(pkgInfo.FilePath, sep, pkgInfo)
 		}
 		for _, app := range layer.Applications {
 			for i := range app.Libraries {
 				app.Libraries[i].LayerID = layer.ID
 			}
-			nestedMap.SetByString(app.FilePath, sep, app)
+			nestedMaps[i].SetByString(app.FilePath, sep, app)
 		}
 	}
 
-	_ = nestedMap.Walk(func(keys []string, value interface{}) error {
-		switch v := value.(type) {
-		case types.PackageInfo:
-			mergedLayer.Packages = append(mergedLayer.Packages, v.Packages...)
-		case types.Application:
-			mergedLayer.Applications = append(mergedLayer.Applications, v)
-		}
-		return nil
-	})
+	for _, nm := range nestedMaps {
+		_ = nm.Walk(func(keys []string, value interface{}) error {
+			switch v := value.(type) {
+			case types.PackageInfo:
+				for _, pkg := range v.Packages {
+					if containsPackage(mergedLayer.Packages, pkg) {
+						continue
+					} else {
+						mergedLayer.Packages = append(mergedLayer.Packages, pkg)
+					}
+				}
+			case types.Application:
+				if !containsApplication(mergedLayer.Applications, v) {
+					if !containsOpqDir(opqDirs, v.FilePath) && !containsWhFile(whFiles, v.FilePath) { // check for whFile
+						mergedLayer.Applications = append(mergedLayer.Applications, v)
+					}
+				}
+			}
+			return nil
+		})
+	}
 
 	return mergedLayer
 }
