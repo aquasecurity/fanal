@@ -95,6 +95,55 @@ func TestApplyLayers(t *testing.T) {
 					},
 					WhiteoutFiles: []string{"app/composer.lock"},
 				},
+				{
+					SchemaVersion: 1,
+					ID:            "sha256:8jf1341564135c98a49a34a193d6cd363d8fa4184d957fde16c087djsa0d9asj",
+					PackageInfos: []types.PackageInfo{
+						{
+							FilePath: "lib/apk/db/installed",
+							Packages: []types.Package{
+								{
+									Name:    "openssl",
+									Version: "1.2.3",
+									Release: "4.5.6",
+								},
+								{
+									Name:    "musl",
+									Version: "1.2.4",
+									Release: "4.5.7",
+								},
+								{
+									Name:    "curl",
+									Version: "9.8.7",
+									Release: "6.5.4",
+								},
+							},
+						},
+					},
+					WhiteoutFiles: []string{"app/composer.lock"},
+				},
+				{
+					SchemaVersion: 1,
+					ID:            "sha256:7juh89564135c98a49a34a193d6cd363d8fa4184d957fde16c087djs901234",
+					PackageInfos: []types.PackageInfo{
+						{
+							FilePath: "lib/apk/db/installed",
+							Packages: []types.Package{
+								{
+									Name:    "openssl",
+									Version: "1.2.3",
+									Release: "4.5.6",
+								},
+								{
+									Name:    "musl",
+									Version: "1.2.4",
+									Release: "4.5.7",
+								},
+							},
+						},
+					},
+					WhiteoutFiles: []string{"app/composer.lock"},
+				},
 			},
 			expectedImageDetail: types.ImageDetail{
 				OS: &types.OS{
@@ -112,7 +161,7 @@ func TestApplyLayers(t *testing.T) {
 						Name:    "openssl",
 						Version: "1.2.3",
 						Release: "4.5.6",
-						LayerID: "sha256:24df0d4e20c0f42d3703bf1f1db2bdd77346c7956f74f423603d651e8e5ae8a7",
+						LayerID: "sha256:932da51564135c98a49a34a193d6cd363d8fa4184d957fde16c9d8527b3f3b02",
 					},
 				},
 				Applications: []types.Application{
