@@ -6,10 +6,9 @@ import (
 	"testing"
 
 	godeptypes "github.com/aquasecurity/go-dep-parser/pkg/types"
+	digest "github.com/opencontainers/go-digest"
 
 	"github.com/stretchr/testify/assert"
-
-	"github.com/opencontainers/go-digest"
 
 	"github.com/stretchr/testify/require"
 
@@ -120,7 +119,20 @@ func TestApplyLayers(t *testing.T) {
 							},
 						},
 					},
-					WhiteoutFiles: []string{"app/composer.lock"},
+					Applications: []types.Application{
+						{
+							Type:     "composer",
+							FilePath: "app/composer.lock",
+							Libraries: []types.LibraryInfo{
+								{
+									Library: godeptypes.Library{
+										Name:    "phplibrary1",
+										Version: "7.7.7",
+									},
+								},
+							},
+						},
+					},
 				},
 				{
 					SchemaVersion: 1,
@@ -142,7 +154,6 @@ func TestApplyLayers(t *testing.T) {
 							},
 						},
 					},
-					WhiteoutFiles: []string{"app/composer.lock"},
 				},
 			},
 			expectedImageDetail: types.ImageDetail{
@@ -183,6 +194,133 @@ func TestApplyLayers(t *testing.T) {
 								LayerID: "sha256:opensslandapps",
 							},
 						},
+					},
+					{
+						Type:     "composer",
+						FilePath: "app/composer.lock",
+						Libraries: []types.LibraryInfo{
+							{
+								Library: godeptypes.Library{
+									Name:    "phplibrary",
+									Version: "7.7.7",
+								},
+								LayerID: "sha256:opensslandmuslandcurl",
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "happy path with updated os packages",
+			inputLayers: []types.LayerInfo{
+				{
+					SchemaVersion: 1,
+					ID:            "sha256:openssl",
+					OS: &types.OS{
+						Family: "alpine",
+						Name:   "3.10",
+					},
+					PackageInfos: []types.PackageInfo{
+						{
+							FilePath: "lib/apk/db/installed",
+							Packages: []types.Package{
+								{
+									Name:    "openssl",
+									Version: "1.2.3",
+									Release: "4.5.6",
+								},
+							},
+						},
+					},
+				},
+				{
+					SchemaVersion: 1,
+					ID:            "sha256:opensslupdated",
+					PackageInfos: []types.PackageInfo{
+						{
+							FilePath: "lib/apk/db/installed",
+							Packages: []types.Package{
+								{
+									Name:    "openssl",
+									Version: "1.2.4",
+									Release: "4.5.6",
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedImageDetail: types.ImageDetail{
+				OS: &types.OS{
+					Family: "alpine",
+					Name:   "3.10",
+				},
+				Packages: []types.Package{
+					{
+						Name:    "openssl",
+						Version: "1.2.4",
+						Release: "4.5.6",
+						LayerID: "sha256:opensslupdated",
+					},
+				},
+			},
+		},
+		{
+			name: "happy path with updated libraries",
+			inputLayers: []types.LayerInfo{
+				{
+					SchemaVersion: 1,
+					ID:            "sha256:gem",
+					OS: &types.OS{
+						Family: "alpine",
+						Name:   "3.10",
+					},
+					Applications: []types.Application{
+						{
+							Type:     "gem",
+							FilePath: "app/Gemfile.lock",
+							Libraries: []types.LibraryInfo{
+								{
+									Library: godeptypes.Library{
+										Name:    "gemlibrary1",
+										Version: "1.2.3",
+									},
+								},
+							},
+						},
+					},
+				},
+				{
+					SchemaVersion: 1,
+					ID:            "sha256:gemupdated",
+					Applications: []types.Application{
+						{
+							Type:     "gem",
+							FilePath: "app/Gemfile.lock",
+							Libraries: []types.LibraryInfo{
+								{
+									Library: godeptypes.Library{
+										Name:    "gemlibrary1",
+										Version: "1.2.4",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedImageDetail: types.ImageDetail{
+				OS: &types.OS{
+					Family: "alpine",
+					Name:   "3.10",
+				},
+				Packages: []types.Package{
+					{
+						Name:    "openssl",
+						Version: "1.2.4",
+						Release: "4.5.6",
+						LayerID: "sha256:opensslupdated",
 					},
 				},
 			},
@@ -266,11 +404,13 @@ func TestApplyLayers(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		gotImageDetail := ApplyLayers(tc.inputLayers)
-		sort.Slice(gotImageDetail.Packages, func(i, j int) bool {
-			return gotImageDetail.Packages[i].Name < gotImageDetail.Packages[j].Name
+		t.Run(tc.name, func(t *testing.T) {
+			gotImageDetail := ApplyLayers(tc.inputLayers)
+			sort.Slice(gotImageDetail.Packages, func(i, j int) bool {
+				return gotImageDetail.Packages[i].Name < gotImageDetail.Packages[j].Name
+			})
+			assert.Equal(t, tc.expectedImageDetail, gotImageDetail, tc.name)
 		})
-		assert.Equal(t, tc.expectedImageDetail, gotImageDetail, tc.name)
 	}
 }
 
