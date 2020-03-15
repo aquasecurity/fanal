@@ -360,6 +360,14 @@ func TestApplyLayers(t *testing.T) {
 			sort.Slice(gotImageDetail.Packages, func(i, j int) bool {
 				return gotImageDetail.Packages[i].Name < gotImageDetail.Packages[j].Name
 			})
+			sort.Slice(gotImageDetail.Applications, func(i, j int) bool {
+				return gotImageDetail.Applications[i].FilePath < gotImageDetail.Applications[j].FilePath
+			})
+			for _, app := range gotImageDetail.Applications {
+				sort.Slice(app.Libraries, func(i, j int) bool {
+					return app.Libraries[i].Library.Name < app.Libraries[j].Library.Name
+				})
+			}
 			assert.Equal(t, tc.expectedImageDetail, gotImageDetail, tc.name)
 		})
 	}
