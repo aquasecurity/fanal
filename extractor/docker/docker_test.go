@@ -246,17 +246,17 @@ func TestApplyLayers(t *testing.T) {
 						Libraries: []types.LibraryInfo{
 							{
 								Library: godeptypes.Library{
-									Name:    "rails",
-									Version: "6.0.0",
-								},
-								LayerID: "sha256:24df0d4e20c0f42d3703bf1f1db2bdd77346c7956f74f423603d651e8e5ae8a7",
-							},
-							{
-								Library: godeptypes.Library{
 									Name:    "rack",
 									Version: "4.0.0",
 								},
 								LayerID: "sha256:932da51564135c98a49a34a193d6cd363d8fa4184d957fde16c9d8527b3f3b02",
+							},
+							{
+								Library: godeptypes.Library{
+									Name:    "rails",
+									Version: "6.0.0",
+								},
+								LayerID: "sha256:24df0d4e20c0f42d3703bf1f1db2bdd77346c7956f74f423603d651e8e5ae8a7",
 							},
 						},
 					},
