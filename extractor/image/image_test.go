@@ -158,7 +158,7 @@ func TestNewImage(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ctx := context.Background()
-			got, err := NewImage(ctx, tt.args.image, tt.args.transports, tt.args.option)
+			got, _, err := NewImage(ctx, tt.args.image, tt.args.transports, tt.args.option)
 			if tt.wantErr != "" {
 				require.NotNil(t, err, tt.name)
 				require.Contains(t, err.Error(), tt.wantErr, tt.name)
@@ -186,7 +186,7 @@ func TestRealImage_LayerIDs(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			img, err := NewImage(context.Background(), Reference{
+			img, _, err := NewImage(context.Background(), Reference{
 				Name:   tt.imageFile,
 				IsFile: true,
 			}, []string{"docker-archive:"}, types.DockerOption{})
