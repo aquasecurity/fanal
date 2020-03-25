@@ -6,14 +6,10 @@ import (
 	"testing"
 
 	godeptypes "github.com/aquasecurity/go-dep-parser/pkg/types"
-	digest "github.com/opencontainers/go-digest"
-
 	"github.com/stretchr/testify/assert"
-
 	"github.com/stretchr/testify/require"
 
 	"github.com/aquasecurity/fanal/extractor"
-	"github.com/aquasecurity/fanal/extractor/image"
 	"github.com/aquasecurity/fanal/types"
 )
 
@@ -406,11 +402,10 @@ func TestApplyLayers(t *testing.T) {
 func TestExtractor_ExtractLayerFiles(t *testing.T) {
 	type fields struct {
 		option types.DockerOption
-		image  image.RealImage
 	}
 	type args struct {
 		ctx       context.Context
-		dig       digest.Digest
+		dig       string
 		filenames []string
 	}
 	tests := []struct {
@@ -418,7 +413,7 @@ func TestExtractor_ExtractLayerFiles(t *testing.T) {
 		fields          fields
 		args            args
 		imagePath       string
-		expectedDigest  digest.Digest
+		expectedDigest  string
 		expectedFileMap extractor.FileMap
 		expectedOpqDirs []string
 		expectedWhFiles []string
@@ -429,7 +424,7 @@ func TestExtractor_ExtractLayerFiles(t *testing.T) {
 			imagePath: "testdata/image1.tar",
 			args: args{
 				ctx:       nil,
-				dig:       "sha256:d9ff549177a94a413c425ffe14ae1cc0aa254bc9c7df781add08e7d2fba25d27",
+				dig:       "sha256:fe18b2be62164eb835d8c8c65d75682782d67d6fb1b4406a8943b4c538c5bbf5",
 				filenames: []string{"etc/hostname"},
 			},
 			expectedDigest: "sha256:d9ff549177a94a413c425ffe14ae1cc0aa254bc9c7df781add08e7d2fba25d27",
@@ -442,7 +437,7 @@ func TestExtractor_ExtractLayerFiles(t *testing.T) {
 			imagePath: "testdata/image1.tar",
 			args: args{
 				ctx:       nil,
-				dig:       "sha256:a8b87ccf2f2f94b9e23308560800afa3f272aa6db5cc7d9b0119b6843889cff2",
+				dig:       "sha256:c12d5ff49cfae67c6b0289ec7fb55a7e00aff1bafbc4b3da581325032c254a57",
 				filenames: []string{"etc/test/"},
 			},
 			expectedDigest: "sha256:a8b87ccf2f2f94b9e23308560800afa3f272aa6db5cc7d9b0119b6843889cff2",
@@ -453,27 +448,32 @@ func TestExtractor_ExtractLayerFiles(t *testing.T) {
 			expectedWhFiles: []string{"var/foo"},
 		},
 		{
-			name:      "sad path with GetLayer fails",
+			name:      "sad path with unknown layer",
+			imagePath: "testdata/image1.tar",
+			args: args{
+				ctx:       nil,
+				dig:       "sha256:beee9f30bc1f711043e78d4a2be0668955d4b761d587d6f60c2c8dc081efb203", // unknown
+				filenames: []string{"var/foo"},
+			},
+			wantErr: "unknown blob",
+		},
+		{
+			name:      "sad path with invalid layer ID",
 			imagePath: "testdata/image1.tar",
 			args: args{
 				ctx:       nil,
 				dig:       "sha256:unknown",
 				filenames: []string{"var/foo"},
 			},
-			expectedDigest: "sha256:f75441026d68038ca80e92f342fb8f3c0f1faeec67b5a80c98f033a65beaef5a",
-			expectedFileMap: extractor.FileMap{
-				"var/foo": []byte(""),
-			},
-			wantErr: "Unknown blob",
+			wantErr: "invalid layer ID",
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			d, cleanup, err := NewDockerArchiveExtractor(context.Background(), tt.imagePath, types.DockerOption{})
+			d, err := NewDockerArchiveExtractor(context.Background(), tt.imagePath, types.DockerOption{})
 			require.NoError(t, err)
-			defer cleanup()
 
-			actualDigest, actualFileMap, actualOpqDirs, actualWhFiles, err := d.ExtractLayerFiles(tt.args.ctx, tt.args.dig, tt.args.filenames)
+			actualDigest, actualFileMap, actualOpqDirs, actualWhFiles, err := d.ExtractLayerFiles(tt.args.dig, tt.args.filenames)
 			if tt.wantErr != "" {
 				require.NotNil(t, err, tt.name)
 				assert.Contains(t, err.Error(), tt.wantErr, tt.name)
