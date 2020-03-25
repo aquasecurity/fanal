@@ -51,31 +51,6 @@ var testCases = []testCase{
 		imageFile: "testdata/fixtures/alpine-310.tar.gz",
 	},
 	{
-		name:      "happy path amazonlinux:2",
-		imageName: "amazonlinux:2",
-		imageFile: "testdata/fixtures/amazon-2.tar.gz",
-	},
-	{
-		name:      "happy path debian:buster",
-		imageName: "debian:buster",
-		imageFile: "testdata/fixtures/debian-buster.tar.gz",
-	},
-	{
-		name:      "happy path photon:1.0",
-		imageName: "photon:1.0-20190823",
-		imageFile: "testdata/fixtures/photon-10.tar.gz",
-	},
-	{
-		name:      "happy path registry.redhat.io/ubi7",
-		imageName: "registry.redhat.io/ubi7",
-		imageFile: "testdata/fixtures/ubi-7.tar.gz",
-	},
-	{
-		name:      "happy path opensuse leap 15.1",
-		imageName: "opensuse/leap:latest",
-		imageFile: "testdata/fixtures/opensuse-leap-151.tar.gz",
-	},
-	{
 		name:      "happy path vulnimage with lock files",
 		imageName: "knqyf263/vuln-image:1.2.3",
 		imageFile: "testdata/fixtures/vulnimage.tar.gz",
