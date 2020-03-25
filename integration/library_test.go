@@ -123,7 +123,7 @@ func TestFanal_Library_DockerLessMode(t *testing.T) {
 				SkipPing: true,
 			}
 
-			cli, err := client.NewClientWithOpts(client.FromEnv)
+			cli, err := client.NewClientWithOpts(client.WithVersion("1.38"), client.FromEnv)
 			require.NoError(t, err, tc.name)
 
 			// remove existing Image if any
@@ -164,7 +164,7 @@ func TestFanal_Library_DockerMode(t *testing.T) {
 				SkipPing: true,
 			}
 
-			cli, err := client.NewClientWithOpts(client.FromEnv)
+			cli, err := client.NewClientWithOpts(client.WithVersion("1.38"), client.FromEnv)
 			require.NoError(t, err, tc.name)
 
 			testfile, err := os.Open(tc.imageFile)
