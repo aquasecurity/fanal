@@ -5,8 +5,7 @@ import (
 	"encoding/json"
 	"sort"
 
-	"github.com/containers/image/v5/manifest"
-	digest "github.com/opencontainers/go-digest"
+	v1 "github.com/google/go-containerregistry/pkg/v1"
 	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/fanal/cache"
@@ -97,14 +96,22 @@ func New(ext extractor.Extractor, c cache.ImageCache) Config {
 }
 
 func (ac Config) Analyze(ctx context.Context) (types.ImageReference, error) {
-	imageID := ac.Extractor.ImageID()
-	layerIDs := ac.Extractor.LayerIDs()
-	missingImage, missingLayers, err := ac.Cache.MissingLayers(string(imageID), layerIDs)
+	imageID, err := ac.Extractor.ImageID()
+	if err != nil {
+		return types.ImageReference{}, xerrors.Errorf("unable to get the image ID: %w", err)
+	}
+
+	layerIDs, err := ac.Extractor.LayerIDs()
+	if err != nil {
+		return types.ImageReference{}, xerrors.Errorf("unable to get layer IDs: %w", err)
+	}
+
+	missingImage, missingLayers, err := ac.Cache.MissingLayers(imageID, layerIDs)
 	if err != nil {
 		return types.ImageReference{}, xerrors.Errorf("unable to get missing layers: %w", err)
 	}
 
-	if err := ac.analyze(ctx, missingImage, missingLayers); err != nil {
+	if err := ac.analyze(ctx, imageID, missingImage, missingLayers); err != nil {
 		return types.ImageReference{}, xerrors.Errorf("analyze error: %w", err)
 	}
 
@@ -115,19 +122,19 @@ func (ac Config) Analyze(ctx context.Context) (types.ImageReference, error) {
 	}, nil
 }
 
-func (ac Config) analyze(ctx context.Context, missingImage bool, layerIDs []string) error {
+func (ac Config) analyze(ctx context.Context, imageID string, missingImage bool, layerIDs []string) error {
 	done := make(chan struct{})
 	errCh := make(chan error)
 
 	var osFound types.OS
 	for _, layerID := range layerIDs {
-		go func(dig digest.Digest) {
-			decompressedLayerID, layerInfo, err := ac.analyzeLayer(ctx, dig)
+		go func(dig string) {
+			decompressedLayerID, layerInfo, err := ac.analyzeLayer(dig)
 			if err != nil {
 				errCh <- xerrors.Errorf("failed to analyze layer: %s : %w", dig, err)
 				return
 			}
-			if err = ac.Cache.PutLayer(string(dig), string(decompressedLayerID), layerInfo); err != nil {
+			if err = ac.Cache.PutLayer(dig, decompressedLayerID, layerInfo); err != nil {
 				errCh <- xerrors.Errorf("failed to store layer: %s in cache: %w", dig, err)
 				return
 			}
@@ -135,7 +142,7 @@ func (ac Config) analyze(ctx context.Context, missingImage bool, layerIDs []stri
 				osFound = *layerInfo.OS
 			}
 			done <- struct{}{}
-		}(digest.Digest(layerID))
+		}(layerID)
 	}
 
 	for range layerIDs {
@@ -149,7 +156,7 @@ func (ac Config) analyze(ctx context.Context, missingImage bool, layerIDs []stri
 	}
 
 	if missingImage {
-		if err := ac.analyzeConfig(ctx, osFound); err != nil {
+		if err := ac.analyzeConfig(ctx, imageID, osFound); err != nil {
 			return xerrors.Errorf("unable to analyze config: %w", err)
 		}
 	}
@@ -157,8 +164,8 @@ func (ac Config) analyze(ctx context.Context, missingImage bool, layerIDs []stri
 	return nil
 }
 
-func (ac Config) analyzeLayer(ctx context.Context, dig digest.Digest) (digest.Digest, types.LayerInfo, error) {
-	decompressedLayerID, files, opqDirs, whFiles, err := ac.Extractor.ExtractLayerFiles(ctx, dig, RequiredFilenames())
+func (ac Config) analyzeLayer(dig string) (string, types.LayerInfo, error) {
+	decompressedLayerID, files, opqDirs, whFiles, err := ac.Extractor.ExtractLayerFiles(dig, RequiredFilenames())
 	if err != nil {
 		return "", types.LayerInfo{}, xerrors.Errorf("unable to extract files from layer %s: %w", dig, err)
 	}
@@ -174,8 +181,8 @@ func (ac Config) analyzeLayer(ctx context.Context, dig digest.Digest) (digest.Di
 	}
 
 	layerInfo := types.LayerInfo{
-		Digest:        string(dig),
-		DiffID:        string(decompressedLayerID),
+		Digest:        dig,
+		DiffID:        decompressedLayerID,
 		SchemaVersion: types.LayerJSONSchemaVersion,
 		OS:            os,
 		PackageInfos:  pkgs,
@@ -186,8 +193,8 @@ func (ac Config) analyzeLayer(ctx context.Context, dig digest.Digest) (digest.Di
 	return decompressedLayerID, layerInfo, nil
 }
 
-func (ac Config) analyzeConfig(ctx context.Context, osFound types.OS) error {
-	configBlob, err := ac.Extractor.ConfigBlob(ctx)
+func (ac Config) analyzeConfig(ctx context.Context, imageID string, osFound types.OS) error {
+	configBlob, err := ac.Extractor.ConfigBlob()
 	if err != nil {
 		return xerrors.Errorf("unable to get config blob: %w", err)
 	}
@@ -198,7 +205,7 @@ func (ac Config) analyzeConfig(ctx context.Context, osFound types.OS) error {
 	}
 	pkgs, _ := GetPackagesFromCommands(osFound, files)
 
-	var s1 manifest.Schema2V1Image
+	var s1 v1.ConfigFile
 	if err := json.Unmarshal(configBlob, &s1); err != nil {
 		return xerrors.Errorf("json marshal error: %w", err)
 	}
@@ -206,13 +213,13 @@ func (ac Config) analyzeConfig(ctx context.Context, osFound types.OS) error {
 	info := types.ImageInfo{
 		SchemaVersion:   types.ImageJSONSchemaVersion,
 		Architecture:    s1.Architecture,
-		Created:         s1.Created,
+		Created:         s1.Created.Time,
 		DockerVersion:   s1.DockerVersion,
 		OS:              s1.OS,
 		HistoryPackages: pkgs,
 	}
 
-	if err := ac.Cache.PutImage(string(ac.Extractor.ImageID()), info); err != nil {
+	if err := ac.Cache.PutImage(imageID, info); err != nil {
 		return xerrors.Errorf("failed to put image info into the cache: %w", err)
 	}
 
@@ -227,7 +234,7 @@ func NewApplier(c cache.LocalImageCache) Applier {
 	return Applier{cache: c}
 }
 
-func (a Applier) ApplyLayers(imageID digest.Digest, layerIDs []string) (types.ImageDetail, error) {
+func (a Applier) ApplyLayers(imageID string, layerIDs []string) (types.ImageDetail, error) {
 	var layers []types.LayerInfo
 	for _, layerID := range layerIDs {
 		layer, _ := a.cache.GetLayer(layerID)
@@ -244,7 +251,7 @@ func (a Applier) ApplyLayers(imageID digest.Digest, layerIDs []string) (types.Im
 		return types.ImageDetail{}, ErrNoPkgsDetected
 	}
 
-	imageInfo, _ := a.cache.GetImage(string(imageID))
+	imageInfo, _ := a.cache.GetImage(imageID)
 	mergedLayer.HistoryPackages = imageInfo.HistoryPackages
 
 	return mergedLayer, nil
@@ -288,7 +295,6 @@ func GetPackages(filesMap extractor.FileMap) ([]types.PackageInfo, error) {
 	return nil, nil
 }
 
-// TODO: support this feature
 func GetPackagesFromCommands(targetOS types.OS, filesMap extractor.FileMap) ([]types.Package, error) {
 	for _, analyzer := range commandAnalyzers {
 		pkgs, err := analyzer.Analyze(targetOS, filesMap)
