@@ -100,13 +100,12 @@ func BenchmarkDockerMode_WithoutCache(b *testing.B) {
 			b.ResetTimer()
 			for i := 0; i < b.N; i++ {
 				b.StopTimer()
-				ac, c, cleanup := initializeAnalyzer(b, ctx, imageName, benchCache)
+				ac, c := initializeAnalyzer(b, ctx, imageName, benchCache)
 				b.StartTimer()
 
 				run(b, ctx, ac)
 
 				b.StopTimer()
-				cleanup()
 				_ = c.Clear()
 				b.StartTimer()
 			}
@@ -126,8 +125,7 @@ func BenchmarkDockerMode_WithCache(b *testing.B) {
 
 			ctx, imageName, cli := setup(b, tc)
 
-			ac, _, cleanup := initializeAnalyzer(b, ctx, imageName, benchCache)
-			defer cleanup()
+			ac, _ := initializeAnalyzer(b, ctx, imageName, benchCache)
 
 			// run once to generate cache
 			run(b, ctx, ac)
@@ -192,7 +190,7 @@ func setup(b *testing.B, tc testCase) (context.Context, string, *client.Client) 
 	return ctx, imageName, cli
 }
 
-func initializeAnalyzer(b *testing.B, ctx context.Context, imageName, cacheDir string) (analyzer.Config, cache.Cache, func()) {
+func initializeAnalyzer(b *testing.B, ctx context.Context, imageName, cacheDir string) (analyzer.Config, cache.Cache) {
 	c, err := cache.NewFSCache(cacheDir)
 	require.NoError(b, err)
 
@@ -201,9 +199,9 @@ func initializeAnalyzer(b *testing.B, ctx context.Context, imageName, cacheDir s
 		SkipPing: true,
 	}
 
-	ext, cleanup, err := docker.NewDockerExtractor(ctx, imageName, opt)
+	ext, err := docker.NewDockerExtractor(ctx, imageName, opt)
 	require.NoError(b, err)
 
 	ac := analyzer.New(ext, c)
-	return ac, c, cleanup
+	return ac, c
 }
