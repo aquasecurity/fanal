@@ -12,6 +12,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/aquasecurity/fanal/extractor/docker"
+
 	"github.com/aquasecurity/fanal/analyzer"
 	_ "github.com/aquasecurity/fanal/analyzer/command/apk"
 	_ "github.com/aquasecurity/fanal/analyzer/library/bundler"
@@ -31,7 +33,6 @@ import (
 	_ "github.com/aquasecurity/fanal/analyzer/pkg/dpkg"
 	_ "github.com/aquasecurity/fanal/analyzer/pkg/rpm"
 	"github.com/aquasecurity/fanal/cache"
-	"github.com/aquasecurity/fanal/extractor/docker"
 	"github.com/aquasecurity/fanal/types"
 	dtypes "github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
@@ -57,8 +58,14 @@ var testCases = []testCase{
 	},
 }
 
-func run(b *testing.B, ctx context.Context, ac analyzer.Config) {
-	_, err := ac.Analyze(ctx)
+func run(b *testing.B, ctx context.Context, imageName string, c cache.Cache, opt types.DockerOption) {
+	ext, cleanup, err := docker.NewDockerExtractor(ctx, imageName, opt)
+	require.NoError(b, err)
+	defer cleanup()
+
+	ac := analyzer.New(ext, c)
+
+	_, err = ac.Analyze(ctx)
 	require.NoError(b, err)
 }
 
@@ -75,10 +82,10 @@ func BenchmarkDockerMode_WithoutCache(b *testing.B) {
 			b.ResetTimer()
 			for i := 0; i < b.N; i++ {
 				b.StopTimer()
-				ac, c := initializeAnalyzer(b, ctx, imageName, benchCache)
+				c, opt := initializeAnalyzer(b, ctx, imageName, benchCache)
 				b.StartTimer()
 
-				run(b, ctx, ac)
+				run(b, ctx, imageName, c, opt)
 
 				b.StopTimer()
 				_ = c.Clear()
@@ -100,15 +107,15 @@ func BenchmarkDockerMode_WithCache(b *testing.B) {
 
 			ctx, imageName, cli := setup(b, tc)
 
-			ac, _ := initializeAnalyzer(b, ctx, imageName, benchCache)
+			c, opt := initializeAnalyzer(b, ctx, imageName, benchCache)
 
 			// run once to generate cache
-			run(b, ctx, ac)
+			run(b, ctx, imageName, c, opt)
 
 			b.ReportAllocs()
 			b.ResetTimer()
 			for i := 0; i < b.N; i++ {
-				run(b, ctx, ac)
+				run(b, ctx, imageName, c, opt)
 			}
 			b.StopTimer()
 
@@ -165,7 +172,7 @@ func setup(b *testing.B, tc testCase) (context.Context, string, *client.Client) 
 	return ctx, imageName, cli
 }
 
-func initializeAnalyzer(b *testing.B, ctx context.Context, imageName, cacheDir string) (analyzer.Config, cache.Cache) {
+func initializeAnalyzer(b *testing.B, ctx context.Context, imageName, cacheDir string) (cache.Cache, types.DockerOption) {
 	c, err := cache.NewFSCache(cacheDir)
 	require.NoError(b, err)
 
@@ -174,9 +181,5 @@ func initializeAnalyzer(b *testing.B, ctx context.Context, imageName, cacheDir s
 		SkipPing: true,
 	}
 
-	ext, err := docker.NewDockerExtractor(ctx, imageName, opt)
-	require.NoError(b, err)
-
-	ac := analyzer.New(ext, c)
-	return ac, c
+	return c, opt
 }
