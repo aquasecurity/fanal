@@ -7,13 +7,11 @@ import (
 	"io/ioutil"
 	"path/filepath"
 	"strings"
-	"time"
-
-	godeptypes "github.com/aquasecurity/go-dep-parser/pkg/types"
-	"github.com/google/go-containerregistry/pkg/v1"
 
 	"github.com/aquasecurity/fanal/extractor/image/token/ecr"
 	"github.com/aquasecurity/fanal/extractor/image/token/gcr"
+	godeptypes "github.com/aquasecurity/go-dep-parser/pkg/types"
+	"github.com/google/go-containerregistry/pkg/v1"
 	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/fanal/analyzer/library"
@@ -29,20 +27,6 @@ const (
 	wh  string = ".wh."
 )
 
-type Config struct {
-	ContainerConfig containerConfig `json:"container_config"`
-	History         []History
-}
-
-type containerConfig struct {
-	Env []string
-}
-
-type History struct {
-	Created   time.Time
-	CreatedBy string `json:"created_by"`
-}
-
 type Extractor struct {
 	imageName string
 	image     v1.Image
@@ -53,19 +37,19 @@ func init() {
 	image.RegisterRegistry(&ecr.ECR{})
 }
 
-func NewDockerExtractor(ctx context.Context, imageName string, option types.DockerOption) (Extractor, error) {
+func NewDockerExtractor(ctx context.Context, imageName string, option types.DockerOption) (Extractor, func(), error) {
 	ctx, cancel := context.WithTimeout(ctx, option.Timeout)
 	defer cancel()
 
-	img, err := image.NewDockerImage(ctx, imageName, option)
+	img, cleanup, err := image.NewDockerImage(ctx, imageName, option)
 	if err != nil {
-		return Extractor{}, xerrors.Errorf("unable to initialize a image struct: %w", err)
+		return Extractor{}, nil, xerrors.Errorf("unable to initialize a image struct: %w", err)
 	}
 
 	return Extractor{
 		imageName: imageName,
 		image:     img,
-	}, nil
+	}, cleanup, nil
 }
 
 func NewDockerArchiveExtractor(ctx context.Context, fileName string, option types.DockerOption) (Extractor, error) {
@@ -196,41 +180,39 @@ func (d Extractor) ConfigBlob() ([]byte, error) {
 }
 
 func (d Extractor) LayerIDs() ([]string, error) {
-	layers, err := d.image.Layers()
+	conf, err := d.image.ConfigFile()
 	if err != nil {
-		return nil, xerrors.Errorf("unable to get layers: %w", err)
+		return nil, xerrors.Errorf("unable to get the config file: %w", err)
 	}
 
 	var layerIDs []string
-	for _, layer := range layers {
-		d, err := layer.Digest()
-		if err != nil {
-			return nil, xerrors.Errorf("unable to get the hash of compressed layer: %w", err)
-		}
+	for _, d := range conf.RootFS.DiffIDs {
 		layerIDs = append(layerIDs, d.String())
 	}
 	return layerIDs, nil
 }
 
-func (d Extractor) ExtractLayerFiles(dig string, filenames []string) (string, extractor.FileMap, []string, []string, error) {
-	h, err := v1.NewHash(dig)
+func (d Extractor) ExtractLayerFiles(diffID string, filenames []string) (string, extractor.FileMap, []string, []string, error) {
+	// diffID is a hash of the uncompressed layer
+	h, err := v1.NewHash(diffID)
 	if err != nil {
-		return "", nil, nil, nil, xerrors.Errorf("invalid layer ID (%s): %w", dig, err)
+		return "", nil, nil, nil, xerrors.Errorf("invalid layer ID (%s): %w", diffID, err)
 	}
 
-	layer, err := d.image.LayerByDigest(h)
+	layer, err := d.image.LayerByDiffID(h)
 	if err != nil {
-		return "", nil, nil, nil, xerrors.Errorf("failed to get the layer (%s): %w", dig, err)
+		return "", nil, nil, nil, xerrors.Errorf("failed to get the layer (%s): %w", diffID, err)
 	}
 
 	r, err := layer.Uncompressed()
 	if err != nil {
-		return "", nil, nil, nil, xerrors.Errorf("failed to get the layer content (%s): %w", dig, err)
+		return "", nil, nil, nil, xerrors.Errorf("failed to get the layer content (%s): %w", diffID, err)
 	}
 
-	uncompressedLayerID, err := layer.DiffID()
+	// digest is a hash of the compressed layer
+	digest, err := layer.Digest()
 	if err != nil {
-		return "", nil, nil, nil, xerrors.Errorf("failed to get the uncompressed layer ID (%s): %w", dig, err)
+		return "", nil, nil, nil, xerrors.Errorf("failed to get the digest (%s): %w", diffID, err)
 	}
 
 	files, opqDirs, whFiles, err := d.extractFiles(r, filenames)
@@ -238,7 +220,7 @@ func (d Extractor) ExtractLayerFiles(dig string, filenames []string) (string, ex
 		return "", nil, nil, nil, xerrors.Errorf("failed to extract files: %w", err)
 	}
 
-	return uncompressedLayerID.String(), files, opqDirs, whFiles, nil
+	return digest.String(), files, opqDirs, whFiles, nil
 }
 
 func (d Extractor) extractFiles(layer io.Reader, filenames []string) (extractor.FileMap, []string, []string, error) {

@@ -2,8 +2,14 @@ package docker
 
 import (
 	"context"
+	"fmt"
+	"net/http/httptest"
+	"os"
 	"sort"
 	"testing"
+
+	"github.com/aquasecurity/testdocker/engine"
+	"github.com/aquasecurity/testdocker/registry"
 
 	godeptypes "github.com/aquasecurity/go-dep-parser/pkg/types"
 	"github.com/stretchr/testify/assert"
@@ -400,19 +406,25 @@ func TestApplyLayers(t *testing.T) {
 }
 
 func TestExtractor_ExtractLayerFiles(t *testing.T) {
+	te, tr := setupDockerEnvironment()
+	defer te.Close()
+	defer tr.Close()
+
+	serverAddr := tr.Listener.Addr().String()
+
 	type fields struct {
 		option types.DockerOption
 	}
 	type args struct {
 		ctx       context.Context
-		dig       string
+		diffID    string
 		filenames []string
 	}
 	tests := []struct {
 		name            string
+		imageName       string
 		fields          fields
 		args            args
-		imagePath       string
 		expectedDigest  string
 		expectedFileMap extractor.FileMap
 		expectedOpqDirs []string
@@ -420,27 +432,40 @@ func TestExtractor_ExtractLayerFiles(t *testing.T) {
 		wantErr         string
 	}{
 		{
-			name:      "happy path",
-			imagePath: "testdata/image1.tar",
+			name:      "happy path with Docker Registry",
+			imageName: fmt.Sprintf("%s/library/image1", serverAddr),
 			args: args{
 				ctx:       nil,
-				dig:       "sha256:fe18b2be62164eb835d8c8c65d75682782d67d6fb1b4406a8943b4c538c5bbf5",
+				diffID:    "sha256:d9ff549177a94a413c425ffe14ae1cc0aa254bc9c7df781add08e7d2fba25d27",
 				filenames: []string{"etc/hostname"},
 			},
-			expectedDigest: "sha256:d9ff549177a94a413c425ffe14ae1cc0aa254bc9c7df781add08e7d2fba25d27",
+			expectedDigest: "sha256:fe18b2be62164eb835d8c8c65d75682782d67d6fb1b4406a8943b4c538c5bbf5",
+			expectedFileMap: extractor.FileMap{
+				"etc/hostname": []byte("localhost\n"),
+			},
+		},
+		{
+			name:      "happy path with Docker Engine",
+			imageName: "image1:latest",
+			args: args{
+				ctx:       nil,
+				diffID:    "sha256:d9ff549177a94a413c425ffe14ae1cc0aa254bc9c7df781add08e7d2fba25d27",
+				filenames: []string{"etc/hostname"},
+			},
+			expectedDigest: "sha256:fe18b2be62164eb835d8c8c65d75682782d67d6fb1b4406a8943b4c538c5bbf5",
 			expectedFileMap: extractor.FileMap{
 				"etc/hostname": []byte("localhost\n"),
 			},
 		},
 		{
 			name:      "opq file path",
-			imagePath: "testdata/image1.tar",
+			imageName: fmt.Sprintf("%s/library/image1", serverAddr),
 			args: args{
 				ctx:       nil,
-				dig:       "sha256:c12d5ff49cfae67c6b0289ec7fb55a7e00aff1bafbc4b3da581325032c254a57",
+				diffID:    "sha256:a8b87ccf2f2f94b9e23308560800afa3f272aa6db5cc7d9b0119b6843889cff2",
 				filenames: []string{"etc/test/"},
 			},
-			expectedDigest: "sha256:a8b87ccf2f2f94b9e23308560800afa3f272aa6db5cc7d9b0119b6843889cff2",
+			expectedDigest: "sha256:c12d5ff49cfae67c6b0289ec7fb55a7e00aff1bafbc4b3da581325032c254a57",
 			expectedFileMap: extractor.FileMap{
 				"etc/test/bar": []byte("bar\n"),
 			},
@@ -449,20 +474,20 @@ func TestExtractor_ExtractLayerFiles(t *testing.T) {
 		},
 		{
 			name:      "sad path with unknown layer",
-			imagePath: "testdata/image1.tar",
+			imageName: fmt.Sprintf("%s/library/image1", serverAddr),
 			args: args{
 				ctx:       nil,
-				dig:       "sha256:beee9f30bc1f711043e78d4a2be0668955d4b761d587d6f60c2c8dc081efb203", // unknown
+				diffID:    "sha256:beee9f30bc1f711043e78d4a2be0668955d4b761d587d6f60c2c8dc081efb203", // unknown
 				filenames: []string{"var/foo"},
 			},
-			wantErr: "unknown blob",
+			wantErr: "unknown diffID",
 		},
 		{
 			name:      "sad path with invalid layer ID",
-			imagePath: "testdata/image1.tar",
+			imageName: fmt.Sprintf("%s/library/image1", serverAddr),
 			args: args{
 				ctx:       nil,
-				dig:       "sha256:unknown",
+				diffID:    "sha256:unknown",
 				filenames: []string{"var/foo"},
 			},
 			wantErr: "invalid layer ID",
@@ -470,10 +495,11 @@ func TestExtractor_ExtractLayerFiles(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			d, err := NewDockerArchiveExtractor(context.Background(), tt.imagePath, types.DockerOption{})
+			d, cleanup, err := NewDockerExtractor(context.Background(), tt.imageName, types.DockerOption{})
 			require.NoError(t, err)
+			defer cleanup()
 
-			actualDigest, actualFileMap, actualOpqDirs, actualWhFiles, err := d.ExtractLayerFiles(tt.args.dig, tt.args.filenames)
+			actualDigest, actualFileMap, actualOpqDirs, actualWhFiles, err := d.ExtractLayerFiles(tt.args.diffID, tt.args.filenames)
 			if tt.wantErr != "" {
 				require.NotNil(t, err, tt.name)
 				assert.Contains(t, err.Error(), tt.wantErr, tt.name)
@@ -488,4 +514,25 @@ func TestExtractor_ExtractLayerFiles(t *testing.T) {
 			assert.Equal(t, tt.expectedWhFiles, actualWhFiles)
 		})
 	}
+}
+
+func setupDockerEnvironment() (*httptest.Server, *httptest.Server) {
+	// Docker Engine
+	imagePaths := map[string]string{
+		"index.docker.io/library/image1:latest": "../testdata/image1.tar",
+	}
+	opt := engine.Option{
+		APIVersion: "1.38",
+		ImagePaths: imagePaths,
+	}
+	te := engine.NewDockerEngine(opt)
+
+	os.Setenv("DOCKER_HOST", fmt.Sprintf("tcp://%s", te.Listener.Addr().String()))
+
+	// Docker Registry
+	imagePaths = map[string]string{
+		"v2/library/image1:latest": "../testdata/image1.tar",
+	}
+	tr := registry.NewDockerRegistry(imagePaths)
+	return te, tr
 }
