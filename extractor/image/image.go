@@ -10,43 +10,33 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/docker/docker/client"
 	"github.com/google/go-containerregistry/pkg/authn"
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/google/go-containerregistry/pkg/v1"
-	"github.com/google/go-containerregistry/pkg/v1/daemon"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"github.com/google/go-containerregistry/pkg/v1/tarball"
 	"golang.org/x/xerrors"
 
+	"github.com/aquasecurity/fanal/extractor/image/daemon"
 	"github.com/aquasecurity/fanal/types"
 	"github.com/aquasecurity/fanal/utils"
 )
 
-const (
-	dockerAPIVersion = "1.38"
-)
-
-func NewDockerImage(ctx context.Context, imageName string, option types.DockerOption) (v1.Image, error) {
+func NewDockerImage(ctx context.Context, imageName string, option types.DockerOption) (v1.Image, func(), error) {
 	var nameOpts []name.Option
 	if option.NonSSL {
 		nameOpts = append(nameOpts, name.Insecure)
 	}
 	ref, err := name.ParseReference(imageName, nameOpts...)
 	if err != nil {
-		return nil, xerrors.Errorf("failed to parse the image name: %w", err)
+		return nil, func() {}, xerrors.Errorf("failed to parse the image name: %w", err)
 	}
 
 	// Try accessing Docker Daemon
-	c, err := client.NewClientWithOpts(client.WithVersion(dockerAPIVersion), client.FromEnv)
-	if err != nil {
-		return nil, xerrors.Errorf("failed to initialize a docker client: %w", err)
-	}
-
-	img, err := daemon.Image(ref, daemon.WithClient(c))
+	img, cleanup, err := daemon.Image(ref)
 	if err == nil {
 		// Return v1.Image if the image is found in Docker Engine
-		return img, nil
+		return img, cleanup, nil
 	}
 
 	// Try accessing Docker Registry
@@ -69,10 +59,10 @@ func NewDockerImage(ctx context.Context, imageName string, option types.DockerOp
 
 	img, err = remote.Image(ref, remoteOpts...)
 	if err != nil {
-		return nil, xerrors.Errorf("unable to access the remote image (%s): %w", ref.Name(), err)
+		return nil, func() {}, xerrors.Errorf("unable to access the remote image (%s): %w", ref.Name(), err)
 	}
 
-	return img, nil
+	return img, func() {}, nil
 }
 
 func NewDockerArchiveImage(fileName string) (v1.Image, error) {

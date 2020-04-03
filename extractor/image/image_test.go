@@ -6,28 +6,44 @@ import (
 	"os"
 	"testing"
 
-	"github.com/aquasecurity/fanal/testutils"
+	"github.com/stretchr/testify/assert"
+
+	"github.com/aquasecurity/testdocker/engine"
+	"github.com/aquasecurity/testdocker/registry"
 
 	"github.com/aquasecurity/fanal/types"
 	v1 "github.com/google/go-containerregistry/pkg/v1"
 )
 
-func TestNewDockerImage(t *testing.T) {
-	filePaths := map[string]string{
-		"index.docker.io/library/alpine:3.11": "testdata/alpine-310.tar.gz",
+var serverAddr string
+
+func TestMain(m *testing.M) {
+	imagePaths := map[string]string{
+		"index.docker.io/library/alpine:3.10": "../testdata/alpine-310.tar.gz",
+		"index.docker.io/library/alpine:3.11": "../testdata/alpine-311.tar.gz",
 	}
-	te := testutils.NewDockerEngine("1.38", filePaths)
+	opt := engine.Option{
+		APIVersion: "1.38",
+		ImagePaths: imagePaths,
+	}
+	te := engine.NewDockerEngine(opt)
 	defer te.Close()
 
-	filePaths = map[string]string{
-		"library/alpine:3.11": "testdata/alpine-310.tar.gz",
+	imagePaths = map[string]string{
+		"v2/library/alpine:3.10": "../testdata/alpine-310.tar.gz",
 	}
-	tr := testutils.NewDockerRegistry(filePaths)
+	tr := registry.NewDockerRegistry(imagePaths)
 	defer tr.Close()
 
-	//pp.Println(ts.Listener.Addr().String())
+	serverAddr = tr.Listener.Addr().String()
+
 	os.Setenv("DOCKER_HOST", fmt.Sprintf("tcp://%s", te.Listener.Addr().String()))
 
+	code := m.Run()
+	os.Exit(code)
+}
+
+func TestNewDockerImage(t *testing.T) {
 	type args struct {
 		imageName string
 		option    types.DockerOption
@@ -47,13 +63,13 @@ func TestNewDockerImage(t *testing.T) {
 		{
 			name: "happy path with Docker Registry",
 			args: args{
-				imageName: fmt.Sprintf("%s/library/alpine:3.11", tr.Listener.Addr().String()),
+				imageName: fmt.Sprintf("%s/library/alpine:3.10", serverAddr),
 			},
 		},
 		{
 			name: "happy path with insecure Docker Registry",
 			args: args{
-				imageName: fmt.Sprintf("%s/library/alpine:3.11", tr.Listener.Addr().String()),
+				imageName: fmt.Sprintf("%s/library/alpine:3.10", serverAddr),
 				option: types.DockerOption{
 					UserName:              "test",
 					Password:              "test",
@@ -65,26 +81,24 @@ func TestNewDockerImage(t *testing.T) {
 		{
 			name: "sad path with invalid tag",
 			args: args{
-				imageName: fmt.Sprintf("%s/library/alpine:3.11!!!", tr.Listener.Addr().String()),
+				imageName: fmt.Sprintf("%s/library/alpine:3.11!!!", serverAddr),
 			},
 			wantErr: true,
 		},
 		{
 			name: "sad path with non-exist image",
 			args: args{
-				imageName: fmt.Sprintf("%s/library/alpine:100", tr.Listener.Addr().String()),
+				imageName: fmt.Sprintf("%s/library/alpine:100", serverAddr),
 			},
 			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			fmt.Println(os.Getenv("DOCKER_HOST"))
-			_, err := NewDockerImage(context.Background(), tt.args.imageName, tt.args.option)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("NewDockerImage() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
+			_, cleanup, err := NewDockerImage(context.Background(), tt.args.imageName, tt.args.option)
+			defer cleanup()
+
+			assert.Equal(t, tt.wantErr, err != nil, err)
 		})
 	}
 }
@@ -102,13 +116,13 @@ func TestNewDockerArchiveImage(t *testing.T) {
 		{
 			name: "happy path",
 			args: args{
-				fileName: "testdata/alpine-310.tar.gz",
+				fileName: "../testdata/alpine-310.tar.gz",
 			},
 		},
 		{
 			name: "sad path",
 			args: args{
-				fileName: "testdata/invalid.tar.gz",
+				fileName: "../testdata/invalid.tar.gz",
 			},
 			wantErr: true,
 		},
@@ -116,10 +130,7 @@ func TestNewDockerArchiveImage(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			_, err := NewDockerArchiveImage(tt.args.fileName)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("NewDockerArchiveImage() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
+			assert.Equal(t, tt.wantErr, err != nil, err)
 		})
 	}
 }
