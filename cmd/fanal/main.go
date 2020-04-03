@@ -43,6 +43,7 @@ func main() {
 }
 
 func run() (err error) {
+
 	ctx := context.Background()
 	tarPath := flag.String("f", "-", "layer.tar path")
 	clearCache := flag.Bool("clear", false, "clear cache")
@@ -67,9 +68,10 @@ func run() (err error) {
 		SkipPing: true,
 	}
 
+	cleanup := func() {}
 	var ext extractor.Extractor
 	if len(args) > 0 {
-		ext, err = docker.NewDockerExtractor(ctx, args[0], opt)
+		ext, cleanup, err = docker.NewDockerExtractor(ctx, args[0], opt)
 		if err != nil {
 			return err
 		}
@@ -79,6 +81,7 @@ func run() (err error) {
 			return err
 		}
 	}
+	defer cleanup()
 
 	ac := analyzer.New(ext, c)
 	imageInfo, err := ac.Analyze(ctx)
