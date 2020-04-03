@@ -128,14 +128,14 @@ func (ac Config) analyze(ctx context.Context, imageID string, missingImage bool,
 
 	var osFound types.OS
 	for _, layerID := range layerIDs {
-		go func(dig string) {
-			decompressedLayerID, layerInfo, err := ac.analyzeLayer(dig)
+		go func(diffID string) {
+			layerInfo, err := ac.analyzeLayer(diffID)
 			if err != nil {
-				errCh <- xerrors.Errorf("failed to analyze layer: %s : %w", dig, err)
+				errCh <- xerrors.Errorf("failed to analyze layer: %s : %w", diffID, err)
 				return
 			}
-			if err = ac.Cache.PutLayer(dig, decompressedLayerID, layerInfo); err != nil {
-				errCh <- xerrors.Errorf("failed to store layer: %s in cache: %w", dig, err)
+			if err = ac.Cache.PutLayer(diffID, layerInfo); err != nil {
+				errCh <- xerrors.Errorf("failed to store layer: %s in cache: %w", diffID, err)
 				return
 			}
 			if layerInfo.OS != nil {
@@ -164,25 +164,25 @@ func (ac Config) analyze(ctx context.Context, imageID string, missingImage bool,
 	return nil
 }
 
-func (ac Config) analyzeLayer(dig string) (string, types.LayerInfo, error) {
-	decompressedLayerID, files, opqDirs, whFiles, err := ac.Extractor.ExtractLayerFiles(dig, RequiredFilenames())
+func (ac Config) analyzeLayer(diffID string) (types.LayerInfo, error) {
+	layerDigest, files, opqDirs, whFiles, err := ac.Extractor.ExtractLayerFiles(diffID, RequiredFilenames())
 	if err != nil {
-		return "", types.LayerInfo{}, xerrors.Errorf("unable to extract files from layer %s: %w", dig, err)
+		return types.LayerInfo{}, xerrors.Errorf("unable to extract files from layer %s: %w", diffID, err)
 	}
 
 	os := GetOS(files)
 	pkgs, err := GetPackages(files)
 	if err != nil {
-		return "", types.LayerInfo{}, xerrors.Errorf("failed to get packages: %w", err)
+		return types.LayerInfo{}, xerrors.Errorf("failed to get packages: %w", err)
 	}
 	apps, err := GetLibraries(files)
 	if err != nil {
-		return "", types.LayerInfo{}, xerrors.Errorf("failed to get libraries: %w", err)
+		return types.LayerInfo{}, xerrors.Errorf("failed to get libraries: %w", err)
 	}
 
 	layerInfo := types.LayerInfo{
-		Digest:        dig,
-		DiffID:        decompressedLayerID,
+		Digest:        layerDigest,
+		DiffID:        diffID,
 		SchemaVersion: types.LayerJSONSchemaVersion,
 		OS:            os,
 		PackageInfos:  pkgs,
@@ -190,7 +190,7 @@ func (ac Config) analyzeLayer(dig string) (string, types.LayerInfo, error) {
 		OpaqueDirs:    opqDirs,
 		WhiteoutFiles: whFiles,
 	}
-	return decompressedLayerID, layerInfo, nil
+	return layerInfo, nil
 }
 
 func (ac Config) analyzeConfig(ctx context.Context, imageID string, osFound types.OS) error {

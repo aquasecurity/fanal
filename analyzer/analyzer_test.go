@@ -51,18 +51,17 @@ func TestConfig_Analyze(t *testing.T) {
 			missingLayerExpectation: cache.ImageCacheMissingLayersExpectation{
 				Args: cache.ImageCacheMissingLayersArgs{
 					ImageID:  "sha256:965ea09ff2ebd2b9eeec88cd822ce156f6674c7e99be082c7efac3c62f3ff652",
-					LayerIDs: []string{"sha256:d466f5549941271d294ac018eb196b5a56dab9afc766c140242eb7eb6fb0c79f"},
+					LayerIDs: []string{"sha256:77cae8ab23bf486355d1b3191259705374f4a11d483b24964d2f729dd8c076a0"},
 				},
 				Returns: cache.ImageCacheMissingLayersReturns{
 					MissingImage:    true,
-					MissingLayerIDs: []string{"sha256:d466f5549941271d294ac018eb196b5a56dab9afc766c140242eb7eb6fb0c79f"},
+					MissingLayerIDs: []string{"sha256:77cae8ab23bf486355d1b3191259705374f4a11d483b24964d2f729dd8c076a0"},
 				},
 			},
 			putLayerExpectations: []cache.ImageCachePutLayerExpectation{
 				{
 					Args: cache.ImageCachePutLayerArgs{
-						LayerID:             "sha256:d466f5549941271d294ac018eb196b5a56dab9afc766c140242eb7eb6fb0c79f",
-						DecompressedLayerID: "sha256:77cae8ab23bf486355d1b3191259705374f4a11d483b24964d2f729dd8c076a0",
+						LayerID: "sha256:77cae8ab23bf486355d1b3191259705374f4a11d483b24964d2f729dd8c076a0",
 						LayerInfo: types.LayerInfo{
 							SchemaVersion: 1,
 							Digest:        "sha256:d466f5549941271d294ac018eb196b5a56dab9afc766c140242eb7eb6fb0c79f",
@@ -97,7 +96,7 @@ func TestConfig_Analyze(t *testing.T) {
 			want: types.ImageReference{
 				Name:     "testdata/alpine.tar.gz",
 				ID:       "sha256:965ea09ff2ebd2b9eeec88cd822ce156f6674c7e99be082c7efac3c62f3ff652",
-				LayerIDs: []string{"sha256:d466f5549941271d294ac018eb196b5a56dab9afc766c140242eb7eb6fb0c79f"},
+				LayerIDs: []string{"sha256:77cae8ab23bf486355d1b3191259705374f4a11d483b24964d2f729dd8c076a0"},
 			},
 		},
 		{
@@ -107,25 +106,24 @@ func TestConfig_Analyze(t *testing.T) {
 				Args: cache.ImageCacheMissingLayersArgs{
 					ImageID: "sha256:58701fd185bda36cab0557bb6438661831267aa4a9e0b54211c4d5317a48aff4",
 					LayerIDs: []string{
-						"sha256:f3896f083e92c804887811c3ec1e7c7e38dd72e96aec843c52a5af3fd81d0e6a",
-						"sha256:35d4dcd7ccb4f81f381b1ae0634909292ed76d9218fd2810b819c72f73cac308",
-						"sha256:b52336985a5d3544ae3addbee2f77d788b2910d7275acccf5a77aae27958953f",
-						"sha256:4e2fa82517c8c5ef6160d6923384c9a6777533a5afddc25431baa934f3b90277",
+						"sha256:932da51564135c98a49a34a193d6cd363d8fa4184d957fde16c9d8527b3f3b02",
+						"sha256:dffd9992ca398466a663c87c92cfea2a2db0ae0cf33fcb99da60eec52addbfc5",
+						"sha256:24df0d4e20c0f42d3703bf1f1db2bdd77346c7956f74f423603d651e8e5ae8a7",
+						"sha256:a4595c43a874856bf95f3bfc4fbf78bbaa04c92c726276d4f64193a47ced0566",
 					},
 				},
 				Returns: cache.ImageCacheMissingLayersReturns{
 					MissingLayerIDs: []string{
-						"sha256:f3896f083e92c804887811c3ec1e7c7e38dd72e96aec843c52a5af3fd81d0e6a",
-						"sha256:35d4dcd7ccb4f81f381b1ae0634909292ed76d9218fd2810b819c72f73cac308",
-						"sha256:b52336985a5d3544ae3addbee2f77d788b2910d7275acccf5a77aae27958953f",
+						"sha256:932da51564135c98a49a34a193d6cd363d8fa4184d957fde16c9d8527b3f3b02",
+						"sha256:dffd9992ca398466a663c87c92cfea2a2db0ae0cf33fcb99da60eec52addbfc5",
+						"sha256:24df0d4e20c0f42d3703bf1f1db2bdd77346c7956f74f423603d651e8e5ae8a7",
 					},
 				},
 			},
 			putLayerExpectations: []cache.ImageCachePutLayerExpectation{
 				{
 					Args: cache.ImageCachePutLayerArgs{
-						LayerID:             "sha256:f3896f083e92c804887811c3ec1e7c7e38dd72e96aec843c52a5af3fd81d0e6a",
-						DecompressedLayerID: "sha256:932da51564135c98a49a34a193d6cd363d8fa4184d957fde16c9d8527b3f3b02",
+						LayerID: "sha256:932da51564135c98a49a34a193d6cd363d8fa4184d957fde16c9d8527b3f3b02",
 						LayerInfo: types.LayerInfo{
 							SchemaVersion: 1,
 							Digest:        "sha256:f3896f083e92c804887811c3ec1e7c7e38dd72e96aec843c52a5af3fd81d0e6a",
@@ -137,8 +135,7 @@ func TestConfig_Analyze(t *testing.T) {
 				},
 				{
 					Args: cache.ImageCachePutLayerArgs{
-						LayerID:             "sha256:35d4dcd7ccb4f81f381b1ae0634909292ed76d9218fd2810b819c72f73cac308",
-						DecompressedLayerID: "sha256:dffd9992ca398466a663c87c92cfea2a2db0ae0cf33fcb99da60eec52addbfc5",
+						LayerID: "sha256:dffd9992ca398466a663c87c92cfea2a2db0ae0cf33fcb99da60eec52addbfc5",
 						LayerInfo: types.LayerInfo{
 							SchemaVersion: 1,
 							Digest:        "sha256:35d4dcd7ccb4f81f381b1ae0634909292ed76d9218fd2810b819c72f73cac308",
@@ -149,8 +146,7 @@ func TestConfig_Analyze(t *testing.T) {
 				},
 				{
 					Args: cache.ImageCachePutLayerArgs{
-						LayerID:             "sha256:b52336985a5d3544ae3addbee2f77d788b2910d7275acccf5a77aae27958953f",
-						DecompressedLayerID: "sha256:24df0d4e20c0f42d3703bf1f1db2bdd77346c7956f74f423603d651e8e5ae8a7",
+						LayerID: "sha256:24df0d4e20c0f42d3703bf1f1db2bdd77346c7956f74f423603d651e8e5ae8a7",
 						LayerInfo: types.LayerInfo{
 							SchemaVersion: 1,
 							Digest:        "sha256:b52336985a5d3544ae3addbee2f77d788b2910d7275acccf5a77aae27958953f",
@@ -182,10 +178,10 @@ func TestConfig_Analyze(t *testing.T) {
 				Name: "testdata/vuln-image.tar.gz",
 				ID:   "sha256:58701fd185bda36cab0557bb6438661831267aa4a9e0b54211c4d5317a48aff4",
 				LayerIDs: []string{
-					"sha256:f3896f083e92c804887811c3ec1e7c7e38dd72e96aec843c52a5af3fd81d0e6a",
-					"sha256:35d4dcd7ccb4f81f381b1ae0634909292ed76d9218fd2810b819c72f73cac308",
-					"sha256:b52336985a5d3544ae3addbee2f77d788b2910d7275acccf5a77aae27958953f",
-					"sha256:4e2fa82517c8c5ef6160d6923384c9a6777533a5afddc25431baa934f3b90277",
+					"sha256:932da51564135c98a49a34a193d6cd363d8fa4184d957fde16c9d8527b3f3b02",
+					"sha256:dffd9992ca398466a663c87c92cfea2a2db0ae0cf33fcb99da60eec52addbfc5",
+					"sha256:24df0d4e20c0f42d3703bf1f1db2bdd77346c7956f74f423603d651e8e5ae8a7",
+					"sha256:a4595c43a874856bf95f3bfc4fbf78bbaa04c92c726276d4f64193a47ced0566",
 				},
 			},
 		},
@@ -195,7 +191,7 @@ func TestConfig_Analyze(t *testing.T) {
 			missingLayerExpectation: cache.ImageCacheMissingLayersExpectation{
 				Args: cache.ImageCacheMissingLayersArgs{
 					ImageID:  "sha256:965ea09ff2ebd2b9eeec88cd822ce156f6674c7e99be082c7efac3c62f3ff652",
-					LayerIDs: []string{"sha256:d466f5549941271d294ac018eb196b5a56dab9afc766c140242eb7eb6fb0c79f"},
+					LayerIDs: []string{"sha256:77cae8ab23bf486355d1b3191259705374f4a11d483b24964d2f729dd8c076a0"},
 				},
 				Returns: cache.ImageCacheMissingLayersReturns{
 					Err: xerrors.New("MissingLayers failed"),
@@ -209,17 +205,16 @@ func TestConfig_Analyze(t *testing.T) {
 			missingLayerExpectation: cache.ImageCacheMissingLayersExpectation{
 				Args: cache.ImageCacheMissingLayersArgs{
 					ImageID:  "sha256:965ea09ff2ebd2b9eeec88cd822ce156f6674c7e99be082c7efac3c62f3ff652",
-					LayerIDs: []string{"sha256:d466f5549941271d294ac018eb196b5a56dab9afc766c140242eb7eb6fb0c79f"},
+					LayerIDs: []string{"sha256:77cae8ab23bf486355d1b3191259705374f4a11d483b24964d2f729dd8c076a0"},
 				},
 				Returns: cache.ImageCacheMissingLayersReturns{
-					MissingLayerIDs: []string{"sha256:d466f5549941271d294ac018eb196b5a56dab9afc766c140242eb7eb6fb0c79f"},
+					MissingLayerIDs: []string{"sha256:77cae8ab23bf486355d1b3191259705374f4a11d483b24964d2f729dd8c076a0"},
 				},
 			},
 			putLayerExpectations: []cache.ImageCachePutLayerExpectation{
 				{
 					Args: cache.ImageCachePutLayerArgs{
-						LayerID:             "sha256:d466f5549941271d294ac018eb196b5a56dab9afc766c140242eb7eb6fb0c79f",
-						DecompressedLayerID: "sha256:77cae8ab23bf486355d1b3191259705374f4a11d483b24964d2f729dd8c076a0",
+						LayerID: "sha256:77cae8ab23bf486355d1b3191259705374f4a11d483b24964d2f729dd8c076a0",
 						LayerInfo: types.LayerInfo{
 							SchemaVersion: 1,
 							Digest:        "sha256:d466f5549941271d294ac018eb196b5a56dab9afc766c140242eb7eb6fb0c79f",
