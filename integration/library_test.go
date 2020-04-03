@@ -132,8 +132,9 @@ func TestFanal_Library_DockerLessMode(t *testing.T) {
 				PruneChildren: true,
 			})
 
-			ext, err := docker.NewDockerExtractor(ctx, tc.remoteImageName, opt)
+			ext, cleanup, err := docker.NewDockerExtractor(ctx, tc.remoteImageName, opt)
 			require.NoError(t, err, tc.name)
+			defer cleanup()
 
 			ac := analyzer.New(ext, c)
 			applier := analyzer.NewApplier(c)
@@ -179,8 +180,9 @@ func TestFanal_Library_DockerMode(t *testing.T) {
 			err = cli.ImageTag(ctx, tc.imageName, tc.imageFile)
 			require.NoError(t, err, tc.name)
 
-			ext, err := docker.NewDockerExtractor(ctx, tc.imageFile, opt)
+			ext, cleanup, err := docker.NewDockerExtractor(ctx, tc.imageFile, opt)
 			require.NoError(t, err)
+			defer cleanup()
 
 			ac := analyzer.New(ext, c)
 			applier := analyzer.NewApplier(c)
