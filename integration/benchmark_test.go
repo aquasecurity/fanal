@@ -82,7 +82,7 @@ func BenchmarkDockerMode_WithoutCache(b *testing.B) {
 			b.ResetTimer()
 			for i := 0; i < b.N; i++ {
 				b.StopTimer()
-				c, opt := initializeAnalyzer(b, ctx, imageName, benchCache)
+				c, opt := initialize(b, benchCache)
 				b.StartTimer()
 
 				run(b, ctx, imageName, c, opt)
@@ -107,7 +107,7 @@ func BenchmarkDockerMode_WithCache(b *testing.B) {
 
 			ctx, imageName, cli := setup(b, tc)
 
-			c, opt := initializeAnalyzer(b, ctx, imageName, benchCache)
+			c, opt := initialize(b, benchCache)
 
 			// run once to generate cache
 			run(b, ctx, imageName, c, opt)
@@ -172,7 +172,7 @@ func setup(b *testing.B, tc testCase) (context.Context, string, *client.Client) 
 	return ctx, imageName, cli
 }
 
-func initializeAnalyzer(b *testing.B, ctx context.Context, imageName, cacheDir string) (cache.Cache, types.DockerOption) {
+func initialize(b *testing.B, cacheDir string) (cache.Cache, types.DockerOption) {
 	c, err := cache.NewFSCache(cacheDir)
 	require.NoError(b, err)
 
@@ -180,6 +180,5 @@ func initializeAnalyzer(b *testing.B, ctx context.Context, imageName, cacheDir s
 		Timeout:  600 * time.Second,
 		SkipPing: true,
 	}
-
 	return c, opt
 }
