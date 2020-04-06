@@ -1,3 +1,5 @@
+// +build integration
+
 package integration
 
 import (
@@ -50,7 +52,7 @@ const (
 	registryPassword = "testpassword"
 )
 
-func TestSecureRegistry(t *testing.T) {
+func TestTLSRegistry(t *testing.T) {
 	ctx := context.Background()
 
 	baseDir, err := filepath.Abs(".")
