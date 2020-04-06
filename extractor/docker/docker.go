@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/aquasecurity/fanal/extractor/image/token/ecr"
 	"github.com/aquasecurity/fanal/extractor/image/token/gcr"
@@ -26,6 +27,20 @@ const (
 	opq string = ".wh..wh..opq"
 	wh  string = ".wh."
 )
+
+type Config struct {
+	ContainerConfig containerConfig `json:"container_config"`
+	History         []History
+}
+
+type containerConfig struct {
+	Env []string
+}
+
+type History struct {
+	Created   time.Time
+	CreatedBy string `json:"created_by"`
+}
 
 type Extractor struct {
 	imageName string
