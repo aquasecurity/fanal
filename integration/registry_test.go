@@ -107,8 +107,7 @@ func TestTLSRegistry(t *testing.T) {
 				Timeout:               60 * time.Second,
 				InsecureSkipTLSVerify: true,
 			},
-			login:      true,
-			expectedOS: types.OS{Name: "3.10.2", Family: "alpine"},
+			login: true,
 			// TODO: this should be false, but there is regression now.
 			// After replacing containers/image with google/go-containerregistry, it is supposed to pass.
 			wantErr: true,
@@ -122,8 +121,7 @@ func TestTLSRegistry(t *testing.T) {
 				UserName: registryUsername,
 				Password: registryPassword,
 			},
-			expectedOS: types.OS{Name: "3.10.2", Family: "alpine"},
-			wantErr:    true,
+			wantErr: true,
 		},
 		{
 			name:      "sad path: no credential",
@@ -133,8 +131,7 @@ func TestTLSRegistry(t *testing.T) {
 				Timeout:               60 * time.Second,
 				InsecureSkipTLSVerify: true,
 			},
-			expectedOS: types.OS{Name: "3.10.2", Family: "alpine"},
-			wantErr:    true,
+			wantErr: true,
 		},
 	}
 
