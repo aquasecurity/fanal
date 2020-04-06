@@ -10,6 +10,7 @@ require (
 	github.com/aws/aws-sdk-go v1.27.1
 	github.com/deckarep/golang-set v1.7.1
 	github.com/docker/docker v1.4.2-0.20190924003213-a8608b5b67c7
+	github.com/docker/go-connections v0.4.0
 	github.com/google/go-containerregistry v0.0.0-20200331213917-3d03ed9b1ca2
 	github.com/knqyf263/go-deb-version v0.0.0-20190517075300-09fca494f03d
 	github.com/knqyf263/go-rpmdb v0.0.0-20190501070121-10a1c42a10dc
@@ -18,6 +19,7 @@ require (
 	github.com/opencontainers/image-spec v1.0.2-0.20190823105129-775207bd45b6 // indirect
 	github.com/pkg/errors v0.9.1
 	github.com/stretchr/testify v1.4.0
+	github.com/testcontainers/testcontainers-go v0.3.1
 	go.etcd.io/bbolt v1.3.3
 	golang.org/x/crypto v0.0.0-20200220183623-bac4c82f6975
 	golang.org/x/net v0.0.0-20191108221443-4ba9e2ef068c // indirect
