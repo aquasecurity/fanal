@@ -452,7 +452,7 @@ func TestExtractor_ExtractLayerFiles(t *testing.T) {
 				diffID:    "sha256:d9ff549177a94a413c425ffe14ae1cc0aa254bc9c7df781add08e7d2fba25d27",
 				filenames: []string{"etc/hostname"},
 			},
-			expectedDigest: "sha256:fe18b2be62164eb835d8c8c65d75682782d67d6fb1b4406a8943b4c538c5bbf5",
+			expectedDigest: "", // Docker Engine doesn't have the ID of the compressed layer
 			expectedFileMap: extractor.FileMap{
 				"etc/hostname": []byte("localhost\n"),
 			},

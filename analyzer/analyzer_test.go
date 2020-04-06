@@ -64,7 +64,7 @@ func TestConfig_Analyze(t *testing.T) {
 						LayerID: "sha256:77cae8ab23bf486355d1b3191259705374f4a11d483b24964d2f729dd8c076a0",
 						LayerInfo: types.LayerInfo{
 							SchemaVersion: 1,
-							Digest:        "sha256:d466f5549941271d294ac018eb196b5a56dab9afc766c140242eb7eb6fb0c79f",
+							Digest:        "",
 							DiffID:        "sha256:77cae8ab23bf486355d1b3191259705374f4a11d483b24964d2f729dd8c076a0",
 							OS: &types.OS{
 								Family: "alpine",
@@ -126,7 +126,7 @@ func TestConfig_Analyze(t *testing.T) {
 						LayerID: "sha256:932da51564135c98a49a34a193d6cd363d8fa4184d957fde16c9d8527b3f3b02",
 						LayerInfo: types.LayerInfo{
 							SchemaVersion: 1,
-							Digest:        "sha256:f3896f083e92c804887811c3ec1e7c7e38dd72e96aec843c52a5af3fd81d0e6a",
+							Digest:        "",
 							DiffID:        "sha256:932da51564135c98a49a34a193d6cd363d8fa4184d957fde16c9d8527b3f3b02",
 							OS:            &types.OS{Family: "debian", Name: "9.9"},
 							PackageInfos:  []types.PackageInfo{{FilePath: "var/lib/dpkg/status.d/base", Packages: []types.Package{{Name: "base-files", Version: "9.9+deb9u9", Release: "", Epoch: 0, Arch: "", SrcName: "base-files", SrcVersion: "9.9+deb9u9", SrcRelease: "", SrcEpoch: 0}}}, {FilePath: "var/lib/dpkg/status.d/netbase", Packages: []types.Package{{Name: "netbase", Version: "5.4", Release: "", Epoch: 0, Arch: "", SrcName: "netbase", SrcVersion: "5.4", SrcRelease: "", SrcEpoch: 0}}}, {FilePath: "var/lib/dpkg/status.d/tzdata", Packages: []types.Package{{Name: "tzdata", Version: "2019a-0+deb9u1", Release: "", Epoch: 0, Arch: "", SrcName: "tzdata", SrcVersion: "2019a-0+deb9u1", SrcRelease: "", SrcEpoch: 0}}}},
@@ -138,7 +138,7 @@ func TestConfig_Analyze(t *testing.T) {
 						LayerID: "sha256:dffd9992ca398466a663c87c92cfea2a2db0ae0cf33fcb99da60eec52addbfc5",
 						LayerInfo: types.LayerInfo{
 							SchemaVersion: 1,
-							Digest:        "sha256:35d4dcd7ccb4f81f381b1ae0634909292ed76d9218fd2810b819c72f73cac308",
+							Digest:        "",
 							DiffID:        "sha256:dffd9992ca398466a663c87c92cfea2a2db0ae0cf33fcb99da60eec52addbfc5",
 							PackageInfos:  []types.PackageInfo{{FilePath: "var/lib/dpkg/status.d/libc6", Packages: []types.Package{{Name: "libc6", Version: "2.24-11+deb9u4", Release: "", Epoch: 0, Arch: "", SrcName: "glibc", SrcVersion: "2.24-11+deb9u4", SrcRelease: "", SrcEpoch: 0}}}, {FilePath: "var/lib/dpkg/status.d/libssl1", Packages: []types.Package{{Name: "libssl1.1", Version: "1.1.0k-1~deb9u1", Release: "", Epoch: 0, Arch: "", SrcName: "openssl", SrcVersion: "1.1.0k-1~deb9u1", SrcRelease: "", SrcEpoch: 0}}}, {FilePath: "var/lib/dpkg/status.d/openssl", Packages: []types.Package{{Name: "openssl", Version: "1.1.0k-1~deb9u1", Release: "", Epoch: 0, Arch: "", SrcName: "openssl", SrcVersion: "1.1.0k-1~deb9u1", SrcRelease: "", SrcEpoch: 0}}}},
 						},
@@ -149,7 +149,7 @@ func TestConfig_Analyze(t *testing.T) {
 						LayerID: "sha256:24df0d4e20c0f42d3703bf1f1db2bdd77346c7956f74f423603d651e8e5ae8a7",
 						LayerInfo: types.LayerInfo{
 							SchemaVersion: 1,
-							Digest:        "sha256:b52336985a5d3544ae3addbee2f77d788b2910d7275acccf5a77aae27958953f",
+							Digest:        "",
 							DiffID:        "sha256:24df0d4e20c0f42d3703bf1f1db2bdd77346c7956f74f423603d651e8e5ae8a7",
 							Applications: []types.Application{{Type: "composer", FilePath: "php-app/composer.lock",
 								Libraries: []types.LibraryInfo{
@@ -217,7 +217,7 @@ func TestConfig_Analyze(t *testing.T) {
 						LayerID: "sha256:77cae8ab23bf486355d1b3191259705374f4a11d483b24964d2f729dd8c076a0",
 						LayerInfo: types.LayerInfo{
 							SchemaVersion: 1,
-							Digest:        "sha256:d466f5549941271d294ac018eb196b5a56dab9afc766c140242eb7eb6fb0c79f",
+							Digest:        "",
 							DiffID:        "sha256:77cae8ab23bf486355d1b3191259705374f4a11d483b24964d2f729dd8c076a0",
 							OS: &types.OS{
 								Family: "alpine",

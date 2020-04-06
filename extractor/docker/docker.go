@@ -6,6 +6,7 @@ import (
 	"io"
 	"io/ioutil"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"time"
 
@@ -225,9 +226,13 @@ func (d Extractor) ExtractLayerFiles(diffID string, filenames []string) (string,
 	}
 
 	// digest is a hash of the compressed layer
-	digest, err := layer.Digest()
-	if err != nil {
-		return "", nil, nil, nil, xerrors.Errorf("failed to get the digest (%s): %w", diffID, err)
+	var digest string
+	if d.isCompressed(layer) {
+		d, err := layer.Digest()
+		if err != nil {
+			return "", nil, nil, nil, xerrors.Errorf("failed to get the digest (%s): %w", diffID, err)
+		}
+		digest = d.String()
 	}
 
 	files, opqDirs, whFiles, err := d.extractFiles(r, filenames)
@@ -235,7 +240,12 @@ func (d Extractor) ExtractLayerFiles(diffID string, filenames []string) (string,
 		return "", nil, nil, nil, xerrors.Errorf("failed to extract files: %w", err)
 	}
 
-	return digest.String(), files, opqDirs, whFiles, nil
+	return digest, files, opqDirs, whFiles, nil
+}
+
+func (d Extractor) isCompressed(l v1.Layer) bool {
+	_, uncompressed := reflect.TypeOf(l).Elem().FieldByName("UncompressedLayer")
+	return !uncompressed
 }
 
 func (d Extractor) extractFiles(layer io.Reader, filenames []string) (extractor.FileMap, []string, []string, error) {
