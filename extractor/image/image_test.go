@@ -39,8 +39,7 @@ func TestMain(m *testing.M) {
 
 	os.Setenv("DOCKER_HOST", fmt.Sprintf("tcp://%s", te.Listener.Addr().String()))
 
-	code := m.Run()
-	os.Exit(code)
+	os.Exit(m.Run())
 }
 
 func TestNewDockerImage(t *testing.T) {
