@@ -106,10 +106,9 @@ func TestTLSRegistry(t *testing.T) {
 				Timeout:               60 * time.Second,
 				InsecureSkipTLSVerify: true,
 			},
-			login: true,
-			// TODO: this should be false, but there is regression now.
-			// After replacing containers/image with google/go-containerregistry, it is supposed to pass.
-			wantErr: true,
+			login:      true,
+			expectedOS: types.OS{Name: "3.10.2", Family: "alpine"},
+			wantErr:    false,
 		},
 		{
 			name:      "sad path: tls verify",
