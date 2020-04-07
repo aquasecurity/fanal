@@ -30,13 +30,13 @@ type Cache interface {
 type ImageCache interface {
 	MissingLayers(imageID string, layerIDs []string) (missingImage bool, missingLayerIDs []string, err error)
 	PutImage(imageID string, imageInfo types.ImageInfo) (err error)
-	PutLayer(layerID string, layerInfo types.LayerInfo) (err error)
+	PutLayer(diffID string, layerInfo types.LayerInfo) (err error)
 }
 
 // LocalImageCache always uses local cache
 type LocalImageCache interface {
 	GetImage(imageID string) (imageInfo types.ImageInfo, err error)
-	GetLayer(layerID string) (layerInfo types.LayerInfo, err error)
+	GetLayer(diffID string) (layerInfo types.LayerInfo, err error)
 	Clear() (err error)
 }
 

@@ -133,8 +133,8 @@ func (_m *MockImageCache) PutImage(imageID string, imageInfo types.ImageInfo) er
 }
 
 type ImageCachePutLayerArgs struct {
-	LayerID           string
-	LayerIDAnything   bool
+	DiffID            string
+	DiffIDAnything    bool
 	LayerInfo         types.LayerInfo
 	LayerInfoAnything bool
 }
@@ -150,10 +150,10 @@ type ImageCachePutLayerExpectation struct {
 
 func (_m *MockImageCache) ApplyPutLayerExpectation(e ImageCachePutLayerExpectation) {
 	var args []interface{}
-	if e.Args.LayerIDAnything {
+	if e.Args.DiffIDAnything {
 		args = append(args, mock.Anything)
 	} else {
-		args = append(args, e.Args.LayerID)
+		args = append(args, e.Args.DiffID)
 	}
 	if e.Args.LayerInfoAnything {
 		args = append(args, mock.Anything)
@@ -169,13 +169,13 @@ func (_m *MockImageCache) ApplyPutLayerExpectations(expectations []ImageCachePut
 	}
 }
 
-// PutLayer provides a mock function with given fields: layerID, layerInfo
-func (_m *MockImageCache) PutLayer(layerID string, layerInfo types.LayerInfo) error {
-	ret := _m.Called(layerID, layerInfo)
+// PutLayer provides a mock function with given fields: diffID, layerInfo
+func (_m *MockImageCache) PutLayer(diffID string, layerInfo types.LayerInfo) error {
+	ret := _m.Called(diffID, layerInfo)
 
 	var r0 error
 	if rf, ok := ret.Get(0).(func(string, types.LayerInfo) error); ok {
-		r0 = rf(layerID, layerInfo)
+		r0 = rf(diffID, layerInfo)
 	} else {
 		r0 = ret.Error(0)
 	}
