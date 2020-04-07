@@ -72,7 +72,6 @@ func imageOpener(c *client.Client, ref name.Reference, f *os.File) opener {
 		defer f.Close()
 
 		image, err := tarball.ImageFromPath(f.Name(), nil)
-		//image, err := daemon.Image(img.imageRef, daemon.WithClient(img.client), daemon.WithUnbufferedOpener())
 		if err != nil {
 			return nil, xerrors.Errorf("foo: %w", err)
 		}
