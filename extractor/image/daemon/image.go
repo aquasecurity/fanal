@@ -29,6 +29,8 @@ type image struct {
 
 type opener func() (v1.Image, error)
 
+// Image implements v1.Image by extending daemon.Image.
+// The caller must call cleanup() to remove a temporary file.
 func Image(ref name.Reference) (v1.Image, func(), error) {
 	c, err := client.NewClientWithOpts(client.FromEnv)
 	if err != nil {
