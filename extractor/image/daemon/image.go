@@ -32,24 +32,26 @@ type opener func() (v1.Image, error)
 // Image implements v1.Image by extending daemon.Image.
 // The caller must call cleanup() to remove a temporary file.
 func Image(ref name.Reference) (v1.Image, func(), error) {
+	cleanup := func() {}
+
 	c, err := client.NewClientWithOpts(client.FromEnv)
 	if err != nil {
-		return nil, nil, xerrors.Errorf("failed to initialize a docker client: %w", err)
+		return nil, cleanup, xerrors.Errorf("failed to initialize a docker client: %w", err)
 	}
 
 	c.NegotiateAPIVersion(context.Background())
 
 	inspect, _, err := c.ImageInspectWithRaw(context.Background(), ref.Name())
 	if err != nil {
-		return nil, nil, err
+		return nil, cleanup, err
 	}
 
 	f, err := ioutil.TempFile("", "fanal-*")
 	if err != nil {
-		return nil, nil, err
+		return nil, cleanup, err
 	}
 
-	cleanup := func() {
+	cleanup = func() {
 		_ = os.Remove(f.Name())
 	}
 
