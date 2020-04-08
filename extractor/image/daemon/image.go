@@ -88,6 +88,7 @@ func (img *image) populateImage() (err error) {
 	mu.Lock()
 	defer mu.Unlock()
 
+	// img.Image is already initialized, so we don't have to do it again.
 	if img.Image != nil {
 		return nil
 	}
