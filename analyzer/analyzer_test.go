@@ -61,7 +61,7 @@ func TestConfig_Analyze(t *testing.T) {
 			putLayerExpectations: []cache.ImageCachePutLayerExpectation{
 				{
 					Args: cache.ImageCachePutLayerArgs{
-						LayerID: "sha256:77cae8ab23bf486355d1b3191259705374f4a11d483b24964d2f729dd8c076a0",
+						DiffID: "sha256:77cae8ab23bf486355d1b3191259705374f4a11d483b24964d2f729dd8c076a0",
 						LayerInfo: types.LayerInfo{
 							SchemaVersion: 1,
 							Digest:        "",
@@ -123,7 +123,7 @@ func TestConfig_Analyze(t *testing.T) {
 			putLayerExpectations: []cache.ImageCachePutLayerExpectation{
 				{
 					Args: cache.ImageCachePutLayerArgs{
-						LayerID: "sha256:932da51564135c98a49a34a193d6cd363d8fa4184d957fde16c9d8527b3f3b02",
+						DiffID: "sha256:932da51564135c98a49a34a193d6cd363d8fa4184d957fde16c9d8527b3f3b02",
 						LayerInfo: types.LayerInfo{
 							SchemaVersion: 1,
 							Digest:        "",
@@ -135,7 +135,7 @@ func TestConfig_Analyze(t *testing.T) {
 				},
 				{
 					Args: cache.ImageCachePutLayerArgs{
-						LayerID: "sha256:dffd9992ca398466a663c87c92cfea2a2db0ae0cf33fcb99da60eec52addbfc5",
+						DiffID: "sha256:dffd9992ca398466a663c87c92cfea2a2db0ae0cf33fcb99da60eec52addbfc5",
 						LayerInfo: types.LayerInfo{
 							SchemaVersion: 1,
 							Digest:        "",
@@ -146,7 +146,7 @@ func TestConfig_Analyze(t *testing.T) {
 				},
 				{
 					Args: cache.ImageCachePutLayerArgs{
-						LayerID: "sha256:24df0d4e20c0f42d3703bf1f1db2bdd77346c7956f74f423603d651e8e5ae8a7",
+						DiffID: "sha256:24df0d4e20c0f42d3703bf1f1db2bdd77346c7956f74f423603d651e8e5ae8a7",
 						LayerInfo: types.LayerInfo{
 							SchemaVersion: 1,
 							Digest:        "",
@@ -214,7 +214,7 @@ func TestConfig_Analyze(t *testing.T) {
 			putLayerExpectations: []cache.ImageCachePutLayerExpectation{
 				{
 					Args: cache.ImageCachePutLayerArgs{
-						LayerID: "sha256:77cae8ab23bf486355d1b3191259705374f4a11d483b24964d2f729dd8c076a0",
+						DiffID: "sha256:77cae8ab23bf486355d1b3191259705374f4a11d483b24964d2f729dd8c076a0",
 						LayerInfo: types.LayerInfo{
 							SchemaVersion: 1,
 							Digest:        "",
