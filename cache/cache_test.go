@@ -68,10 +68,11 @@ func TestFSCache_GetLayer(t *testing.T) {
 		layerID string
 	}
 	tests := []struct {
-		name   string
-		dbPath string
-		args   args
-		want   types.LayerInfo
+		name    string
+		dbPath  string
+		args    args
+		want    types.LayerInfo
+		wantErr bool
 	}{
 		{
 			name:   "happy path",
@@ -87,6 +88,14 @@ func TestFSCache_GetLayer(t *testing.T) {
 				},
 			},
 		},
+		{
+			name:   "sad path",
+			dbPath: "testdata/fanal.db",
+			args: args{
+				layerID: "sha256:unknown",
+			},
+			wantErr: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -99,7 +108,7 @@ func TestFSCache_GetLayer(t *testing.T) {
 			defer fs.Clear()
 
 			got, err := fs.GetLayer(tt.args.layerID)
-			assert.NoError(t, err)
+			assert.Equal(t, tt.wantErr, err != nil, err)
 			assert.Equal(t, tt.want, got)
 		})
 	}
