@@ -84,6 +84,9 @@ func imageOpener(c *client.Client, ref name.Reference, f *os.File) opener {
 	}
 }
 
+// populateImage initializes an "image" struct.
+// This method is called by some goroutines at the same time.
+// To prevent multiple heavy initializations, the lock is necessary.
 func (img *image) populateImage() (err error) {
 	mu.Lock()
 	defer mu.Unlock()
