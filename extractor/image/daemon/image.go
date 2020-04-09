@@ -34,12 +34,10 @@ type opener func() (v1.Image, error)
 func Image(ref name.Reference) (v1.Image, func(), error) {
 	cleanup := func() {}
 
-	c, err := client.NewClientWithOpts(client.FromEnv)
+	c, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
 		return nil, cleanup, xerrors.Errorf("failed to initialize a docker client: %w", err)
 	}
-
-	c.NegotiateAPIVersion(context.Background())
 
 	inspect, _, err := c.ImageInspectWithRaw(context.Background(), ref.Name())
 	if err != nil {
