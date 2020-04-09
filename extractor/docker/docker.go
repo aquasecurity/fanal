@@ -71,13 +71,9 @@ func newDockerExtractor(ctx context.Context, imgRef image.Reference, transports 
 	ctx, cancel := context.WithTimeout(ctx, option.Timeout)
 	defer cancel()
 
-	img, err := image.NewImage(ctx, imgRef, transports, option)
+	img, cleanup, err := image.NewImage(ctx, imgRef, transports, option)
 	if err != nil {
 		return Extractor{}, nil, xerrors.Errorf("unable to initialize a image struct: %w", err)
-	}
-
-	cleanup := func() {
-		_ = img.Close()
 	}
 
 	return Extractor{

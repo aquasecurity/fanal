@@ -3,6 +3,8 @@ package image
 import (
 	"context"
 	"io"
+	"io/ioutil"
+	"os"
 
 	"github.com/containers/image/v5/image"
 	"github.com/containers/image/v5/pkg/blobinfocache"
@@ -11,6 +13,7 @@ import (
 	imageTypes "github.com/containers/image/v5/types"
 	"github.com/docker/distribution/reference"
 	digest "github.com/opencontainers/go-digest"
+	"golang.org/x/crypto/ssh/terminal"
 	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/fanal/types"
@@ -49,15 +52,16 @@ type RealImage struct {
 	src           ImageCloser
 }
 
-func NewImage(ctx context.Context, image Reference, transports []string, option types.DockerOption) (RealImage, error) {
+func NewImage(ctx context.Context, image Reference, transports []string, option types.DockerOption) (RealImage, func(), error) {
 	var domain string
 	var auth *imageTypes.DockerAuthConfig
+	var err error
 
 	originalName := image.Name
 	if !image.IsFile {
 		named, err := reference.ParseNormalizedNamed(image.Name)
 		if err != nil {
-			return RealImage{}, xerrors.Errorf("invalid image name: %w", err)
+			return RealImage{}, nil, xerrors.Errorf("invalid image name: %w", err)
 		}
 
 		// add 'latest' tag
@@ -67,6 +71,16 @@ func NewImage(ctx context.Context, image Reference, transports []string, option 
 		// get a credential for Docker registry
 		domain = reference.Domain(named)
 		auth = GetToken(ctx, domain, option)
+	}
+
+	// Receive an image content from stdin
+	var tmpImageFileName string
+	if image.IsFile && image.Name == "-" && !terminal.IsTerminal(0) {
+		tmpImageFileName, err = copyStdinToTempFile()
+		if err != nil {
+			return RealImage{}, nil, err
+		}
+		image.Name = tmpImageFileName
 	}
 
 	sys := &imageTypes.SystemContext{
@@ -83,15 +97,36 @@ func NewImage(ctx context.Context, image Reference, transports []string, option 
 
 	rawSource, src, err := newSource(ctx, image.Name, transports, sys)
 	if err != nil {
-		return RealImage{}, xerrors.Errorf("failed to initialize source: %w", err)
+		return RealImage{}, nil, xerrors.Errorf("failed to initialize source: %w", err)
 	}
 
-	return RealImage{
+	img := RealImage{
 		name:          originalName,
 		blobInfoCache: blobinfocache.DefaultCache(sys),
 		rawSource:     rawSource,
 		src:           src,
-	}, nil
+	}
+
+	cleanup := func() {
+		if tmpImageFileName != "" {
+			_ = os.Remove(tmpImageFileName)
+		}
+		_ = img.Close()
+	}
+
+	return img, cleanup, nil
+}
+
+func copyStdinToTempFile() (string, error) {
+	tmpImageFile, err := ioutil.TempFile("", "fanal")
+	if err != nil {
+		return "", xerrors.Errorf("unable to create a temp file: %w", err)
+	}
+
+	if _, err = io.Copy(tmpImageFile, os.Stdin); err != nil {
+		return "", xerrors.Errorf("unable to copy stdin to a temp file: %w", err)
+	}
+	return tmpImageFile.Name(), nil
 }
 
 func newSource(ctx context.Context, imageName string, transports []string, sys *imageTypes.SystemContext) (
