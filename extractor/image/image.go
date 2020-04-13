@@ -75,10 +75,7 @@ func NewDockerArchiveImage(fileName string) (v1.Image, error) {
 
 func fileOpener(fileName string) func() (io.ReadCloser, error) {
 	return func() (io.ReadCloser, error) {
-		var f *os.File
-		var err error
-
-		f, err = os.Open(fileName)
+		f, err := os.Open(fileName)
 		if err != nil {
 			return nil, xerrors.Errorf("unable to open the file: %w", err)
 		}
