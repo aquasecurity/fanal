@@ -7,5 +7,5 @@ type Extractor interface {
 	ImageID() (imageID string, err error)
 	ConfigBlob() (configBlob []byte, err error)
 	LayerIDs() (layerIDs []string, err error)
-	ExtractLayerFiles(dig string, filenames []string) (decompressedLayerId string, files FileMap, opqDirs []string, whFiles []string, err error)
+	ExtractLayerFiles(diffID string, filenames []string) (layerDigest string, files FileMap, opqDirs []string, whFiles []string, err error)
 }
