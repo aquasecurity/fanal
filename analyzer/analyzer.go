@@ -145,7 +145,7 @@ func (ac Config) analyze(ctx context.Context, imageID string, missingImage bool,
 		}(d)
 	}
 
-	for range layerIDs {
+	for range diffIDs {
 		select {
 		case <-done:
 		case err := <-errCh:
@@ -156,7 +156,7 @@ func (ac Config) analyze(ctx context.Context, imageID string, missingImage bool,
 	}
 
 	if missingImage {
-		if err := ac.analyzeConfig(ctx, imageID, osFound); err != nil {
+		if err := ac.analyzeConfig(imageID, osFound); err != nil {
 			return xerrors.Errorf("unable to analyze config: %w", err)
 		}
 	}
@@ -193,7 +193,7 @@ func (ac Config) analyzeLayer(diffID string) (types.LayerInfo, error) {
 	return layerInfo, nil
 }
 
-func (ac Config) analyzeConfig(ctx context.Context, imageID string, osFound types.OS) error {
+func (ac Config) analyzeConfig(imageID string, osFound types.OS) error {
 	configBlob, err := ac.Extractor.ConfigBlob()
 	if err != nil {
 		return xerrors.Errorf("unable to get config blob: %w", err)
