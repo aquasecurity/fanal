@@ -10,18 +10,18 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aquasecurity/fanal/extractor/image/token/ecr"
-	"github.com/aquasecurity/fanal/extractor/image/token/gcr"
-	godeptypes "github.com/aquasecurity/go-dep-parser/pkg/types"
 	"github.com/google/go-containerregistry/pkg/v1"
+	"github.com/knqyf263/nested"
 	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/fanal/analyzer/library"
 	"github.com/aquasecurity/fanal/extractor"
 	"github.com/aquasecurity/fanal/extractor/image"
+	"github.com/aquasecurity/fanal/extractor/image/token/ecr"
+	"github.com/aquasecurity/fanal/extractor/image/token/gcr"
 	"github.com/aquasecurity/fanal/types"
 	"github.com/aquasecurity/fanal/utils"
-	"github.com/knqyf263/nested"
+	godeptypes "github.com/aquasecurity/go-dep-parser/pkg/types"
 )
 
 const (
