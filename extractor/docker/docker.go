@@ -243,6 +243,7 @@ func (d Extractor) ExtractLayerFiles(diffID string, filenames []string) (string,
 	return digest, files, opqDirs, whFiles, nil
 }
 
+// ref. https://github.com/google/go-containerregistry/issues/701
 func (d Extractor) isCompressed(l v1.Layer) bool {
 	_, uncompressed := reflect.TypeOf(l).Elem().FieldByName("UncompressedLayer")
 	return !uncompressed
