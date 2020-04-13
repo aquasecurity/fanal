@@ -41,12 +41,12 @@ func Image(ref name.Reference) (v1.Image, func(), error) {
 
 	inspect, _, err := c.ImageInspectWithRaw(context.Background(), ref.Name())
 	if err != nil {
-		return nil, cleanup, err
+		return nil, cleanup, xerrors.Errorf("unable to inspect the image (%s): %w", ref.Name(), err)
 	}
 
 	f, err := ioutil.TempFile("", "fanal-*")
 	if err != nil {
-		return nil, cleanup, err
+		return nil, cleanup, xerrors.Errorf("failed to create a temporary file")
 	}
 
 	cleanup = func() {
@@ -64,18 +64,18 @@ func imageOpener(c *client.Client, ref name.Reference, f *os.File) opener {
 		// Store the tarball in local filesystem and return a new reader into the bytes each time we need to access something.
 		rc, err := c.ImageSave(context.Background(), []string{ref.Name()})
 		if err != nil {
-			return nil, xerrors.Errorf("foo: %w", err)
+			return nil, xerrors.Errorf("unable to export the image: %w", err)
 		}
 		defer rc.Close()
 
 		if _, err = io.Copy(f, rc); err != nil {
-			return nil, xerrors.Errorf("foo: %w", err)
+			return nil, xerrors.Errorf("failed to copy the image: %w", err)
 		}
 		defer f.Close()
 
 		image, err := tarball.ImageFromPath(f.Name(), nil)
 		if err != nil {
-			return nil, xerrors.Errorf("foo: %w", err)
+			return nil, xerrors.Errorf("failed to initialize the struct from the temporary file: %w", err)
 		}
 
 		return image, nil
@@ -96,7 +96,7 @@ func (img *image) populateImage() (err error) {
 
 	img.Image, err = img.opener()
 	if err != nil {
-		return xerrors.Errorf("open: %w", err)
+		return xerrors.Errorf("unable to open: %w", err)
 	}
 
 	return nil
@@ -111,7 +111,7 @@ func (img *image) ConfigFile() (*v1.ConfigFile, error) {
 	for _, l := range img.inspect.RootFS.Layers {
 		h, err := v1.NewHash(l)
 		if err != nil {
-			return nil, err
+			return nil, xerrors.Errorf("invalid hash %s: %w", l, err)
 		}
 		diffIDs = append(diffIDs, h)
 	}
@@ -126,14 +126,14 @@ func (img *image) ConfigFile() (*v1.ConfigFile, error) {
 
 func (img *image) LayerByDiffID(h v1.Hash) (v1.Layer, error) {
 	if err := img.populateImage(); err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("unable to populate: %w", err)
 	}
 	return img.Image.LayerByDiffID(h)
 }
 
 func (img *image) RawConfigFile() ([]byte, error) {
 	if err := img.populateImage(); err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("unable to populate: %w", err)
 	}
 	return img.Image.RawConfigFile()
 }
