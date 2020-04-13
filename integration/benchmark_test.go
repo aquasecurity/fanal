@@ -142,7 +142,7 @@ func teardown(b *testing.B, ctx context.Context, originalImageName, imageName st
 func setup(b *testing.B, tc testCase) (context.Context, string, *client.Client) {
 	ctx := context.Background()
 
-	cli, err := client.NewClientWithOpts(client.WithVersion("1.38"), client.FromEnv)
+	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	require.NoError(b, err, tc.name)
 
 	// ensure image doesnt already exists
