@@ -108,18 +108,18 @@ func (fs FSCache) PutLayer(diffID string, layerInfo types.LayerInfo) error {
 
 	b, err := json.Marshal(layerInfo)
 	if err != nil {
-		return err
+		return xerrors.Errorf("unable to marshal layer JSON (%s): %w", diffID, err)
 	}
 	err = fs.db.Update(func(tx *bolt.Tx) error {
 		layerBucket := tx.Bucket([]byte(layerBucket))
 		err = layerBucket.Put([]byte(diffID), b)
 		if err != nil {
-			return err
+			return xerrors.Errorf("unable to store layer information in cache (%s): %w", diffID, err)
 		}
 		return nil
 	})
 	if err != nil {
-		return err
+		return xerrors.Errorf("DB update error: %w", err)
 	}
 	return nil
 }
@@ -145,19 +145,19 @@ func (fs FSCache) GetImage(imageID string) (types.ImageInfo, error) {
 func (fs FSCache) PutImage(imageID string, imageConfig types.ImageInfo) (err error) {
 	b, err := json.Marshal(imageConfig)
 	if err != nil {
-		return err
+		return xerrors.Errorf("unable to marshal image JSON (%s): %w", imageID, err)
 	}
 
 	err = fs.db.Update(func(tx *bolt.Tx) error {
 		imageBucket := tx.Bucket([]byte(imageBucket))
 		err = imageBucket.Put([]byte(imageID), b)
 		if err != nil {
-			return err
+			return xerrors.Errorf("unable to store image information in cache (%s): %w", imageID, err)
 		}
 		return nil
 	})
 	if err != nil {
-		return err
+		return xerrors.Errorf("DB update error: %w", err)
 	}
 	return nil
 }
