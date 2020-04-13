@@ -220,11 +220,6 @@ func (d Extractor) ExtractLayerFiles(diffID string, filenames []string) (string,
 		return "", nil, nil, nil, xerrors.Errorf("failed to get the layer (%s): %w", diffID, err)
 	}
 
-	r, err := layer.Uncompressed()
-	if err != nil {
-		return "", nil, nil, nil, xerrors.Errorf("failed to get the layer content (%s): %w", diffID, err)
-	}
-
 	// digest is a hash of the compressed layer
 	var digest string
 	if d.isCompressed(layer) {
@@ -233,6 +228,11 @@ func (d Extractor) ExtractLayerFiles(diffID string, filenames []string) (string,
 			return "", nil, nil, nil, xerrors.Errorf("failed to get the digest (%s): %w", diffID, err)
 		}
 		digest = d.String()
+	}
+
+	r, err := layer.Uncompressed()
+	if err != nil {
+		return "", nil, nil, nil, xerrors.Errorf("failed to get the layer content (%s): %w", diffID, err)
 	}
 
 	files, opqDirs, whFiles, err := d.extractFiles(r, filenames)
