@@ -101,12 +101,12 @@ func (ac Config) Analyze(ctx context.Context) (types.ImageReference, error) {
 		return types.ImageReference{}, xerrors.Errorf("unable to get the image ID: %w", err)
 	}
 
-	layerIDs, err := ac.Extractor.LayerIDs()
+	diffIDs, err := ac.Extractor.LayerIDs()
 	if err != nil {
 		return types.ImageReference{}, xerrors.Errorf("unable to get layer IDs: %w", err)
 	}
 
-	missingImage, missingLayers, err := ac.Cache.MissingLayers(imageID, layerIDs)
+	missingImage, missingLayers, err := ac.Cache.MissingLayers(imageID, diffIDs)
 	if err != nil {
 		return types.ImageReference{}, xerrors.Errorf("unable to get missing layers: %w", err)
 	}
@@ -118,16 +118,16 @@ func (ac Config) Analyze(ctx context.Context) (types.ImageReference, error) {
 	return types.ImageReference{
 		Name:     ac.Extractor.ImageName(),
 		ID:       imageID,
-		LayerIDs: layerIDs,
+		LayerIDs: diffIDs,
 	}, nil
 }
 
-func (ac Config) analyze(ctx context.Context, imageID string, missingImage bool, layerIDs []string) error {
+func (ac Config) analyze(ctx context.Context, imageID string, missingImage bool, diffIDs []string) error {
 	done := make(chan struct{})
 	errCh := make(chan error)
 
 	var osFound types.OS
-	for _, layerID := range layerIDs {
+	for _, d := range diffIDs {
 		go func(diffID string) {
 			layerInfo, err := ac.analyzeLayer(diffID)
 			if err != nil {
@@ -142,7 +142,7 @@ func (ac Config) analyze(ctx context.Context, imageID string, missingImage bool,
 				osFound = *layerInfo.OS
 			}
 			done <- struct{}{}
-		}(layerID)
+		}(d)
 	}
 
 	for range layerIDs {
@@ -234,12 +234,12 @@ func NewApplier(c cache.LocalImageCache) Applier {
 	return Applier{cache: c}
 }
 
-func (a Applier) ApplyLayers(imageID string, layerIDs []string) (types.ImageDetail, error) {
+func (a Applier) ApplyLayers(imageID string, diffIDs []string) (types.ImageDetail, error) {
 	var layers []types.LayerInfo
-	for _, layerID := range layerIDs {
-		layer, _ := a.cache.GetLayer(layerID)
+	for _, diffID := range diffIDs {
+		layer, _ := a.cache.GetLayer(diffID)
 		if layer.SchemaVersion == 0 {
-			return types.ImageDetail{}, xerrors.Errorf("layer cache missing: %s", layerID)
+			return types.ImageDetail{}, xerrors.Errorf("layer cache missing: %s", diffID)
 		}
 		layers = append(layers, layer)
 	}
