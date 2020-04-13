@@ -43,7 +43,6 @@ func main() {
 }
 
 func run() (err error) {
-
 	ctx := context.Background()
 	tarPath := flag.String("f", "-", "layer.tar path")
 	clearCache := flag.Bool("clear", false, "clear cache")
