@@ -116,6 +116,7 @@ func (img *image) ConfigFile() (*v1.ConfigFile, error) {
 		diffIDs = append(diffIDs, h)
 	}
 
+	// fill only RootFS in v1.ConfigFile
 	return &v1.ConfigFile{
 		RootFS: v1.RootFS{
 			Type:    img.inspect.RootFS.Type,
