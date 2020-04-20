@@ -13,6 +13,7 @@ import (
 	"github.com/google/go-containerregistry/pkg/authn"
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/google/go-containerregistry/pkg/v1"
+	"github.com/google/go-containerregistry/pkg/v1/layout"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"github.com/google/go-containerregistry/pkg/v1/tarball"
 	"golang.org/x/xerrors"
@@ -65,7 +66,22 @@ func NewDockerImage(ctx context.Context, imageName string, option types.DockerOp
 	return img, func() {}, nil
 }
 
+// TODO: rename NewDockerArchiveImage to NewArchiveImage
 func NewDockerArchiveImage(fileName string) (v1.Image, error) {
+	img, err := tryDockerArchive(fileName)
+	if err == nil {
+		return img, nil
+	}
+
+	img, err = tryOCI(fileName)
+	if err == nil {
+		return img, nil
+	}
+
+	return nil, xerrors.New("invalid archive")
+}
+
+func tryDockerArchive(fileName string) (v1.Image, error) {
 	img, err := tarball.Image(fileOpener(fileName), nil)
 	if err != nil {
 		return nil, xerrors.Errorf("unable to open %s as an image: %w", fileName, err)
@@ -92,4 +108,34 @@ func fileOpener(fileName string) func() (io.ReadCloser, error) {
 		}
 		return ioutil.NopCloser(r), nil
 	}
+}
+
+func tryOCI(fileName string) (v1.Image, error) {
+	lp, err := layout.FromPath(fileName)
+	if err != nil {
+		return nil, xerrors.Errorf("unable to open %s as an OCI image: %w", fileName, err)
+	}
+
+	index, err := lp.ImageIndex()
+	if err != nil {
+		return nil, xerrors.Errorf("unable to retrieve index.json: %w", err)
+	}
+
+	m, err := index.IndexManifest()
+	if err != nil {
+		return nil, xerrors.Errorf("invalid index.json: %w", err)
+	}
+
+	if len(m.Manifests) == 0 {
+		return nil, xerrors.New("no valid manifest")
+	}
+
+	// Support only first image
+	h := m.Manifests[0].Digest
+	img, err := index.Image(h)
+	if err != nil {
+		return nil, xerrors.New("invalid OCI image")
+	}
+
+	return img, nil
 }

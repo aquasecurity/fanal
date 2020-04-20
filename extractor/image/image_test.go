@@ -119,6 +119,12 @@ func TestNewDockerArchiveImage(t *testing.T) {
 			},
 		},
 		{
+			name: "happy path with OCI Image Format",
+			args: args{
+				fileName: "../testdata/test.oci",
+			},
+		},
+		{
 			name: "sad path",
 			args: args{
 				fileName: "../testdata/invalid.tar.gz",
