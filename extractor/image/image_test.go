@@ -134,7 +134,7 @@ func TestNewDockerArchiveImage(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_, err := NewDockerArchiveImage(tt.args.fileName)
+			_, err := NewArchiveImage(tt.args.fileName)
 			assert.Equal(t, tt.wantErr, err != nil, err)
 		})
 	}

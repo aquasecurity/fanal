@@ -66,8 +66,7 @@ func NewDockerImage(ctx context.Context, imageName string, option types.DockerOp
 	return img, func() {}, nil
 }
 
-// TODO: rename NewDockerArchiveImage to NewArchiveImage
-func NewDockerArchiveImage(fileName string) (v1.Image, error) {
+func NewArchiveImage(fileName string) (v1.Image, error) {
 	img, err := tryDockerArchive(fileName)
 	if err == nil {
 		return img, nil
