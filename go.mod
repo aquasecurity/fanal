@@ -9,6 +9,7 @@ require (
 	github.com/aquasecurity/testdocker v0.0.0-20200406162423-9b83286bd1ae
 	github.com/aws/aws-sdk-go v1.27.1
 	github.com/deckarep/golang-set v1.7.1
+	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/docker/docker v1.4.2-0.20190924003213-a8608b5b67c7
 	github.com/docker/go-connections v0.4.0
 	github.com/google/go-containerregistry v0.0.0-20200331213917-3d03ed9b1ca2
@@ -26,3 +27,6 @@ require (
 	golang.org/x/xerrors v0.0.0-20191204190536-9bdfabe68543
 	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect
 )
+
+// TODO: remove this replace later
+replace github.com/aquasecurity/testdocker => ../testdocker
