@@ -246,7 +246,7 @@ func (a Applier) ApplyLayers(imageID string, diffIDs []string) (types.ImageDetai
 
 	mergedLayer := docker.ApplyLayers(layers)
 	if mergedLayer.OS == nil {
-		return types.ImageDetail{}, ErrUnknownOS
+		return mergedLayer, ErrUnknownOS // send back package and apps info regardless
 	} else if mergedLayer.Packages == nil {
 		return types.ImageDetail{}, ErrNoPkgsDetected
 	}
