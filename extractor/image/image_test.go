@@ -102,7 +102,7 @@ func TestNewDockerImage(t *testing.T) {
 	}
 }
 
-func TestNewDockerArchiveImage(t *testing.T) {
+func TestNewArchiveImage(t *testing.T) {
 	type args struct {
 		fileName string
 	}
