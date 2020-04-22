@@ -110,7 +110,7 @@ func TestNewArchiveImage(t *testing.T) {
 		name    string
 		args    args
 		want    v1.Image
-		wantErr bool
+		wantErr string
 	}{
 		{
 			name: "happy path",
@@ -125,17 +125,43 @@ func TestNewArchiveImage(t *testing.T) {
 			},
 		},
 		{
-			name: "sad path",
+			name: "sad path, oci image not found",
 			args: args{
 				fileName: "../testdata/invalid.tar.gz",
 			},
-			wantErr: true,
+			wantErr: "unable to open",
+		},
+		{
+			name: "sad path with OCI Image Format invalid index.json",
+			args: args{
+				fileName: "../testdata/test_bad_index_json.oci",
+			},
+			wantErr: "invalid index.json",
+		},
+		{
+			name: "sad path with OCI Image Format no valid manifests",
+			args: args{
+				fileName: "../testdata/test_no_valid_manifests.oci",
+			},
+			wantErr: "no valid manifest",
+		},
+		{
+			name: "sad path with OCI Image Format with invalid oci image digest",
+			args: args{
+				fileName: "../testdata/test_invalid_oci_image.oci",
+			},
+			wantErr: "invalid OCI image",
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			_, err := NewArchiveImage(tt.args.fileName)
-			assert.Equal(t, tt.wantErr, err != nil, err)
+			switch {
+			case tt.wantErr != "":
+				assert.Contains(t, err.Error(), tt.wantErr, tt.name)
+			default:
+				assert.NoError(t, err, tt.name)
+			}
 		})
 	}
 }
