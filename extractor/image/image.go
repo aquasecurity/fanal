@@ -16,6 +16,7 @@ import (
 	"github.com/google/go-containerregistry/pkg/v1/layout"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"github.com/google/go-containerregistry/pkg/v1/tarball"
+	"github.com/hashicorp/go-multierror"
 	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/fanal/extractor/image/daemon"
@@ -24,6 +25,8 @@ import (
 )
 
 func NewDockerImage(ctx context.Context, imageName string, option types.DockerOption) (v1.Image, func(), error) {
+	var result error
+
 	var nameOpts []name.Option
 	if option.NonSSL {
 		nameOpts = append(nameOpts, name.Insecure)
@@ -39,6 +42,7 @@ func NewDockerImage(ctx context.Context, imageName string, option types.DockerOp
 		// Return v1.Image if the image is found in Docker Engine
 		return img, cleanup, nil
 	}
+	result = multierror.Append(result, err)
 
 	// Try accessing Docker Registry
 	var remoteOpts []remote.Option
@@ -59,31 +63,38 @@ func NewDockerImage(ctx context.Context, imageName string, option types.DockerOp
 	}
 
 	img, err = remote.Image(ref, remoteOpts...)
-	if err != nil {
-		return nil, func() {}, xerrors.Errorf("unable to access the remote image (%s): %w", ref.Name(), err)
+	if err == nil {
+		// Return v1.Image if the image is found in Docker Registry
+		return img, func() {}, nil
 	}
+	result = multierror.Append(result, err)
 
-	return img, func() {}, nil
+	return nil, func() {}, result
 }
 
 func NewArchiveImage(fileName string) (v1.Image, error) {
+	var result error
 	img, err := tryDockerArchive(fileName)
 	if err == nil {
+		// Return v1.Image if the file can be opened as Docker archive
 		return img, nil
 	}
+	result = multierror.Append(result, err)
 
 	img, err = tryOCI(fileName)
 	if err == nil {
+		// Return v1.Image if the directory can be opened as OCI Image Format
 		return img, nil
 	}
+	result = multierror.Append(result, err)
 
-	return nil, xerrors.New("invalid archive")
+	return nil, result
 }
 
 func tryDockerArchive(fileName string) (v1.Image, error) {
 	img, err := tarball.Image(fileOpener(fileName), nil)
 	if err != nil {
-		return nil, xerrors.Errorf("unable to open %s as an image: %w", fileName, err)
+		return nil, xerrors.Errorf("unable to open %s as a Docker image: %w", fileName, err)
 	}
 	return img, nil
 }
@@ -112,7 +123,7 @@ func fileOpener(fileName string) func() (io.ReadCloser, error) {
 func tryOCI(fileName string) (v1.Image, error) {
 	lp, err := layout.FromPath(fileName)
 	if err != nil {
-		return nil, xerrors.Errorf("unable to open %s as an OCI image: %w", fileName, err)
+		return nil, xerrors.Errorf("unable to open %s as an OCI Image: %w", fileName, err)
 	}
 
 	index, err := lp.ImageIndex()
