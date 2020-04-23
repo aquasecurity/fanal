@@ -146,7 +146,7 @@ func TestNewDockerImageWithPrivateRegistry(t *testing.T) {
 		name    string
 		args    args
 		want    v1.Image
-		wantErr bool
+		wantErr string
 	}{
 		{
 			name: "happy path with private Docker Registry",
@@ -171,11 +171,11 @@ func TestNewDockerImageWithPrivateRegistry(t *testing.T) {
 			},
 		},
 		{
-			name: "sad path without a credential ",
+			name: "sad path without a credential",
 			args: args{
 				imageName: fmt.Sprintf("%s/library/alpine:3.11", serverAddr),
 			},
-			wantErr: true,
+			wantErr: "unsupported status code 401",
 		},
 		{
 			name: "sad path with invalid registry token",
@@ -186,7 +186,7 @@ func TestNewDockerImageWithPrivateRegistry(t *testing.T) {
 					NonSSL:        true,
 				},
 			},
-			wantErr: true,
+			wantErr: "signature is invalid",
 		},
 	}
 	for _, tt := range tests {
@@ -194,7 +194,12 @@ func TestNewDockerImageWithPrivateRegistry(t *testing.T) {
 			_, cleanup, err := NewDockerImage(context.Background(), tt.args.imageName, tt.args.option)
 			defer cleanup()
 
-			assert.Equal(t, tt.wantErr, err != nil, err)
+			if tt.wantErr != "" {
+				assert.NotNil(t, err)
+				assert.Contains(t, err.Error(), tt.wantErr, err)
+			} else {
+				assert.NoError(t, err)
+			}
 		})
 	}
 }
