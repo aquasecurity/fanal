@@ -132,6 +132,13 @@ func TestNewArchiveImage(t *testing.T) {
 			wantErr: "unable to open",
 		},
 		{
+			name: "sad path with OCI Image Format index.json directory",
+			args: args{
+				fileName: "../testdata/test_index_json_dir.oci",
+			},
+			wantErr: "unable to retrieve index.json",
+		},
+		{
 			name: "sad path with OCI Image Format invalid index.json",
 			args: args{
 				fileName: "../testdata/test_bad_index_json.oci",
