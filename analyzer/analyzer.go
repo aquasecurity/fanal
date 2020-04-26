@@ -248,7 +248,7 @@ func (a Applier) ApplyLayers(imageID string, diffIDs []string) (types.ImageDetai
 	if mergedLayer.OS == nil {
 		return mergedLayer, ErrUnknownOS // send back package and apps info regardless
 	} else if mergedLayer.Packages == nil {
-		return types.ImageDetail{}, ErrNoPkgsDetected
+		return mergedLayer, ErrNoPkgsDetected // send back package and apps info regardless
 	}
 
 	imageInfo, _ := a.cache.GetImage(imageID)

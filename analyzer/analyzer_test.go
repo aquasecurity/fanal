@@ -756,6 +756,12 @@ func TestApplier_ApplyLayers(t *testing.T) {
 					},
 				},
 			},
+			want: types.ImageDetail{
+				OS: &types.OS{
+					Family: "debian",
+					Name:   "9.9",
+				},
+			},
 			wantErr: "no packages detected",
 		},
 	}
