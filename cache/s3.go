@@ -15,9 +15,9 @@ import (
 )
 
 type S3Cache struct {
-	S3         s3iface.S3API
-	Downloader *s3manager.Downloader
-	BucketName string
+	s3         s3iface.S3API
+	downloader *s3manager.Downloader
+	bucketName string
 }
 
 func NewS3Cache(region string, bucketName string) (S3Cache, error) {
@@ -30,9 +30,9 @@ func NewS3Cache(region string, bucketName string) (S3Cache, error) {
 	}
 
 	return S3Cache{
-		S3:         s3.New(session, aws.NewConfig().WithRegion(region)),
-		Downloader: s3manager.NewDownloader(session),
-		BucketName: bucketName,
+		s3:         s3.New(session, aws.NewConfig().WithRegion(region)),
+		downloader: s3manager.NewDownloader(session),
+		bucketName: bucketName,
 	}, nil
 }
 
@@ -40,62 +40,42 @@ func (cache S3Cache) PutLayer(diffID string, layerInfo types.LayerInfo) error {
 	if _, err := v1.NewHash(diffID); err != nil {
 		return xerrors.Errorf("invalid diffID (%s): %w", diffID, err)
 	}
-	key := fmt.Sprintf("%s/%s", layerBucket, diffID) //TODO folder prefix
-
-	b, err := json.Marshal(layerInfo)
-	if err != nil {
-		return xerrors.Errorf("unable to marshal layer JSON (%s): %w", diffID, err)
-	}
-
-	params := &s3.PutObjectInput{
-		Bucket: aws.String(cache.BucketName),
-		Key:    aws.String(key),
-		Body:   bytes.NewReader(b),
-	}
-	_, err = cache.S3.PutObject(params)
-	if err != nil {
+	key := fmt.Sprintf("%s/%s", layerBucket, diffID)
+	if err := cache.put(key, layerInfo); err != nil {
 		return xerrors.Errorf("unable to store layer information in cache (%s): %w", diffID, err)
 	}
-
-	headObjectInput := &s3.HeadObjectInput{
-		Bucket: aws.String(cache.BucketName),
-		Key:    aws.String(key),
-	}
-	err = cache.S3.WaitUntilObjectExists(headObjectInput)
-	if err != nil {
-		return xerrors.Errorf("failed layer information was not found in cache (%s): %w", diffID, err)
-	}
-
 	return nil
 }
 
 func (cache S3Cache) PutImage(imageID string, imageConfig types.ImageInfo) (err error) {
+	key := fmt.Sprintf("%s/%s", imageBucket, imageID)
+	if err := cache.put(key, imageConfig); err != nil {
+		return xerrors.Errorf("unable to store image information in cache (%s): %w", imageID, err)
+	}
+	return nil
+}
 
-	key := fmt.Sprintf("%s/%s", imageBucket, imageID) //TODO folder prefix
-
-	b, err := json.Marshal(imageConfig)
+func (cache S3Cache) put(key string, body interface{}) (err error) {
+	b, err := json.Marshal(body)
 	if err != nil {
 		return err
 	}
 	params := &s3.PutObjectInput{
-		Bucket: aws.String(cache.BucketName),
+		Bucket: aws.String(cache.bucketName),
 		Key:    aws.String(key),
 		Body:   bytes.NewReader(b),
 	}
-	_, err = cache.S3.PutObject(params)
+	_, err = cache.s3.PutObject(params)
 	if err != nil {
-		return xerrors.Errorf("unable to store image information in cache (%s): %w", imageID, err)
+		return xerrors.Errorf("unable to put object: %w", err)
 	}
-
 	headObjectInput := &s3.HeadObjectInput{
-		Bucket: aws.String(cache.BucketName),
+		Bucket: aws.String(cache.bucketName),
 		Key:    aws.String(key),
 	}
-	err = cache.S3.WaitUntilObjectExists(headObjectInput)
-	if err != nil {
-		return xerrors.Errorf("failed image information was not found in cache (%s): %w", imageID, err)
+	if err = cache.s3.WaitUntilObjectExists(headObjectInput); err != nil {
+		return xerrors.Errorf("information was not found in cache: %w", err)
 	}
-
 	return nil
 }
 
@@ -103,8 +83,8 @@ func (cache S3Cache) GetLayer(diffID string) (types.LayerInfo, error) {
 	var layerInfo types.LayerInfo
 
 	buf := aws.NewWriteAtBuffer([]byte{})
-	_, err := cache.Downloader.Download(buf, &s3.GetObjectInput{
-		Bucket: aws.String(cache.BucketName),
+	_, err := cache.downloader.Download(buf, &s3.GetObjectInput{
+		Bucket: aws.String(cache.bucketName),
 		Key:    aws.String(fmt.Sprintf("%s/%s", layerBucket, diffID)), //TODO add prefix
 	})
 	if err != nil {
@@ -122,8 +102,8 @@ func (cache S3Cache) GetImage(imageID string) (types.ImageInfo, error) {
 	var info types.ImageInfo
 
 	buf := aws.NewWriteAtBuffer([]byte{})
-	_, err := cache.Downloader.Download(buf, &s3.GetObjectInput{
-		Bucket: aws.String(cache.BucketName),
+	_, err := cache.downloader.Download(buf, &s3.GetObjectInput{
+		Bucket: aws.String(cache.bucketName),
 		Key:    aws.String(fmt.Sprintf("%s/%s", imageBucket, imageID)), //TODO add prefix
 	})
 	if err != nil {

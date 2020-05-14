@@ -57,9 +57,9 @@ func TestS3Cache_PutLayer(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			cache := S3Cache{
-				S3:         tt.fields.S3,
-				Downloader: tt.fields.Downloader,
-				BucketName: tt.fields.BucketName,
+				s3:         tt.fields.S3,
+				downloader: tt.fields.Downloader,
+				bucketName: tt.fields.BucketName,
 			}
 			if err := cache.PutLayer(tt.args.diffID, tt.args.layerInfo); (err != nil) != tt.wantErr {
 				t.Errorf("S3Cache.PutLayer() error = %v, wantErr %v", err, tt.wantErr)
@@ -108,12 +108,50 @@ func TestS3Cache_PutImage(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			cache := S3Cache{
-				S3:         tt.fields.S3,
-				Downloader: tt.fields.Downloader,
-				BucketName: tt.fields.BucketName,
+				s3:         tt.fields.S3,
+				downloader: tt.fields.Downloader,
+				bucketName: tt.fields.BucketName,
 			}
 			if err := cache.PutImage(tt.args.imageID, tt.args.imageConfig); (err != nil) != tt.wantErr {
 				t.Errorf("S3Cache.PutImage() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestS3Cache_put(t *testing.T) {
+	mockSvc := &mockS3Client{}
+
+	type fields struct {
+		S3         s3iface.S3API
+		Downloader *s3manager.Downloader
+		BucketName string
+	}
+	type args struct {
+		key  string
+		body interface{}
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		wantErr bool
+	}{
+		{
+			name:   "put",
+			fields: fields{S3: mockSvc, BucketName: "test"},
+			args:   args{key: "key", body: map[string]interface{}{"key": "val"}},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cache := S3Cache{
+				s3:         tt.fields.S3,
+				downloader: tt.fields.Downloader,
+				bucketName: tt.fields.BucketName,
+			}
+			if err := cache.put(tt.args.key, tt.args.body); (err != nil) != tt.wantErr {
+				t.Errorf("S3Cache.put() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}
