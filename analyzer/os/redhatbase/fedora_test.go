@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func Test_oracleOSAnalyzer_Analyze(t *testing.T) {
+func Test_fedoraOSAnalyzer_Analyze(t *testing.T) {
 	tests := []struct {
 		name      string
 		inputFile string
@@ -19,20 +19,20 @@ func Test_oracleOSAnalyzer_Analyze(t *testing.T) {
 	}{
 		{
 			name:      "happy path",
-			inputFile: "testdata/oracle_7/oracle-release",
+			inputFile: "testdata/fedora_29/fedora-release",
 			want: analyzer.AnalyzeReturn{
-				OS: types.OS{Family: "oracle", Name: "7.6"},
+				OS: types.OS{Family: "fedora", Name: "29"},
 			},
 		},
 		{
 			name:      "sad path",
 			inputFile: "testdata/not_redhatbase/empty",
-			wantErr:   "oracle: unable to analyze OS information",
+			wantErr:   "fedora: unable to analyze OS information",
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			a := oracleOSAnalyzer{}
+			a := fedoraOSAnalyzer{}
 			b, err := ioutil.ReadFile(tt.inputFile)
 			require.NoError(t, err)
 

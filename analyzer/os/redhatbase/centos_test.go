@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func Test_oracleOSAnalyzer_Analyze(t *testing.T) {
+func Test_centosOSAnalyzer_Analyze(t *testing.T) {
 	tests := []struct {
 		name      string
 		inputFile string
@@ -19,20 +19,20 @@ func Test_oracleOSAnalyzer_Analyze(t *testing.T) {
 	}{
 		{
 			name:      "happy path",
-			inputFile: "testdata/oracle_7/oracle-release",
+			inputFile: "testdata/centos/centos-release",
 			want: analyzer.AnalyzeReturn{
-				OS: types.OS{Family: "oracle", Name: "7.6"},
+				OS: types.OS{Family: "centos", Name: "7.6.1810"},
 			},
 		},
 		{
 			name:      "sad path",
 			inputFile: "testdata/not_redhatbase/empty",
-			wantErr:   "oracle: unable to analyze OS information",
+			wantErr:   "centos: unable to analyze OS information",
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			a := oracleOSAnalyzer{}
+			a := centOSAnalyzer{}
 			b, err := ioutil.ReadFile(tt.inputFile)
 			require.NoError(t, err)
 

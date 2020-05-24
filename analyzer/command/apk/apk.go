@@ -10,24 +10,24 @@ import (
 	"strings"
 	"time"
 
-	"github.com/pkg/errors"
+	"github.com/aquasecurity/fanal/analyzer"
+	"github.com/aquasecurity/fanal/extractor/docker"
+
 	"golang.org/x/xerrors"
 
-	"github.com/aquasecurity/fanal/analyzer"
 	"github.com/aquasecurity/fanal/analyzer/os"
-	"github.com/aquasecurity/fanal/extractor"
-	"github.com/aquasecurity/fanal/extractor/docker"
 	"github.com/aquasecurity/fanal/types"
 )
 
 const envApkIndexArchiveURL = "FANAL_APK_INDEX_ARCHIVE_URL"
+
 var apkIndexArchiveURL = "https://raw.githubusercontent.com/knqyf263/apkIndex-archive/master/alpine/v%s/main/x86_64/history.json"
 
 func init() {
 	if builtinos.Getenv(envApkIndexArchiveURL) != "" {
 		apkIndexArchiveURL = builtinos.Getenv(envApkIndexArchiveURL)
 	}
-	analyzer.RegisterCommandAnalyzer(&alpineCmdAnalyzer{})
+	analyzer.RegisterConfigAnalyzer(&alpineCmdAnalyzer{})
 }
 
 type alpineCmdAnalyzer struct{}
@@ -56,31 +56,20 @@ type pkg struct {
 
 type version map[string]int
 
-func (a alpineCmdAnalyzer) Analyze(targetOS types.OS, fileMap extractor.FileMap) (pkgs []types.Package, err error) {
-	if targetOS.Family != os.Alpine {
-		return nil, xerrors.New("not target")
-	}
-
+func (a alpineCmdAnalyzer) Analyze(targetOS types.OS, configBlob []byte) ([]types.Package, error) {
 	var apkIndexArchive *apkIndex
+	var err error
 	if apkIndexArchive, err = a.fetchApkIndexArchive(targetOS); err != nil {
 		log.Println(err)
 		return nil, xerrors.Errorf("failed to fetch apk index archive: %w", err)
 	}
 
-	for _, filename := range a.RequiredFiles() {
-		file, ok := fileMap[filename]
-		if !ok {
-			continue
-		}
-		var config docker.Config
-		if err := json.Unmarshal(file, &config); err != nil {
-			return nil, xerrors.Errorf("failed to unmarshal docker config: %w", err)
-		}
-		pkgs = append(pkgs, a.parseConfig(apkIndexArchive, config)...)
+	var config docker.Config
+	if err = json.Unmarshal(configBlob, &config); err != nil {
+		return nil, xerrors.Errorf("failed to unmarshal docker config: %w", err)
 	}
-	if len(pkgs) == 0 {
-		return pkgs, errors.New("No package detected")
-	}
+	pkgs := a.parseConfig(apkIndexArchive, config)
+
 	return pkgs, nil
 }
 func (a alpineCmdAnalyzer) fetchApkIndexArchive(targetOS types.OS) (*apkIndex, error) {
@@ -268,6 +257,6 @@ func (a alpineCmdAnalyzer) guessVersion(apkIndexArchive *apkIndex, originalPkgs 
 	return pkgs
 }
 
-func (a alpineCmdAnalyzer) RequiredFiles() []string {
-	return []string{"/config"} // special file
+func (a alpineCmdAnalyzer) Required(targetOS types.OS) bool {
+	return targetOS.Family == os.Alpine
 }

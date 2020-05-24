@@ -9,10 +9,10 @@ import (
 	"time"
 
 	"github.com/aquasecurity/fanal/cache"
+	"github.com/aquasecurity/fanal/types"
 	"github.com/aquasecurity/fanal/utils"
 	"golang.org/x/xerrors"
 
-	"github.com/aquasecurity/fanal/analyzer"
 	_ "github.com/aquasecurity/fanal/analyzer/command/apk"
 	_ "github.com/aquasecurity/fanal/analyzer/library/bundler"
 	_ "github.com/aquasecurity/fanal/analyzer/library/cargo"
@@ -23,16 +23,14 @@ import (
 	_ "github.com/aquasecurity/fanal/analyzer/library/yarn"
 	_ "github.com/aquasecurity/fanal/analyzer/os/alpine"
 	_ "github.com/aquasecurity/fanal/analyzer/os/amazonlinux"
-	_ "github.com/aquasecurity/fanal/analyzer/os/debianbase"
+	_ "github.com/aquasecurity/fanal/analyzer/os/debian"
 	_ "github.com/aquasecurity/fanal/analyzer/os/photon"
 	_ "github.com/aquasecurity/fanal/analyzer/os/redhatbase"
 	_ "github.com/aquasecurity/fanal/analyzer/os/suse"
+	_ "github.com/aquasecurity/fanal/analyzer/os/ubuntu"
 	_ "github.com/aquasecurity/fanal/analyzer/pkg/apk"
 	_ "github.com/aquasecurity/fanal/analyzer/pkg/dpkg"
 	_ "github.com/aquasecurity/fanal/analyzer/pkg/rpmcmd"
-	"github.com/aquasecurity/fanal/extractor"
-	"github.com/aquasecurity/fanal/extractor/docker"
-	"github.com/aquasecurity/fanal/types"
 	"golang.org/x/crypto/ssh/terminal"
 )
 
@@ -67,43 +65,46 @@ func run() (err error) {
 		SkipPing: true,
 	}
 
-	cleanup := func() {}
-	var ext extractor.Extractor
-	if len(args) > 0 {
-		ext, cleanup, err = docker.NewDockerExtractor(ctx, args[0], opt)
-		if err != nil {
-			return err
-		}
-	} else {
-		ext, err = docker.NewArchiveImageExtractor(*tarPath)
-		if err != nil {
-			return err
-		}
-	}
-	defer cleanup()
+	// TODO: suppress errors
+	fmt.Println(ctx, tarPath, args, opt)
 
-	ac := analyzer.New(ext, c)
-	imageInfo, err := ac.Analyze(ctx)
-	if err != nil {
-		return err
-	}
-
-	a := analyzer.NewApplier(c)
-	mergedLayer, err := a.ApplyLayers(imageInfo.ID, imageInfo.BlobIDs)
-	if err != nil {
-		switch err {
-		case analyzer.ErrUnknownOS, analyzer.ErrNoPkgsDetected:
-			fmt.Printf("WARN: %s\n", err)
-		default:
-			return err
-		}
-	}
-
-	fmt.Printf("%+v\n", mergedLayer.OS)
-	fmt.Printf("via image Packages: %d\n", len(mergedLayer.Packages))
-	for _, app := range mergedLayer.Applications {
-		fmt.Printf("%s (%s): %d\n", app.Type, app.FilePath, len(app.Libraries))
-	}
+	//cleanup := func() {}
+	//var ext extractor.Extractor
+	//if len(args) > 0 {
+	//	ext, cleanup, err = docker.NewDockerExtractor(ctx, args[0], opt)
+	//	if err != nil {
+	//		return err
+	//	}
+	//} else {
+	//	ext, err = docker.NewArchiveImageExtractor(*tarPath)
+	//	if err != nil {
+	//		return err
+	//	}
+	//}
+	//defer cleanup()
+	//
+	//ac := analyzer.New(ext, c)
+	//imageInfo, err := ac.Analyze(ctx)
+	//if err != nil {
+	//	return err
+	//}
+	//
+	//a := analyzer.NewApplier(c)
+	//mergedLayer, err := a.ApplyLayers(imageInfo.ID, imageInfo.BlobIDs)
+	//if err != nil {
+	//	switch err {
+	//	case analyzer.ErrUnknownOS, analyzer.ErrNoPkgsDetected:
+	//		fmt.Printf("WARN: %s\n", err)
+	//	default:
+	//		return err
+	//	}
+	//}
+	//
+	//fmt.Printf("%+v\n", mergedLayer.OS)
+	//fmt.Printf("via image Packages: %d\n", len(mergedLayer.Packages))
+	//for _, app := range mergedLayer.Applications {
+	//	fmt.Printf("%s (%s): %d\n", app.Type, app.FilePath, len(app.Libraries))
+	//}
 	return nil
 }
 

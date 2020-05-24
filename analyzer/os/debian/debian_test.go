@@ -1,18 +1,18 @@
-package photon
+package debian
 
 import (
 	"io/ioutil"
 	"testing"
 
+	aos "github.com/aquasecurity/fanal/analyzer/os"
+	"github.com/aquasecurity/fanal/types"
+
 	"github.com/aquasecurity/fanal/analyzer"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-
-	"github.com/aquasecurity/fanal/analyzer/os"
-	"github.com/aquasecurity/fanal/types"
 )
 
-func Test_photonOSAnalyzer_Analyze(t *testing.T) {
+func Test_debianOSAnalyzer_Analyze(t *testing.T) {
 	tests := []struct {
 		name      string
 		inputFile string
@@ -20,24 +20,34 @@ func Test_photonOSAnalyzer_Analyze(t *testing.T) {
 		wantErr   string
 	}{
 		{
-			name:      "happy path with Photon OS 3.0",
-			inputFile: "testdata/photon_3/os-release",
+			name:      "happy path with debian 9",
+			inputFile: "testdata/debian_9/etc/debian_version",
 			want: analyzer.AnalyzeReturn{
-				OS: types.OS{Family: os.Photon, Name: "3.0"},
+				OS: types.OS{
+					Family: aos.Debian,
+					Name:   "9.8",
+				},
 			},
 		},
 		{
-			name:      "sad path",
-			inputFile: "testdata/not_photon/os-release",
+			name:      "happy path with debian sid",
+			inputFile: "testdata/debian_sid/etc/debian_version",
 			want: analyzer.AnalyzeReturn{
-				OS: types.OS{Family: os.Photon, Name: "3.0"},
+				OS: types.OS{
+					Family: aos.Debian,
+					Name:   "buster/sid",
+				},
 			},
-			wantErr: "photon: unable to analyze OS information",
+		},
+		{
+			name:      "sad path with empty file",
+			inputFile: "testdata/empty",
+			wantErr:   "debian: unable to analyze OS information",
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			a := photonOSAnalyzer{}
+			a := debianOSAnalyzer{}
 			b, err := ioutil.ReadFile(tt.inputFile)
 			require.NoError(t, err)
 
