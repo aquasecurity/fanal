@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/aquasecurity/fanal/analyzer"
-	"github.com/aquasecurity/fanal/extractor/docker"
+	"github.com/aquasecurity/fanal/applier"
 
 	"golang.org/x/xerrors"
 
@@ -64,7 +64,7 @@ func (a alpineCmdAnalyzer) Analyze(targetOS types.OS, configBlob []byte) ([]type
 		return nil, xerrors.Errorf("failed to fetch apk index archive: %w", err)
 	}
 
-	var config docker.Config
+	var config applier.Config
 	if err = json.Unmarshal(configBlob, &config); err != nil {
 		return nil, xerrors.Errorf("failed to unmarshal docker config: %w", err)
 	}
@@ -94,7 +94,7 @@ func (a alpineCmdAnalyzer) fetchApkIndexArchive(targetOS types.OS) (*apkIndex, e
 	return apkIndexArchive, nil
 }
 
-func (a alpineCmdAnalyzer) parseConfig(apkIndexArchive *apkIndex, config docker.Config) (packages []types.Package) {
+func (a alpineCmdAnalyzer) parseConfig(apkIndexArchive *apkIndex, config applier.Config) (packages []types.Package) {
 	envs := map[string]string{}
 	for _, env := range config.ContainerConfig.Env {
 		index := strings.Index(env, "=")
