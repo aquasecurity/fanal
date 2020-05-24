@@ -164,6 +164,8 @@ func (ac Config) analyze(ctx context.Context, imageID string, missingImage bool,
 	return nil
 }
 
+type Opener func() ([]byte, error)
+
 func (ac Config) analyzeLayer(diffID string) (types.BlobInfo, error) {
 	layerDigest, files, opqDirs, whFiles, err := ac.Extractor.ExtractLayerFiles(diffID, RequiredFilenames())
 	if err != nil {

@@ -20,6 +20,7 @@ require (
 	github.com/kylelemons/godebug v0.0.0-20170820004349-d65d576e9348
 	github.com/opencontainers/image-spec v1.0.2-0.20190823105129-775207bd45b6 // indirect
 	github.com/pkg/errors v0.9.1
+	github.com/saracen/walker v0.0.0-20191201085201-324a081bae7e
 	github.com/stretchr/testify v1.4.0
 	github.com/testcontainers/testcontainers-go v0.3.1
 	go.etcd.io/bbolt v1.3.3
