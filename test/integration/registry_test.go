@@ -22,7 +22,7 @@ import (
 	"github.com/aquasecurity/fanal/analyzer"
 	"github.com/aquasecurity/fanal/cache"
 	"github.com/aquasecurity/fanal/extractor/docker"
-	testdocker "github.com/aquasecurity/fanal/integration/docker"
+	testdocker "github.com/aquasecurity/fanal/test/integration/docker"
 	"github.com/aquasecurity/fanal/types"
 
 	_ "github.com/aquasecurity/fanal/analyzer"
