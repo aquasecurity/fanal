@@ -12,7 +12,6 @@ import (
 	"sort"
 	"strings"
 	"testing"
-	"time"
 
 	_ "github.com/aquasecurity/fanal/analyzer/command/apk"
 	_ "github.com/aquasecurity/fanal/analyzer/library/bundler"
@@ -33,7 +32,6 @@ import (
 	_ "github.com/aquasecurity/fanal/analyzer/pkg/dpkg"
 	_ "github.com/aquasecurity/fanal/analyzer/pkg/rpmcmd"
 	"github.com/aquasecurity/fanal/cache"
-	"github.com/aquasecurity/fanal/extractor/docker"
 	"github.com/aquasecurity/fanal/types"
 	godeptypes "github.com/aquasecurity/go-dep-parser/pkg/types"
 	dtypes "github.com/docker/docker/api/types"
@@ -111,30 +109,30 @@ func TestFanal_Library_DockerLessMode(t *testing.T) {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
-			ctx := context.Background()
+			//ctx := context.Background()
 			d, _ := ioutil.TempDir("", "TestFanal_Library_DockerLessMode_*")
 			defer os.RemoveAll(d)
 
 			c, err := cache.NewFSCache(d)
 			require.NoError(t, err, tc.name)
 
-			opt := types.DockerOption{
-				Timeout:  600 * time.Second,
-				SkipPing: true,
-			}
-
-			cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
-			require.NoError(t, err, tc.name)
-
-			// remove existing Image if any
-			_, _ = cli.ImageRemove(ctx, tc.remoteImageName, dtypes.ImageRemoveOptions{
-				Force:         true,
-				PruneChildren: true,
-			})
-
-			_, cleanup, err := docker.NewDockerExtractor(ctx, tc.remoteImageName, opt)
-			require.NoError(t, err, tc.name)
-			defer cleanup()
+			//opt := types.DockerOption{
+			//	Timeout:  600 * time.Second,
+			//	SkipPing: true,
+			//}
+			//
+			//cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+			//require.NoError(t, err, tc.name)
+			//
+			//// remove existing Image if any
+			//_, _ = cli.ImageRemove(ctx, tc.remoteImageName, dtypes.ImageRemoveOptions{
+			//	Force:         true,
+			//	PruneChildren: true,
+			//})
+			//
+			//_, cleanup, err := docker.NewDockerExtractor(ctx, tc.remoteImageName, opt)
+			//require.NoError(t, err, tc.name)
+			//defer cleanup()
 
 			//ac := analyzer.New(ext, c)
 			//applier := analyzer.NewApplier(c)
@@ -160,10 +158,10 @@ func TestFanal_Library_DockerMode(t *testing.T) {
 			defer os.RemoveAll(d)
 			c, err := cache.NewFSCache(d)
 			require.NoError(t, err)
-			opt := types.DockerOption{
-				Timeout:  600 * time.Second,
-				SkipPing: true,
-			}
+			//opt := types.DockerOption{
+			//	Timeout:  600 * time.Second,
+			//	SkipPing: true,
+			//}
 
 			cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 			require.NoError(t, err, tc.name)
@@ -180,10 +178,10 @@ func TestFanal_Library_DockerMode(t *testing.T) {
 			err = cli.ImageTag(ctx, tc.imageName, tc.imageFile)
 			require.NoError(t, err, tc.name)
 
-			_, cleanup, err := docker.NewDockerExtractor(ctx, tc.imageFile, opt)
-			require.NoError(t, err)
-			defer cleanup()
-
+			//_, cleanup, err := docker.NewDockerExtractor(ctx, tc.imageFile, opt)
+			//require.NoError(t, err)
+			//defer cleanup()
+			//
 			//ac := analyzer.New(ext, c)
 			//applier := analyzer.NewApplier(c)
 			//
