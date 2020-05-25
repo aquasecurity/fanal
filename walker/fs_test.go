@@ -29,11 +29,11 @@ func TestWalkDir(t *testing.T) {
 
 		return nil
 	})
-	require.NoError(t, err)
+	require.NoError(t, err, "happy path")
 
 	// sad path
 	err = walker.WalkDir("testdata/fs", func(filePath string, info os.FileInfo, opener analyzer.Opener) error {
 		return errors.New("error")
 	})
-	require.EqualError(t, err, "failed to analyze file: error")
+	require.EqualError(t, err, "failed to analyze file: error", "sad path")
 }
