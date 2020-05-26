@@ -75,10 +75,10 @@ func (a Artifact) Inspect(_ context.Context) (types.ArtifactReference, error) {
 	// get hostname
 	var hostName string
 	b, err := ioutil.ReadFile(filepath.Join(a.dir, "etc", "hostname"))
-	if err != nil {
-		hostName = a.dir
-	} else {
+	if err == nil && string(b) != "" {
 		hostName = strings.TrimSpace(string(b))
+	} else {
+		hostName = a.dir
 	}
 
 	return types.ArtifactReference{

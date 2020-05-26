@@ -150,6 +150,7 @@ func inspect(ctx context.Context, artifact artifact.Artifact, c cache.LocalArtif
 			return err
 		}
 	}
+	fmt.Println(imageInfo.Name)
 	fmt.Printf("%+v\n", mergedLayer.OS)
 	fmt.Printf("via image Packages: %d\n", len(mergedLayer.Packages))
 	for _, app := range mergedLayer.Applications {
