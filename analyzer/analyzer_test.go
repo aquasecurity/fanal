@@ -160,6 +160,29 @@ func TestAnalysisResult_Merge(t *testing.T) {
 			},
 		},
 		{
+			name: "debian must be replaced with ubuntu",
+			fields: fields{
+				OS: &types.OS{
+					Family: aos.Debian, // this must be overwritten
+					Name:   "9.0",
+				},
+			},
+			args: args{
+				new: analyzer.AnalysisResult{
+					OS: &types.OS{
+						Family: aos.Ubuntu,
+						Name:   "18.04",
+					},
+				},
+			},
+			want: analyzer.AnalysisResult{
+				OS: &types.OS{
+					Family: aos.Ubuntu,
+					Name:   "18.04",
+				},
+			},
+		},
+		{
 			name: "alpine must not be replaced with oracle",
 			fields: fields{
 				OS: &types.OS{
