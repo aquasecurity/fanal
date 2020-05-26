@@ -35,16 +35,16 @@ func TestArtifact_Inspect(t *testing.T) {
 		name                    string
 		imagePath               string
 		args                    args
-		missingLayerExpectation cache.ArtifactCacheMissingBlobsExpectation
-		putLayerExpectations    []cache.ArtifactCachePutBlobExpectation
-		putImageExpectations    []cache.ArtifactCachePutArtifactExpectation
+		missingBlobsExpectation cache.ArtifactCacheMissingBlobsExpectation
+		putBlobExpectations     []cache.ArtifactCachePutBlobExpectation
+		putArtifactExpectations []cache.ArtifactCachePutArtifactExpectation
 		want                    types.ArtifactReference
 		wantErr                 string
 	}{
 		{
 			name:      "happy path",
 			imagePath: "../../test/testdata/alpine-311.tar.gz",
-			missingLayerExpectation: cache.ArtifactCacheMissingBlobsExpectation{
+			missingBlobsExpectation: cache.ArtifactCacheMissingBlobsExpectation{
 				Args: cache.ArtifactCacheMissingBlobsArgs{
 					ArtifactID: "sha256:a187dde48cd289ac374ad8539930628314bc581a481cdb41409c9289419ddb72",
 					BlobIDs:    []string{"sha256:beee9f30bc1f711043e78d4a2be0668955d4b761d587d6f60c2c8dc081efb203"},
@@ -54,7 +54,7 @@ func TestArtifact_Inspect(t *testing.T) {
 					MissingBlobIDs:  []string{"sha256:beee9f30bc1f711043e78d4a2be0668955d4b761d587d6f60c2c8dc081efb203"},
 				},
 			},
-			putLayerExpectations: []cache.ArtifactCachePutBlobExpectation{
+			putBlobExpectations: []cache.ArtifactCachePutBlobExpectation{
 				{
 					Args: cache.ArtifactCachePutBlobArgs{
 						BlobID: "sha256:beee9f30bc1f711043e78d4a2be0668955d4b761d587d6f60c2c8dc081efb203",
@@ -97,7 +97,7 @@ func TestArtifact_Inspect(t *testing.T) {
 					Returns: cache.ArtifactCachePutBlobReturns{},
 				},
 			},
-			putImageExpectations: []cache.ArtifactCachePutArtifactExpectation{
+			putArtifactExpectations: []cache.ArtifactCachePutArtifactExpectation{
 				{
 					Args: cache.ArtifactCachePutArtifactArgs{
 						ArtifactID: "sha256:a187dde48cd289ac374ad8539930628314bc581a481cdb41409c9289419ddb72",
@@ -120,7 +120,7 @@ func TestArtifact_Inspect(t *testing.T) {
 		{
 			name:      "happy path: include lock files",
 			imagePath: "../../test/testdata/vuln-image.tar.gz",
-			missingLayerExpectation: cache.ArtifactCacheMissingBlobsExpectation{
+			missingBlobsExpectation: cache.ArtifactCacheMissingBlobsExpectation{
 				Args: cache.ArtifactCacheMissingBlobsArgs{
 					ArtifactID: "sha256:58701fd185bda36cab0557bb6438661831267aa4a9e0b54211c4d5317a48aff4",
 					BlobIDs: []string{
@@ -138,7 +138,7 @@ func TestArtifact_Inspect(t *testing.T) {
 					},
 				},
 			},
-			putLayerExpectations: []cache.ArtifactCachePutBlobExpectation{
+			putBlobExpectations: []cache.ArtifactCachePutBlobExpectation{
 				{
 					Args: cache.ArtifactCachePutBlobArgs{
 						BlobID: "sha256:932da51564135c98a49a34a193d6cd363d8fa4184d957fde16c9d8527b3f3b02",
@@ -206,7 +206,7 @@ func TestArtifact_Inspect(t *testing.T) {
 		{
 			name:      "sad path, MissingBlobs returns an error",
 			imagePath: "../../test/testdata/alpine-311.tar.gz",
-			missingLayerExpectation: cache.ArtifactCacheMissingBlobsExpectation{
+			missingBlobsExpectation: cache.ArtifactCacheMissingBlobsExpectation{
 				Args: cache.ArtifactCacheMissingBlobsArgs{
 					ArtifactID: "sha256:a187dde48cd289ac374ad8539930628314bc581a481cdb41409c9289419ddb72",
 					BlobIDs:    []string{"sha256:beee9f30bc1f711043e78d4a2be0668955d4b761d587d6f60c2c8dc081efb203"},
@@ -220,7 +220,7 @@ func TestArtifact_Inspect(t *testing.T) {
 		{
 			name:      "sad path, PutBlob returns an error",
 			imagePath: "../../test/testdata/alpine-311.tar.gz",
-			missingLayerExpectation: cache.ArtifactCacheMissingBlobsExpectation{
+			missingBlobsExpectation: cache.ArtifactCacheMissingBlobsExpectation{
 				Args: cache.ArtifactCacheMissingBlobsArgs{
 					ArtifactID: "sha256:a187dde48cd289ac374ad8539930628314bc581a481cdb41409c9289419ddb72",
 					BlobIDs:    []string{"sha256:beee9f30bc1f711043e78d4a2be0668955d4b761d587d6f60c2c8dc081efb203"},
@@ -229,7 +229,7 @@ func TestArtifact_Inspect(t *testing.T) {
 					MissingBlobIDs: []string{"sha256:beee9f30bc1f711043e78d4a2be0668955d4b761d587d6f60c2c8dc081efb203"},
 				},
 			},
-			putLayerExpectations: []cache.ArtifactCachePutBlobExpectation{
+			putBlobExpectations: []cache.ArtifactCachePutBlobExpectation{
 				{
 					Args: cache.ArtifactCachePutBlobArgs{
 						BlobID: "sha256:beee9f30bc1f711043e78d4a2be0668955d4b761d587d6f60c2c8dc081efb203",
@@ -280,9 +280,9 @@ func TestArtifact_Inspect(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mockCache := new(cache.MockArtifactCache)
-			mockCache.ApplyMissingBlobsExpectation(tt.missingLayerExpectation)
-			mockCache.ApplyPutBlobExpectations(tt.putLayerExpectations)
-			mockCache.ApplyPutArtifactExpectations(tt.putImageExpectations)
+			mockCache.ApplyMissingBlobsExpectation(tt.missingBlobsExpectation)
+			mockCache.ApplyPutBlobExpectations(tt.putBlobExpectations)
+			mockCache.ApplyPutArtifactExpectations(tt.putArtifactExpectations)
 
 			img, err := image.NewArchiveImage(tt.imagePath)
 			require.NoError(t, err)
