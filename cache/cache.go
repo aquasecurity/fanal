@@ -2,12 +2,13 @@ package cache
 
 import (
 	"encoding/json"
+	"os"
+	"path/filepath"
+
 	"github.com/aquasecurity/fanal/types"
 	"github.com/google/go-containerregistry/pkg/v1"
 	bolt "go.etcd.io/bbolt"
 	"golang.org/x/xerrors"
-	"os"
-	"path/filepath"
 )
 
 const (
@@ -19,30 +20,52 @@ const (
 	blobBucket = "blob"
 )
 
+type options struct {
+	S3Prefix string
+}
+
+type Option interface {
+	Apply(opts *options)
+}
+
+type S3Prefix string
+
+func (o S3Prefix) Apply(g *options) {
+	g.S3Prefix = string(o)
+}
+
 type Cache interface {
 	ArtifactCache
 	LocalArtifactCache
 }
 
+func initOpts(opts []Option) *options {
+	options := new(options)
+	for _, opt := range opts {
+		opt.Apply(options)
+	}
+	return options
+}
+
 // ArtifactCache uses local or remote cache
 type ArtifactCache interface {
 	// MissingBlobs returns missing blob IDs such as layer IDs in cache
-	MissingBlobs(artifactID string, blobIDs []string) (missingArtifact bool, missingBlobIDs []string, err error)
+	MissingBlobs(artifactID string, blobIDs []string, opts ...Option) (missingArtifact bool, missingBlobIDs []string, err error)
 
 	// PutArtifact stores artifact information such as image metadata in cache
-	PutArtifact(artifactID string, artifactInfo types.ArtifactInfo) (err error)
+	PutArtifact(artifactID string, artifactInfo types.ArtifactInfo, opts ...Option) (err error)
 
 	// PutBlob stores blob information such as layer information in local cache
-	PutBlob(blobID string, blobInfo types.BlobInfo) (err error)
+	PutBlob(blobID string, blobInfo types.BlobInfo, opts ...Option) (err error)
 }
 
 // LocalArtifactCache always uses local cache
 type LocalArtifactCache interface {
 	// GetArtifact gets artifact information such as image metadata from local cache
-	GetArtifact(artifactID string) (artifactInfo types.ArtifactInfo, err error)
+	GetArtifact(artifactID string, opts ...Option) (artifactInfo types.ArtifactInfo, err error)
 
 	// GetBlob gets blob information such as layer data from local cache
-	GetBlob(blobID string) (blobInfo types.BlobInfo, err error)
+	GetBlob(blobID string, opts ...Option) (blobInfo types.BlobInfo, err error)
 
 	// Close closes the local database
 	Close() (err error)
@@ -86,7 +109,7 @@ func NewFSCache(cacheDir string) (FSCache, error) {
 }
 
 // GetBlob gets blob information such as layer data from local cache
-func (fs FSCache) GetBlob(blobID string) (types.BlobInfo, error) {
+func (fs FSCache) GetBlob(blobID string, _ ...Option) (types.BlobInfo, error) {
 	var blobInfo types.BlobInfo
 	err := fs.db.View(func(tx *bolt.Tx) error {
 		var err error
@@ -114,7 +137,7 @@ func (fs FSCache) getBlob(blobBucket *bolt.Bucket, diffID string) (types.BlobInf
 }
 
 // PutBlob stores blob information such as layer information in local cache
-func (fs FSCache) PutBlob(blobID string, blobInfo types.BlobInfo) error {
+func (fs FSCache) PutBlob(blobID string, blobInfo types.BlobInfo, _ ...Option) error {
 	if _, err := v1.NewHash(blobID); err != nil {
 		return xerrors.Errorf("invalid diffID (%s): %w", blobID, err)
 	}
@@ -138,7 +161,7 @@ func (fs FSCache) PutBlob(blobID string, blobInfo types.BlobInfo) error {
 }
 
 // GetArtifact gets artifact information such as image metadata from local cache
-func (fs FSCache) GetArtifact(artifactID string) (types.ArtifactInfo, error) {
+func (fs FSCache) GetArtifact(artifactID string, _ ...Option) (types.ArtifactInfo, error) {
 	var blob []byte
 	err := fs.db.View(func(tx *bolt.Tx) error {
 		artifactBucket := tx.Bucket([]byte(artifactBucket))
@@ -157,7 +180,7 @@ func (fs FSCache) GetArtifact(artifactID string) (types.ArtifactInfo, error) {
 }
 
 // PutArtifact stores artifact information such as image metadata in local cache
-func (fs FSCache) PutArtifact(artifactID string, artifactInfo types.ArtifactInfo) (err error) {
+func (fs FSCache) PutArtifact(artifactID string, artifactInfo types.ArtifactInfo, _ ...Option) (err error) {
 	b, err := json.Marshal(artifactInfo)
 	if err != nil {
 		return xerrors.Errorf("unable to marshal artifact JSON (%s): %w", artifactID, err)
@@ -178,7 +201,7 @@ func (fs FSCache) PutArtifact(artifactID string, artifactInfo types.ArtifactInfo
 }
 
 // MissingBlobs returns missing blob IDs such as layer IDs
-func (fs FSCache) MissingBlobs(artifactID string, blobIDs []string) (bool, []string, error) {
+func (fs FSCache) MissingBlobs(artifactID string, blobIDs []string, _ ...Option) (bool, []string, error) {
 	var missingArtifact bool
 	var missingBlobIDs []string
 	err := fs.db.View(func(tx *bolt.Tx) error {

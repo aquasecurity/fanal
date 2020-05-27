@@ -37,19 +37,21 @@ func NewS3Cache(region string, bucketName string) (S3Cache, error) {
 	}, nil
 }
 
-func (cache S3Cache) PutLayer(diffID string, layerInfo types.BlobInfo) error {
+func (cache S3Cache) PutLayer(diffID string, layerInfo types.BlobInfo, opts ...Option) error {
+	options := initOpts(opts)
 	if _, err := v1.NewHash(diffID); err != nil {
 		return xerrors.Errorf("invalid diffID (%s): %w", diffID, err)
 	}
-	key := fmt.Sprintf("%s/%s", blobBucket, diffID)
+	key := fmt.Sprintf("%s/%s/%s", blobBucket, options.S3Prefix, diffID)
 	if err := cache.put(key, layerInfo); err != nil {
 		return xerrors.Errorf("unable to store layer information in cache (%s): %w", diffID, err)
 	}
 	return nil
 }
 
-func (cache S3Cache) PutImage(imageID string, imageConfig types.ArtifactInfo) (err error) {
-	key := fmt.Sprintf("%s/%s", artifactBucket, imageID)
+func (cache S3Cache) PutImage(imageID string, imageConfig types.ArtifactInfo, opts ...Option) (err error) {
+	options := initOpts(opts)
+	key := fmt.Sprintf("%s/%s/%s", artifactBucket, options.S3Prefix, imageID)
 	if err := cache.put(key, imageConfig); err != nil {
 		return xerrors.Errorf("unable to store image information in cache (%s): %w", imageID, err)
 	}
@@ -80,13 +82,14 @@ func (cache S3Cache) put(key string, body interface{}) (err error) {
 	return nil
 }
 
-func (cache S3Cache) GetLayer(diffID string) (types.BlobInfo, error) {
+func (cache S3Cache) GetLayer(diffID string, opts ...Option) (types.BlobInfo, error) {
 	var layerInfo types.BlobInfo
 
+	options := initOpts(opts)
 	buf := aws.NewWriteAtBuffer([]byte{})
 	_, err := cache.downloader.Download(buf, &s3.GetObjectInput{
 		Bucket: aws.String(cache.bucketName),
-		Key:    aws.String(fmt.Sprintf("%s/%s", blobBucket, diffID)), //TODO add prefix
+		Key:    aws.String(fmt.Sprintf("%s/%s/%s", blobBucket, options.S3Prefix, diffID)),
 	})
 	if err != nil {
 		return types.BlobInfo{}, xerrors.Errorf("failed to get layer from the cache: %w", err)
@@ -99,13 +102,14 @@ func (cache S3Cache) GetLayer(diffID string) (types.BlobInfo, error) {
 	return layerInfo, nil
 }
 
-func (cache S3Cache) GetImage(imageID string) (types.ArtifactInfo, error) {
+func (cache S3Cache) GetImage(imageID string, opts ...Option) (types.ArtifactInfo, error) {
 	var info types.ArtifactInfo
 
+	options := initOpts(opts)
 	buf := aws.NewWriteAtBuffer([]byte{})
 	_, err := cache.downloader.Download(buf, &s3.GetObjectInput{
 		Bucket: aws.String(cache.bucketName),
-		Key:    aws.String(fmt.Sprintf("%s/%s", artifactBucket, imageID)), //TODO add prefix
+		Key:    aws.String(fmt.Sprintf("%s/%s/%s", artifactBucket, options.S3Prefix, imageID)),
 	})
 	if err != nil {
 		return types.ArtifactInfo{}, xerrors.Errorf("failed to get image from the cache: %w", err)
@@ -118,11 +122,11 @@ func (cache S3Cache) GetImage(imageID string) (types.ArtifactInfo, error) {
 	return info, nil
 }
 
-func (cache S3Cache) MissingLayers(imageID string, layerIDs []string) (bool, []string, error) {
+func (cache S3Cache) MissingLayers(imageID string, layerIDs []string, opts ...Option) (bool, []string, error) {
 	var missingImage bool
 	var missingLayerIDs []string
 	for _, layerID := range layerIDs {
-		layerInfo, err := cache.GetLayer(layerID)
+		layerInfo, err := cache.GetLayer(layerID, opts...)
 		if err != nil {
 			// error means cache missed layer info
 			missingLayerIDs = append(missingLayerIDs, layerID)
@@ -133,7 +137,7 @@ func (cache S3Cache) MissingLayers(imageID string, layerIDs []string) (bool, []s
 		}
 	}
 	// get image info
-	imageInfo, err := cache.GetImage(imageID)
+	imageInfo, err := cache.GetImage(imageID, opts...)
 	if err != nil {
 		// error means cache missed image info
 		return true, missingLayerIDs, nil
