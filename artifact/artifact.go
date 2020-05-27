@@ -7,5 +7,5 @@ import (
 )
 
 type Artifact interface {
-	Inspect(ctx context.Context) (types.ArtifactReference, error)
+	Inspect(ctx context.Context) (reference types.ArtifactReference, err error)
 }
