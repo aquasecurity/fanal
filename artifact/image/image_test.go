@@ -6,13 +6,12 @@ import (
 	"testing"
 	"time"
 
+	depTypes "github.com/aquasecurity/go-dep-parser/pkg/types"
+	"golang.org/x/xerrors"
+
 	image2 "github.com/aquasecurity/fanal/artifact/image"
 
 	"github.com/aquasecurity/fanal/image"
-
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-	"golang.org/x/xerrors"
 
 	_ "github.com/aquasecurity/fanal/analyzer/command/apk"
 	_ "github.com/aquasecurity/fanal/analyzer/library/composer"
@@ -21,10 +20,11 @@ import (
 	_ "github.com/aquasecurity/fanal/analyzer/os/ubuntu"
 	_ "github.com/aquasecurity/fanal/analyzer/pkg/apk"
 	_ "github.com/aquasecurity/fanal/analyzer/pkg/dpkg"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/aquasecurity/fanal/cache"
 	"github.com/aquasecurity/fanal/types"
-	depTypes "github.com/aquasecurity/go-dep-parser/pkg/types"
 )
 
 func TestArtifact_Inspect(t *testing.T) {
@@ -275,6 +275,81 @@ func TestArtifact_Inspect(t *testing.T) {
 				},
 			},
 			wantErr: "put layer failed",
+		},
+		{
+			name:      "sad path, PutArtifact returns an error",
+			imagePath: "../../test/testdata/alpine-311.tar.gz",
+			missingBlobsExpectation: cache.ArtifactCacheMissingBlobsExpectation{
+				Args: cache.ArtifactCacheMissingBlobsArgs{
+					ArtifactID: "sha256:a187dde48cd289ac374ad8539930628314bc581a481cdb41409c9289419ddb72",
+					BlobIDs:    []string{"sha256:beee9f30bc1f711043e78d4a2be0668955d4b761d587d6f60c2c8dc081efb203"},
+				},
+				Returns: cache.ArtifactCacheMissingBlobsReturns{
+					MissingArtifact: true,
+					MissingBlobIDs:  []string{"sha256:beee9f30bc1f711043e78d4a2be0668955d4b761d587d6f60c2c8dc081efb203"},
+				},
+			},
+			putBlobExpectations: []cache.ArtifactCachePutBlobExpectation{
+				{
+					Args: cache.ArtifactCachePutBlobArgs{
+						BlobID: "sha256:beee9f30bc1f711043e78d4a2be0668955d4b761d587d6f60c2c8dc081efb203",
+						BlobInfo: types.BlobInfo{
+							SchemaVersion: 1,
+							Digest:        "",
+							DiffID:        "sha256:beee9f30bc1f711043e78d4a2be0668955d4b761d587d6f60c2c8dc081efb203",
+							OS: &types.OS{
+								Family: "alpine",
+								Name:   "3.11.5",
+							},
+							PackageInfos: []types.PackageInfo{{
+								FilePath: "lib/apk/db/installed",
+								Packages: []types.Package{
+									{Name: "musl", Version: "1.1.24-r2"},
+									{Name: "busybox", Version: "1.31.1-r9"},
+									{Name: "alpine-baselayout", Version: "3.2.0-r3"},
+									{Name: "alpine-keys", Version: "2.1-r2"},
+									{Name: "openssl", Version: "1.1.1d-r3"},
+									{Name: "libcrypto1.1", Version: "1.1.1d-r3"},
+									{Name: "libssl1.1", Version: "1.1.1d-r3"},
+									{Name: "ca-certificates", Version: "20191127-r1"},
+									{Name: "ca-certificates-cacert", Version: "20191127-r1"},
+									{Name: "libtls-standalone", Version: "2.9.1-r0"},
+									{Name: "ssl_client", Version: "1.31.1-r9"},
+									{Name: "zlib", Version: "1.2.11-r3"},
+									{Name: "apk-tools", Version: "2.10.4-r3"},
+									{Name: "pax-utils", Version: "1.2.4-r0"},
+									{Name: "scanelf", Version: "1.2.4-r0"},
+									{Name: "musl-utils", Version: "1.1.24-r2"},
+									{Name: "libc-dev", Version: "0.7.2-r0"},
+									{Name: "libc-utils", Version: "0.7.2-r0"},
+								},
+							}},
+							Applications:  []types.Application(nil),
+							OpaqueDirs:    []string(nil),
+							WhiteoutFiles: []string(nil),
+						},
+					},
+					Returns: cache.ArtifactCachePutBlobReturns{},
+				},
+			},
+			putArtifactExpectations: []cache.ArtifactCachePutArtifactExpectation{
+				{
+					Returns: cache.ArtifactCachePutArtifactReturns{
+						Err: errors.New("put artifact failed"),
+					},
+					Args: cache.ArtifactCachePutArtifactArgs{
+						ArtifactID: "sha256:a187dde48cd289ac374ad8539930628314bc581a481cdb41409c9289419ddb72",
+						ArtifactInfo: types.ArtifactInfo{
+							SchemaVersion: 1,
+							Architecture:  "amd64",
+							Created:       time.Date(2020, 3, 23, 21, 19, 34, 196162891, time.UTC),
+							DockerVersion: "18.09.7",
+							OS:            "linux",
+						},
+					},
+				},
+			},
+			wantErr: "put artifact failed",
 		},
 	}
 	for _, tt := range tests {
