@@ -1,7 +1,6 @@
 package bundler
 
 import (
-	"bytes"
 	"os"
 	"path/filepath"
 
@@ -24,14 +23,11 @@ var (
 type bundlerLibraryAnalyzer struct{}
 
 func (a bundlerLibraryAnalyzer) Analyze(content []byte) (analyzer.AnalyzeReturn, error) {
-	r := bytes.NewBuffer(content)
-	libs, err := bundler.Parse(r)
+	ret, err := library.Analyze(content, bundler.Parse)
 	if err != nil {
-		return analyzer.AnalyzeReturn{}, xerrors.Errorf("error with Gemfile.lock: %w", err)
+		return analyzer.AnalyzeReturn{}, xerrors.Errorf("unable to parse Gemfile.lock: %w", err)
 	}
-	return analyzer.AnalyzeReturn{
-		Libraries: libs,
-	}, nil
+	return ret, nil
 }
 
 func (a bundlerLibraryAnalyzer) Required(filePath string, _ os.FileInfo) bool {

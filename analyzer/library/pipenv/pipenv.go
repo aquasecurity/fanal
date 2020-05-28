@@ -1,16 +1,16 @@
 package pipenv
 
 import (
-	"bytes"
 	"os"
 	"path/filepath"
+
+	"github.com/aquasecurity/go-dep-parser/pkg/pipenv"
 
 	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/fanal/analyzer"
 	"github.com/aquasecurity/fanal/analyzer/library"
 	"github.com/aquasecurity/fanal/utils"
-	"github.com/aquasecurity/go-dep-parser/pkg/pipenv"
 )
 
 func init() {
@@ -22,14 +22,11 @@ var requiredFiles = []string{"Pipfile.lock"}
 type pipenvLibraryAnalyzer struct{}
 
 func (a pipenvLibraryAnalyzer) Analyze(content []byte) (analyzer.AnalyzeReturn, error) {
-	r := bytes.NewBuffer(content)
-	libs, err := pipenv.Parse(r)
+	ret, err := library.Analyze(content, pipenv.Parse)
 	if err != nil {
-		return analyzer.AnalyzeReturn{}, xerrors.Errorf("error with Pipfile.lock: %w", err)
+		return analyzer.AnalyzeReturn{}, xerrors.Errorf("unable to parse Pipfile.lock: %w", err)
 	}
-	return analyzer.AnalyzeReturn{
-		Libraries: libs,
-	}, nil
+	return ret, nil
 }
 
 func (a pipenvLibraryAnalyzer) Required(filePath string, _ os.FileInfo) bool {

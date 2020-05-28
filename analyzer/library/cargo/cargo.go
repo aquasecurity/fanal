@@ -1,7 +1,6 @@
 package cargo
 
 import (
-	"bytes"
 	"os"
 	"path/filepath"
 
@@ -21,14 +20,11 @@ var requiredFiles = []string{"Cargo.lock"}
 type cargoLibraryAnalyzer struct{}
 
 func (a cargoLibraryAnalyzer) Analyze(content []byte) (analyzer.AnalyzeReturn, error) {
-	r := bytes.NewBuffer(content)
-	libs, err := cargo.Parse(r)
+	ret, err := library.Analyze(content, cargo.Parse)
 	if err != nil {
 		return analyzer.AnalyzeReturn{}, xerrors.Errorf("error with Cargo.lock: %w", err)
 	}
-	return analyzer.AnalyzeReturn{
-		Libraries: libs,
-	}, nil
+	return ret, nil
 }
 
 func (a cargoLibraryAnalyzer) Required(filePath string, _ os.FileInfo) bool {

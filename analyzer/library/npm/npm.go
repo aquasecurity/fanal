@@ -1,15 +1,15 @@
 package npm
 
 import (
-	"bytes"
 	"os"
 	"path/filepath"
+
+	"github.com/aquasecurity/go-dep-parser/pkg/npm"
 
 	"github.com/aquasecurity/fanal/analyzer/library"
 
 	"github.com/aquasecurity/fanal/analyzer"
 	"github.com/aquasecurity/fanal/utils"
-	"github.com/aquasecurity/go-dep-parser/pkg/npm"
 	"golang.org/x/xerrors"
 )
 
@@ -22,14 +22,11 @@ var requiredFiles = []string{"package-lock.json"}
 type npmLibraryAnalyzer struct{}
 
 func (a npmLibraryAnalyzer) Analyze(content []byte) (analyzer.AnalyzeReturn, error) {
-	r := bytes.NewBuffer(content)
-	libs, err := npm.Parse(r)
+	ret, err := library.Analyze(content, npm.Parse)
 	if err != nil {
-		return analyzer.AnalyzeReturn{}, xerrors.Errorf("error with Cargo.lock: %w", err)
+		return analyzer.AnalyzeReturn{}, xerrors.Errorf("unable to parse package-lock.json: %w", err)
 	}
-	return analyzer.AnalyzeReturn{
-		Libraries: libs,
-	}, nil
+	return ret, nil
 }
 
 func (a npmLibraryAnalyzer) Required(filePath string, _ os.FileInfo) bool {

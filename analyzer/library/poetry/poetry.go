@@ -1,7 +1,6 @@
 package poetry
 
 import (
-	"bytes"
 	"os"
 	"path/filepath"
 
@@ -22,14 +21,11 @@ var requiredFiles = []string{"poetry.lock"}
 type poetryLibraryAnalyzer struct{}
 
 func (a poetryLibraryAnalyzer) Analyze(content []byte) (analyzer.AnalyzeReturn, error) {
-	r := bytes.NewBuffer(content)
-	libs, err := poetry.Parse(r)
+	ret, err := library.Analyze(content, poetry.Parse)
 	if err != nil {
-		return analyzer.AnalyzeReturn{}, xerrors.Errorf("error with poetry.lock: %w", err)
+		return analyzer.AnalyzeReturn{}, xerrors.Errorf("unable to parse poetry.lock: %w", err)
 	}
-	return analyzer.AnalyzeReturn{
-		Libraries: libs,
-	}, nil
+	return ret, nil
 }
 
 func (a poetryLibraryAnalyzer) Required(filePath string, _ os.FileInfo) bool {
