@@ -31,8 +31,8 @@ type AnalyzeReturn struct {
 	Libraries []godeptypes.Library
 }
 
-func (r AnalyzeReturn) ConvertToResult(analyzerType, filePath string) AnalysisResult {
-	var result AnalysisResult
+func (r AnalyzeReturn) ConvertToResult(analyzerType, filePath string) *AnalysisResult {
+	result := new(AnalysisResult)
 	if r.OS != (types.OS{}) {
 		result.OS = &r.OS
 	}
@@ -92,8 +92,8 @@ func (r *AnalysisResult) isEmpty() bool {
 	return r.OS == nil && len(r.PackageInfos) == 0 && len(r.Applications) == 0
 }
 
-func (r *AnalysisResult) Merge(new AnalysisResult) {
-	if new.isEmpty() {
+func (r *AnalysisResult) Merge(new *AnalysisResult) {
+	if new == nil || new.isEmpty() {
 		return
 	}
 

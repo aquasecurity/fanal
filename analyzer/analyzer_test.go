@@ -29,7 +29,7 @@ func TestAnalysisResult_Merge(t *testing.T) {
 		Applications []types.Application
 	}
 	type args struct {
-		new analyzer.AnalysisResult
+		new *analyzer.AnalysisResult
 	}
 	tests := []struct {
 		name   string
@@ -67,7 +67,7 @@ func TestAnalysisResult_Merge(t *testing.T) {
 				},
 			},
 			args: args{
-				new: analyzer.AnalysisResult{
+				new: &analyzer.AnalysisResult{
 					PackageInfos: []types.PackageInfo{
 						{
 							FilePath: "var/lib/dpkg/status.d/openssl",
@@ -145,7 +145,7 @@ func TestAnalysisResult_Merge(t *testing.T) {
 				},
 			},
 			args: args{
-				new: analyzer.AnalysisResult{
+				new: &analyzer.AnalysisResult{
 					OS: &types.OS{
 						Family: aos.Oracle,
 						Name:   "8.0",
@@ -168,7 +168,7 @@ func TestAnalysisResult_Merge(t *testing.T) {
 				},
 			},
 			args: args{
-				new: analyzer.AnalysisResult{
+				new: &analyzer.AnalysisResult{
 					OS: &types.OS{
 						Family: aos.Ubuntu,
 						Name:   "18.04",
@@ -191,7 +191,7 @@ func TestAnalysisResult_Merge(t *testing.T) {
 				},
 			},
 			args: args{
-				new: analyzer.AnalysisResult{
+				new: &analyzer.AnalysisResult{
 					OS: &types.OS{
 						Family: aos.Oracle,
 						Name:   "8.0",

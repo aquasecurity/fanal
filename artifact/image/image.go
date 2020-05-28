@@ -107,7 +107,7 @@ func (a Artifact) inspectLayer(diffID string) (types.BlobInfo, error) {
 		return types.BlobInfo{}, xerrors.Errorf("unable to get uncompressed layer %s: %w", diffID, err)
 	}
 
-	var result analyzer.AnalysisResult
+	result := new(analyzer.AnalysisResult)
 	opqDirs, whFiles, err := walker.WalkLayerTar(r, func(filePath string, info os.FileInfo, opener analyzer.Opener) error {
 		r, err := analyzer.AnalyzeFile(filePath, info, opener)
 		if err != nil {
