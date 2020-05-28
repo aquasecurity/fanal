@@ -14,7 +14,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/aquasecurity/fanal/analyzer"
 	_ "github.com/aquasecurity/fanal/analyzer/command/apk"
 	_ "github.com/aquasecurity/fanal/analyzer/library/bundler"
 	_ "github.com/aquasecurity/fanal/analyzer/library/cargo"
@@ -25,15 +24,19 @@ import (
 	_ "github.com/aquasecurity/fanal/analyzer/library/yarn"
 	_ "github.com/aquasecurity/fanal/analyzer/os/alpine"
 	_ "github.com/aquasecurity/fanal/analyzer/os/amazonlinux"
-	_ "github.com/aquasecurity/fanal/analyzer/os/debianbase"
+	_ "github.com/aquasecurity/fanal/analyzer/os/debian"
 	_ "github.com/aquasecurity/fanal/analyzer/os/photon"
 	_ "github.com/aquasecurity/fanal/analyzer/os/redhatbase"
 	_ "github.com/aquasecurity/fanal/analyzer/os/suse"
+	_ "github.com/aquasecurity/fanal/analyzer/os/ubuntu"
 	_ "github.com/aquasecurity/fanal/analyzer/pkg/apk"
 	_ "github.com/aquasecurity/fanal/analyzer/pkg/dpkg"
 	_ "github.com/aquasecurity/fanal/analyzer/pkg/rpmcmd"
+	"github.com/aquasecurity/fanal/applier"
+	"github.com/aquasecurity/fanal/artifact"
+	aimage "github.com/aquasecurity/fanal/artifact/image"
 	"github.com/aquasecurity/fanal/cache"
-	"github.com/aquasecurity/fanal/extractor/docker"
+	"github.com/aquasecurity/fanal/image"
 	"github.com/aquasecurity/fanal/types"
 	godeptypes "github.com/aquasecurity/go-dep-parser/pkg/types"
 	dtypes "github.com/docker/docker/api/types"
@@ -132,16 +135,16 @@ func TestFanal_Library_DockerLessMode(t *testing.T) {
 				PruneChildren: true,
 			})
 
-			ext, cleanup, err := docker.NewDockerExtractor(ctx, tc.remoteImageName, opt)
+			img, cleanup, err := image.NewDockerImage(ctx, tc.remoteImageName, opt)
 			require.NoError(t, err, tc.name)
 			defer cleanup()
 
-			ac := analyzer.New(ext, c)
-			applier := analyzer.NewApplier(c)
+			ar := aimage.NewArtifact(img, c)
+			applier := applier.NewApplier(c)
 
 			// run tests twice, one without cache and with cache
 			for i := 1; i <= 2; i++ {
-				runChecks(t, ctx, ac, applier, tc)
+				runChecks(t, ctx, ar, applier, tc)
 			}
 
 			// clear Cache
@@ -180,16 +183,16 @@ func TestFanal_Library_DockerMode(t *testing.T) {
 			err = cli.ImageTag(ctx, tc.imageName, tc.imageFile)
 			require.NoError(t, err, tc.name)
 
-			ext, cleanup, err := docker.NewDockerExtractor(ctx, tc.imageFile, opt)
-			require.NoError(t, err)
+			img, cleanup, err := image.NewDockerImage(ctx, tc.imageFile, opt)
+			require.NoError(t, err, tc.name)
 			defer cleanup()
 
-			ac := analyzer.New(ext, c)
-			applier := analyzer.NewApplier(c)
+			ar := aimage.NewArtifact(img, c)
+			applier := applier.NewApplier(c)
 
 			// run tests twice, one without cache and with cache
 			for i := 1; i <= 2; i++ {
-				runChecks(t, ctx, ac, applier, tc)
+				runChecks(t, ctx, ar, applier, tc)
 			}
 
 			// clear Cache
@@ -225,13 +228,13 @@ func TestFanal_Library_TarMode(t *testing.T) {
 			c, err := cache.NewFSCache(d)
 			require.NoError(t, err)
 
-			applier := analyzer.NewApplier(c)
+			img, err := image.NewArchiveImage(tc.imageFile)
+			require.NoError(t, err, tc.name)
 
-			ext, err := docker.NewArchiveImageExtractor(tc.imageFile)
-			require.NoError(t, err)
+			ar := aimage.NewArtifact(img, c)
+			applier := applier.NewApplier(c)
 
-			ac := analyzer.New(ext, c)
-			runChecks(t, ctx, ac, applier, tc)
+			runChecks(t, ctx, ar, applier, tc)
 
 			// clear Cache
 			require.NoError(t, c.Clear(), tc.name)
@@ -239,8 +242,8 @@ func TestFanal_Library_TarMode(t *testing.T) {
 	}
 }
 
-func runChecks(t *testing.T, ctx context.Context, ac analyzer.Config, applier analyzer.Applier, tc testCase) {
-	imageInfo, err := ac.Analyze(ctx)
+func runChecks(t *testing.T, ctx context.Context, ar artifact.Artifact, applier applier.Applier, tc testCase) {
+	imageInfo, err := ar.Inspect(ctx)
 	require.NoError(t, err, tc.name)
 	imageDetail, err := applier.ApplyLayers(imageInfo.ID, imageInfo.BlobIDs)
 	require.NoError(t, err, tc.name)
@@ -277,9 +280,10 @@ func checkPackages(t *testing.T, detail types.ArtifactDetail, tc testCase) {
 func checkLibraries(detail types.ArtifactDetail, t *testing.T, tc testCase) {
 	if tc.expectedLibraries != "" {
 		data, _ := ioutil.ReadFile(tc.expectedLibraries)
-		var expectedLibraries map[types.FilePath][]godeptypes.Library
+		var expectedLibraries map[string][]godeptypes.Library
 
-		json.Unmarshal(data, &expectedLibraries)
+		err := json.Unmarshal(data, &expectedLibraries)
+		require.NoError(t, err)
 		require.Equal(t, len(expectedLibraries), len(detail.Applications), tc.name)
 	} else {
 		assert.Nil(t, detail.Applications, tc.name)
@@ -291,7 +295,8 @@ func checkPackageFromCommands(t *testing.T, detail types.ArtifactDetail, tc test
 		data, _ := ioutil.ReadFile(tc.expectedPkgsFromCmds)
 		var expectedPkgsFromCmds []types.Package
 
-		json.Unmarshal(data, &expectedPkgsFromCmds)
+		err := json.Unmarshal(data, &expectedPkgsFromCmds)
+		require.NoError(t, err)
 		assert.ElementsMatch(t, expectedPkgsFromCmds, detail.HistoryPackages, tc.name)
 	} else {
 		assert.Equal(t, []types.Package(nil), detail.HistoryPackages, tc.name)
