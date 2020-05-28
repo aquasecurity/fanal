@@ -43,6 +43,9 @@ func (a amazonlinuxOSAnalyzer) parseRelease(content []byte) (types.OS, error) {
 		fields := strings.Fields(line)
 		// Only Amazon Linux Prefix
 		if strings.HasPrefix(line, "Amazon Linux release 2") {
+			if len(fields) < 5 {
+				continue
+			}
 			return types.OS{
 				Family: aos.Amazon,
 				Name:   fmt.Sprintf("%s %s", fields[3], fields[4]),
