@@ -61,7 +61,7 @@ func WalkLayerTar(layer io.Reader, analyzeFn WalkFunc) ([]string, []string, erro
 	return opqDirs, whFiles, nil
 }
 
-// fileOnceOpener reads a file once and the content is shared so that some analyzers can use the same data
+// tarOnceOpener reads a file once and the content is shared so that some analyzers can use the same data
 func tarOnceOpener(r io.Reader) func() ([]byte, error) {
 	var once sync.Once
 	var b []byte
