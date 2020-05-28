@@ -5,6 +5,8 @@ import (
 	"strings"
 	"sync"
 
+	aos "github.com/aquasecurity/fanal/analyzer/os"
+
 	godeptypes "github.com/aquasecurity/go-dep-parser/pkg/types"
 	"golang.org/x/xerrors"
 
@@ -100,7 +102,12 @@ func (r *AnalysisResult) Merge(new AnalysisResult) {
 	defer r.m.Unlock()
 
 	if new.OS != nil {
-		r.OS = new.OS
+		// OLE also has /etc/redhat-release and it detects OLE as RHEL by mistake.
+		// In that case, OS must be overwritten with the content of /etc/oracle-release.
+		// There is the same problem between Debian and Ubuntu.
+		if r.OS == nil || r.OS.Family == aos.RedHat || r.OS.Family == aos.Debian {
+			r.OS = new.OS
+		}
 	}
 
 	if len(new.PackageInfos) > 0 {

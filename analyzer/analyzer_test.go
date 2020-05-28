@@ -4,28 +4,220 @@ import (
 	"errors"
 	"io/ioutil"
 	"os"
+	"sync"
 	"testing"
-
-	_ "github.com/aquasecurity/fanal/analyzer/library/bundler"
-	_ "github.com/aquasecurity/fanal/analyzer/os/alpine"
-	_ "github.com/aquasecurity/fanal/analyzer/os/ubuntu"
-	_ "github.com/aquasecurity/fanal/analyzer/pkg/apk"
-
-	_ "github.com/aquasecurity/fanal/analyzer/library/bundler"
-	_ "github.com/aquasecurity/fanal/analyzer/os/alpine"
-	_ "github.com/aquasecurity/fanal/analyzer/os/ubuntu"
-	_ "github.com/aquasecurity/fanal/analyzer/pkg/apk"
-
-	godeptypes "github.com/aquasecurity/go-dep-parser/pkg/types"
-
-	"github.com/aquasecurity/fanal/analyzer"
-	"golang.org/x/xerrors"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"golang.org/x/xerrors"
 
+	"github.com/aquasecurity/fanal/analyzer"
+	_ "github.com/aquasecurity/fanal/analyzer/library/bundler"
+	aos "github.com/aquasecurity/fanal/analyzer/os"
+	_ "github.com/aquasecurity/fanal/analyzer/os/alpine"
+	_ "github.com/aquasecurity/fanal/analyzer/os/ubuntu"
+	_ "github.com/aquasecurity/fanal/analyzer/pkg/apk"
 	"github.com/aquasecurity/fanal/types"
+	godeptypes "github.com/aquasecurity/go-dep-parser/pkg/types"
 )
+
+func TestAnalysisResult_Merge(t *testing.T) {
+	type fields struct {
+		m            sync.Mutex
+		OS           *types.OS
+		PackageInfos []types.PackageInfo
+		Applications []types.Application
+	}
+	type args struct {
+		new analyzer.AnalysisResult
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		args   args
+		want   analyzer.AnalysisResult
+	}{
+		{
+			name: "happy path",
+			fields: fields{
+				OS: &types.OS{
+					Family: aos.Debian,
+					Name:   "9.8",
+				},
+				PackageInfos: []types.PackageInfo{
+					{
+						FilePath: "var/lib/dpkg/status.d/libc",
+						Packages: []types.Package{
+							{Name: "libc", Version: "1.2.3"},
+						},
+					},
+				},
+				Applications: []types.Application{
+					{
+						Type:     "bundler",
+						FilePath: "app/Gemfile.lock",
+						Libraries: []types.LibraryInfo{
+							{
+								Library: godeptypes.Library{
+									Name: "rails", Version: "5.0.0",
+								},
+							},
+						},
+					},
+				},
+			},
+			args: args{
+				new: analyzer.AnalysisResult{
+					PackageInfos: []types.PackageInfo{
+						{
+							FilePath: "var/lib/dpkg/status.d/openssl",
+							Packages: []types.Package{
+								{Name: "openssl", Version: "1.1.1"},
+							},
+						},
+					},
+					Applications: []types.Application{
+						{
+							Type:     "bundler",
+							FilePath: "app2/Gemfile.lock",
+							Libraries: []types.LibraryInfo{
+								{
+									Library: godeptypes.Library{
+										Name: "nokogiri", Version: "1.0.0",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			want: analyzer.AnalysisResult{
+				OS: &types.OS{
+					Family: aos.Debian,
+					Name:   "9.8",
+				},
+				PackageInfos: []types.PackageInfo{
+					{
+						FilePath: "var/lib/dpkg/status.d/libc",
+						Packages: []types.Package{
+							{Name: "libc", Version: "1.2.3"},
+						},
+					},
+					{
+						FilePath: "var/lib/dpkg/status.d/openssl",
+						Packages: []types.Package{
+							{Name: "openssl", Version: "1.1.1"},
+						},
+					},
+				},
+				Applications: []types.Application{
+					{
+						Type:     "bundler",
+						FilePath: "app/Gemfile.lock",
+						Libraries: []types.LibraryInfo{
+							{
+								Library: godeptypes.Library{
+									Name: "rails", Version: "5.0.0",
+								},
+							},
+						},
+					},
+					{
+						Type:     "bundler",
+						FilePath: "app2/Gemfile.lock",
+						Libraries: []types.LibraryInfo{
+							{
+								Library: godeptypes.Library{
+									Name: "nokogiri", Version: "1.0.0",
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "redhat must be replaced with oracle",
+			fields: fields{
+				OS: &types.OS{
+					Family: aos.RedHat, // this must be overwritten
+					Name:   "8.0",
+				},
+			},
+			args: args{
+				new: analyzer.AnalysisResult{
+					OS: &types.OS{
+						Family: aos.Oracle,
+						Name:   "8.0",
+					},
+				},
+			},
+			want: analyzer.AnalysisResult{
+				OS: &types.OS{
+					Family: aos.Oracle,
+					Name:   "8.0",
+				},
+			},
+		},
+		{
+			name: "debian must be replaced with ubuntu",
+			fields: fields{
+				OS: &types.OS{
+					Family: aos.Debian, // this must be overwritten
+					Name:   "9.0",
+				},
+			},
+			args: args{
+				new: analyzer.AnalysisResult{
+					OS: &types.OS{
+						Family: aos.Ubuntu,
+						Name:   "18.04",
+					},
+				},
+			},
+			want: analyzer.AnalysisResult{
+				OS: &types.OS{
+					Family: aos.Ubuntu,
+					Name:   "18.04",
+				},
+			},
+		},
+		{
+			name: "alpine must not be replaced with oracle",
+			fields: fields{
+				OS: &types.OS{
+					Family: aos.Alpine, // this must not be overwritten
+					Name:   "3.11",
+				},
+			},
+			args: args{
+				new: analyzer.AnalysisResult{
+					OS: &types.OS{
+						Family: aos.Oracle,
+						Name:   "8.0",
+					},
+				},
+			},
+			want: analyzer.AnalysisResult{
+				OS: &types.OS{
+					Family: aos.Alpine, // this must not be overwritten
+					Name:   "3.11",
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			r := analyzer.AnalysisResult{
+				OS:           tt.fields.OS,
+				PackageInfos: tt.fields.PackageInfos,
+				Applications: tt.fields.Applications,
+			}
+			r.Merge(tt.args.new)
+			assert.Equal(t, tt.want, r)
+		})
+	}
+}
 
 func TestAnalyzeFile(t *testing.T) {
 	type args struct {
