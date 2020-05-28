@@ -19,13 +19,14 @@ import (
 	testcontainers "github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
 
-	"github.com/aquasecurity/fanal/analyzer"
+	_ "github.com/aquasecurity/fanal/analyzer/os/alpine"
+	_ "github.com/aquasecurity/fanal/analyzer/pkg/apk"
+	"github.com/aquasecurity/fanal/applier"
+	aimage "github.com/aquasecurity/fanal/artifact/image"
 	"github.com/aquasecurity/fanal/cache"
-	"github.com/aquasecurity/fanal/extractor/docker"
+	"github.com/aquasecurity/fanal/image"
 	testdocker "github.com/aquasecurity/fanal/test/integration/docker"
 	"github.com/aquasecurity/fanal/types"
-
-	_ "github.com/aquasecurity/fanal/analyzer"
 )
 
 const (
@@ -152,7 +153,7 @@ func TestTLSRegistry(t *testing.T) {
 			// 2. Analyze it
 			imageRef := fmt.Sprintf("%s/%s", registryURL.Host, tc.imageName)
 			imageDetail, err := analyze(ctx, imageRef, tc.option)
-			require.Equal(t, tc.wantErr, err != nil)
+			require.Equal(t, tc.wantErr, err != nil, err)
 			if err != nil {
 				return
 			}
@@ -195,21 +196,21 @@ func analyze(ctx context.Context, imageRef string, opt types.DockerOption) (*typ
 	}
 	cli.NegotiateAPIVersion(ctx)
 
-	ext, cleanup, err := docker.NewDockerExtractor(ctx, imageRef, opt)
+	img, cleanup, err := image.NewDockerImage(ctx, imageRef, opt)
 	if err != nil {
 		return nil, err
 	}
 	defer cleanup()
 
-	ac := analyzer.New(ext, c)
-	applier := analyzer.NewApplier(c)
+	ar := aimage.NewArtifact(img, c)
+	ap := applier.NewApplier(c)
 
-	imageInfo, err := ac.Analyze(ctx)
+	imageInfo, err := ar.Inspect(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	imageDetail, err := applier.ApplyLayers(imageInfo.ID, imageInfo.BlobIDs)
+	imageDetail, err := ap.ApplyLayers(imageInfo.ID, imageInfo.BlobIDs)
 	if err != nil {
 		return nil, err
 	}
