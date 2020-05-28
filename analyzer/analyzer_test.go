@@ -36,7 +36,7 @@ func TestAnalyzeFile(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    args
-		want    analyzer.AnalysisResult
+		want    *analyzer.AnalysisResult
 		wantErr string
 	}{
 		{
@@ -47,7 +47,7 @@ func TestAnalyzeFile(t *testing.T) {
 					return ioutil.ReadFile("testdata/etc/alpine-release")
 				},
 			},
-			want: analyzer.AnalysisResult{
+			want: &analyzer.AnalysisResult{
 				OS: &types.OS{
 					Family: "alpine",
 					Name:   "3.11.6",
@@ -62,7 +62,7 @@ func TestAnalyzeFile(t *testing.T) {
 					return ioutil.ReadFile("testdata/lib/apk/db/installed")
 				},
 			},
-			want: analyzer.AnalysisResult{
+			want: &analyzer.AnalysisResult{
 				PackageInfos: []types.PackageInfo{
 					{
 						FilePath: "/lib/apk/db/installed",
@@ -81,7 +81,7 @@ func TestAnalyzeFile(t *testing.T) {
 					return ioutil.ReadFile("testdata/app/Gemfile.lock")
 				},
 			},
-			want: analyzer.AnalysisResult{
+			want: &analyzer.AnalysisResult{
 				Applications: []types.Application{
 					{
 						Type:     "bundler",
@@ -106,6 +106,7 @@ func TestAnalyzeFile(t *testing.T) {
 					return []byte(`foo`), nil
 				},
 			},
+			want: &analyzer.AnalysisResult{},
 		},
 		{
 			name: "sad path with opener error",

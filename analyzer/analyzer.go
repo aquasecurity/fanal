@@ -112,8 +112,8 @@ func (r *AnalysisResult) Merge(new AnalysisResult) {
 	}
 }
 
-func AnalyzeFile(filePath string, info os.FileInfo, opener Opener) (AnalysisResult, error) {
-	var result AnalysisResult
+func AnalyzeFile(filePath string, info os.FileInfo, opener Opener) (*AnalysisResult, error) {
+	result := new(AnalysisResult)
 	for _, analyzer := range analyzers {
 		// filepath extracted from tar file doesn't have the prefix "/"
 		if !analyzer.Required(strings.TrimLeft(filePath, "/"), info) {
@@ -121,7 +121,7 @@ func AnalyzeFile(filePath string, info os.FileInfo, opener Opener) (AnalysisResu
 		}
 		b, err := opener()
 		if err != nil {
-			return AnalysisResult{}, xerrors.Errorf("unable to open a file (%s): %w", filePath, err)
+			return nil, xerrors.Errorf("unable to open a file (%s): %w", filePath, err)
 		}
 
 		ret, err := analyzer.Analyze(b)
