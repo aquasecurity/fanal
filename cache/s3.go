@@ -22,7 +22,7 @@ type S3Cache struct {
 }
 
 func NewS3Cache(region string, bucketName string) (S3Cache, error) {
-	session, err := session.NewSessionWithOptions(session.Options{
+	sess, err := session.NewSessionWithOptions(session.Options{
 		SharedConfigState: session.SharedConfigEnable,
 		Config:            aws.Config{Region: aws.String(region)},
 	})
@@ -31,8 +31,8 @@ func NewS3Cache(region string, bucketName string) (S3Cache, error) {
 	}
 
 	return S3Cache{
-		s3:         s3.New(session, aws.NewConfig().WithRegion(region)),
-		downloader: s3manager.NewDownloader(session),
+		s3:         s3.New(sess, aws.NewConfig().WithRegion(region)),
+		downloader: s3manager.NewDownloader(sess),
 		bucketName: bucketName,
 	}, nil
 }
