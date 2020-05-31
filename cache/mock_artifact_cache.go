@@ -46,7 +46,7 @@ func (_m *MockArtifactCache) ApplyMissingBlobsExpectation(e ArtifactCacheMissing
 	}
 	if e.Args.OptsAnything {
 		args = append(args, mock.Anything)
-	} else {
+	} else if e.Args.Opts != nil {
 		args = append(args, e.Args.Opts)
 	}
 	_m.On("MissingBlobs", args...).Return(e.Returns.MissingArtifact, e.Returns.MissingBlobIDs, e.Returns.Err)
@@ -127,7 +127,7 @@ func (_m *MockArtifactCache) ApplyPutArtifactExpectation(e ArtifactCachePutArtif
 	}
 	if e.Args.OptsAnything {
 		args = append(args, mock.Anything)
-	} else {
+	} else if e.Args.Opts != nil {
 		args = append(args, e.Args.Opts)
 	}
 	_m.On("PutArtifact", args...).Return(e.Returns.Err)
@@ -192,7 +192,7 @@ func (_m *MockArtifactCache) ApplyPutBlobExpectation(e ArtifactCachePutBlobExpec
 	}
 	if e.Args.OptsAnything {
 		args = append(args, mock.Anything)
-	} else {
+	} else if e.Args.Opts != nil {
 		args = append(args, e.Args.Opts)
 	}
 	_m.On("PutBlob", args...).Return(e.Returns.Err)
