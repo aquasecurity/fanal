@@ -15,6 +15,8 @@ import (
 	"golang.org/x/xerrors"
 )
 
+var _ Cache = &S3Cache{}
+
 type S3Cache struct {
 	s3         s3iface.S3API
 	downloader *s3manager.Downloader
