@@ -24,13 +24,13 @@ type S3Cache struct {
 	prefix     string
 }
 
-func NewS3Cache(bucketName, prefix string, api s3iface.S3API, downloaderAPI s3manageriface.DownloaderAPI) (S3Cache, error) {
+func NewS3Cache(bucketName, prefix string, api s3iface.S3API, downloaderAPI s3manageriface.DownloaderAPI) S3Cache {
 	return S3Cache{
 		s3Client:   api,
 		downloader: downloaderAPI,
 		bucketName: bucketName,
 		prefix:     prefix,
-	}, nil
+	}
 }
 
 func (c S3Cache) PutArtifact(artifactID string, artifactConfig types.ArtifactInfo) (err error) {
