@@ -48,6 +48,10 @@ const (
 
 	// Alpine is done
 	Alpine = "alpine"
+
+	// Gentoo is detectable
+	// TODO: detect packages
+	Gentoo = "gentoo"
 )
 
 var AnalyzeOSError = xerrors.New("unable to analyze OS information")
