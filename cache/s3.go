@@ -129,7 +129,7 @@ func (c S3Cache) MissingBlobs(artifactID string, blobIDs []string) (bool, []stri
 		}
 		blobInfo, err := c.GetBlob(blobID)
 		if err != nil {
-			return true, missingBlobIDs, xerrors.Errorf("failed to get blob from the cache: %w", err)
+			return true, missingBlobIDs, xerrors.Errorf("the blob object (%s) doesn't exist in S3 even though the index file exists: %w", blobID, err)
 		}
 		if blobInfo.SchemaVersion != types.BlobJSONSchemaVersion {
 			missingBlobIDs = append(missingBlobIDs, blobID)
@@ -143,7 +143,7 @@ func (c S3Cache) MissingBlobs(artifactID string, blobIDs []string) (bool, []stri
 	}
 	artifactInfo, err := c.GetArtifact(artifactID)
 	if err != nil {
-		return true, missingBlobIDs, xerrors.Errorf("failed to get artifact from the cache: %w", err)
+		return true, missingBlobIDs, xerrors.Errorf("the artifact object (%s) doesn't exist in S3 even though the index file exists: %w", artifactID, err)
 	}
 	if artifactInfo.SchemaVersion != types.ArtifactJSONSchemaVersion {
 		missingArtifact = true
