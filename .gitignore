@@ -18,3 +18,4 @@ test/integration/testdata/fixtures
 cmd/fanal/fanal
 *.tar
 *.gz
+fanal

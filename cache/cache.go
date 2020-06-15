@@ -1,7 +1,7 @@
 package cache
 
 import (
-	"github.com/aquasecurity/fanal/types"
+	"github.com/BryanKMorrow/fanal/types"
 )
 
 const (

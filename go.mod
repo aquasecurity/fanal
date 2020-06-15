@@ -3,9 +3,10 @@ module github.com/aquasecurity/fanal
 go 1.13
 
 require (
+	github.com/BryanKMorrow/fanal v0.0.0-20200615155700-3be089f25ed9 // indirect
 	github.com/GoogleCloudPlatform/docker-credential-gcr v1.5.0
 	github.com/Microsoft/go-winio v0.4.15-0.20190919025122-fc70bd9a86b5 // indirect
-	github.com/aquasecurity/go-dep-parser v0.0.0-20190819075924-ea223f0ef24b
+	github.com/aquasecurity/go-dep-parser v0.0.0-20200123140603-4dc0125084da
 	github.com/aquasecurity/testdocker v0.0.0-20200426142840-5f05bce6f12a
 	github.com/aws/aws-sdk-go v1.27.1
 	github.com/deckarep/golang-set v1.7.1
