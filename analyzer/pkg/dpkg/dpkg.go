@@ -78,6 +78,7 @@ func (a debianPkgAnalyzer) parseDpkgPkg(scanner *bufio.Scanner) (pkg *types.Pack
 		name          string
 		version       string
 		sourceName    string
+		isInstalled   bool
 		sourceVersion string
 	)
 
@@ -105,6 +106,8 @@ func (a debianPkgAnalyzer) parseDpkgPkg(scanner *bufio.Scanner) (pkg *types.Pack
 			}
 		} else if strings.HasPrefix(line, "Version: ") {
 			version = strings.TrimPrefix(line, "Version: ")
+		} else if strings.HasPrefix(line, "Status: ") {
+			isInstalled = strings.HasPrefix(strings.TrimPrefix(line, "Status: "), "install")
 		}
 
 		if !scanner.Scan() {
@@ -112,7 +115,7 @@ func (a debianPkgAnalyzer) parseDpkgPkg(scanner *bufio.Scanner) (pkg *types.Pack
 		}
 	}
 
-	if name == "" || version == "" {
+	if name == "" || version == "" || !isInstalled {
 		return nil
 	} else if !debVersion.Valid(version) {
 		log.Printf("Invalid Version Found : OS %s, Package %s, Version %s", "debian", name, version)

@@ -2130,4 +2130,26 @@ Description: Micro string library: shared library
  This package contains the shared library for ustr.
 Homepage: http://www.and.org/ustr/
 
+Package: git
+Status: uninstall ok installed
+Priority: optional
+Section: libs
+Installed-Size: 287
+Maintainer: Vaclav Ovsik <vaclav.ovsik@i.cz>
+Architecture: amd64
+Multi-Arch: same
+Source: ustr (1.0.4-3)
+Version: 1.0.4-3+b2
+Depends: libc6 (>= 2.14)
+Pre-Depends: multiarch-support
+Description: Micro string library: shared library
+ ustr (Micro string library) is a string API for C. It has tiny overhead over
+ just plain strdup(), is much safer, is easier to use, is faster for many
+ operations, can be used with read-only or automatically allocated data. You
+ don't even need to link to the library to use it (so there are no
+ dependencies).
+ .
+ This package contains the shared library for ustr.
+Homepage: http://www.and.org/ustr/
+
 
