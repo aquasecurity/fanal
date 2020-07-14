@@ -81,7 +81,7 @@ func (a debianPkgAnalyzer) parseDpkgPkg(scanner *bufio.Scanner) (pkg *types.Pack
 		isInstalled   bool
 		sourceVersion string
 	)
-
+	isInstalled = true
 	for {
 		line := strings.TrimSpace(scanner.Text())
 		if line == "" {
