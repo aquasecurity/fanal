@@ -107,9 +107,13 @@ func (a debianPkgAnalyzer) parseDpkgPkg(scanner *bufio.Scanner) (pkg *types.Pack
 		} else if strings.HasPrefix(line, "Version: ") {
 			version = strings.TrimPrefix(line, "Version: ")
 		} else if strings.HasPrefix(line, "Status: ") {
-			isInstalled = strings.HasPrefix(strings.TrimPrefix(line, "Status: "), "install")
+			for _, ss := range strings.Fields(strings.TrimPrefix(line, "Status: ")) {
+				if ss == "deinstall" || ss == "purge" {
+					isInstalled = false
+					break
+				}
+			}
 		}
-
 		if !scanner.Scan() {
 			break
 		}
