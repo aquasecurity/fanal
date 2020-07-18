@@ -19,14 +19,16 @@ import (
 )
 
 type Artifact struct {
-	image image.Image
-	cache cache.ArtifactCache
+	image           image.Image
+	cache           cache.ArtifactCache
+	skipDirectories []string
 }
 
-func NewArtifact(img image.Image, c cache.ArtifactCache) artifact.Artifact {
+func NewArtifact(img image.Image, c cache.ArtifactCache, skipDirectories ...string) artifact.Artifact {
 	return Artifact{
-		image: img,
-		cache: c,
+		image:           img,
+		cache:           c,
+		skipDirectories: skipDirectories,
 	}
 }
 
@@ -115,7 +117,7 @@ func (a Artifact) inspectLayer(diffID string) (types.BlobInfo, error) {
 		}
 		result.Merge(r)
 		return nil
-	})
+	}, a.skipDirectories...)
 	if err != nil {
 		return types.BlobInfo{}, err
 	}
