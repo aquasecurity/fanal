@@ -16,7 +16,7 @@ import (
 func WalkDir(root string, f WalkFunc) error {
 	// walk function called for every path found
 	walkFn := func(pathname string, fi os.FileInfo) error {
-		if isIgnored(pathname) {
+		if isIgnored(pathname, nil) {
 			return filepath.SkipDir
 		}
 		pathname = filepath.Clean(pathname)

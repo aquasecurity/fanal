@@ -110,14 +110,14 @@ func (a Artifact) inspectLayer(diffID string) (types.BlobInfo, error) {
 	}
 
 	result := new(analyzer.AnalysisResult)
-	opqDirs, whFiles, err := walker.WalkLayerTar(r, func(filePath string, info os.FileInfo, opener analyzer.Opener) error {
+	opqDirs, whFiles, err := walker.WalkLayerTar(r, a.skipDirectories, func(filePath string, info os.FileInfo, opener analyzer.Opener) error {
 		r, err := analyzer.AnalyzeFile(filePath, info, opener)
 		if err != nil {
 			return err
 		}
 		result.Merge(r)
 		return nil
-	}, a.skipDirectories...)
+	})
 	if err != nil {
 		return types.BlobInfo{}, err
 	}

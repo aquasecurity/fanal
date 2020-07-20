@@ -17,7 +17,7 @@ var (
 
 type WalkFunc func(filePath string, info os.FileInfo, opener analyzer.Opener) error
 
-func isIgnored(filePath string, skipDirectories ...string) bool {
+func isIgnored(filePath string, skipDirectories []string) bool {
 	filePath = strings.TrimLeft(filePath, "/")
 	for _, path := range strings.Split(filePath, utils.PathSeparator) {
 		if utils.StringInSlice(path, library.IgnoreDirs) {
@@ -26,10 +26,8 @@ func isIgnored(filePath string, skipDirectories ...string) bool {
 		if utils.StringInSlice(path, ignoreDirs) {
 			return true
 		}
-		if skipDirectories != nil {
-			if utils.StringInSlice(path, skipDirectories) {
-				return true
-			}
+		if utils.StringInSlice(path, skipDirectories) {
+			return true
 		}
 	}
 
