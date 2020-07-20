@@ -24,7 +24,7 @@ type Artifact struct {
 	skipDirectories []string
 }
 
-func NewArtifact(img image.Image, c cache.ArtifactCache, skipDirectories ...string) artifact.Artifact {
+func NewArtifact(img image.Image, c cache.ArtifactCache, skipDirectories []string) artifact.Artifact {
 	return Artifact{
 		image:           img,
 		cache:           c,

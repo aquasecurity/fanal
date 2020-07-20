@@ -362,7 +362,7 @@ func TestArtifact_Inspect(t *testing.T) {
 			img, err := image.NewArchiveImage(tt.imagePath)
 			require.NoError(t, err)
 
-			a := image2.NewArtifact(img, mockCache)
+			a := image2.NewArtifact(img, mockCache, nil)
 			got, err := a.Inspect(context.Background())
 			if tt.wantErr != "" {
 				require.NotNil(t, err)

@@ -170,7 +170,7 @@ func imageArtifact(ctx context.Context, imageName string, c cache.ArtifactCache)
 		return nil, func() {}, err
 	}
 
-	return aimage.NewArtifact(img, c), cleanup, nil
+	return aimage.NewArtifact(img, c, nil), cleanup, nil
 }
 
 func archiveImageArtifact(imagePath string, c cache.ArtifactCache) (artifact.Artifact, error) {
@@ -179,7 +179,7 @@ func archiveImageArtifact(imagePath string, c cache.ArtifactCache) (artifact.Art
 		return nil, err
 	}
 
-	return aimage.NewArtifact(img, c), nil
+	return aimage.NewArtifact(img, c, nil), nil
 }
 
 func localArtifact(dir string, c cache.ArtifactCache) artifact.Artifact {
