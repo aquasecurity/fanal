@@ -134,8 +134,8 @@ func repoAction(ctx context.Context, c *cli.Context, fsCache cache.Cache) error 
 	return inspect(ctx, art, fsCache)
 }
 
-func inspect(ctx context.Context, artifact artifact.Artifact, c cache.LocalArtifactCache) error {
-	imageInfo, err := artifact.Inspect(ctx)
+func inspect(ctx context.Context, art artifact.Artifact, c cache.LocalArtifactCache) error {
+	imageInfo, err := art.Inspect(ctx, artifact.InspectOption{})
 	if err != nil {
 		return err
 	}
@@ -170,7 +170,7 @@ func imageArtifact(ctx context.Context, imageName string, c cache.ArtifactCache)
 		return nil, func() {}, err
 	}
 
-	return aimage.NewArtifact(img, c, nil), cleanup, nil
+	return aimage.NewArtifact(img, c), cleanup, nil
 }
 
 func archiveImageArtifact(imagePath string, c cache.ArtifactCache) (artifact.Artifact, error) {
@@ -179,7 +179,7 @@ func archiveImageArtifact(imagePath string, c cache.ArtifactCache) (artifact.Art
 		return nil, err
 	}
 
-	return aimage.NewArtifact(img, c, nil), nil
+	return aimage.NewArtifact(img, c), nil
 }
 
 func localArtifact(dir string, c cache.ArtifactCache) artifact.Artifact {
