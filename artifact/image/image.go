@@ -19,16 +19,14 @@ import (
 )
 
 type Artifact struct {
-	image           image.Image
-	cache           cache.ArtifactCache
-	skipDirectories []string
+	image image.Image
+	cache cache.ArtifactCache
 }
 
-func NewArtifact(img image.Image, c cache.ArtifactCache, skipDirectories []string) artifact.Artifact {
+func NewArtifact(img image.Image, c cache.ArtifactCache) artifact.Artifact {
 	return Artifact{
-		image:           img,
-		cache:           c,
-		skipDirectories: skipDirectories,
+		image: img,
+		cache: c,
 	}
 }
 
