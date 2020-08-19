@@ -42,9 +42,9 @@ func TestApplier_ApplyLayers(t *testing.T) {
 					},
 					Returns: cache.LocalArtifactCacheGetBlobReturns{
 						BlobInfo: types.BlobInfo{
-							SchemaVersion: 1,
-							Digest:        "sha256:932da51564135c98a49a34a193d6cd363d8fa4184d957fde16c9d8527b3f3b02",
-							DiffID:        "sha256:a187dde48cd289ac374ad8539930628314bc581a481cdb41409c9289419ddb72",
+							Version: 1,
+							Digest:  "sha256:932da51564135c98a49a34a193d6cd363d8fa4184d957fde16c9d8527b3f3b02",
+							DiffID:  "sha256:a187dde48cd289ac374ad8539930628314bc581a481cdb41409c9289419ddb72",
 							OS: &types.OS{
 								Family: "debian",
 								Name:   "9.9",
@@ -71,9 +71,9 @@ func TestApplier_ApplyLayers(t *testing.T) {
 					},
 					Returns: cache.LocalArtifactCacheGetBlobReturns{
 						BlobInfo: types.BlobInfo{
-							SchemaVersion: 1,
-							Digest:        "sha256:dffd9992ca398466a663c87c92cfea2a2db0ae0cf33fcb99da60eec52addbfc5",
-							DiffID:        "sha256:aad63a9339440e7c3e1fff2b988991b9bfb81280042fa7f39a5e327023056819",
+							Version: 1,
+							Digest:  "sha256:dffd9992ca398466a663c87c92cfea2a2db0ae0cf33fcb99da60eec52addbfc5",
+							DiffID:  "sha256:aad63a9339440e7c3e1fff2b988991b9bfb81280042fa7f39a5e327023056819",
 							PackageInfos: []types.PackageInfo{
 								{
 									FilePath: "var/lib/dpkg/status.d/libc6",
@@ -99,9 +99,9 @@ func TestApplier_ApplyLayers(t *testing.T) {
 					},
 					Returns: cache.LocalArtifactCacheGetBlobReturns{
 						BlobInfo: types.BlobInfo{
-							SchemaVersion: 1,
-							Digest:        "sha256:beee9f30bc1f711043e78d4a2be0668955d4b761d587d6f60c2c8dc081efb203",
-							DiffID:        "sha256:24df0d4e20c0f42d3703bf1f1db2bdd77346c7956f74f423603d651e8e5ae8a7",
+							Version: 1,
+							Digest:  "sha256:beee9f30bc1f711043e78d4a2be0668955d4b761d587d6f60c2c8dc081efb203",
+							DiffID:  "sha256:24df0d4e20c0f42d3703bf1f1db2bdd77346c7956f74f423603d651e8e5ae8a7",
 							Applications: []types.Application{
 								{
 									Type:     "composer",
@@ -133,7 +133,7 @@ func TestApplier_ApplyLayers(t *testing.T) {
 					},
 					Returns: cache.LocalArtifactCacheGetArtifactReturns{
 						ArtifactInfo: types.ArtifactInfo{
-							SchemaVersion: 1,
+							Version: 1,
 						},
 					},
 				},
@@ -203,9 +203,9 @@ func TestApplier_ApplyLayers(t *testing.T) {
 					},
 					Returns: cache.LocalArtifactCacheGetBlobReturns{
 						BlobInfo: types.BlobInfo{
-							SchemaVersion: 1,
-							Digest:        "sha256:a187dde48cd289ac374ad8539930628314bc581a481cdb41409c9289419ddb72",
-							DiffID:        "sha256:531743b7098cb2aaf615641007a129173f63ed86ca32fe7b5a246a1c47286028",
+							Version: 1,
+							Digest:  "sha256:a187dde48cd289ac374ad8539930628314bc581a481cdb41409c9289419ddb72",
+							DiffID:  "sha256:531743b7098cb2aaf615641007a129173f63ed86ca32fe7b5a246a1c47286028",
 							OS: &types.OS{
 								Family: "alpine",
 								Name:   "3.10.4",
@@ -233,7 +233,7 @@ func TestApplier_ApplyLayers(t *testing.T) {
 					},
 					Returns: cache.LocalArtifactCacheGetArtifactReturns{
 						ArtifactInfo: types.ArtifactInfo{
-							SchemaVersion: 1,
+							Version: 1,
 							HistoryPackages: []types.Package{
 								{Name: "musl", Version: "1.1.23"},
 								{Name: "busybox", Version: "1.31"},
@@ -358,9 +358,9 @@ func TestApplier_ApplyLayers(t *testing.T) {
 					},
 					Returns: cache.LocalArtifactCacheGetBlobReturns{
 						BlobInfo: types.BlobInfo{
-							SchemaVersion: 1,
-							Digest:        "sha256:932da51564135c98a49a34a193d6cd363d8fa4184d957fde16c9d8527b3f3b02",
-							DiffID:        "sha256:a187dde48cd289ac374ad8539930628314bc581a481cdb41409c9289419ddb72",
+							Version: 1,
+							Digest:  "sha256:932da51564135c98a49a34a193d6cd363d8fa4184d957fde16c9d8527b3f3b02",
+							DiffID:  "sha256:a187dde48cd289ac374ad8539930628314bc581a481cdb41409c9289419ddb72",
 							PackageInfos: []types.PackageInfo{
 								{
 									FilePath: "var/lib/dpkg/status.d/tzdata",
@@ -383,9 +383,9 @@ func TestApplier_ApplyLayers(t *testing.T) {
 					},
 					Returns: cache.LocalArtifactCacheGetBlobReturns{
 						BlobInfo: types.BlobInfo{
-							SchemaVersion: 1,
-							Digest:        "sha256:dffd9992ca398466a663c87c92cfea2a2db0ae0cf33fcb99da60eec52addbfc5",
-							DiffID:        "sha256:aad63a9339440e7c3e1fff2b988991b9bfb81280042fa7f39a5e327023056819",
+							Version: 1,
+							Digest:  "sha256:dffd9992ca398466a663c87c92cfea2a2db0ae0cf33fcb99da60eec52addbfc5",
+							DiffID:  "sha256:aad63a9339440e7c3e1fff2b988991b9bfb81280042fa7f39a5e327023056819",
 							PackageInfos: []types.PackageInfo{
 								{
 									FilePath: "var/lib/dpkg/status.d/libc6",
@@ -411,9 +411,9 @@ func TestApplier_ApplyLayers(t *testing.T) {
 					},
 					Returns: cache.LocalArtifactCacheGetBlobReturns{
 						BlobInfo: types.BlobInfo{
-							SchemaVersion: 1,
-							Digest:        "sha256:beee9f30bc1f711043e78d4a2be0668955d4b761d587d6f60c2c8dc081efb203",
-							DiffID:        "sha256:24df0d4e20c0f42d3703bf1f1db2bdd77346c7956f74f423603d651e8e5ae8a7",
+							Version: 1,
+							Digest:  "sha256:beee9f30bc1f711043e78d4a2be0668955d4b761d587d6f60c2c8dc081efb203",
+							DiffID:  "sha256:24df0d4e20c0f42d3703bf1f1db2bdd77346c7956f74f423603d651e8e5ae8a7",
 							Applications: []types.Application{
 								{
 									Type:     "composer",
@@ -499,7 +499,7 @@ func TestApplier_ApplyLayers(t *testing.T) {
 					},
 					Returns: cache.LocalArtifactCacheGetBlobReturns{
 						BlobInfo: types.BlobInfo{
-							SchemaVersion: 1,
+							Version: 1,
 							OS: &types.OS{
 								Family: "debian",
 								Name:   "9.9",

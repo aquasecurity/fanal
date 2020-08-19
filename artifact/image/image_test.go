@@ -59,9 +59,9 @@ func TestArtifact_Inspect(t *testing.T) {
 					Args: cache.ArtifactCachePutBlobArgs{
 						BlobID: "sha256:beee9f30bc1f711043e78d4a2be0668955d4b761d587d6f60c2c8dc081efb203",
 						BlobInfo: types.BlobInfo{
-							SchemaVersion: 1,
-							Digest:        "",
-							DiffID:        "sha256:beee9f30bc1f711043e78d4a2be0668955d4b761d587d6f60c2c8dc081efb203",
+							Version: 1,
+							Digest:  "",
+							DiffID:  "sha256:beee9f30bc1f711043e78d4a2be0668955d4b761d587d6f60c2c8dc081efb203",
 							OS: &types.OS{
 								Family: "alpine",
 								Name:   "3.11.5",
@@ -102,7 +102,7 @@ func TestArtifact_Inspect(t *testing.T) {
 					Args: cache.ArtifactCachePutArtifactArgs{
 						ArtifactID: "sha256:a187dde48cd289ac374ad8539930628314bc581a481cdb41409c9289419ddb72",
 						ArtifactInfo: types.ArtifactInfo{
-							SchemaVersion: 1,
+							Version:       1,
 							Architecture:  "amd64",
 							Created:       time.Date(2020, 3, 23, 21, 19, 34, 196162891, time.UTC),
 							DockerVersion: "18.09.7",
@@ -143,11 +143,11 @@ func TestArtifact_Inspect(t *testing.T) {
 					Args: cache.ArtifactCachePutBlobArgs{
 						BlobID: "sha256:932da51564135c98a49a34a193d6cd363d8fa4184d957fde16c9d8527b3f3b02",
 						BlobInfo: types.BlobInfo{
-							SchemaVersion: 1,
-							Digest:        "",
-							DiffID:        "sha256:932da51564135c98a49a34a193d6cd363d8fa4184d957fde16c9d8527b3f3b02",
-							OS:            &types.OS{Family: "debian", Name: "9.9"},
-							PackageInfos:  []types.PackageInfo{{FilePath: "var/lib/dpkg/status.d/base", Packages: []types.Package{{Name: "base-files", Version: "9.9+deb9u9", Release: "", Epoch: 0, Arch: "", SrcName: "base-files", SrcVersion: "9.9+deb9u9", SrcRelease: "", SrcEpoch: 0}}}, {FilePath: "var/lib/dpkg/status.d/netbase", Packages: []types.Package{{Name: "netbase", Version: "5.4", Release: "", Epoch: 0, Arch: "", SrcName: "netbase", SrcVersion: "5.4", SrcRelease: "", SrcEpoch: 0}}}, {FilePath: "var/lib/dpkg/status.d/tzdata", Packages: []types.Package{{Name: "tzdata", Version: "2019a-0+deb9u1", Release: "", Epoch: 0, Arch: "", SrcName: "tzdata", SrcVersion: "2019a-0+deb9u1", SrcRelease: "", SrcEpoch: 0}}}},
+							Version:      1,
+							Digest:       "",
+							DiffID:       "sha256:932da51564135c98a49a34a193d6cd363d8fa4184d957fde16c9d8527b3f3b02",
+							OS:           &types.OS{Family: "debian", Name: "9.9"},
+							PackageInfos: []types.PackageInfo{{FilePath: "var/lib/dpkg/status.d/base", Packages: []types.Package{{Name: "base-files", Version: "9.9+deb9u9", Release: "", Epoch: 0, Arch: "", SrcName: "base-files", SrcVersion: "9.9+deb9u9", SrcRelease: "", SrcEpoch: 0}}}, {FilePath: "var/lib/dpkg/status.d/netbase", Packages: []types.Package{{Name: "netbase", Version: "5.4", Release: "", Epoch: 0, Arch: "", SrcName: "netbase", SrcVersion: "5.4", SrcRelease: "", SrcEpoch: 0}}}, {FilePath: "var/lib/dpkg/status.d/tzdata", Packages: []types.Package{{Name: "tzdata", Version: "2019a-0+deb9u1", Release: "", Epoch: 0, Arch: "", SrcName: "tzdata", SrcVersion: "2019a-0+deb9u1", SrcRelease: "", SrcEpoch: 0}}}},
 						},
 					},
 				},
@@ -155,10 +155,10 @@ func TestArtifact_Inspect(t *testing.T) {
 					Args: cache.ArtifactCachePutBlobArgs{
 						BlobID: "sha256:dffd9992ca398466a663c87c92cfea2a2db0ae0cf33fcb99da60eec52addbfc5",
 						BlobInfo: types.BlobInfo{
-							SchemaVersion: 1,
-							Digest:        "",
-							DiffID:        "sha256:dffd9992ca398466a663c87c92cfea2a2db0ae0cf33fcb99da60eec52addbfc5",
-							PackageInfos:  []types.PackageInfo{{FilePath: "var/lib/dpkg/status.d/libc6", Packages: []types.Package{{Name: "libc6", Version: "2.24-11+deb9u4", Release: "", Epoch: 0, Arch: "", SrcName: "glibc", SrcVersion: "2.24-11+deb9u4", SrcRelease: "", SrcEpoch: 0}}}, {FilePath: "var/lib/dpkg/status.d/libssl1", Packages: []types.Package{{Name: "libssl1.1", Version: "1.1.0k-1~deb9u1", Release: "", Epoch: 0, Arch: "", SrcName: "openssl", SrcVersion: "1.1.0k-1~deb9u1", SrcRelease: "", SrcEpoch: 0}}}, {FilePath: "var/lib/dpkg/status.d/openssl", Packages: []types.Package{{Name: "openssl", Version: "1.1.0k-1~deb9u1", Release: "", Epoch: 0, Arch: "", SrcName: "openssl", SrcVersion: "1.1.0k-1~deb9u1", SrcRelease: "", SrcEpoch: 0}}}},
+							Version:      1,
+							Digest:       "",
+							DiffID:       "sha256:dffd9992ca398466a663c87c92cfea2a2db0ae0cf33fcb99da60eec52addbfc5",
+							PackageInfos: []types.PackageInfo{{FilePath: "var/lib/dpkg/status.d/libc6", Packages: []types.Package{{Name: "libc6", Version: "2.24-11+deb9u4", Release: "", Epoch: 0, Arch: "", SrcName: "glibc", SrcVersion: "2.24-11+deb9u4", SrcRelease: "", SrcEpoch: 0}}}, {FilePath: "var/lib/dpkg/status.d/libssl1", Packages: []types.Package{{Name: "libssl1.1", Version: "1.1.0k-1~deb9u1", Release: "", Epoch: 0, Arch: "", SrcName: "openssl", SrcVersion: "1.1.0k-1~deb9u1", SrcRelease: "", SrcEpoch: 0}}}, {FilePath: "var/lib/dpkg/status.d/openssl", Packages: []types.Package{{Name: "openssl", Version: "1.1.0k-1~deb9u1", Release: "", Epoch: 0, Arch: "", SrcName: "openssl", SrcVersion: "1.1.0k-1~deb9u1", SrcRelease: "", SrcEpoch: 0}}}},
 						},
 					},
 				},
@@ -166,9 +166,9 @@ func TestArtifact_Inspect(t *testing.T) {
 					Args: cache.ArtifactCachePutBlobArgs{
 						BlobID: "sha256:24df0d4e20c0f42d3703bf1f1db2bdd77346c7956f74f423603d651e8e5ae8a7",
 						BlobInfo: types.BlobInfo{
-							SchemaVersion: 1,
-							Digest:        "",
-							DiffID:        "sha256:24df0d4e20c0f42d3703bf1f1db2bdd77346c7956f74f423603d651e8e5ae8a7",
+							Version: 1,
+							Digest:  "",
+							DiffID:  "sha256:24df0d4e20c0f42d3703bf1f1db2bdd77346c7956f74f423603d651e8e5ae8a7",
 							Applications: []types.Application{{Type: "composer", FilePath: "php-app/composer.lock",
 								Libraries: []types.LibraryInfo{
 									{Library: depTypes.Library{Name: "guzzlehttp/guzzle", Version: "6.2.0"}},
@@ -234,9 +234,9 @@ func TestArtifact_Inspect(t *testing.T) {
 					Args: cache.ArtifactCachePutBlobArgs{
 						BlobID: "sha256:beee9f30bc1f711043e78d4a2be0668955d4b761d587d6f60c2c8dc081efb203",
 						BlobInfo: types.BlobInfo{
-							SchemaVersion: 1,
-							Digest:        "",
-							DiffID:        "sha256:beee9f30bc1f711043e78d4a2be0668955d4b761d587d6f60c2c8dc081efb203",
+							Version: 1,
+							Digest:  "",
+							DiffID:  "sha256:beee9f30bc1f711043e78d4a2be0668955d4b761d587d6f60c2c8dc081efb203",
 							OS: &types.OS{
 								Family: "alpine",
 								Name:   "3.11.5",
@@ -294,9 +294,9 @@ func TestArtifact_Inspect(t *testing.T) {
 					Args: cache.ArtifactCachePutBlobArgs{
 						BlobID: "sha256:beee9f30bc1f711043e78d4a2be0668955d4b761d587d6f60c2c8dc081efb203",
 						BlobInfo: types.BlobInfo{
-							SchemaVersion: 1,
-							Digest:        "",
-							DiffID:        "sha256:beee9f30bc1f711043e78d4a2be0668955d4b761d587d6f60c2c8dc081efb203",
+							Version: 1,
+							Digest:  "",
+							DiffID:  "sha256:beee9f30bc1f711043e78d4a2be0668955d4b761d587d6f60c2c8dc081efb203",
 							OS: &types.OS{
 								Family: "alpine",
 								Name:   "3.11.5",
@@ -340,7 +340,7 @@ func TestArtifact_Inspect(t *testing.T) {
 					Args: cache.ArtifactCachePutArtifactArgs{
 						ArtifactID: "sha256:a187dde48cd289ac374ad8539930628314bc581a481cdb41409c9289419ddb72",
 						ArtifactInfo: types.ArtifactInfo{
-							SchemaVersion: 1,
+							Version:       1,
 							Architecture:  "amd64",
 							Created:       time.Date(2020, 3, 23, 21, 19, 34, 196162891, time.UTC),
 							DockerVersion: "18.09.7",

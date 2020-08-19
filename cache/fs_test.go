@@ -63,7 +63,7 @@ func copyFile(src, dst string) (int64, error) {
 	return n, err
 }
 
-func TestFSCache_GetLayer(t *testing.T) {
+func TestFSCache_GetBlob(t *testing.T) {
 	type args struct {
 		layerID string
 	}
@@ -81,7 +81,7 @@ func TestFSCache_GetLayer(t *testing.T) {
 				layerID: "sha256:24df0d4e20c0f42d3703bf1f1db2bdd77346c7956f74f423603d651e8e5ae8a7",
 			},
 			want: types.BlobInfo{
-				SchemaVersion: 2,
+				Version: 2,
 				OS: &types.OS{
 					Family: "alpine",
 					Name:   "3.10",
@@ -136,7 +136,7 @@ func TestFSCache_PutLayer(t *testing.T) {
 			args: args{
 				diffID: "sha256:24df0d4e20c0f42d3703bf1f1db2bdd77346c7956f74f423603d651e8e5ae8a7",
 				layerInfo: types.BlobInfo{
-					SchemaVersion: 1,
+					Version: 1,
 					OS: &types.OS{
 						Family: "alpine",
 						Name:   "3.10",
@@ -145,7 +145,7 @@ func TestFSCache_PutLayer(t *testing.T) {
 			},
 			want: `
 				{
-				  "SchemaVersion": 1,
+				  "Version": 1,
 				  "OS": {
 				    "Family": "alpine",
 				    "Name": "3.10"
@@ -158,9 +158,9 @@ func TestFSCache_PutLayer(t *testing.T) {
 			args: args{
 				diffID: "sha256:dffd9992ca398466a663c87c92cfea2a2db0ae0cf33fcb99da60eec52addbfc5",
 				layerInfo: types.BlobInfo{
-					SchemaVersion: 1,
-					Digest:        "sha256:dffd9992ca398466a663c87c92cfea2a2db0ae0cf33fcb99da60eec52addbfc5",
-					DiffID:        "sha256:dab15cac9ebd43beceeeda3ce95c574d6714ed3d3969071caead678c065813ec",
+					Version: 1,
+					Digest:  "sha256:dffd9992ca398466a663c87c92cfea2a2db0ae0cf33fcb99da60eec52addbfc5",
+					DiffID:  "sha256:dab15cac9ebd43beceeeda3ce95c574d6714ed3d3969071caead678c065813ec",
 					OS: &types.OS{
 						Family: "alpine",
 						Name:   "3.10",
@@ -202,7 +202,7 @@ func TestFSCache_PutLayer(t *testing.T) {
 			},
 			want: `
 				{
-				  "SchemaVersion": 1,
+				  "Version": 1,
 				  "Digest": "sha256:dffd9992ca398466a663c87c92cfea2a2db0ae0cf33fcb99da60eec52addbfc5",
 				  "DiffID": "sha256:dab15cac9ebd43beceeeda3ce95c574d6714ed3d3969071caead678c065813ec",
 				  "OS": {
@@ -306,7 +306,7 @@ func TestFSCache_PutImage(t *testing.T) {
 			args: args{
 				imageID: "sha256:58701fd185bda36cab0557bb6438661831267aa4a9e0b54211c4d5317a48aff4",
 				imageConfig: types.ArtifactInfo{
-					SchemaVersion: 1,
+					Version:       1,
 					Architecture:  "amd64",
 					Created:       time.Date(2020, 1, 2, 3, 4, 5, 0, time.UTC),
 					DockerVersion: "18.06.1-ce",
@@ -321,7 +321,7 @@ func TestFSCache_PutImage(t *testing.T) {
 			},
 			want: `
 				{
-				  "SchemaVersion": 1,
+				  "Version": 1,
 				  "Architecture": "amd64",
 				  "Created": "2020-01-02T03:04:05Z",
 				  "DockerVersion": "18.06.1-ce",

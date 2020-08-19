@@ -19,7 +19,7 @@ func (a Applier) ApplyLayers(imageID string, diffIDs []string) (types.ArtifactDe
 	var layers []types.BlobInfo
 	for _, diffID := range diffIDs {
 		layer, _ := a.cache.GetBlob(diffID)
-		if layer.SchemaVersion == 0 {
+		if layer.Version == 0 {
 			return types.ArtifactDetail{}, xerrors.Errorf("layer cache missing: %s", diffID)
 		}
 		layers = append(layers, layer)

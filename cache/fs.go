@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 
 	"github.com/aquasecurity/fanal/types"
-	"github.com/google/go-containerregistry/pkg/v1"
+	v1 "github.com/google/go-containerregistry/pkg/v1"
 	bolt "go.etcd.io/bbolt"
 	"golang.org/x/xerrors"
 )
@@ -152,7 +152,7 @@ func (fs FSCache) MissingBlobs(artifactID string, blobIDs []string) (bool, []str
 				missingBlobIDs = append(missingBlobIDs, blobID)
 				continue
 			}
-			if blobInfo.SchemaVersion != types.BlobJSONSchemaVersion {
+			if blobInfo.Version != types.BlobJSONSchemaVersion {
 				missingBlobIDs = append(missingBlobIDs, blobID)
 			}
 		}
@@ -168,7 +168,7 @@ func (fs FSCache) MissingBlobs(artifactID string, blobIDs []string) (bool, []str
 		// error means cache missed artifact info
 		return true, missingBlobIDs, nil
 	}
-	if artifactInfo.SchemaVersion != types.ArtifactJSONSchemaVersion {
+	if artifactInfo.Version != types.ArtifactJSONSchemaVersion {
 		missingArtifact = true
 	}
 	return missingArtifact, missingBlobIDs, nil

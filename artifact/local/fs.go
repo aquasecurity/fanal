@@ -52,10 +52,10 @@ func (a Artifact) Inspect(_ context.Context) (types.ArtifactReference, error) {
 	}
 
 	blobInfo := types.BlobInfo{
-		SchemaVersion: types.BlobJSONSchemaVersion,
-		OS:            result.OS,
-		PackageInfos:  result.PackageInfos,
-		Applications:  result.Applications,
+		Version:      types.BlobJSONSchemaVersion,
+		OS:           result.OS,
+		PackageInfos: result.PackageInfos,
+		Applications: result.Applications,
 	}
 
 	// calculate hash of JSON and use it as pseudo artifactID and blobID

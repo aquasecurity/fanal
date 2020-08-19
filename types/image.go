@@ -60,7 +60,7 @@ type ArtifactReference struct {
 
 // ArtifactInfo is stored in cache
 type ArtifactInfo struct {
-	SchemaVersion int
+	Version       int
 	Architecture  string
 	Created       time.Time
 	DockerVersion string
@@ -72,7 +72,7 @@ type ArtifactInfo struct {
 
 // BlobInfo is stored in cache
 type BlobInfo struct {
-	SchemaVersion int
+	Version       int
 	Digest        string        `json:",omitempty"`
 	DiffID        string        `json:",omitempty"`
 	OS            *OS           `json:",omitempty"`
