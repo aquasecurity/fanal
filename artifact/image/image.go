@@ -123,7 +123,7 @@ func (a Artifact) inspectLayer(diffID string) (types.BlobInfo, error) {
 	layerInfo := types.BlobInfo{
 		Digest:        layerDigest,
 		DiffID:        diffID,
-		Version:       types.BlobJSONSchemaVersion,
+		Version:       types.SchemaVersion,
 		OS:            result.OS,
 		PackageInfos:  result.PackageInfos,
 		Applications:  result.Applications,
@@ -182,7 +182,7 @@ func (a Artifact) inspectConfig(imageID string, osFound types.OS) error {
 	}
 
 	info := types.ArtifactInfo{
-		Version:         types.ArtifactJSONSchemaVersion,
+		Version:         types.SchemaVersion,
 		Architecture:    s1.Architecture,
 		Created:         s1.Created.Time,
 		DockerVersion:   s1.DockerVersion,

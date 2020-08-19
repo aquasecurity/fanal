@@ -52,7 +52,7 @@ func (a Artifact) Inspect(_ context.Context) (types.ArtifactReference, error) {
 	}
 
 	blobInfo := types.BlobInfo{
-		Version:      types.BlobJSONSchemaVersion,
+		Version:      types.SchemaVersion,
 		OS:           result.OS,
 		PackageInfos: result.PackageInfos,
 		Applications: result.Applications,

@@ -152,7 +152,7 @@ func (fs FSCache) MissingBlobs(artifactID string, blobIDs []string) (bool, []str
 				missingBlobIDs = append(missingBlobIDs, blobID)
 				continue
 			}
-			if blobInfo.Version != types.BlobJSONSchemaVersion {
+			if blobInfo.Version != types.SchemaVersion {
 				missingBlobIDs = append(missingBlobIDs, blobID)
 			}
 		}
@@ -168,7 +168,7 @@ func (fs FSCache) MissingBlobs(artifactID string, blobIDs []string) (bool, []str
 		// error means cache missed artifact info
 		return true, missingBlobIDs, nil
 	}
-	if artifactInfo.Version != types.ArtifactJSONSchemaVersion {
+	if artifactInfo.Version != types.SchemaVersion {
 		missingArtifact = true
 	}
 	return missingArtifact, missingBlobIDs, nil

@@ -134,7 +134,7 @@ func (c S3Cache) MissingBlobs(artifactID string, blobIDs []string) (bool, []stri
 		if err != nil {
 			return true, missingBlobIDs, xerrors.Errorf("the blob object (%s) doesn't exist in S3 even though the index file exists: %w", blobID, err)
 		}
-		if blobInfo.Version != types.BlobJSONSchemaVersion {
+		if blobInfo.Version != types.SchemaVersion {
 			missingBlobIDs = append(missingBlobIDs, blobID)
 		}
 	}
@@ -148,7 +148,7 @@ func (c S3Cache) MissingBlobs(artifactID string, blobIDs []string) (bool, []stri
 	if err != nil {
 		return true, missingBlobIDs, xerrors.Errorf("the artifact object (%s) doesn't exist in S3 even though the index file exists: %w", artifactID, err)
 	}
-	if artifactInfo.Version != types.ArtifactJSONSchemaVersion {
+	if artifactInfo.Version != types.SchemaVersion {
 		missingArtifact = true
 	}
 	return missingArtifact, missingBlobIDs, nil

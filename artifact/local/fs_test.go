@@ -32,7 +32,7 @@ func TestArtifact_Inspect(t *testing.T) {
 				Args: cache.ArtifactCachePutBlobArgs{
 					BlobID: "sha256:177353bf2cb4c268df9d00de07591ccb6ec61a157f4e8f702bb7c038a0a0db11",
 					BlobInfo: types.BlobInfo{
-						Version: types.BlobJSONSchemaVersion,
+						Version: types.SchemaVersion,
 						DiffID:  "sha256:177353bf2cb4c268df9d00de07591ccb6ec61a157f4e8f702bb7c038a0a0db11",
 						OS: &types.OS{
 							Family: "alpine",
@@ -67,7 +67,7 @@ func TestArtifact_Inspect(t *testing.T) {
 				Args: cache.ArtifactCachePutBlobArgs{
 					BlobID: "sha256:177353bf2cb4c268df9d00de07591ccb6ec61a157f4e8f702bb7c038a0a0db11",
 					BlobInfo: types.BlobInfo{
-						Version: types.BlobJSONSchemaVersion,
+						Version: types.SchemaVersion,
 						DiffID:  "sha256:177353bf2cb4c268df9d00de07591ccb6ec61a157f4e8f702bb7c038a0a0db11",
 						OS: &types.OS{
 							Family: "alpine",
