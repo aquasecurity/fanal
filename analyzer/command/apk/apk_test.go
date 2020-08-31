@@ -11,6 +11,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/kylelemons/godebug/pretty"
 
 	"github.com/aquasecurity/fanal/types"
@@ -313,9 +315,7 @@ func TestAnalyze(t *testing.T) {
 			sort.Slice(actual, func(i, j int) bool {
 				return actual[i].Name < actual[j].Name
 			})
-			if !reflect.DeepEqual(v.expected, actual) {
-				t.Errorf("[%s]\n%s", testName, pretty.Compare(v.expected, actual))
-			}
+			assert.Equal(t, v.expected, actual)
 		})
 
 	}
