@@ -20,15 +20,10 @@ import (
 
 func TestAnalyze(t *testing.T) {
 	testServer := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
-		f, err := os.Open("testdata/history_v3.9.json")
+		content, err := ioutil.ReadFile("testdata/history_v3.9.json")
 		if err != nil {
 			res.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-		defer f.Close()
-		content, err := ioutil.ReadAll(f)
-		if err != nil {
-			res.WriteHeader(http.StatusInternalServerError)
+			http.Error(res, err.Error(), http.StatusInternalServerError)
 			return
 		}
 		res.WriteHeader(http.StatusOK)
@@ -317,7 +312,6 @@ func TestAnalyze(t *testing.T) {
 			})
 			assert.Equal(t, v.expected, actual)
 		})
-
 	}
 }
 
@@ -377,9 +371,7 @@ func TestParseCommand(t *testing.T) {
 	analyzer := alpineCmdAnalyzer{}
 	for testName, v := range tests {
 		actual := analyzer.parseCommand(v.command, v.envs)
-		if !reflect.DeepEqual(v.expected, actual) {
-			t.Errorf("[%s]\n%s", testName, pretty.Compare(v.expected, actual))
-		}
+		assert.Equal(t, v.expected, actual, "[%s]\n%s", testName, pretty.Compare(v.expected, actual))
 	}
 }
 
