@@ -22,7 +22,6 @@ func TestAnalyze(t *testing.T) {
 	testServer := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
 		content, err := ioutil.ReadFile("testdata/history_v3.9.json")
 		if err != nil {
-			res.WriteHeader(http.StatusInternalServerError)
 			http.Error(res, err.Error(), http.StatusInternalServerError)
 			return
 		}
