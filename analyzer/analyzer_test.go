@@ -13,6 +13,7 @@ import (
 
 	"github.com/aquasecurity/fanal/analyzer"
 	_ "github.com/aquasecurity/fanal/analyzer/library/bundler"
+	_ "github.com/aquasecurity/fanal/analyzer/library/manifest"
 	aos "github.com/aquasecurity/fanal/analyzer/os"
 	_ "github.com/aquasecurity/fanal/analyzer/os/alpine"
 	_ "github.com/aquasecurity/fanal/analyzer/os/ubuntu"
@@ -260,6 +261,26 @@ func TestAnalyzeFile(t *testing.T) {
 						FilePath: "/lib/apk/db/installed",
 						Packages: []types.Package{
 							{Name: "musl", Version: "1.1.24-r2", SrcName: "musl", SrcVersion: "1.1.24-r2"},
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "happy path with manifest.trivy file",
+			args: args{
+				filePath: "/etc/manifest.trivy",
+				opener: func() ([]byte, error) {
+					return ioutil.ReadFile("testdata/etc/manifest.trivy")
+				},
+			},
+			want: &analyzer.AnalysisResult{
+				PackageInfos: []types.PackageInfo{
+					{
+						FilePath: "/etc/manifest.trivy",
+						Packages: []types.Package{
+							{Name: "php", Version: "7.4.11"},
+							{Name: "curl", Version: "7.72.0"},
 						},
 					},
 				},

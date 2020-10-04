@@ -8,6 +8,7 @@ const (
 	Pipenv   = "pipenv"
 	Poetry   = "poetry"
 	Yarn     = "yarn"
+	Manifest = "pkg-manifest"
 )
 
 var (

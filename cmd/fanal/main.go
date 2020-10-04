@@ -15,6 +15,7 @@ import (
 	_ "github.com/aquasecurity/fanal/analyzer/library/bundler"
 	_ "github.com/aquasecurity/fanal/analyzer/library/cargo"
 	_ "github.com/aquasecurity/fanal/analyzer/library/composer"
+	_ "github.com/aquasecurity/fanal/analyzer/library/manifest"
 	_ "github.com/aquasecurity/fanal/analyzer/library/npm"
 	_ "github.com/aquasecurity/fanal/analyzer/library/pipenv"
 	_ "github.com/aquasecurity/fanal/analyzer/library/poetry"
