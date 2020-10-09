@@ -3,9 +3,10 @@ Static Analysis Library for Containers
 
 [![GoDoc](https://godoc.org/github.com/aquasecurity/fanal?status.svg)](https://godoc.org/github.com/aquasecurity/fanal)
 [![Build Status](https://travis-ci.org/aquasecurity/fanal.svg?branch=master)](https://travis-ci.org/aquasecurity/fanal)
-<!-- [![Coverage Status](https://coveralls.io/repos/github/aquasecurity/fanal/badge.svg?branch=master)](https://coveralls.io/github/aquasecurity/fanal?branch=master) -->
 [![Go Report Card](https://goreportcard.com/badge/github.com/aquasecurity/fanal)](https://goreportcard.com/report/github.com/aquasecurity/fanal)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/aquasecurity/fanal/blob/master/LICENSE)
+<!-- [![Coverage Status](https://coveralls.io/repos/github/aquasecurity/fanal/badge.svg?branch=master)](https://coveralls.io/github/aquasecurity/fanal?branch=master) -->
+
 
 ## Feature
 - Detect OS
@@ -129,4 +130,15 @@ func openStream(path string) (*os.File, error) {
 When using `latest` tag, that image will be cached. After `latest` tag is updated, you need to clear cache.
 
 
+## Contributing
 
+
+### Pull Requests
+
+We welcome pull requests!
+
+- Your PR is more likely to be accepted if it focuses on just one change.
+- Please include a comment with the results before and after your change.
+- Your PR is more likely to be accepted if it includes tests. (We have not historically been very strict about tests, but we would like to improve this!).
+- You're welcome to submit a draft PR if you would like early feedback on an idea or an approach.
+- Happy coding!
