@@ -1,13 +1,15 @@
 package nuget
 
 import (
+	"os"
+	"path/filepath"
+
+	"golang.org/x/xerrors"
+
 	"github.com/aquasecurity/fanal/analyzer"
 	"github.com/aquasecurity/fanal/analyzer/library"
 	"github.com/aquasecurity/fanal/utils"
 	"github.com/aquasecurity/go-dep-parser/pkg/nuget"
-	"golang.org/x/xerrors"
-	"os"
-	"path/filepath"
 )
 
 func init() {
