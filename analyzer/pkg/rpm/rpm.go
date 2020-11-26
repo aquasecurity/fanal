@@ -4,7 +4,6 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
 
 	rpmdb "github.com/knqyf263/go-rpmdb/pkg"
@@ -74,7 +73,7 @@ func (a rpmPkgAnalyzer) parsePkgInfo(packageBytes []byte) (pkgs []types.Package,
 		var srcName, srcVer, srcRel string
 		if pkg.SourceRpm != "(none)" && pkg.SourceRpm != "" {
 			// source epoch is not included in SOURCERPM
-			srcName, srcVer, srcRel, _, _ = splitFileName(pkg.SourceRpm)
+			srcName, srcVer, srcRel = splitFileName(pkg.SourceRpm)
 		}
 
 		p := types.Package{
@@ -99,13 +98,12 @@ func (a rpmPkgAnalyzer) parsePkgInfo(packageBytes []byte) (pkgs []types.Package,
 //    foo-1.0-1.i386.rpm returns foo, 1.0, 1, i386
 //    1:bar-9-123a.ia64.rpm returns bar, 9, 123a, 1, ia64
 // https://github.com/rpm-software-management/yum/blob/043e869b08126c1b24e392f809c9f6871344c60d/rpmUtils/miscutils.py#L301
-func splitFileName(filename string) (name, ver, rel string, epoch int, arch string) {
+func splitFileName(filename string) (name, ver, rel string) {
 	if strings.HasSuffix(filename, ".rpm") {
 		filename = filename[:len(filename)-4]
 	}
 
 	archIndex := strings.LastIndex(filename, ".")
-	arch = filename[archIndex+1:]
 
 	relIndex := strings.LastIndex(filename[:archIndex], "-")
 	rel = filename[relIndex+1 : archIndex]
@@ -113,15 +111,8 @@ func splitFileName(filename string) (name, ver, rel string, epoch int, arch stri
 	verIndex := strings.LastIndex(filename[:relIndex], "-")
 	ver = filename[verIndex+1 : relIndex]
 
-	epochIndex := strings.Index(filename, ":")
-	if epochIndex == -1 {
-		epoch = 0
-	} else {
-		epoch, _ = strconv.Atoi(filename[:epochIndex])
-	}
-
-	name = filename[epochIndex+1 : verIndex]
-	return name, ver, rel, epoch, arch
+	name = filename[:verIndex]
+	return name, ver, rel
 }
 
 func (a rpmPkgAnalyzer) Required(filePath string, _ os.FileInfo) bool {
