@@ -50,7 +50,7 @@ func TestRedisCache_PutArtifact(t *testing.T) {
 				artifactID:     "sha256:8652b9f0cb4c0599575e5a003f5906876e10c1ceb2ab9fe1786712dac14a50cf",
 				artifactConfig: types.ArtifactInfo{},
 			},
-			wantErr: "no such host",
+			wantErr: "unable to store artifact information in Redis cache",
 		},
 	}
 
@@ -63,7 +63,7 @@ func TestRedisCache_PutArtifact(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			addr := s.Addr()
 			if !tt.setupRedis {
-				addr = "dummy:6379"
+				addr = "dummy:16379"
 			}
 
 			c := cache.NewRedisCache(&redis.Options{
@@ -136,7 +136,7 @@ func TestRedisCache_PutBlob(t *testing.T) {
 				blobID:     "sha256:03901b4a2ea88eeaad62dbe59b072b28b6efa00491962b8741081c5df50c65e0",
 				blobConfig: types.BlobInfo{},
 			},
-			wantErr: "no such host",
+			wantErr: "unable to store blob information in Redis cache",
 		},
 		{
 			name:       "malformed blobID",
@@ -158,7 +158,7 @@ func TestRedisCache_PutBlob(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			addr := s.Addr()
 			if !tt.setupRedis {
-				addr = "dummy:6379"
+				addr = "dummy:16379"
 			}
 
 			c := cache.NewRedisCache(&redis.Options{
@@ -215,7 +215,7 @@ func TestRedisCache_GetArtifact(t *testing.T) {
 			name:       "no such host",
 			setupRedis: false,
 			artifactID: "sha256:961769676411f082461f9ef46626dd7a2d1e2b2a38e6a44364bcbecf51e66dd4",
-			wantErr:    "no such host",
+			wantErr:    "failed to get artifact from the Redis cache",
 		},
 		{
 			name:       "nonexistent key",
@@ -239,7 +239,7 @@ func TestRedisCache_GetArtifact(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			addr := s.Addr()
 			if !tt.setupRedis {
-				addr = "dummy:6379"
+				addr = "dummy:16379"
 			}
 
 			c := cache.NewRedisCache(&redis.Options{
@@ -307,7 +307,7 @@ func TestRedisCache_GetBlob(t *testing.T) {
 			name:       "no such host",
 			setupRedis: false,
 			blobID:     "sha256:961769676411f082461f9ef46626dd7a2d1e2b2a38e6a44364bcbecf51e66dd4",
-			wantErr:    "no such host",
+			wantErr:    "failed to get blob from the Redis cache",
 		},
 		{
 			name:       "nonexistent key",
@@ -332,7 +332,7 @@ func TestRedisCache_GetBlob(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			addr := s.Addr()
 			if !tt.setupRedis {
-				addr = "dummy:6379"
+				addr = "dummy:16379"
 			}
 
 			c := cache.NewRedisCache(&redis.Options{

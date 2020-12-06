@@ -57,7 +57,7 @@ func (c RedisCache) GetArtifact(artifactID string) (types.ArtifactInfo, error) {
 	if err == redis.Nil {
 		return types.ArtifactInfo{}, xerrors.Errorf("artifact (%s) is missing in Redis cache", artifactID)
 	} else if err != nil {
-		return types.ArtifactInfo{}, xerrors.Errorf("failed to get blob from the Redis cache: %w", err)
+		return types.ArtifactInfo{}, xerrors.Errorf("failed to get artifact from the Redis cache: %w", err)
 	}
 
 	var info types.ArtifactInfo
