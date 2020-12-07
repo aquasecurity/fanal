@@ -2,6 +2,7 @@ package cache_test
 
 import (
 	"encoding/json"
+	"fmt"
 	"testing"
 	"time"
 
@@ -40,7 +41,7 @@ func TestRedisCache_PutArtifact(t *testing.T) {
 					OS:            "linux",
 				},
 			},
-			wantKey:   "artifact::sha256:8652b9f0cb4c0599575e5a003f5906876e10c1ceb2ab9fe1786712dac14a50cf",
+			wantKey:   "fanal::artifact::sha256:8652b9f0cb4c0599575e5a003f5906876e10c1ceb2ab9fe1786712dac14a50cf",
 			wantValue: `{"SchemaVersion":1,"Architecture":"amd64","Created":"2020-11-14T00:20:04Z","DockerVersion":"19.03.12","OS":"linux"}`,
 		},
 		{
@@ -127,7 +128,7 @@ func TestRedisCache_PutBlob(t *testing.T) {
 					},
 				},
 			},
-			wantKey: "blob::sha256:03901b4a2ea88eeaad62dbe59b072b28b6efa00491962b8741081c5df50c65e0",
+			wantKey: "fanal::blob::sha256:03901b4a2ea88eeaad62dbe59b072b28b6efa00491962b8741081c5df50c65e0",
 		},
 		{
 			name:       "no such host",
@@ -232,8 +233,8 @@ func TestRedisCache_GetArtifact(t *testing.T) {
 
 	// Set key/value pairs
 	v := `{"SchemaVersion":1,"Architecture":"amd64","Created":"2020-11-14T00:20:04Z","DockerVersion":"19.03.12","OS":"linux"}`
-	s.Set("artifact::sha256:8652b9f0cb4c0599575e5a003f5906876e10c1ceb2ab9fe1786712dac14a50cf", v)
-	s.Set("artifact::sha256:961769676411f082461f9ef46626dd7a2d1e2b2a38e6a44364bcbecf51e66dd4", "foobar")
+	s.Set("fanal::artifact::sha256:8652b9f0cb4c0599575e5a003f5906876e10c1ceb2ab9fe1786712dac14a50cf", v)
+	s.Set("fanal::artifact::sha256:961769676411f082461f9ef46626dd7a2d1e2b2a38e6a44364bcbecf51e66dd4", "foobar")
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -325,8 +326,8 @@ func TestRedisCache_GetBlob(t *testing.T) {
 	// Set key/value pairs
 	b, err := json.Marshal(blobInfo)
 	require.NoError(t, err)
-	s.Set("blob::sha256:03901b4a2ea88eeaad62dbe59b072b28b6efa00491962b8741081c5df50c65e0", string(b))
-	s.Set("blob::sha256:961769676411f082461f9ef46626dd7a2d1e2b2a38e6a44364bcbecf51e66dd4", "foobar")
+	s.Set("fanal::blob::sha256:03901b4a2ea88eeaad62dbe59b072b28b6efa00491962b8741081c5df50c65e0", string(b))
+	s.Set("fanal::blob::sha256:961769676411f082461f9ef46626dd7a2d1e2b2a38e6a44364bcbecf51e66dd4", "foobar")
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -421,10 +422,10 @@ func TestRedisCache_MissingBlobs(t *testing.T) {
 	require.NoError(t, err)
 	defer s.Close()
 
-	s.Set("artifact::sha256:8652b9f0cb4c0599575e5a003f5906876e10c1ceb2ab9fe1786712dac14a50cf", `{"SchemaVersion": 1}`)
-	s.Set("artifact::sha256:be4e4bea2c2e15b403bb321562e78ea84b501fb41497472e91ecb41504e8a27c", `{"SchemaVersion": 2}`)
-	s.Set("blob::sha256:03901b4a2ea88eeaad62dbe59b072b28b6efa00491962b8741081c5df50c65e0", `{"SchemaVersion": 1}`)
-	s.Set("blob::sha256:174f5685490326fc0a1c0f5570b8663732189b327007e47ff13d2ca59673db02", `{"SchemaVersion": 2}`)
+	s.Set("fanal::artifact::sha256:8652b9f0cb4c0599575e5a003f5906876e10c1ceb2ab9fe1786712dac14a50cf", `{"SchemaVersion": 1}`)
+	s.Set("fanal::artifact::sha256:be4e4bea2c2e15b403bb321562e78ea84b501fb41497472e91ecb41504e8a27c", `{"SchemaVersion": 2}`)
+	s.Set("fanal::blob::sha256:03901b4a2ea88eeaad62dbe59b072b28b6efa00491962b8741081c5df50c65e0", `{"SchemaVersion": 1}`)
+	s.Set("fanal::blob::sha256:174f5685490326fc0a1c0f5570b8663732189b327007e47ff13d2ca59673db02", `{"SchemaVersion": 2}`)
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -472,6 +473,9 @@ func TestRedisCache_Clear(t *testing.T) {
 	require.NoError(t, err)
 	defer s.Close()
 
+	for i := 0; i < 200; i++ {
+		s.Set(fmt.Sprintf("fanal::key%d", i), "value")
+	}
 	s.Set("foo", "bar")
 
 	t.Run("clear", func(t *testing.T) {
@@ -479,6 +483,9 @@ func TestRedisCache_Clear(t *testing.T) {
 			Addr: s.Addr(),
 		})
 		require.NoError(t, c.Clear())
-		assert.False(t, s.Exists("foo"))
+		for i := 0; i < 200; i++ {
+			assert.False(t, s.Exists(fmt.Sprintf("fanal::key%d", i)))
+		}
+		assert.True(t, s.Exists("foo"))
 	})
 }

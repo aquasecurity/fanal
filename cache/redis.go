@@ -14,6 +14,10 @@ import (
 
 var _ Cache = &RedisCache{}
 
+const (
+	redisPrefix = "fanal"
+)
+
 type RedisCache struct {
 	client *redis.Client
 }
@@ -25,7 +29,7 @@ func NewRedisCache(options *redis.Options) RedisCache {
 }
 
 func (c RedisCache) PutArtifact(artifactID string, artifactConfig types.ArtifactInfo) error {
-	key := fmt.Sprintf("%s::%s", artifactBucket, artifactID)
+	key := fmt.Sprintf("%s::%s::%s", redisPrefix, artifactBucket, artifactID)
 	b, err := json.Marshal(artifactConfig)
 	if err != nil {
 		return xerrors.Errorf("failed to marshal artifact JSON: %w", err)
@@ -44,7 +48,7 @@ func (c RedisCache) PutBlob(blobID string, blobInfo types.BlobInfo) error {
 	if err != nil {
 		return xerrors.Errorf("failed to marshal blob JSON: %w", err)
 	}
-	key := fmt.Sprintf("%s::%s", blobBucket, blobID)
+	key := fmt.Sprintf("%s::%s::%s", redisPrefix, blobBucket, blobID)
 	if err := c.client.Set(context.TODO(), key, string(b), 0).Err(); err != nil {
 		return xerrors.Errorf("unable to store blob information in Redis cache (%s): %w", blobID, err)
 	}
@@ -52,7 +56,7 @@ func (c RedisCache) PutBlob(blobID string, blobInfo types.BlobInfo) error {
 }
 
 func (c RedisCache) GetArtifact(artifactID string) (types.ArtifactInfo, error) {
-	key := fmt.Sprintf("%s::%s", artifactBucket, artifactID)
+	key := fmt.Sprintf("%s::%s::%s", redisPrefix, artifactBucket, artifactID)
 	val, err := c.client.Get(context.TODO(), key).Bytes()
 	if err == redis.Nil {
 		return types.ArtifactInfo{}, xerrors.Errorf("artifact (%s) is missing in Redis cache", artifactID)
@@ -69,7 +73,7 @@ func (c RedisCache) GetArtifact(artifactID string) (types.ArtifactInfo, error) {
 }
 
 func (c RedisCache) GetBlob(blobID string) (types.BlobInfo, error) {
-	key := fmt.Sprintf("%s::%s", blobBucket, blobID)
+	key := fmt.Sprintf("%s::%s::%s", redisPrefix, blobBucket, blobID)
 	val, err := c.client.Get(context.TODO(), key).Bytes()
 	if err == redis.Nil {
 		return types.BlobInfo{}, xerrors.Errorf("blob (%s) is missing in Redis cache", blobID)
@@ -115,5 +119,22 @@ func (c RedisCache) Close() error {
 }
 
 func (c RedisCache) Clear() error {
-	return c.client.FlushAll(context.TODO()).Err()
+	ctx := context.Background()
+
+	var cursor uint64
+	for {
+		var keys []string
+		var err error
+		keys, cursor, err = c.client.Scan(ctx, cursor, redisPrefix+"::*", 100).Result()
+		if err != nil {
+			return xerrors.Errorf("failed to perform prefix scanning: %w", err)
+		}
+		if err = c.client.Unlink(ctx, keys...).Err(); err != nil {
+			return xerrors.Errorf("failed to unlink redis keys: %w", err)
+		}
+		if cursor == 0 {
+			break
+		}
+	}
+	return nil
 }
