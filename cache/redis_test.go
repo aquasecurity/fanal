@@ -210,7 +210,7 @@ func TestRedisCache_GetArtifact(t *testing.T) {
 			name:       "malformed JSON",
 			setupRedis: true,
 			artifactID: "sha256:961769676411f082461f9ef46626dd7a2d1e2b2a38e6a44364bcbecf51e66dd4",
-			wantErr:    "JSON unmarshal error",
+			wantErr:    "failed to unmarshal artifact",
 		},
 		{
 			name:       "no such host",
@@ -302,7 +302,7 @@ func TestRedisCache_GetBlob(t *testing.T) {
 			name:       "malformed JSON",
 			setupRedis: true,
 			blobID:     "sha256:961769676411f082461f9ef46626dd7a2d1e2b2a38e6a44364bcbecf51e66dd4",
-			wantErr:    "JSON unmarshal error",
+			wantErr:    "failed to unmarshal blob",
 		},
 		{
 			name:       "no such host",
