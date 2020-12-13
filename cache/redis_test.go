@@ -463,7 +463,10 @@ func TestRedisCache_Close(t *testing.T) {
 		c := cache.NewRedisCache(&redis.Options{
 			Addr: s.Addr(),
 		})
-		require.NoError(t, c.Close())
+		closeErr := c.Close()
+		require.NoError(t, closeErr)
+		time.Sleep(3 * time.Second) // give it some time
+		assert.Equal(t, 0, s.CurrentConnectionCount(), "The client is disconnected")
 	})
 }
 
