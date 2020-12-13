@@ -99,6 +99,7 @@ func globalOption(ctx context.Context, f func(context.Context, *cli.Context, cac
 		if err != nil {
 			return err
 		}
+		defer cacheClient.Close()
 
 		clearCache := c.Bool("clear")
 		if clearCache {
