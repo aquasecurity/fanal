@@ -83,7 +83,7 @@ func (c RedisCache) GetBlob(blobID string) (types.BlobInfo, error) {
 
 	var blobInfo types.BlobInfo
 	if err = json.Unmarshal(val, &blobInfo); err != nil {
-		return types.BlobInfo{}, xerrors.Errorf("JSON unmarshal error: %w", err)
+		return types.BlobInfo{}, xerrors.Errorf("failed to unmarshal blog(%s) from Redis value: %w", blobID, err)
 	}
 	return blobInfo, nil
 }
