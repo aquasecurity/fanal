@@ -67,7 +67,7 @@ func (c RedisCache) GetArtifact(artifactID string) (types.ArtifactInfo, error) {
 	var info types.ArtifactInfo
 	err = json.Unmarshal(val, &info)
 	if err != nil {
-		return types.ArtifactInfo{}, xerrors.Errorf("JSON unmarshal error: %w", err)
+		return types.ArtifactInfo{}, xerrors.Errorf("failed to unmarshal artifact (%s) from Redis value: %w", artifactID, err)
 	}
 	return info, nil
 }
