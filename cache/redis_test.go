@@ -25,7 +25,6 @@ func TestRedisCache_PutArtifact(t *testing.T) {
 		setupRedis bool
 		args       args
 		wantKey    string
-		wantValue  string
 		wantErr    string
 	}{
 		{
@@ -41,8 +40,7 @@ func TestRedisCache_PutArtifact(t *testing.T) {
 					OS:            "linux",
 				},
 			},
-			wantKey:   "fanal::artifact::sha256:8652b9f0cb4c0599575e5a003f5906876e10c1ceb2ab9fe1786712dac14a50cf",
-			wantValue: `{"SchemaVersion":1,"Architecture":"amd64","Created":"2020-11-14T00:20:04Z","DockerVersion":"19.03.12","OS":"linux"}`,
+			wantKey: "fanal::artifact::sha256:8652b9f0cb4c0599575e5a003f5906876e10c1ceb2ab9fe1786712dac14a50cf",
 		},
 		{
 			name:       "no such host",
@@ -83,7 +81,10 @@ func TestRedisCache_PutArtifact(t *testing.T) {
 			got, err := s.Get(tt.wantKey)
 			require.NoError(t, err)
 
-			assert.Equal(t, tt.wantValue, got)
+			want, err := json.Marshal(tt.args.artifactConfig)
+			require.NoError(t, err)
+
+			assert.JSONEq(t, string(want), got)
 		})
 	}
 }
@@ -187,6 +188,14 @@ func TestRedisCache_PutBlob(t *testing.T) {
 }
 
 func TestRedisCache_GetArtifact(t *testing.T) {
+	info := types.ArtifactInfo{
+		SchemaVersion: 1,
+		Architecture:  "amd64",
+		Created:       time.Date(2020, 11, 14, 0, 20, 4, 0, time.UTC),
+		DockerVersion: "19.03.12",
+		OS:            "linux",
+	}
+
 	tests := []struct {
 		name       string
 		setupRedis bool
@@ -198,13 +207,7 @@ func TestRedisCache_GetArtifact(t *testing.T) {
 			name:       "happy path",
 			setupRedis: true,
 			artifactID: "sha256:8652b9f0cb4c0599575e5a003f5906876e10c1ceb2ab9fe1786712dac14a50cf",
-			want: types.ArtifactInfo{
-				SchemaVersion: 1,
-				Architecture:  "amd64",
-				Created:       time.Date(2020, 11, 14, 0, 20, 4, 0, time.UTC),
-				DockerVersion: "19.03.12",
-				OS:            "linux",
-			},
+			want:       info,
 		},
 		{
 			name:       "malformed JSON",
@@ -232,8 +235,10 @@ func TestRedisCache_GetArtifact(t *testing.T) {
 	defer s.Close()
 
 	// Set key/value pairs
-	v := `{"SchemaVersion":1,"Architecture":"amd64","Created":"2020-11-14T00:20:04Z","DockerVersion":"19.03.12","OS":"linux"}`
-	s.Set("fanal::artifact::sha256:8652b9f0cb4c0599575e5a003f5906876e10c1ceb2ab9fe1786712dac14a50cf", v)
+	b, err := json.Marshal(info)
+	require.NoError(t, err)
+
+	s.Set("fanal::artifact::sha256:8652b9f0cb4c0599575e5a003f5906876e10c1ceb2ab9fe1786712dac14a50cf", string(b))
 	s.Set("fanal::artifact::sha256:961769676411f082461f9ef46626dd7a2d1e2b2a38e6a44364bcbecf51e66dd4", "foobar")
 
 	for _, tt := range tests {
