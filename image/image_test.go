@@ -49,7 +49,6 @@ func TestNewDockerImage(t *testing.T) {
 		tr.Close()
 	}()
 	serverAddr := tr.Listener.Addr().String()
-	fmt.Println(serverAddr)
 
 	type args struct {
 		imageName string
