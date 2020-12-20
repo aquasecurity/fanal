@@ -28,9 +28,15 @@ import (
 	"github.com/aquasecurity/fanal/utils"
 )
 
+type extender interface {
+	RepoTags() []string
+	RepoDigests() []string
+}
+
 type Image struct {
 	name   string
 	client v1.Image
+	extender
 }
 
 func (img Image) Name() string {
@@ -67,18 +73,19 @@ func (img Image) LayerByDiffID(h v1.Hash) (v1.Layer, error) {
 }
 
 func NewDockerImage(ctx context.Context, imageName string, option types.DockerOption) (Image, func(), error) {
-	img, cleanup, err := newDockerImage(ctx, imageName, option)
+	img, ext, cleanup, err := newDockerImage(ctx, imageName, option)
 	if err != nil {
 		return Image{}, func() {}, err
 	}
 	return Image{
-		name:   imageName,
-		client: img,
+		name:     imageName,
+		client:   img,
+		extender: ext,
 	}, cleanup, nil
 }
 
-func newDockerImage(ctx context.Context, imageName string, option types.DockerOption) (v1.Image, func(), error) {
-	var result error
+func newDockerImage(ctx context.Context, imageName string, option types.DockerOption) (v1.Image, extender, func(), error) {
+	var errs error
 
 	var nameOpts []name.Option
 	if option.NonSSL {
@@ -86,16 +93,16 @@ func newDockerImage(ctx context.Context, imageName string, option types.DockerOp
 	}
 	ref, err := name.ParseReference(imageName, nameOpts...)
 	if err != nil {
-		return nil, func() {}, xerrors.Errorf("failed to parse the image name: %w", err)
+		return nil, nil, func() {}, xerrors.Errorf("failed to parse the image name: %w", err)
 	}
 
 	// Try accessing Docker Daemon
-	img, cleanup, err := daemon.Image(ref)
+	img, ext, cleanup, err := tryDaemon(ref)
 	if err == nil {
 		// Return v1.Image if the image is found in Docker Engine
-		return img, cleanup, nil
+		return img, ext, cleanup, nil
 	}
-	result = multierror.Append(result, err)
+	errs = multierror.Append(errs, err)
 
 	// Try accessing Docker Registry
 	var remoteOpts []remote.Option
