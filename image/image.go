@@ -105,34 +105,14 @@ func newDockerImage(ctx context.Context, imageName string, option types.DockerOp
 	errs = multierror.Append(errs, err)
 
 	// Try accessing Docker Registry
-	var remoteOpts []remote.Option
-	if option.InsecureSkipTLSVerify {
-		t := &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-		}
-		remoteOpts = append(remoteOpts, remote.WithTransport(t))
-	}
-
-	domain := ref.Context().RegistryStr()
-	auth := token.GetToken(ctx, domain, option)
-
-	if auth.Username != "" && auth.Password != "" {
-		remoteOpts = append(remoteOpts, remote.WithAuth(&auth))
-	} else if option.RegistryToken != "" {
-		bearer := authn.Bearer{Token: option.RegistryToken}
-		remoteOpts = append(remoteOpts, remote.WithAuth(&bearer))
-	} else {
-		remoteOpts = append(remoteOpts, remote.WithAuthFromKeychain(authn.DefaultKeychain))
-	}
-
-	img, err = remote.Image(ref, remoteOpts...)
+	img, ext, err = tryRemote(ctx, ref, option)
 	if err == nil {
 		// Return v1.Image if the image is found in Docker Registry
-		return img, func() {}, nil
+		return img, ext, func() {}, nil
 	}
-	result = multierror.Append(result, err)
 
-	return nil, func() {}, result
+	errs = multierror.Append(errs, err)
+	return nil, nil, func() {}, errs
 }
 
 func NewArchiveImage(fileName string) (Image, error) {
