@@ -1,31 +1,14 @@
 package image
 
 import (
-	"bufio"
-	"compress/gzip"
 	"context"
-	"crypto/tls"
-	"io"
-	"io/ioutil"
-	"net/http"
-	"os"
-	"strings"
 
-	"github.com/aquasecurity/fanal/image/token"
-	ispec "github.com/opencontainers/image-spec/specs-go/v1"
-
-	"github.com/google/go-containerregistry/pkg/authn"
 	"github.com/google/go-containerregistry/pkg/name"
 	v1 "github.com/google/go-containerregistry/pkg/v1"
-	"github.com/google/go-containerregistry/pkg/v1/layout"
-	"github.com/google/go-containerregistry/pkg/v1/remote"
-	"github.com/google/go-containerregistry/pkg/v1/tarball"
 	multierror "github.com/hashicorp/go-multierror"
 	"golang.org/x/xerrors"
 
-	"github.com/aquasecurity/fanal/image/daemon"
 	"github.com/aquasecurity/fanal/types"
-	"github.com/aquasecurity/fanal/utils"
 )
 
 type extender interface {
@@ -121,8 +104,9 @@ func NewArchiveImage(fileName string) (Image, error) {
 		return Image{}, err
 	}
 	return Image{
-		name:   fileName,
-		client: img,
+		name:     fileName,
+		client:   img,
+		extender: archiveExtender{},
 	}, nil
 }
 
@@ -145,7 +129,14 @@ func newArchiveImage(fileName string) (v1.Image, error) {
 	return nil, result
 }
 
+type archiveExtender struct{}
 
+// RepoTags returns empty as an archive doesn't support RepoTags
+func (archiveExtender) RepoTags() []string {
+	return nil
 }
 
+// RepoDigests returns empty as an archive doesn't support RepoDigests
+func (archiveExtender) RepoDigests() []string {
+	return nil
 }
