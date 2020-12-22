@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/google/go-containerregistry/pkg/authn"
 	"github.com/google/go-containerregistry/pkg/name"
@@ -48,25 +49,51 @@ func tryRemote(ctx context.Context, ref name.Reference, option types.DockerOptio
 
 	// Return v1.Image if the image is found in Docker Registry
 	return img, remoteExtender{
-		ref:        ref,
+		ref:        implicitReference{ref: ref},
 		descriptor: desc,
 	}, nil
 }
 
 type remoteExtender struct {
-	ref        name.Reference
+	ref        implicitReference
 	descriptor *remote.Descriptor
 }
 
 func (e remoteExtender) RepoTags() []string {
-	if t, ok := e.ref.(name.Tag); ok {
-		return []string{t.String()}
+	tag := e.ref.TagName()
+	if tag == "" {
+		return []string{}
 	}
-	return []string{}
+	return []string{fmt.Sprintf("%s:%s", e.ref.RepositoryName(), tag)}
 }
 
 func (e remoteExtender) RepoDigests() []string {
-	repoDigest := fmt.Sprintf("%s@%s", e.ref.Context().Name(),
-		e.descriptor.Digest.String())
+	repoDigest := fmt.Sprintf("%s@%s", e.ref.RepositoryName(), e.descriptor.Digest.String())
 	return []string{repoDigest}
+}
+
+type implicitReference struct {
+	ref name.Reference
+}
+
+func (r implicitReference) TagName() string {
+	if t, ok := r.ref.(name.Tag); ok {
+		return t.TagStr()
+	}
+	return ""
+}
+
+func (r implicitReference) RepositoryName() string {
+	ctx := r.ref.Context()
+	reg := ctx.RegistryStr()
+	repo := ctx.RepositoryStr()
+
+	// Default registry
+	if reg != name.DefaultRegistry {
+		return fmt.Sprintf("%s/%s", reg, repo)
+	}
+
+	// Trim default namespace
+	// See https://docs.docker.com/docker-hub/official_repos
+	return strings.TrimPrefix(repo, "library/")
 }
