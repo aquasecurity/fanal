@@ -7,8 +7,8 @@ import (
 	v1 "github.com/google/go-containerregistry/pkg/v1"
 )
 
-func tryDaemon(ref name.Reference) (v1.Image, extender, func(), error) {
-	img, inspect, cleanup, err := daemon.Image(ref)
+func tryDockerDaemon(ref name.Reference) (v1.Image, extender, func(), error) {
+	img, inspect, cleanup, err := daemon.DockerImage(ref)
 	if err != nil {
 		return nil, nil, nil, err
 	}

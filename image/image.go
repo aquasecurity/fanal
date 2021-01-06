@@ -80,7 +80,7 @@ func newDockerImage(ctx context.Context, imageName string, option types.DockerOp
 	}
 
 	// Try accessing Docker Daemon
-	img, ext, cleanup, err := tryDaemon(ref)
+	img, ext, cleanup, err := tryDockerDaemon(ref)
 	if err == nil {
 		// Return v1.Image if the image is found in Docker Engine
 		return img, ext, cleanup, nil
