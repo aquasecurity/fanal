@@ -16,6 +16,15 @@ func tryDockerDaemon(ref name.Reference) (v1.Image, extender, func(), error) {
 
 }
 
+func tryPodmanDaemon(ref string) (v1.Image, extender, func(), error) {
+	img, inspect, cleanup, err := daemon.PodmanImage(ref)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+	return img, daemonExtender{inspect: inspect}, cleanup, nil
+
+}
+
 type daemonExtender struct {
 	inspect *types.ImageInspect
 }

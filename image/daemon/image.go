@@ -76,6 +76,13 @@ func (img *image) ConfigName() (v1.Hash, error) {
 }
 
 func (img *image) ConfigFile() (*v1.ConfigFile, error) {
+	if len(img.inspect.RootFS.Layers) == 0 {
+		// Podman doesn't return RootFS...
+		if err := img.populateImage(); err != nil {
+			return nil, xerrors.Errorf("unable to populate: %w", err)
+		}
+		return img.Image.ConfigFile()
+	}
 	var diffIDs []v1.Hash
 	for _, l := range img.inspect.RootFS.Layers {
 		h, err := v1.NewHash(l)

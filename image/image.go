@@ -87,6 +87,14 @@ func newDockerImage(ctx context.Context, imageName string, option types.DockerOp
 	}
 	errs = multierror.Append(errs, err)
 
+	// Try accessing Podman
+	img, ext, cleanup, err = tryPodmanDaemon(imageName)
+	if err == nil {
+		// Return v1.Image if the image is found in Podman
+		return img, ext, cleanup, nil
+	}
+	errs = multierror.Append(errs, err)
+
 	// Try accessing Docker Registry
 	img, ext, err = tryRemote(ctx, ref, option)
 	if err == nil {
