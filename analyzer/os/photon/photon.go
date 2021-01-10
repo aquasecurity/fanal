@@ -53,7 +53,3 @@ func (a photonOSAnalyzer) Analyze(_ string, content []byte) (*analyzer.AnalysisR
 func (a photonOSAnalyzer) Required(filePath string, _ os.FileInfo) bool {
 	return utils.StringInSlice(filePath, requiredFiles)
 }
-
-func (a photonOSAnalyzer) Name() string {
-	return aos.Photon
-}

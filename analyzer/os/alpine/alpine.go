@@ -35,7 +35,3 @@ func (a alpineOSAnalyzer) Analyze(_ string, content []byte) (*analyzer.AnalysisR
 func (a alpineOSAnalyzer) Required(filePath string, _ os.FileInfo) bool {
 	return utils.StringInSlice(filePath, requiredFiles)
 }
-
-func (a alpineOSAnalyzer) Name() string {
-	return aos.Alpine
-}

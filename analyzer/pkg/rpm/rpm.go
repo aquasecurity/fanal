@@ -125,7 +125,3 @@ func splitFileName(filename string) (name, ver, rel string) {
 func (a rpmPkgAnalyzer) Required(filePath string, _ os.FileInfo) bool {
 	return utils.StringInSlice(filePath, requiredFiles)
 }
-
-func (a rpmPkgAnalyzer) Name() string {
-	return "rpm"
-}

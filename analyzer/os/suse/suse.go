@@ -60,7 +60,3 @@ func (a suseOSAnalyzer) Analyze(_ string, content []byte) (*analyzer.AnalysisRes
 func (a suseOSAnalyzer) Required(filePath string, _ os.FileInfo) bool {
 	return utils.StringInSlice(filePath, requiredFiles)
 }
-
-func (a suseOSAnalyzer) Name() string {
-	return "suse"
-}

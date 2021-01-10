@@ -33,7 +33,3 @@ func (a pipenvLibraryAnalyzer) Required(filePath string, _ os.FileInfo) bool {
 	fileName := filepath.Base(filePath)
 	return utils.StringInSlice(fileName, requiredFiles)
 }
-
-func (a pipenvLibraryAnalyzer) Name() string {
-	return library.Pipenv
-}

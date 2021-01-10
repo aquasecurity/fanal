@@ -25,7 +25,6 @@ var (
 )
 
 type analyzer interface {
-	Name() string
 	Analyze(filePath string, content []byte) (*AnalysisResult, error)
 	Required(filePath string, info os.FileInfo) bool
 }

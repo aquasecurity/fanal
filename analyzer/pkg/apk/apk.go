@@ -9,7 +9,6 @@ import (
 	apkVersion "github.com/knqyf263/go-apk-version"
 
 	"github.com/aquasecurity/fanal/analyzer"
-	fos "github.com/aquasecurity/fanal/analyzer/os"
 	"github.com/aquasecurity/fanal/types"
 	"github.com/aquasecurity/fanal/utils"
 )
@@ -88,8 +87,4 @@ func (a alpinePkgAnalyzer) uniquePkgs(pkgs []types.Package) (uniqPkgs []types.Pa
 
 func (a alpinePkgAnalyzer) Required(filePath string, _ os.FileInfo) bool {
 	return utils.StringInSlice(filePath, requiredFiles)
-}
-
-func (a alpinePkgAnalyzer) Name() string {
-	return fos.Alpine
 }

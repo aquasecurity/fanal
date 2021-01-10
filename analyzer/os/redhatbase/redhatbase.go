@@ -67,7 +67,3 @@ func (a redhatOSAnalyzer) Required(filePath string, _ os.FileInfo) bool {
 func (a redhatOSAnalyzer) requiredFiles() []string {
 	return []string{"etc/redhat-release"}
 }
-
-func (a redhatOSAnalyzer) Name() string {
-	return aos.RedHat
-}

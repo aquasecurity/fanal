@@ -49,7 +49,3 @@ func (a fedoraOSAnalyzer) requiredFiles() []string {
 		"usr/lib/fedora-release",
 	}
 }
-
-func (a fedoraOSAnalyzer) Name() string {
-	return aos.Fedora
-}
