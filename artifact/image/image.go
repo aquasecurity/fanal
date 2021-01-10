@@ -122,6 +122,9 @@ func (a Artifact) inspectLayer(diffID string) (types.BlobInfo, error) {
 		return types.BlobInfo{}, err
 	}
 
+	// For Red Hat
+	result.FillContentSets()
+
 	layerInfo := types.BlobInfo{
 		Digest:        layerDigest,
 		DiffID:        diffID,

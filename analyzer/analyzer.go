@@ -6,7 +6,6 @@ import (
 	"sync"
 
 	aos "github.com/aquasecurity/fanal/analyzer/os"
-
 	godeptypes "github.com/aquasecurity/go-dep-parser/pkg/types"
 	"golang.org/x/xerrors"
 
@@ -29,6 +28,12 @@ type AnalyzeReturn struct {
 	OS        types.OS
 	Packages  []types.Package
 	Libraries []godeptypes.Library
+	BuildInfo *BuildInfo // only for Red Hat
+}
+
+// BuildInfo represents information under /root/buildinfo in RHEL
+type BuildInfo struct {
+	ContentSets []string
 }
 
 func (r AnalyzeReturn) ConvertToResult(analyzerType, filePath string) *AnalysisResult {
@@ -56,6 +61,10 @@ func (r AnalyzeReturn) ConvertToResult(analyzerType, filePath string) *AnalysisR
 			FilePath:  filePath,
 			Libraries: libs,
 		}}
+	}
+
+	if r.BuildInfo != nil {
+		result.buildInfo = r.BuildInfo
 	}
 	return result
 }
@@ -86,10 +95,13 @@ type AnalysisResult struct {
 	OS           *types.OS
 	PackageInfos []types.PackageInfo
 	Applications []types.Application
+
+	// for Red Hat
+	buildInfo *BuildInfo
 }
 
 func (r *AnalysisResult) isEmpty() bool {
-	return r.OS == nil && len(r.PackageInfos) == 0 && len(r.Applications) == 0
+	return r.OS == nil && len(r.PackageInfos) == 0 && len(r.Applications) == 0 && r.buildInfo == nil
 }
 
 func (r *AnalysisResult) Merge(new *AnalysisResult) {
@@ -117,6 +129,30 @@ func (r *AnalysisResult) Merge(new *AnalysisResult) {
 	if len(new.Applications) > 0 {
 		r.Applications = append(r.Applications, new.Applications...)
 	}
+
+	if new.buildInfo != nil {
+		r.buildInfo = new.buildInfo
+	}
+}
+
+// FillContentSets adds content sets to each package in RHEL
+func (r *AnalysisResult) FillContentSets() {
+	if r.buildInfo == nil {
+		return
+	}
+
+	if len(r.buildInfo.ContentSets) == 0 {
+
+	}
+
+	for _, pkgInfo := range r.PackageInfos {
+		for i := range pkgInfo.Packages {
+			pkgInfo.Packages[i].ContentSets = r.buildInfo.ContentSets
+		}
+	}
+
+	// no longer necessary
+	r.buildInfo = nil
 }
 
 func AnalyzeFile(filePath string, info os.FileInfo, opener Opener) (*AnalysisResult, error) {

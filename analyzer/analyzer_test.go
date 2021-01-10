@@ -7,6 +7,11 @@ import (
 	"sync"
 	"testing"
 
+	_ "github.com/aquasecurity/fanal/analyzer/library/bundler"
+	_ "github.com/aquasecurity/fanal/analyzer/os/alpine"
+	_ "github.com/aquasecurity/fanal/analyzer/os/ubuntu"
+	_ "github.com/aquasecurity/fanal/analyzer/pkg/apk"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/xerrors"
@@ -430,6 +435,62 @@ func TestCheckPackage(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			got := analyzer.CheckPackage(tt.pkg)
 			assert.Equal(t, tt.want, got)
+		})
+	}
+}
+
+func TestAnalysisResult_FillContentSets(t *testing.T) {
+	tests := []struct {
+		name  string
+		input analyzer.AnalyzeReturn
+		want  *analyzer.AnalysisResult
+	}{
+		{
+			name: "Happy path",
+			input: analyzer.AnalyzeReturn{
+				Packages: []types.Package{
+					{Name: "foo", Version: "1.2.3"},
+					{Name: "bar", Version: "4.5.6"},
+				},
+				BuildInfo: &analyzer.BuildInfo{
+					ContentSets: []string{
+						"rhel-8-for-x86_64-baseos-rpms",
+						"rhel-8-for-x86_64-appstream-rpms",
+					},
+				},
+			},
+			want: &analyzer.AnalysisResult{
+				PackageInfos: []types.PackageInfo{
+					{
+						FilePath: "var/lib/rpm/Packages",
+						Packages: []types.Package{
+							{
+								Name:    "foo",
+								Version: "1.2.3",
+								ContentSets: []string{
+									"rhel-8-for-x86_64-baseos-rpms",
+									"rhel-8-for-x86_64-appstream-rpms",
+								},
+							},
+							{
+								Name:    "bar",
+								Version: "4.5.6",
+								ContentSets: []string{
+									"rhel-8-for-x86_64-baseos-rpms",
+									"rhel-8-for-x86_64-appstream-rpms",
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := tt.input.ConvertToResult("test", "var/lib/rpm/Packages")
+			result.FillContentSets()
+			assert.Equal(t, tt.want, result)
 		})
 	}
 }
