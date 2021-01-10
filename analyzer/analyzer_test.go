@@ -442,15 +442,20 @@ func TestCheckPackage(t *testing.T) {
 func TestAnalysisResult_FillContentSets(t *testing.T) {
 	tests := []struct {
 		name  string
-		input analyzer.AnalyzeReturn
+		input *analyzer.AnalysisResult
 		want  *analyzer.AnalysisResult
 	}{
 		{
 			name: "Happy path",
-			input: analyzer.AnalyzeReturn{
-				Packages: []types.Package{
-					{Name: "foo", Version: "1.2.3"},
-					{Name: "bar", Version: "4.5.6"},
+			input: &analyzer.AnalysisResult{
+				PackageInfos: []types.PackageInfo{
+					{
+						FilePath: "var/lib/rpm/Packages",
+						Packages: []types.Package{
+							{Name: "foo", Version: "1.2.3"},
+							{Name: "bar", Version: "4.5.6"},
+						},
+					},
 				},
 				BuildInfo: &analyzer.BuildInfo{
 					ContentSets: []string{
@@ -483,14 +488,19 @@ func TestAnalysisResult_FillContentSets(t *testing.T) {
 						},
 					},
 				},
+				BuildInfo: &analyzer.BuildInfo{
+					ContentSets: []string{
+						"rhel-8-for-x86_64-baseos-rpms",
+						"rhel-8-for-x86_64-appstream-rpms",
+					},
+				},
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := tt.input.ConvertToResult("test", "var/lib/rpm/Packages")
-			result.FillContentSets()
-			assert.Equal(t, tt.want, result)
+			tt.input.FillContentSets()
+			assert.Equal(t, tt.want, tt.input)
 		})
 	}
 }

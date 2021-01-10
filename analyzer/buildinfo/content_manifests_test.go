@@ -14,7 +14,7 @@ func Test_contentManifestAnalyzer_Analyze(t *testing.T) {
 	tests := []struct {
 		name    string
 		content []byte
-		want    analyzer.AnalyzeReturn
+		want    *analyzer.AnalysisResult
 		wantErr bool
 	}{
 		{
@@ -32,7 +32,7 @@ func Test_contentManifestAnalyzer_Analyze(t *testing.T) {
     ],
     "image_contents": []
 }`),
-			want: analyzer.AnalyzeReturn{
+			want: &analyzer.AnalysisResult{
 				BuildInfo: &analyzer.BuildInfo{
 					ContentSets: []string{
 						"rhel-8-for-x86_64-baseos-rpms",
@@ -50,7 +50,7 @@ func Test_contentManifestAnalyzer_Analyze(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			a := contentManifestAnalyzer{}
-			got, err := a.Analyze(tt.content)
+			got, err := a.Analyze("root/buildinfo/content_manifests/ubi8-container-8.3-227.json", tt.content)
 			if tt.wantErr {
 				require.NotNil(t, err)
 				return

@@ -9,6 +9,8 @@ import (
 	godeptypes "github.com/aquasecurity/go-dep-parser/pkg/types"
 	"golang.org/x/xerrors"
 
+	"github.com/aquasecurity/fanal/analyzer/buildinfo/pyxis"
+	aos "github.com/aquasecurity/fanal/analyzer/os"
 	"github.com/aquasecurity/fanal/types"
 )
 
@@ -29,11 +31,6 @@ type AnalyzeReturn struct {
 	Packages  []types.Package
 	Libraries []godeptypes.Library
 	BuildInfo *BuildInfo // only for Red Hat
-}
-
-// BuildInfo represents information under /root/buildinfo in RHEL
-type BuildInfo struct {
-	ContentSets []string
 }
 
 func (r AnalyzeReturn) ConvertToResult(analyzerType, filePath string) *AnalysisResult {
@@ -64,7 +61,7 @@ func (r AnalyzeReturn) ConvertToResult(analyzerType, filePath string) *AnalysisR
 	}
 
 	if r.BuildInfo != nil {
-		result.buildInfo = r.BuildInfo
+		result.BuildInfo = r.BuildInfo
 	}
 	return result
 }
@@ -90,6 +87,13 @@ func RegisterConfigAnalyzer(analyzer configAnalyzer) {
 
 type Opener func() ([]byte, error)
 
+// BuildInfo represents information under /root/buildinfo in RHEL
+type BuildInfo struct {
+	ContentSets []string
+	Nvr         string
+	Arch        string
+}
+
 type AnalysisResult struct {
 	m            sync.Mutex
 	OS           *types.OS
@@ -97,11 +101,11 @@ type AnalysisResult struct {
 	Applications []types.Application
 
 	// for Red Hat
-	buildInfo *BuildInfo
+	BuildInfo *BuildInfo
 }
 
 func (r *AnalysisResult) isEmpty() bool {
-	return r.OS == nil && len(r.PackageInfos) == 0 && len(r.Applications) == 0 && r.buildInfo == nil
+	return r.OS == nil && len(r.PackageInfos) == 0 && len(r.Applications) == 0 && r.BuildInfo == nil
 }
 
 func (r *AnalysisResult) Merge(new *AnalysisResult) {
@@ -130,29 +134,31 @@ func (r *AnalysisResult) Merge(new *AnalysisResult) {
 		r.Applications = append(r.Applications, new.Applications...)
 	}
 
-	if new.buildInfo != nil {
-		r.buildInfo = new.buildInfo
+	if new.BuildInfo != nil {
+		r.BuildInfo = new.BuildInfo
 	}
 }
 
 // FillContentSets adds content sets to each package in RHEL
 func (r *AnalysisResult) FillContentSets() {
-	if r.buildInfo == nil {
+	if r.BuildInfo == nil {
 		return
 	}
 
-	if len(r.buildInfo.ContentSets) == 0 {
+	contentSets := r.BuildInfo.ContentSets
+	if len(contentSets) == 0 && r.BuildInfo.Nvr != "" {
+		contentSets = pyxis.FetchContentSets(r.BuildInfo.Nvr, r.BuildInfo.Arch)
+	}
 
+	if len(contentSets) == 0 {
+		return
 	}
 
 	for _, pkgInfo := range r.PackageInfos {
 		for i := range pkgInfo.Packages {
-			pkgInfo.Packages[i].ContentSets = r.buildInfo.ContentSets
+			pkgInfo.Packages[i].ContentSets = contentSets
 		}
 	}
-
-	// no longer necessary
-	r.buildInfo = nil
 }
 
 func AnalyzeFile(filePath string, info os.FileInfo, opener Opener) (*AnalysisResult, error) {
