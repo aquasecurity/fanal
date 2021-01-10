@@ -47,3 +47,7 @@ func (a ubuntuOSAnalyzer) Analyze(_ string, content []byte) (*analyzer.AnalysisR
 func (a ubuntuOSAnalyzer) Required(filePath string, _ os.FileInfo) bool {
 	return utils.StringInSlice(filePath, requiredFiles)
 }
+
+func (a ubuntuOSAnalyzer) Name() string {
+	return aos.Ubuntu
+}

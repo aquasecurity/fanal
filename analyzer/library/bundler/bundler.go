@@ -34,3 +34,7 @@ func (a bundlerLibraryAnalyzer) Required(filePath string, _ os.FileInfo) bool {
 	fileName := filepath.Base(filePath)
 	return utils.StringInSlice(fileName, requiredFiles)
 }
+
+func (a bundlerLibraryAnalyzer) Name() string {
+	return library.Bundler
+}

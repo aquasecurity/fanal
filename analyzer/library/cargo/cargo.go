@@ -31,3 +31,7 @@ func (a cargoLibraryAnalyzer) Required(filePath string, _ os.FileInfo) bool {
 	fileName := filepath.Base(filePath)
 	return utils.StringInSlice(fileName, requiredFiles)
 }
+
+func (a cargoLibraryAnalyzer) Name() string {
+	return library.Cargo
+}

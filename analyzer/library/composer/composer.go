@@ -35,3 +35,7 @@ func (a composerLibraryAnalyzer) Required(filePath string, _ os.FileInfo) bool {
 	fileName := filepath.Base(filePath)
 	return utils.StringInSlice(fileName, requiredFiles)
 }
+
+func (a composerLibraryAnalyzer) Name() string {
+	return library.Composer
+}

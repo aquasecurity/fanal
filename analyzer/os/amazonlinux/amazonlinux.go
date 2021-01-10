@@ -63,3 +63,7 @@ func (a amazonlinuxOSAnalyzer) parseRelease(content []byte) (types.OS, error) {
 func (a amazonlinuxOSAnalyzer) Required(filePath string, _ os.FileInfo) bool {
 	return utils.StringInSlice(filePath, requiredFiles)
 }
+
+func (a amazonlinuxOSAnalyzer) Name() string {
+	return aos.Amazon
+}

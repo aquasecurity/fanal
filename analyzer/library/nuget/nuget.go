@@ -32,3 +32,7 @@ func (a nugetLibraryAnalyzer) Required(filePath string, _ os.FileInfo) bool {
 	fileName := filepath.Base(filePath)
 	return utils.StringInSlice(fileName, requiredFiles)
 }
+
+func (a nugetLibraryAnalyzer) Name() string {
+	return library.NuGet
+}

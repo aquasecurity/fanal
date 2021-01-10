@@ -35,3 +35,7 @@ func (a debianOSAnalyzer) Analyze(_ string, content []byte) (*analyzer.AnalysisR
 func (a debianOSAnalyzer) Required(filePath string, _ os.FileInfo) bool {
 	return utils.StringInSlice(filePath, requiredFiles)
 }
+
+func (a debianOSAnalyzer) Name() string {
+	return aos.Debian
+}
