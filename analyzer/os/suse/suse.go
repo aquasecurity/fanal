@@ -25,7 +25,7 @@ var requiredFiles = []string{
 
 type suseOSAnalyzer struct{}
 
-func (a suseOSAnalyzer) Analyze(content []byte) (analyzer.AnalyzeReturn, error) {
+func (a suseOSAnalyzer) Analyze(_ string, content []byte) (*analyzer.AnalysisResult, error) {
 	suseName := ""
 	scanner := bufio.NewScanner(bytes.NewBuffer(content))
 	for scanner.Scan() {
@@ -46,15 +46,15 @@ func (a suseOSAnalyzer) Analyze(content []byte) (analyzer.AnalyzeReturn, error) 
 		}
 
 		if suseName != "" && strings.HasPrefix(line, "VERSION_ID=") {
-			return analyzer.AnalyzeReturn{
-				OS: types.OS{
+			return &analyzer.AnalysisResult{
+				OS: &types.OS{
 					Family: suseName,
 					Name:   strings.TrimSpace(line[12 : len(line)-1]),
 				},
 			}, nil
 		}
 	}
-	return analyzer.AnalyzeReturn{}, xerrors.Errorf("suse: %w", aos.AnalyzeOSError)
+	return nil, xerrors.Errorf("suse: %w", aos.AnalyzeOSError)
 }
 
 func (a suseOSAnalyzer) Required(filePath string, _ os.FileInfo) bool {

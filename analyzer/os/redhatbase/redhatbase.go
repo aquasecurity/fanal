@@ -26,13 +26,13 @@ var redhatRe = regexp.MustCompile(`(.*) release (\d[\d\.]*)`)
 
 type redhatOSAnalyzer struct{}
 
-func (a redhatOSAnalyzer) Analyze(content []byte) (analyzer.AnalyzeReturn, error) {
+func (a redhatOSAnalyzer) Analyze(_ string, content []byte) (*analyzer.AnalysisResult, error) {
 	foundOS, err := a.parseRelease(content)
 	if err != nil {
-		return analyzer.AnalyzeReturn{}, err
+		return nil, err
 	}
-	return analyzer.AnalyzeReturn{
-		OS: foundOS,
+	return &analyzer.AnalysisResult{
+		OS: &foundOS,
 	}, nil
 
 }

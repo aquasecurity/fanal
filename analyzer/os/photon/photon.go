@@ -28,7 +28,7 @@ var requiredFiles = []string{
 
 type photonOSAnalyzer struct{}
 
-func (a photonOSAnalyzer) Analyze(content []byte) (analyzer.AnalyzeReturn, error) {
+func (a photonOSAnalyzer) Analyze(_ string, content []byte) (*analyzer.AnalysisResult, error) {
 	photonName := ""
 	scanner := bufio.NewScanner(bytes.NewBuffer(content))
 	for scanner.Scan() {
@@ -39,15 +39,15 @@ func (a photonOSAnalyzer) Analyze(content []byte) (analyzer.AnalyzeReturn, error
 		}
 
 		if photonName != "" && strings.HasPrefix(line, "VERSION_ID=") {
-			return analyzer.AnalyzeReturn{
-				OS: types.OS{
+			return &analyzer.AnalysisResult{
+				OS: &types.OS{
 					Family: photonName,
 					Name:   strings.TrimSpace(line[11:]),
 				},
 			}, nil
 		}
 	}
-	return analyzer.AnalyzeReturn{}, xerrors.Errorf("photon: %w", aos.AnalyzeOSError)
+	return nil, xerrors.Errorf("photon: %w", aos.AnalyzeOSError)
 }
 
 func (a photonOSAnalyzer) Required(filePath string, _ os.FileInfo) bool {

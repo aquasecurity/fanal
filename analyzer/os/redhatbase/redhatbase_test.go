@@ -14,14 +14,14 @@ func Test_oracleOSAnalyzer_Analyze(t *testing.T) {
 	tests := []struct {
 		name      string
 		inputFile string
-		want      analyzer.AnalyzeReturn
+		want      *analyzer.AnalysisResult
 		wantErr   string
 	}{
 		{
 			name:      "happy path",
 			inputFile: "testdata/oracle_7/oracle-release",
-			want: analyzer.AnalyzeReturn{
-				OS: types.OS{Family: "oracle", Name: "7.6"},
+			want: &analyzer.AnalysisResult{
+				OS: &types.OS{Family: "oracle", Name: "7.6"},
 			},
 		},
 		{
@@ -36,7 +36,7 @@ func Test_oracleOSAnalyzer_Analyze(t *testing.T) {
 			b, err := ioutil.ReadFile(tt.inputFile)
 			require.NoError(t, err)
 
-			got, err := a.Analyze(b)
+			got, err := a.Analyze("etc/oracle-release", b)
 			if tt.wantErr != "" {
 				require.NotNil(t, err)
 				assert.Contains(t, err.Error(), tt.wantErr)

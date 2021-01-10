@@ -14,14 +14,14 @@ func Test_redhatOSAnalyzer_Analyze(t *testing.T) {
 	tests := []struct {
 		name      string
 		inputFile string
-		want      analyzer.AnalyzeReturn
+		want      *analyzer.AnalysisResult
 		wantErr   string
 	}{
 		{
 			name:      "happy path",
 			inputFile: "testdata/redhat_6/redhat-release",
-			want: analyzer.AnalyzeReturn{
-				OS: types.OS{Family: "redhat", Name: "6.2"},
+			want: &analyzer.AnalysisResult{
+				OS: &types.OS{Family: "redhat", Name: "6.2"},
 			},
 		},
 		{
@@ -36,7 +36,7 @@ func Test_redhatOSAnalyzer_Analyze(t *testing.T) {
 			b, err := ioutil.ReadFile(tt.inputFile)
 			require.NoError(t, err)
 
-			got, err := a.Analyze(b)
+			got, err := a.Analyze("etc/redhat-release", b)
 			if tt.wantErr != "" {
 				require.NotNil(t, err)
 				assert.Contains(t, err.Error(), tt.wantErr)

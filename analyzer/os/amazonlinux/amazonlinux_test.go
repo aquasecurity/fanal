@@ -19,7 +19,7 @@ func Test_amazonlinuxOSAnalyzer_Analyze(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    args
-		want    analyzer.AnalyzeReturn
+		want    *analyzer.AnalysisResult
 		wantErr string
 	}{
 		{
@@ -27,8 +27,8 @@ func Test_amazonlinuxOSAnalyzer_Analyze(t *testing.T) {
 			args: args{
 				content: []byte(`Amazon Linux AMI release 2018.03`),
 			},
-			want: analyzer.AnalyzeReturn{
-				OS: types.OS{
+			want: &analyzer.AnalysisResult{
+				OS: &types.OS{
 					Family: aos.Amazon,
 					Name:   "AMI release 2018.03",
 				},
@@ -39,8 +39,8 @@ func Test_amazonlinuxOSAnalyzer_Analyze(t *testing.T) {
 			args: args{
 				content: []byte(`Amazon Linux release 2 (Karoo)`),
 			},
-			want: analyzer.AnalyzeReturn{
-				OS: types.OS{
+			want: &analyzer.AnalysisResult{
+				OS: &types.OS{
 					Family: aos.Amazon,
 					Name:   "2 (Karoo)",
 				},
@@ -64,7 +64,7 @@ func Test_amazonlinuxOSAnalyzer_Analyze(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			a := amazonlinuxOSAnalyzer{}
-			got, err := a.Analyze(tt.args.content)
+			got, err := a.Analyze("etc/os-version", tt.args.content)
 			if tt.wantErr != "" {
 				require.NotNil(t, err)
 				assert.Contains(t, err.Error(), tt.wantErr)
