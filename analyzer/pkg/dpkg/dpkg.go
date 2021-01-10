@@ -36,11 +36,17 @@ var (
 
 type debianPkgAnalyzer struct{}
 
-func (a debianPkgAnalyzer) Analyze(content []byte) (analyzer.AnalyzeReturn, error) {
+func (a debianPkgAnalyzer) Analyze(filePath string, content []byte) (*analyzer.AnalysisResult, error) {
 	scanner := bufio.NewScanner(bytes.NewBuffer(content))
 	parsedPkgs := a.parseDpkginfo(scanner)
-	return analyzer.AnalyzeReturn{
-		Packages: parsedPkgs,
+
+	return &analyzer.AnalysisResult{
+		PackageInfos: []types.PackageInfo{
+			{
+				FilePath: filePath,
+				Packages: parsedPkgs,
+			},
+		},
 	}, nil
 }
 
