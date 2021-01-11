@@ -5,8 +5,6 @@ import (
 	"strings"
 	"sync"
 
-	aos "github.com/aquasecurity/fanal/analyzer/os"
-	godeptypes "github.com/aquasecurity/go-dep-parser/pkg/types"
 	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/fanal/analyzer/buildinfo/pyxis"
@@ -26,59 +24,24 @@ var (
 	ErrNoPkgsDetected = xerrors.New("no packages detected")
 )
 
-type AnalyzeReturn struct {
-	OS        types.OS
-	Packages  []types.Package
-	Libraries []godeptypes.Library
-	BuildInfo *BuildInfo // only for Red Hat
-}
-
-func (r AnalyzeReturn) ConvertToResult(analyzerType, filePath string) *AnalysisResult {
-	result := new(AnalysisResult)
-	if r.OS != (types.OS{}) {
-		result.OS = &r.OS
-	}
-
-	if len(r.Packages) > 0 {
-		result.PackageInfos = []types.PackageInfo{{
-			FilePath: filePath,
-			Packages: r.Packages,
-		}}
-	}
-
-	if len(r.Libraries) > 0 {
-		var libs []types.LibraryInfo
-		for _, lib := range r.Libraries {
-			libs = append(libs, types.LibraryInfo{
-				Library: lib,
-			})
-		}
-		result.Applications = []types.Application{{
-			Type:      analyzerType,
-			FilePath:  filePath,
-			Libraries: libs,
-		}}
-	}
-
-	if r.BuildInfo != nil {
-		result.BuildInfo = r.BuildInfo
-	}
-	return result
+type AnalysisTarget struct {
+	FilePath string
+	Content  []byte
 }
 
 type analyzer interface {
 	Name() string
-	Analyze(content []byte) (AnalyzeReturn, error)
+	Analyze(input AnalysisTarget) (*AnalysisResult, error)
 	Required(filePath string, info os.FileInfo) bool
-}
-
-func RegisterAnalyzer(analyzer analyzer) {
-	analyzers = append(analyzers, analyzer)
 }
 
 type configAnalyzer interface {
 	Analyze(targetOS types.OS, content []byte) ([]types.Package, error)
 	Required(osFound types.OS) bool
+}
+
+func RegisterAnalyzer(analyzer analyzer) {
+	analyzers = append(analyzers, analyzer)
 }
 
 func RegisterConfigAnalyzer(analyzer configAnalyzer) {
@@ -173,11 +136,11 @@ func AnalyzeFile(filePath string, info os.FileInfo, opener Opener) (*AnalysisRes
 			return nil, xerrors.Errorf("unable to open a file (%s): %w", filePath, err)
 		}
 
-		ret, err := analyzer.Analyze(b)
+		ret, err := analyzer.Analyze(AnalysisTarget{FilePath: filePath, Content: b})
 		if err != nil {
 			continue
 		}
-		result.Merge(ret.ConvertToResult(analyzer.Name(), filePath))
+		result.Merge(ret)
 	}
 	return result, nil
 }
