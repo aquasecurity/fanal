@@ -25,9 +25,9 @@ var requiredFiles = []string{
 
 type suseOSAnalyzer struct{}
 
-func (a suseOSAnalyzer) Analyze(_ string, content []byte) (*analyzer.AnalysisResult, error) {
+func (a suseOSAnalyzer) Analyze(target analyzer.AnalysisTarget) (*analyzer.AnalysisResult, error) {
 	suseName := ""
-	scanner := bufio.NewScanner(bytes.NewBuffer(content))
+	scanner := bufio.NewScanner(bytes.NewBuffer(target.Content))
 	for scanner.Scan() {
 		line := scanner.Text()
 		if strings.HasPrefix(line, "NAME=\"openSUSE") {

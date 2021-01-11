@@ -20,8 +20,8 @@ var requiredFiles = []string{"packages.lock.json"}
 
 type nugetLibraryAnalyzer struct{}
 
-func (a nugetLibraryAnalyzer) Analyze(filePath string, content []byte) (*analyzer.AnalysisResult, error) {
-	res, err := library.Analyze(library.NuGet, filePath, content, nuget.Parse)
+func (a nugetLibraryAnalyzer) Analyze(target analyzer.AnalysisTarget) (*analyzer.AnalysisResult, error) {
+	res, err := library.Analyze(library.NuGet, target.FilePath, target.Content, nuget.Parse)
 	if err != nil {
 		return nil, xerrors.Errorf("unable to parse packages.lock.json: %w", err)
 	}

@@ -36,7 +36,10 @@ func Test_centosOSAnalyzer_Analyze(t *testing.T) {
 			b, err := ioutil.ReadFile(tt.inputFile)
 			require.NoError(t, err)
 
-			got, err := a.Analyze("etc/centos-release", b)
+			got, err := a.Analyze(analyzer.AnalysisTarget{
+				FilePath: "etc/centos-release",
+				Content:  b,
+			})
 			if tt.wantErr != "" {
 				require.NotNil(t, err)
 				assert.Contains(t, err.Error(), tt.wantErr)

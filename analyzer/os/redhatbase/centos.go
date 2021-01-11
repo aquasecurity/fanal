@@ -24,8 +24,8 @@ var (
 
 type centOSAnalyzer struct{}
 
-func (a centOSAnalyzer) Analyze(_ string, content []byte) (*analyzer.AnalysisResult, error) {
-	scanner := bufio.NewScanner(bytes.NewBuffer(content))
+func (a centOSAnalyzer) Analyze(target analyzer.AnalysisTarget) (*analyzer.AnalysisResult, error) {
+	scanner := bufio.NewScanner(bytes.NewBuffer(target.Content))
 	for scanner.Scan() {
 		line := scanner.Text()
 		result := redhatRe.FindStringSubmatch(strings.TrimSpace(line))

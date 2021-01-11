@@ -5,10 +5,9 @@ import (
 	"strings"
 	"sync"
 
-	aos "github.com/aquasecurity/fanal/analyzer/os"
-
 	"golang.org/x/xerrors"
 
+	aos "github.com/aquasecurity/fanal/analyzer/os"
 	"github.com/aquasecurity/fanal/types"
 )
 
@@ -24,9 +23,14 @@ var (
 	ErrNoPkgsDetected = xerrors.New("no packages detected")
 )
 
+type AnalysisTarget struct {
+	FilePath string
+	Content  []byte
+}
+
 type analyzer interface {
 	Name() string
-	Analyze(filePath string, content []byte) (*AnalysisResult, error)
+	Analyze(input AnalysisTarget) (*AnalysisResult, error)
 	Required(filePath string, info os.FileInfo) bool
 }
 
@@ -95,7 +99,7 @@ func AnalyzeFile(filePath string, info os.FileInfo, opener Opener) (*AnalysisRes
 			return nil, xerrors.Errorf("unable to open a file (%s): %w", filePath, err)
 		}
 
-		ret, err := analyzer.Analyze(filePath, b)
+		ret, err := analyzer.Analyze(AnalysisTarget{FilePath: filePath, Content: b})
 		if err != nil {
 			continue
 		}

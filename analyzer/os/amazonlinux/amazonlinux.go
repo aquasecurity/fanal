@@ -26,8 +26,8 @@ var requiredFiles = []string{"etc/system-release"}
 
 type amazonlinuxOSAnalyzer struct{}
 
-func (a amazonlinuxOSAnalyzer) Analyze(_ string, content []byte) (*analyzer.AnalysisResult, error) {
-	foundOS, err := a.parseRelease(content)
+func (a amazonlinuxOSAnalyzer) Analyze(target analyzer.AnalysisTarget) (*analyzer.AnalysisResult, error) {
+	foundOS, err := a.parseRelease(target.Content)
 	if err != nil {
 		return nil, err
 	}

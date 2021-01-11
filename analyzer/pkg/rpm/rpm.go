@@ -25,8 +25,8 @@ var requiredFiles = []string{
 
 type rpmPkgAnalyzer struct{}
 
-func (a rpmPkgAnalyzer) Analyze(filePath string, content []byte) (*analyzer.AnalysisResult, error) {
-	parsedPkgs, err := a.parsePkgInfo(content)
+func (a rpmPkgAnalyzer) Analyze(target analyzer.AnalysisTarget) (*analyzer.AnalysisResult, error) {
+	parsedPkgs, err := a.parsePkgInfo(target.Content)
 	if err != nil {
 		return nil, xerrors.Errorf("failed to parse rpmdb: %w", err)
 	}
@@ -34,7 +34,7 @@ func (a rpmPkgAnalyzer) Analyze(filePath string, content []byte) (*analyzer.Anal
 	return &analyzer.AnalysisResult{
 		PackageInfos: []types.PackageInfo{
 			{
-				FilePath: filePath,
+				FilePath: target.FilePath,
 				Packages: parsedPkgs,
 			},
 		},

@@ -20,8 +20,8 @@ var requiredFiles = []string{"poetry.lock"}
 
 type poetryLibraryAnalyzer struct{}
 
-func (a poetryLibraryAnalyzer) Analyze(filePath string, content []byte) (*analyzer.AnalysisResult, error) {
-	res, err := library.Analyze(library.Poetry, filePath, content, poetry.Parse)
+func (a poetryLibraryAnalyzer) Analyze(target analyzer.AnalysisTarget) (*analyzer.AnalysisResult, error) {
+	res, err := library.Analyze(library.Poetry, target.FilePath, target.Content, poetry.Parse)
 	if err != nil {
 		return nil, xerrors.Errorf("unable to parse poetry.lock: %w", err)
 	}

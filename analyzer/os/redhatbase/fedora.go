@@ -20,8 +20,8 @@ func init() {
 
 type fedoraOSAnalyzer struct{}
 
-func (a fedoraOSAnalyzer) Analyze(_ string, content []byte) (*analyzer.AnalysisResult, error) {
-	scanner := bufio.NewScanner(bytes.NewBuffer(content))
+func (a fedoraOSAnalyzer) Analyze(target analyzer.AnalysisTarget) (*analyzer.AnalysisResult, error) {
+	scanner := bufio.NewScanner(bytes.NewBuffer(target.Content))
 	for scanner.Scan() {
 		line := scanner.Text()
 		result := redhatRe.FindStringSubmatch(strings.TrimSpace(line))

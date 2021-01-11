@@ -36,7 +36,10 @@ func Test_fedoraOSAnalyzer_Analyze(t *testing.T) {
 			b, err := ioutil.ReadFile(tt.inputFile)
 			require.NoError(t, err)
 
-			got, err := a.Analyze("etc/fedora-release", b)
+			got, err := a.Analyze(analyzer.AnalysisTarget{
+				FilePath: "etc/fedora-release",
+				Content:  b,
+			})
 			if tt.wantErr != "" {
 				require.NotNil(t, err)
 				assert.Contains(t, err.Error(), tt.wantErr)
