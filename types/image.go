@@ -1,6 +1,7 @@
 package types
 
 import (
+	"fmt"
 	"time"
 
 	godeptypes "github.com/aquasecurity/go-dep-parser/pkg/types"
@@ -29,6 +30,10 @@ type Package struct {
 	Modularitylabel string   `json:",omitempty"` // for Red Hat
 	ContentSets     []string `json:",omitempty"` // for Red Hat
 	Layer           Layer    `json:",omitempty"`
+}
+
+func (p Package) String() string {
+	return fmt.Sprintf("%d:%s-%s-%s.%s", p.Epoch, p.Name, p.Version, p.Release, p.Arch)
 }
 
 type SrcPackage struct {
