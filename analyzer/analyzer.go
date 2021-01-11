@@ -102,25 +102,15 @@ func (r *AnalysisResult) Merge(new *AnalysisResult) {
 	}
 }
 
-// FillContentSets adds content sets to each package in RHEL
+// FillContentSets fills content sets from /root/buildinfo/Dockerfile-*
 func (r *AnalysisResult) FillContentSets() {
 	if r.BuildInfo == nil {
+		r.BuildInfo = &BuildInfo{}
 		return
 	}
-
-	contentSets := r.BuildInfo.ContentSets
-	if len(contentSets) == 0 && r.BuildInfo.Nvr != "" {
-		contentSets = pyxis.FetchContentSets(r.BuildInfo.Nvr, r.BuildInfo.Arch)
-	}
-
-	if len(contentSets) == 0 {
-		return
-	}
-
-	for _, pkgInfo := range r.PackageInfos {
-		for i := range pkgInfo.Packages {
-			pkgInfo.Packages[i].ContentSets = contentSets
-		}
+	// Only when content manifests don't exist, but Dockerfile in the layer
+	if len(r.BuildInfo.ContentSets) == 0 && r.BuildInfo.Nvr != "" {
+		r.BuildInfo.ContentSets = pyxis.FetchContentSets(r.BuildInfo.Nvr, r.BuildInfo.Arch)
 	}
 }
 

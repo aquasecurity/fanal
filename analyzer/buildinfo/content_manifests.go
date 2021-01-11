@@ -14,10 +14,6 @@ func init() {
 	analyzer.RegisterAnalyzer(&contentManifestAnalyzer{})
 }
 
-const (
-	name = "redhat content manifest"
-)
-
 type contentManifest struct {
 	ContentSets []string `json:"content_sets"`
 }
@@ -25,13 +21,13 @@ type contentManifest struct {
 // For Red Hat products
 type contentManifestAnalyzer struct{}
 
-func (a contentManifestAnalyzer) Analyze(content []byte) (analyzer.AnalyzeReturn, error) {
+func (a contentManifestAnalyzer) Analyze(target analyzer.AnalysisTarget) (*analyzer.AnalysisResult, error) {
 	var manifest contentManifest
-	if err := json.Unmarshal(content, &manifest); err != nil {
-		return analyzer.AnalyzeReturn{}, xerrors.Errorf("invalid content manifests: %w", err)
+	if err := json.Unmarshal(target.Content, &manifest); err != nil {
+		return nil, xerrors.Errorf("invalid content manifests: %w", err)
 	}
 
-	return analyzer.AnalyzeReturn{
+	return &analyzer.AnalysisResult{
 		BuildInfo: &analyzer.BuildInfo{
 			ContentSets: manifest.ContentSets,
 		},
@@ -47,5 +43,5 @@ func (a contentManifestAnalyzer) Required(filePath string, _ os.FileInfo) bool {
 }
 
 func (a contentManifestAnalyzer) Name() string {
-	return name
+	return "redhat content manifest"
 }

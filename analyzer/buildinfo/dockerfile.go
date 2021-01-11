@@ -28,22 +28,22 @@ var (
 // For Red Hat products
 type dockerfileAnalyzer struct{}
 
-func (a dockerfileAnalyzer) Analyze(filePath string, content []byte) (*analyzer.AnalysisResult, error) {
-	res := componentRegexp.FindStringSubmatch(string(content))
+func (a dockerfileAnalyzer) Analyze(target analyzer.AnalysisTarget) (*analyzer.AnalysisResult, error) {
+	res := componentRegexp.FindStringSubmatch(string(target.Content))
 	if len(res) < 2 {
-		return nil, xerrors.Errorf("unknown Dockerfile format: %s", filePath)
+		return nil, xerrors.Errorf("unknown Dockerfile format: %s", target.FilePath)
 	}
 	component := res[1]
 
-	res = architectureRegexp.FindStringSubmatch(string(content))
+	res = architectureRegexp.FindStringSubmatch(string(target.Content))
 	if len(res) < 2 {
-		return nil, xerrors.Errorf("unknown Dockerfile format: %s", filePath)
+		return nil, xerrors.Errorf("unknown Dockerfile format: %s", target.FilePath)
 	}
 	arch := res[1]
 
 	return &analyzer.AnalysisResult{
 		BuildInfo: &analyzer.BuildInfo{
-			Nvr:  component + "-" + parseVersion(filePath),
+			Nvr:  component + "-" + parseVersion(target.FilePath),
 			Arch: arch,
 		},
 	}, nil
@@ -55,6 +55,10 @@ func (a dockerfileAnalyzer) Required(filePath string, _ os.FileInfo) bool {
 		return false
 	}
 	return strings.HasPrefix(file, "Dockerfile")
+}
+
+func (a dockerfileAnalyzer) Name() string {
+	return "redhat dockerfile"
 }
 
 // parseVersion parses version from a file name
