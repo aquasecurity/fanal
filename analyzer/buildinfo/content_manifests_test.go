@@ -50,7 +50,10 @@ func Test_contentManifestAnalyzer_Analyze(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			a := contentManifestAnalyzer{}
-			got, err := a.Analyze("root/buildinfo/content_manifests/ubi8-container-8.3-227.json", tt.content)
+			got, err := a.Analyze(analyzer.AnalysisTarget{
+				FilePath: "root/buildinfo/content_manifests/ubi8-container-8.3-227.json",
+				Content:  tt.content,
+			})
 			if tt.wantErr {
 				require.NotNil(t, err)
 				return

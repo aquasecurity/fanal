@@ -446,7 +446,7 @@ func TestAnalysisResult_FillContentSets(t *testing.T) {
 		want  *analyzer.AnalysisResult
 	}{
 		{
-			name: "Happy path",
+			name: "happy path",
 			input: &analyzer.AnalysisResult{
 				PackageInfos: []types.PackageInfo{
 					{
@@ -472,18 +472,10 @@ func TestAnalysisResult_FillContentSets(t *testing.T) {
 							{
 								Name:    "foo",
 								Version: "1.2.3",
-								ContentSets: []string{
-									"rhel-8-for-x86_64-baseos-rpms",
-									"rhel-8-for-x86_64-appstream-rpms",
-								},
 							},
 							{
 								Name:    "bar",
 								Version: "4.5.6",
-								ContentSets: []string{
-									"rhel-8-for-x86_64-baseos-rpms",
-									"rhel-8-for-x86_64-appstream-rpms",
-								},
 							},
 						},
 					},

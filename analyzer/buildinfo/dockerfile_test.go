@@ -25,9 +25,8 @@ func Test_dockerfileAnalyzer_Analyze(t *testing.T) {
 			filePath:  "Dockerfile-ubi8-8.3-227",
 			want: &analyzer.AnalysisResult{
 				BuildInfo: &analyzer.BuildInfo{
-					Component: "ubi8-container",
-					Version:   "8.3-227",
-					Arch:      "x86_64",
+					Nvr:  "ubi8-container-8.3-227",
+					Arch: "x86_64",
 				},
 			},
 		},
@@ -44,7 +43,10 @@ func Test_dockerfileAnalyzer_Analyze(t *testing.T) {
 			require.NoError(t, err)
 
 			a := dockerfileAnalyzer{}
-			got, err := a.Analyze(tt.filePath, b)
+			got, err := a.Analyze(analyzer.AnalysisTarget{
+				FilePath: tt.filePath,
+				Content:  b,
+			})
 			if tt.wantErr {
 				require.NotNil(t, err)
 				return
