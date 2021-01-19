@@ -40,29 +40,60 @@ func containsLibrary(e godeptypes.Library, s []types.LibraryInfo) bool {
 	return false
 }
 
-func lookupOriginLayerForPkg(pkg types.Package, layers []types.BlobInfo) (string, string) {
-	for _, layer := range layers {
+func lookupOriginLayerForPkg(pkg types.Package, layers []types.BlobInfo) (types.Layer, []string) {
+	for i, layer := range layers {
 		for _, info := range layer.PackageInfos {
 			if containsPackage(pkg, info.Packages) {
-				return layer.Digest, layer.DiffID
+				return types.Layer{
+					Digest: layer.Digest,
+					DiffID: layer.DiffID,
+				}, lookupContentSets(i, layers)
 			}
 		}
 	}
-	return "", ""
+	return types.Layer{}, nil
 }
 
-func lookupOriginLayerForLib(filePath string, lib godeptypes.Library, layers []types.BlobInfo) (string, string) {
+// lookupContentSets looks up Red Hat content sets from all layers
+func lookupContentSets(index int, layers []types.BlobInfo) []string {
+	if len(layers[index].ContentSets) != 0 {
+		return layers[index].ContentSets
+	}
+
+	// Base layer (layers[0]) is missing content sets
+	//   - it needs to be shared from layers[1]
+	if index == 0 {
+		if len(layers) > 1 {
+			return layers[1].ContentSets
+		}
+		return nil
+	}
+
+	// Customers layers build on top of Red Hat image are also missing content sets
+	//   - it needs to be shared from the last Red Hat's layers which contains content sets
+	for i := index - 1; i >= 1; i-- {
+		if len(layers[i].ContentSets) != 0 {
+			return layers[i].ContentSets
+		}
+	}
+	return nil
+}
+
+func lookupOriginLayerForLib(filePath string, lib godeptypes.Library, layers []types.BlobInfo) types.Layer {
 	for _, layer := range layers {
 		for _, layerApp := range layer.Applications {
 			if filePath != layerApp.FilePath {
 				continue
 			}
 			if containsLibrary(lib, layerApp.Libraries) {
-				return layer.Digest, layer.DiffID
+				return types.Layer{
+					Digest: layer.Digest,
+					DiffID: layer.DiffID,
+				}
 			}
 		}
 	}
-	return "", ""
+	return types.Layer{}
 }
 
 func ApplyLayers(layers []types.BlobInfo) types.ArtifactDetail {
@@ -101,20 +132,14 @@ func ApplyLayers(layers []types.BlobInfo) types.ArtifactDetail {
 	})
 
 	for i, pkg := range mergedLayer.Packages {
-		originLayerDigest, originLayerDiffID := lookupOriginLayerForPkg(pkg, layers)
-		mergedLayer.Packages[i].Layer = types.Layer{
-			Digest: originLayerDigest,
-			DiffID: originLayerDiffID,
-		}
+		originLayer, contentSets := lookupOriginLayerForPkg(pkg, layers)
+		mergedLayer.Packages[i].Layer = originLayer
+		mergedLayer.Packages[i].ContentSets = contentSets
 	}
 
 	for _, app := range mergedLayer.Applications {
 		for i, libInfo := range app.Libraries {
-			originLayerDigest, originLayerDiffID := lookupOriginLayerForLib(app.FilePath, libInfo.Library, layers)
-			app.Libraries[i].Layer = types.Layer{
-				Digest: originLayerDigest,
-				DiffID: originLayerDiffID,
-			}
+			app.Libraries[i].Layer = lookupOriginLayerForLib(app.FilePath, libInfo.Library, layers)
 		}
 	}
 

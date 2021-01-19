@@ -7,6 +7,7 @@ import (
 
 	"golang.org/x/xerrors"
 
+	"github.com/aquasecurity/fanal/analyzer/buildinfo/pyxis"
 	aos "github.com/aquasecurity/fanal/analyzer/os"
 	"github.com/aquasecurity/fanal/types"
 )
@@ -49,15 +50,25 @@ func RegisterConfigAnalyzer(analyzer configAnalyzer) {
 
 type Opener func() ([]byte, error)
 
+// BuildInfo represents information under /root/buildinfo in RHEL
+type BuildInfo struct {
+	ContentSets []string
+	Nvr         string
+	Arch        string
+}
+
 type AnalysisResult struct {
 	m            sync.Mutex
 	OS           *types.OS
 	PackageInfos []types.PackageInfo
 	Applications []types.Application
+
+	// for Red Hat
+	BuildInfo *BuildInfo
 }
 
 func (r *AnalysisResult) isEmpty() bool {
-	return r.OS == nil && len(r.PackageInfos) == 0 && len(r.Applications) == 0
+	return r.OS == nil && len(r.PackageInfos) == 0 && len(r.Applications) == 0 && r.BuildInfo == nil
 }
 
 func (r *AnalysisResult) Merge(new *AnalysisResult) {
@@ -85,6 +96,27 @@ func (r *AnalysisResult) Merge(new *AnalysisResult) {
 	if len(new.Applications) > 0 {
 		r.Applications = append(r.Applications, new.Applications...)
 	}
+
+	if new.BuildInfo != nil {
+		r.BuildInfo = new.BuildInfo
+	}
+}
+
+// FillContentSets fills content sets from /root/buildinfo/Dockerfile-*
+func (r *AnalysisResult) FillContentSets() (err error) {
+	if r.BuildInfo == nil {
+		r.BuildInfo = &BuildInfo{}
+		return nil
+	}
+	// Only when content manifests don't exist, but Dockerfile in the layer
+	if len(r.BuildInfo.ContentSets) == 0 && r.BuildInfo.Nvr != "" {
+		p := pyxis.NewPyxis()
+		r.BuildInfo.ContentSets, err = p.FetchContentSets(r.BuildInfo.Nvr, r.BuildInfo.Arch)
+		if err != nil {
+			return xerrors.Errorf("unable to fetch content sets: %w", err)
+		}
+	}
+	return nil
 }
 
 func AnalyzeFile(filePath string, info os.FileInfo, opener Opener) (*AnalysisResult, error) {

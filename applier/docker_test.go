@@ -375,6 +375,140 @@ func TestApplyLayers(t *testing.T) {
 				},
 			},
 		},
+
+		{
+			name: "happy path with Red Hat content sets",
+			inputLayers: []types.BlobInfo{
+				{
+					SchemaVersion: 1,
+					Digest:        "sha256:24df0d4e20c0f42d3703bf1f1db2bdd77346c7956f74f423603d651e8e5ae8a7",
+					DiffID:        "sha256:aad63a9339440e7c3e1fff2b988991b9bfb81280042fa7f39a5e327023056819",
+					OS: &types.OS{
+						Family: "redhat",
+						Name:   "8",
+					},
+					PackageInfos: []types.PackageInfo{
+						{
+							FilePath: "var/lib/rpm/Packages",
+							Packages: []types.Package{
+								{
+									Name:    "openssl",
+									Version: "1.2.3",
+									Release: "4",
+								},
+							},
+						},
+					},
+				},
+				{
+					SchemaVersion: 1,
+					Digest:        "sha256:932da51564135c98a49a34a193d6cd363d8fa4184d957fde16c9d8527b3f3b02",
+					DiffID:        "sha256:a187dde48cd289ac374ad8539930628314bc581a481cdb41409c9289419ddb72",
+					ContentSets: []string{
+						"rhel-8-for-x86_64-baseos-rpms",
+						"rhel-8-for-x86_64-appstream-rpms",
+					},
+					PackageInfos: []types.PackageInfo{
+						{
+							FilePath: "var/lib/rpm/Packages",
+							Packages: []types.Package{
+								{
+									Name:    "openssl",
+									Version: "1.2.3",
+									Release: "4",
+								},
+								{
+									Name:    "libc",
+									Version: "1.2.4",
+									Release: "5",
+								},
+							},
+						},
+					},
+				},
+				{
+					SchemaVersion: 1,
+					Digest:        "sha256:a64e5f34c33ed4c5121498e721e24d95dae2c9599bee4aa6d07850702b401406",
+					DiffID:        "sha256:0abd3f2c73de6f02e033f410590111f9339b9500dc07270234f283f2d9a2694b",
+					ContentSets: []string{
+						"rhel-8-for-x86_64-appstream-rpms",
+					},
+				},
+				{
+					SchemaVersion: 1,
+					Digest:        "sha256:a3ed95caeb02ffe68cdd9fd84406680ae93d633cb16422d00e8a7c22955b46d4",
+					DiffID:        "sha256:a187dde48cd289ac374ad8539930628314bc581a481cdb41409c9289419ddb72",
+					PackageInfos: []types.PackageInfo{
+						{
+							FilePath: "var/lib/rpm/Packages",
+							Packages: []types.Package{
+								{
+									Name:    "openssl",
+									Version: "1.2.3",
+									Release: "4",
+								},
+								{
+									Name:    "libc",
+									Version: "1.2.4",
+									Release: "5",
+								},
+								{
+									Name:    "bash",
+									Version: "5.6.7",
+									Release: "8",
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedArtifactDetail: types.ArtifactDetail{
+				OS: &types.OS{
+					Family: "redhat",
+					Name:   "8",
+				},
+				Packages: []types.Package{
+					{
+						Name:    "bash",
+						Version: "5.6.7",
+						Release: "8",
+						Layer: types.Layer{
+							Digest: "sha256:a3ed95caeb02ffe68cdd9fd84406680ae93d633cb16422d00e8a7c22955b46d4",
+							DiffID: "sha256:a187dde48cd289ac374ad8539930628314bc581a481cdb41409c9289419ddb72",
+						},
+						ContentSets: []string{
+							"rhel-8-for-x86_64-appstream-rpms",
+						},
+					},
+					{
+						Name:    "libc",
+						Version: "1.2.4",
+						Release: "5",
+						Layer: types.Layer{
+							Digest: "sha256:932da51564135c98a49a34a193d6cd363d8fa4184d957fde16c9d8527b3f3b02",
+							DiffID: "sha256:a187dde48cd289ac374ad8539930628314bc581a481cdb41409c9289419ddb72",
+						},
+						ContentSets: []string{
+							"rhel-8-for-x86_64-baseos-rpms",
+							"rhel-8-for-x86_64-appstream-rpms",
+						},
+					},
+					{
+						Name:    "openssl",
+						Version: "1.2.3",
+						Release: "4",
+						Layer: types.Layer{
+							Digest: "sha256:24df0d4e20c0f42d3703bf1f1db2bdd77346c7956f74f423603d651e8e5ae8a7",
+							DiffID: "sha256:aad63a9339440e7c3e1fff2b988991b9bfb81280042fa7f39a5e327023056819",
+						},
+						ContentSets: []string{
+							"rhel-8-for-x86_64-baseos-rpms",
+							"rhel-8-for-x86_64-appstream-rpms",
+						},
+					},
+				},
+			},
+		},
 	}
 
 	for _, tc := range testCases {
