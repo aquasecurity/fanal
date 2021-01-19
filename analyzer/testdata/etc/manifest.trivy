@@ -1,0 +1,4 @@
+[
+  {"name": "php", "version": "7.4.11" },
+  {"name": "curl", "version": "7.72.0" }
+]
