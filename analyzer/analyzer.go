@@ -103,16 +103,20 @@ func (r *AnalysisResult) Merge(new *AnalysisResult) {
 }
 
 // FillContentSets fills content sets from /root/buildinfo/Dockerfile-*
-func (r *AnalysisResult) FillContentSets() {
+func (r *AnalysisResult) FillContentSets() (err error) {
 	if r.BuildInfo == nil {
 		r.BuildInfo = &BuildInfo{}
-		return
+		return nil
 	}
 	// Only when content manifests don't exist, but Dockerfile in the layer
 	if len(r.BuildInfo.ContentSets) == 0 && r.BuildInfo.Nvr != "" {
 		p := pyxis.NewPyxis()
-		r.BuildInfo.ContentSets = p.FetchContentSets(r.BuildInfo.Nvr, r.BuildInfo.Arch)
+		r.BuildInfo.ContentSets, err = p.FetchContentSets(r.BuildInfo.Nvr, r.BuildInfo.Arch)
+		if err != nil {
+			return xerrors.Errorf("unable to fetch content sets: %w", err)
+		}
 	}
+	return nil
 }
 
 func AnalyzeFile(filePath string, info os.FileInfo, opener Opener) (*AnalysisResult, error) {

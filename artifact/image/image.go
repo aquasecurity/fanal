@@ -113,17 +113,19 @@ func (a Artifact) inspectLayer(diffID string) (types.BlobInfo, error) {
 	opqDirs, whFiles, err := walker.WalkLayerTar(r, func(filePath string, info os.FileInfo, opener analyzer.Opener) error {
 		r, err := analyzer.AnalyzeFile(filePath, info, opener)
 		if err != nil {
-			return err
+			return xerrors.Errorf("unable to analyze the file (%s): %w", filePath, err)
 		}
 		result.Merge(r)
 		return nil
 	})
 	if err != nil {
-		return types.BlobInfo{}, err
+		return types.BlobInfo{}, xerrors.Errorf("unable to analyze the layer tar (%s): %w", diffID, err)
 	}
 
 	// For Red Hat
-	result.FillContentSets()
+	if err = result.FillContentSets(); err != nil {
+		return types.BlobInfo{}, xerrors.Errorf("failed to fill content sets via Pyxis API: %w", err)
+	}
 
 	layerInfo := types.BlobInfo{
 		Digest:        layerDigest,
