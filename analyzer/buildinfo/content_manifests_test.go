@@ -3,11 +3,10 @@ package buildinfo
 import (
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/aquasecurity/fanal/analyzer"
-
-	"github.com/stretchr/testify/assert"
 )
 
 func Test_contentManifestAnalyzer_Analyze(t *testing.T) {

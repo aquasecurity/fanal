@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+
+	"golang.org/x/xerrors"
 )
 
 const (
@@ -11,7 +13,7 @@ const (
 		"?filter=parsed_data.labels=em=(name=='architecture'andvalue=='%s')"
 )
 
-type pyxis struct {
+type response struct {
 	Data []struct {
 		ContentSets []string `json:"content_sets"`
 	} `json:"data"`
@@ -20,23 +22,44 @@ type pyxis struct {
 	Total    int `json:"total"`
 }
 
-func FetchContentSets(nvr, arch string) []string {
-	url := fmt.Sprintf(pyxisAPI, nvr, arch)
+type Pyxis struct {
+	baseURL string
+}
+
+type Option func(pyxis *Pyxis)
+
+func WithURL(url string) Option {
+	return func(pyxis *Pyxis) {
+		pyxis.baseURL = url
+	}
+}
+
+func NewPyxis(options ...Option) Pyxis {
+	p := &Pyxis{
+		baseURL: pyxisAPI,
+	}
+	for _, opt := range options {
+		opt(p)
+	}
+	return *p
+}
+
+func (p Pyxis) FetchContentSets(nvr, arch string) ([]string, error) {
+	url := fmt.Sprintf(p.baseURL, nvr, arch)
 	resp, err := http.Get(url)
-	fmt.Println(url)
 	if err != nil {
-		return nil
+		return nil, xerrors.Errorf("HTTP error (%s): %w", url, err)
 	}
 	defer resp.Body.Close()
 
-	var res pyxis
+	var res response
 	if err = json.NewDecoder(resp.Body).Decode(&res); err != nil {
-		return nil
+		return nil, xerrors.Errorf("JSON parse error: %w", err)
 	}
 
 	if len(res.Data) != 1 {
-		return nil
+		return nil, xerrors.Errorf("the response must have only one block")
 	}
 
-	return res.Data[0].ContentSets
+	return res.Data[0].ContentSets, nil
 }

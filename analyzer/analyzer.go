@@ -110,7 +110,8 @@ func (r *AnalysisResult) FillContentSets() {
 	}
 	// Only when content manifests don't exist, but Dockerfile in the layer
 	if len(r.BuildInfo.ContentSets) == 0 && r.BuildInfo.Nvr != "" {
-		r.BuildInfo.ContentSets = pyxis.FetchContentSets(r.BuildInfo.Nvr, r.BuildInfo.Arch)
+		p := pyxis.NewPyxis()
+		r.BuildInfo.ContentSets = p.FetchContentSets(r.BuildInfo.Nvr, r.BuildInfo.Arch)
 	}
 }
 
