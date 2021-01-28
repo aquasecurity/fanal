@@ -16,7 +16,7 @@ func Analyze(analyzerType, filePath string, content []byte, parse func(r io.Read
 	r := bytes.NewBuffer(content)
 	parsedLibs, err := parse(r)
 	if err != nil {
-		return nil, xerrors.Errorf("error with a lock file: %w", err)
+		return nil, xerrors.Errorf("failed to parse %s: %w", filePath, err)
 	}
 
 	var libs []types.LibraryInfo
