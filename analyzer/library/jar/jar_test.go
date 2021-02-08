@@ -1,4 +1,4 @@
-package bundler
+package jar
 
 import (
 	"io/ioutil"
