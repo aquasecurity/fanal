@@ -221,9 +221,10 @@ func TestAnalysisResult_Merge(t *testing.T) {
 
 func TestAnalyzeFile(t *testing.T) {
 	type args struct {
-		filePath string
-		info     os.FileInfo
-		opener   analyzer.Opener
+		filePath          string
+		info              os.FileInfo
+		opener            analyzer.Opener
+		disabledAnalyzers []analyzer.Type
 	}
 	tests := []struct {
 		name    string
@@ -247,6 +248,17 @@ func TestAnalyzeFile(t *testing.T) {
 			},
 		},
 		{
+			name: "happy path with disabled os analyzer",
+			args: args{
+				filePath: "/etc/alpine-release",
+				opener: func() ([]byte, error) {
+					return ioutil.ReadFile("testdata/etc/alpine-release")
+				},
+				disabledAnalyzers: []analyzer.Type{analyzer.TypeAlpine},
+			},
+			want: &analyzer.AnalysisResult{},
+		},
+		{
 			name: "happy path with package analyzer",
 			args: args{
 				filePath: "/lib/apk/db/installed",
@@ -264,6 +276,17 @@ func TestAnalyzeFile(t *testing.T) {
 					},
 				},
 			},
+		},
+		{
+			name: "happy path with disabled package analyzer",
+			args: args{
+				filePath: "/lib/apk/db/installed",
+				opener: func() ([]byte, error) {
+					return ioutil.ReadFile("testdata/lib/apk/db/installed")
+				},
+				disabledAnalyzers: []analyzer.Type{analyzer.TypeApk},
+			},
+			want: &analyzer.AnalysisResult{},
 		},
 		{
 			name: "happy path with library analyzer",
@@ -313,7 +336,7 @@ func TestAnalyzeFile(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := analyzer.AnalyzeFile(tt.args.filePath, tt.args.info, tt.args.opener)
+			got, err := analyzer.AnalyzeFile(tt.args.filePath, tt.args.info, tt.args.opener, tt.args.disabledAnalyzers)
 			if tt.wantErr != "" {
 				require.NotNil(t, err)
 				assert.Contains(t, err.Error(), tt.wantErr)
@@ -341,12 +364,17 @@ func (mockConfigAnalyzer) Analyze(targetOS types.OS, configBlob []byte) ([]types
 	}, nil
 }
 
+func (mockConfigAnalyzer) Type() analyzer.Type {
+	return "mock"
+}
+
 func TestAnalyzeConfig(t *testing.T) {
 	analyzer.RegisterConfigAnalyzer(mockConfigAnalyzer{})
 
 	type args struct {
-		targetOS   types.OS
-		configBlob []byte
+		targetOS          types.OS
+		configBlob        []byte
+		disabledAnalyzers []analyzer.Type
 	}
 	tests := []struct {
 		name string
@@ -389,7 +417,7 @@ func TestAnalyzeConfig(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := analyzer.AnalyzeConfig(tt.args.targetOS, tt.args.configBlob)
+			got := analyzer.AnalyzeConfig(tt.args.targetOS, tt.args.configBlob, tt.args.disabledAnalyzers)
 			assert.Equal(t, tt.want, got)
 		})
 	}

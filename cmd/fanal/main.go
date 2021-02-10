@@ -157,8 +157,8 @@ func repoAction(ctx context.Context, c *cli.Context, fsCache cache.Cache) error 
 	return inspect(ctx, art, fsCache)
 }
 
-func inspect(ctx context.Context, artifact artifact.Artifact, c cache.LocalArtifactCache) error {
-	imageInfo, err := artifact.Inspect(ctx)
+func inspect(ctx context.Context, art artifact.Artifact, c cache.LocalArtifactCache) error {
+	imageInfo, err := art.Inspect(ctx, artifact.InspectOption{})
 	if err != nil {
 		return err
 	}

@@ -30,7 +30,7 @@ func NewArtifact(img image.Image, c cache.ArtifactCache) artifact.Artifact {
 	}
 }
 
-func (a Artifact) Inspect(ctx context.Context) (types.ArtifactReference, error) {
+func (a Artifact) Inspect(ctx context.Context, option artifact.InspectOption) (types.ArtifactReference, error) {
 	imageID, err := a.image.ID()
 	if err != nil {
 		return types.ArtifactReference{}, xerrors.Errorf("unable to get the image ID: %w", err)
@@ -46,7 +46,7 @@ func (a Artifact) Inspect(ctx context.Context) (types.ArtifactReference, error) 
 		return types.ArtifactReference{}, xerrors.Errorf("unable to get missing layers: %w", err)
 	}
 
-	if err := a.inspect(ctx, imageID, missingImage, missingLayers); err != nil {
+	if err := a.inspect(ctx, imageID, missingImage, missingLayers, option); err != nil {
 		return types.ArtifactReference{}, xerrors.Errorf("analyze error: %w", err)
 	}
 
@@ -60,14 +60,15 @@ func (a Artifact) Inspect(ctx context.Context) (types.ArtifactReference, error) 
 
 }
 
-func (a Artifact) inspect(ctx context.Context, imageID string, missingImage bool, diffIDs []string) error {
+func (a Artifact) inspect(ctx context.Context, imageID string, missingImage bool, diffIDs []string,
+	option artifact.InspectOption) error {
 	done := make(chan struct{})
 	errCh := make(chan error)
 
 	var osFound types.OS
 	for _, d := range diffIDs {
 		go func(diffID string) {
-			layerInfo, err := a.inspectLayer(diffID)
+			layerInfo, err := a.inspectLayer(diffID, option)
 			if err != nil {
 				errCh <- xerrors.Errorf("failed to analyze layer: %s : %w", diffID, err)
 				return
@@ -94,7 +95,7 @@ func (a Artifact) inspect(ctx context.Context, imageID string, missingImage bool
 	}
 
 	if missingImage {
-		if err := a.inspectConfig(imageID, osFound); err != nil {
+		if err := a.inspectConfig(imageID, osFound, option); err != nil {
 			return xerrors.Errorf("unable to analyze config: %w", err)
 		}
 	}
@@ -103,7 +104,7 @@ func (a Artifact) inspect(ctx context.Context, imageID string, missingImage bool
 
 }
 
-func (a Artifact) inspectLayer(diffID string) (types.BlobInfo, error) {
+func (a Artifact) inspectLayer(diffID string, option artifact.InspectOption) (types.BlobInfo, error) {
 	layerDigest, r, err := a.uncompressedLayer(diffID)
 	if err != nil {
 		return types.BlobInfo{}, xerrors.Errorf("unable to get uncompressed layer %s: %w", diffID, err)
@@ -111,7 +112,7 @@ func (a Artifact) inspectLayer(diffID string) (types.BlobInfo, error) {
 
 	result := new(analyzer.AnalysisResult)
 	opqDirs, whFiles, err := walker.WalkLayerTar(r, func(filePath string, info os.FileInfo, opener analyzer.Opener) error {
-		r, err := analyzer.AnalyzeFile(filePath, info, opener)
+		r, err := analyzer.AnalyzeFile(filePath, info, opener, option.DisableAnalyzers)
 		if err != nil {
 			return err
 		}
@@ -170,13 +171,13 @@ func (a Artifact) isCompressed(l v1.Layer) bool {
 	return !uncompressed
 }
 
-func (a Artifact) inspectConfig(imageID string, osFound types.OS) error {
+func (a Artifact) inspectConfig(imageID string, osFound types.OS, option artifact.InspectOption) error {
 	configBlob, err := a.image.ConfigBlob()
 	if err != nil {
 		return xerrors.Errorf("unable to get config blob: %w", err)
 	}
 
-	pkgs := analyzer.AnalyzeConfig(osFound, configBlob)
+	pkgs := analyzer.AnalyzeConfig(osFound, configBlob, option.DisableAnalyzers)
 
 	var s1 v1.ConfigFile
 	if err := json.Unmarshal(configBlob, &s1); err != nil {
