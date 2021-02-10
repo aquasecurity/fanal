@@ -29,12 +29,13 @@ type AnalysisTarget struct {
 }
 
 type analyzer interface {
-	Name() string
+	Type() Type
 	Analyze(input AnalysisTarget) (*AnalysisResult, error)
 	Required(filePath string, info os.FileInfo) bool
 }
 
 type configAnalyzer interface {
+	Type() Type
 	Analyze(targetOS types.OS, content []byte) ([]types.Package, error)
 	Required(osFound types.OS) bool
 }
