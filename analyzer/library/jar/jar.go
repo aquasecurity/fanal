@@ -1,11 +1,9 @@
 package jar
 
 import (
-	"io"
+	"bytes"
 	"os"
 	"path/filepath"
-
-	godeptypes "github.com/aquasecurity/go-dep-parser/pkg/types"
 
 	"golang.org/x/xerrors"
 
@@ -26,14 +24,13 @@ var (
 type javaLibraryAnalyzer struct{}
 
 func (a javaLibraryAnalyzer) Analyze(target analyzer.AnalysisTarget) (*analyzer.AnalysisResult, error) {
-	parse := func(r io.Reader) ([]godeptypes.Library, error) {
-		return jar.Parse(r)
-	}
-	res, err := library.Analyze(library.Jar, target.FilePath, target.Content, parse)
+	r := bytes.NewReader(target.Content)
+	libs, err := jar.Parse(r, jar.WithFilePath(target.FilePath))
 	if err != nil {
-		return nil, xerrors.Errorf("unable to parse jar/war/ear: %w", err)
+		return nil, xerrors.Errorf("jar/war/ear parse error: %w", err)
 	}
-	return res, nil
+
+	return library.ToAnalysisResult(library.Jar, target.FilePath, libs), nil
 }
 
 func (a javaLibraryAnalyzer) Required(filePath string, _ os.FileInfo) bool {
