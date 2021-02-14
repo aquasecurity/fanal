@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"golang.org/x/xerrors"
 
@@ -36,7 +37,7 @@ func (a javaLibraryAnalyzer) Analyze(target analyzer.AnalysisTarget) (*analyzer.
 func (a javaLibraryAnalyzer) Required(filePath string, _ os.FileInfo) bool {
 	ext := filepath.Ext(filePath)
 	for _, required := range requiredExtensions {
-		if ext == required {
+		if strings.EqualFold(ext, required) {
 			return true
 		}
 	}

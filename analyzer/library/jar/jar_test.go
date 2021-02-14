@@ -92,6 +92,11 @@ func Test_javaLibraryAnalyzer_Required(t *testing.T) {
 			want:     true,
 		},
 		{
+			name:     "capital jar",
+			filePath: "a/b/c/d/test.JAR",
+			want:     true,
+		},
+		{
 			name:     "zip",
 			filePath: "test.zip",
 			want:     false,
