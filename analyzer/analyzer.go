@@ -2,6 +2,7 @@ package analyzer
 
 import (
 	"os"
+	"sort"
 	"strings"
 	"sync"
 
@@ -58,6 +59,16 @@ type AnalysisResult struct {
 
 func (r *AnalysisResult) isEmpty() bool {
 	return r.OS == nil && len(r.PackageInfos) == 0 && len(r.Applications) == 0
+}
+
+func (r *AnalysisResult) Sort() {
+	sort.Slice(r.PackageInfos, func(i, j int) bool {
+		return r.PackageInfos[i].FilePath < r.PackageInfos[j].FilePath
+	})
+
+	sort.Slice(r.Applications, func(i, j int) bool {
+		return r.Applications[i].FilePath < r.Applications[j].FilePath
+	})
 }
 
 func (r *AnalysisResult) Merge(new *AnalysisResult) {

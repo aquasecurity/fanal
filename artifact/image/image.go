@@ -126,6 +126,8 @@ func (a Artifact) inspectLayer(diffID string) (types.BlobInfo, error) {
 	// Wait for all the goroutine to finish.
 	wg.Wait()
 
+	result.Sort()
+
 	layerInfo := types.BlobInfo{
 		Digest:        layerDigest,
 		DiffID:        diffID,

@@ -54,6 +54,8 @@ func (a Artifact) Inspect(_ context.Context) (types.ArtifactReference, error) {
 	// Wait for all the goroutine to finish.
 	wg.Wait()
 
+	result.Sort()
+
 	blobInfo := types.BlobInfo{
 		SchemaVersion: types.BlobJSONSchemaVersion,
 		OS:            result.OS,
