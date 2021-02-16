@@ -24,6 +24,7 @@ const (
 	TypeBundler  = Type("bundler")
 	TypeCargo    = Type("cargo")
 	TypeComposer = Type("composer")
+	TypeJar      = Type("jar")
 	TypeNpm      = Type("npm")
 	TypeNuget    = Type("nuget")
 	TypePipenv   = Type("pipenv")
