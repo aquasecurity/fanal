@@ -22,7 +22,6 @@ import (
 	_ "github.com/aquasecurity/fanal/analyzer/os/alpine"
 	_ "github.com/aquasecurity/fanal/analyzer/pkg/apk"
 	"github.com/aquasecurity/fanal/applier"
-	"github.com/aquasecurity/fanal/artifact"
 	aimage "github.com/aquasecurity/fanal/artifact/image"
 	"github.com/aquasecurity/fanal/cache"
 	"github.com/aquasecurity/fanal/image"
@@ -203,10 +202,10 @@ func analyze(ctx context.Context, imageRef string, opt types.DockerOption) (*typ
 	}
 	defer cleanup()
 
-	ar := aimage.NewArtifact(img, c)
+	ar := aimage.NewArtifact(img, c, nil)
 	ap := applier.NewApplier(c)
 
-	imageInfo, err := ar.Inspect(ctx, artifact.InspectOption{})
+	imageInfo, err := ar.Inspect(ctx)
 	if err != nil {
 		return nil, err
 	}

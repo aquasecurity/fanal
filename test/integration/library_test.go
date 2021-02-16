@@ -142,7 +142,7 @@ func TestFanal_Library_DockerLessMode(t *testing.T) {
 			require.NoError(t, err, tc.name)
 			defer cleanup()
 
-			ar := aimage.NewArtifact(img, c)
+			ar := aimage.NewArtifact(img, c, nil)
 			applier := applier.NewApplier(c)
 
 			// run tests twice, one without cache and with cache
@@ -190,7 +190,7 @@ func TestFanal_Library_DockerMode(t *testing.T) {
 			require.NoError(t, err, tc.name)
 			defer cleanup()
 
-			ar := aimage.NewArtifact(img, c)
+			ar := aimage.NewArtifact(img, c, nil)
 			applier := applier.NewApplier(c)
 
 			// run tests twice, one without cache and with cache
@@ -234,7 +234,7 @@ func TestFanal_Library_TarMode(t *testing.T) {
 			img, err := image.NewArchiveImage(tc.imageFile)
 			require.NoError(t, err, tc.name)
 
-			ar := aimage.NewArtifact(img, c)
+			ar := aimage.NewArtifact(img, c, nil)
 			applier := applier.NewApplier(c)
 
 			runChecks(t, ctx, ar, applier, tc)
@@ -246,7 +246,7 @@ func TestFanal_Library_TarMode(t *testing.T) {
 }
 
 func runChecks(t *testing.T, ctx context.Context, ar artifact.Artifact, applier applier.Applier, tc testCase) {
-	imageInfo, err := ar.Inspect(ctx, artifact.InspectOption{})
+	imageInfo, err := ar.Inspect(ctx)
 	require.NoError(t, err, tc.name)
 	imageDetail, err := applier.ApplyLayers(imageInfo.ID, imageInfo.BlobIDs)
 	require.NoError(t, err, tc.name)
