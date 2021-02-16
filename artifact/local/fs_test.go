@@ -1,6 +1,7 @@
 package local
 
 import (
+	"context"
 	"errors"
 	"testing"
 
@@ -8,7 +9,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/aquasecurity/fanal/analyzer"
-	"github.com/aquasecurity/fanal/artifact"
 	"github.com/aquasecurity/fanal/cache"
 	"github.com/aquasecurity/fanal/types"
 )
@@ -128,10 +128,8 @@ func TestArtifact_Inspect(t *testing.T) {
 			c := new(cache.MockArtifactCache)
 			c.ApplyPutBlobExpectation(tt.putBlobExpectation)
 
-			a := NewArtifact(tt.fields.dir, c)
-			got, err := a.Inspect(nil, artifact.InspectOption{
-				DisableAnalyzers: tt.disabledAnalyzers,
-			})
+			a := NewArtifact(tt.fields.dir, c, tt.disabledAnalyzers)
+			got, err := a.Inspect(context.Background())
 			if tt.wantErr != "" {
 				require.NotNil(t, err)
 				assert.Contains(t, err.Error(), tt.wantErr)

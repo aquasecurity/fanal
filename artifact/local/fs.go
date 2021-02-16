@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 
 	digest "github.com/opencontainers/go-digest"
 	"golang.org/x/xerrors"
@@ -22,34 +23,40 @@ import (
 )
 
 type Artifact struct {
-	dir   string
-	cache cache.ArtifactCache
+	dir              string
+	cache            cache.ArtifactCache
+	disableAnalyzers []analyzer.Type
 }
 
-func NewArtifact(dir string, c cache.ArtifactCache) artifact.Artifact {
+func NewArtifact(dir string, c cache.ArtifactCache, disabled []analyzer.Type) artifact.Artifact {
 	return Artifact{
-		dir:   dir,
-		cache: c,
+		dir:              dir,
+		cache:            c,
+		disableAnalyzers: disabled,
 	}
 }
 
-func (a Artifact) Inspect(_ context.Context, option artifact.InspectOption) (types.ArtifactReference, error) {
-	var result analyzer.AnalysisResult
+func (a Artifact) Inspect(_ context.Context) (types.ArtifactReference, error) {
+	var wg sync.WaitGroup
+	result := new(analyzer.AnalysisResult)
 	err := walker.WalkDir(a.dir, func(filePath string, info os.FileInfo, opener analyzer.Opener) error {
 		filePath, err := filepath.Rel(a.dir, filePath)
 		if err != nil {
 			return err
 		}
-		r, err := analyzer.AnalyzeFile(filePath, info, opener, option.DisableAnalyzers)
-		if err != nil {
+		if err = analyzer.AnalyzeFile(&wg, result, filePath, info, opener, a.disableAnalyzers); err != nil {
 			return err
 		}
-		result.Merge(r)
 		return nil
 	})
 	if err != nil {
 		return types.ArtifactReference{}, err
 	}
+
+	// Wait for all the goroutine to finish.
+	wg.Wait()
+
+	result.Sort()
 
 	blobInfo := types.BlobInfo{
 		SchemaVersion: types.BlobJSONSchemaVersion,

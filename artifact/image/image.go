@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"reflect"
+	"sync"
 
 	v1 "github.com/google/go-containerregistry/pkg/v1"
 	"golang.org/x/xerrors"
@@ -19,18 +20,20 @@ import (
 )
 
 type Artifact struct {
-	image image.Image
-	cache cache.ArtifactCache
+	image            image.Image
+	cache            cache.ArtifactCache
+	disableAnalyzers []analyzer.Type
 }
 
-func NewArtifact(img image.Image, c cache.ArtifactCache) artifact.Artifact {
+func NewArtifact(img image.Image, c cache.ArtifactCache, disabled []analyzer.Type) artifact.Artifact {
 	return Artifact{
-		image: img,
-		cache: c,
+		image:            img,
+		cache:            c,
+		disableAnalyzers: disabled,
 	}
 }
 
-func (a Artifact) Inspect(ctx context.Context, option artifact.InspectOption) (types.ArtifactReference, error) {
+func (a Artifact) Inspect(ctx context.Context) (types.ArtifactReference, error) {
 	imageID, err := a.image.ID()
 	if err != nil {
 		return types.ArtifactReference{}, xerrors.Errorf("unable to get the image ID: %w", err)
@@ -46,7 +49,7 @@ func (a Artifact) Inspect(ctx context.Context, option artifact.InspectOption) (t
 		return types.ArtifactReference{}, xerrors.Errorf("unable to get missing layers: %w", err)
 	}
 
-	if err := a.inspect(ctx, imageID, missingImage, missingLayers, option); err != nil {
+	if err := a.inspect(ctx, imageID, missingImage, missingLayers); err != nil {
 		return types.ArtifactReference{}, xerrors.Errorf("analyze error: %w", err)
 	}
 
@@ -60,15 +63,14 @@ func (a Artifact) Inspect(ctx context.Context, option artifact.InspectOption) (t
 
 }
 
-func (a Artifact) inspect(ctx context.Context, imageID string, missingImage bool, diffIDs []string,
-	option artifact.InspectOption) error {
+func (a Artifact) inspect(ctx context.Context, imageID string, missingImage bool, diffIDs []string) error {
 	done := make(chan struct{})
 	errCh := make(chan error)
 
 	var osFound types.OS
 	for _, d := range diffIDs {
 		go func(diffID string) {
-			layerInfo, err := a.inspectLayer(diffID, option)
+			layerInfo, err := a.inspectLayer(diffID)
 			if err != nil {
 				errCh <- xerrors.Errorf("failed to analyze layer: %s : %w", diffID, err)
 				return
@@ -95,7 +97,7 @@ func (a Artifact) inspect(ctx context.Context, imageID string, missingImage bool
 	}
 
 	if missingImage {
-		if err := a.inspectConfig(imageID, osFound, option); err != nil {
+		if err := a.inspectConfig(imageID, osFound); err != nil {
 			return xerrors.Errorf("unable to analyze config: %w", err)
 		}
 	}
@@ -104,24 +106,29 @@ func (a Artifact) inspect(ctx context.Context, imageID string, missingImage bool
 
 }
 
-func (a Artifact) inspectLayer(diffID string, option artifact.InspectOption) (types.BlobInfo, error) {
+func (a Artifact) inspectLayer(diffID string) (types.BlobInfo, error) {
 	layerDigest, r, err := a.uncompressedLayer(diffID)
 	if err != nil {
 		return types.BlobInfo{}, xerrors.Errorf("unable to get uncompressed layer %s: %w", diffID, err)
 	}
 
+	var wg sync.WaitGroup
 	result := new(analyzer.AnalysisResult)
+
 	opqDirs, whFiles, err := walker.WalkLayerTar(r, func(filePath string, info os.FileInfo, opener analyzer.Opener) error {
-		r, err := analyzer.AnalyzeFile(filePath, info, opener, option.DisableAnalyzers)
-		if err != nil {
-			return err
+		if err = analyzer.AnalyzeFile(&wg, result, filePath, info, opener, a.disableAnalyzers); err != nil {
+			return xerrors.Errorf("failed to analyze %s: %w", filePath, err)
 		}
-		result.Merge(r)
 		return nil
 	})
 	if err != nil {
-		return types.BlobInfo{}, err
+		return types.BlobInfo{}, xerrors.Errorf("walk error: %w", err)
 	}
+
+	// Wait for all the goroutine to finish.
+	wg.Wait()
+
+	result.Sort()
 
 	layerInfo := types.BlobInfo{
 		Digest:        layerDigest,
@@ -171,13 +178,13 @@ func (a Artifact) isCompressed(l v1.Layer) bool {
 	return !uncompressed
 }
 
-func (a Artifact) inspectConfig(imageID string, osFound types.OS, option artifact.InspectOption) error {
+func (a Artifact) inspectConfig(imageID string, osFound types.OS) error {
 	configBlob, err := a.image.ConfigBlob()
 	if err != nil {
 		return xerrors.Errorf("unable to get config blob: %w", err)
 	}
 
-	pkgs := analyzer.AnalyzeConfig(osFound, configBlob, option.DisableAnalyzers)
+	pkgs := analyzer.AnalyzeConfig(osFound, configBlob, a.disableAnalyzers)
 
 	var s1 v1.ConfigFile
 	if err := json.Unmarshal(configBlob, &s1); err != nil {
