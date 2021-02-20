@@ -10,6 +10,7 @@ const (
 	Poetry   = "poetry"
 	Yarn     = "yarn"
 	Jar      = "jar"
+	Wheel    = "wheel"
 )
 
 var (
