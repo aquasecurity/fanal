@@ -4,6 +4,7 @@ const (
 	Bundler  = "bundler"
 	Cargo    = "cargo"
 	Composer = "composer"
+	Egg      = "egg"
 	Npm      = "npm"
 	NuGet    = "nuget"
 	Pipenv   = "pipenv"
