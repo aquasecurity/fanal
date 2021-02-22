@@ -74,6 +74,46 @@ func Test_yamlConfigAnalyzer_Analyze(t *testing.T) {
 			},
 		},
 		{
+			name:      "happy path using multiple yaml",
+			inputFile: "testdata/multiple.yaml",
+			want: &analyzer.AnalysisResult{
+				Configs: []types.Config{
+					{
+						Type:     config.YAML,
+						FilePath: "testdata/multiple.yaml",
+						Content: []interface{}{
+							map[string]interface{}{
+								"apiVersion": "apps/v1",
+								"kind":       "Deployment",
+								"metadata": map[string]interface{}{
+									"name": "hello-kubernetes",
+								},
+								"spec": map[string]interface{}{
+									"replicas": float64(3),
+								},
+							},
+							map[string]interface{}{
+								"apiVersion": "v1",
+								"kind":       "Service",
+								"metadata": map[string]interface{}{
+									"name": "hello-kubernetes",
+								},
+								"spec": map[string]interface{}{
+									"ports": []interface{}{
+										map[string]interface{}{
+											"protocol":   "TCP",
+											"port":       float64(80),
+											"targetPort": float64(8080),
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		{
 			name:      "broken YAML",
 			inputFile: "testdata/broken.yaml",
 			wantErr:   "unmarshal yaml",
