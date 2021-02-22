@@ -79,7 +79,7 @@ func Test_yamlConfigAnalyzer_Analyze(t *testing.T) {
 			wantErr:   "unmarshal yaml",
 		},
 		{
-			name:      "invalid circular refernces yaml",
+			name:      "invalid circular references yaml",
 			inputFile: "testdata/circular_references.yaml",
 			wantErr:   "yaml: anchor 'circular' value contains itself",
 		},

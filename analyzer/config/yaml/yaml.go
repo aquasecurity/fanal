@@ -50,7 +50,6 @@ func (a yamlConfigAnalyzer) Required(filePath string, _ os.FileInfo) bool {
 	return false
 }
 
-func (a yamlConfigAnalyzer) Name() string {
-	// TODO: it needs to be updated after #153 got merged.
-	return "yaml"
+func (a yamlConfigAnalyzer) Type() analyzer.Type {
+	return analyzer.TypeYaml
 }
