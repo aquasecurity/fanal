@@ -43,6 +43,37 @@ func Test_yamlConfigAnalyzer_Analyze(t *testing.T) {
 			},
 		},
 		{
+			name:      "happy path using anchors",
+			inputFile: "testdata/anchor.yaml",
+			want: &analyzer.AnalysisResult{
+				Configs: []types.Config{
+					{
+						Type:     config.YAML,
+						FilePath: "testdata/anchor.yaml",
+						Content: map[string]interface{}{
+							"default": map[string]interface{}{
+								"line": "single line",
+							},
+							"john": map[string]interface{}{
+								"john_name": "john",
+							},
+							"fred": map[string]interface{}{
+								"fred_name": "fred",
+							},
+							"main": map[string]interface{}{
+								"line": "single line",
+								"name": map[string]interface{}{
+									"john_name": "john",
+									"fred_name": "fred",
+								},
+								"comment": "multi\nline\n",
+							},
+						},
+					},
+				},
+			},
+		},
+		{
 			name:      "broken YAML",
 			inputFile: "testdata/broken.yaml",
 			wantErr:   "unmarshal yaml",
