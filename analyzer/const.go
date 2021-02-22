@@ -31,9 +31,9 @@ const (
 	TypePoetry   = Type("poetry")
 	TypeYarn     = Type("yarn")
 
-	// Command
+	// Image Config
 	TypeApkCommand = Type("apk-command")
 
-	// Config
+	// Structured Config
 	TypeYaml = Type("yaml")
 )
