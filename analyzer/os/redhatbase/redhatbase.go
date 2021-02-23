@@ -71,3 +71,7 @@ func (a redhatOSAnalyzer) requiredFiles() []string {
 func (a redhatOSAnalyzer) Type() analyzer.Type {
 	return analyzer.TypeRedHatBase
 }
+
+func (a redhatOSAnalyzer) Version() int {
+	return 1
+}

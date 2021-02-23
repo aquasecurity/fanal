@@ -48,3 +48,7 @@ func (a oracleOSAnalyzer) requiredFiles() []string {
 func (a oracleOSAnalyzer) Type() analyzer.Type {
 	return analyzer.TypeOracle
 }
+
+func (a oracleOSAnalyzer) Version() int {
+	return 1
+}

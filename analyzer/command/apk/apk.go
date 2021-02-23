@@ -19,7 +19,9 @@ import (
 	"github.com/aquasecurity/fanal/types"
 )
 
-const envApkIndexArchiveURL = "FANAL_APK_INDEX_ARCHIVE_URL"
+const (
+	envApkIndexArchiveURL = "FANAL_APK_INDEX_ARCHIVE_URL"
+)
 
 var apkIndexArchiveURL = "https://raw.githubusercontent.com/knqyf263/apkIndex-archive/master/alpine/v%s/main/x86_64/history.json"
 
@@ -272,4 +274,8 @@ func (a alpineCmdAnalyzer) Required(targetOS types.OS) bool {
 
 func (a alpineCmdAnalyzer) Type() analyzer.Type {
 	return analyzer.TypeApkCommand
+}
+
+func (a alpineCmdAnalyzer) Version() int {
+	return 1
 }

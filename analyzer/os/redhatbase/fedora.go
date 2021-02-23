@@ -53,3 +53,7 @@ func (a fedoraOSAnalyzer) requiredFiles() []string {
 func (a fedoraOSAnalyzer) Type() analyzer.Type {
 	return analyzer.TypeFedora
 }
+
+func (a fedoraOSAnalyzer) Version() int {
+	return 1
+}
