@@ -18,9 +18,9 @@ func init() {
 	})
 }
 
-var (
-	requiredExts = []string{".json"}
-)
+const version = 1
+
+var requiredExts = []string{".json"}
 
 type jsonConfigAnalyzer struct {
 	parser *json.Parser
@@ -52,4 +52,8 @@ func (a jsonConfigAnalyzer) Required(filePath string, _ os.FileInfo) bool {
 
 func (a jsonConfigAnalyzer) Type() analyzer.Type {
 	return analyzer.TypeYaml
+}
+
+func (a jsonConfigAnalyzer) Version() int {
+	return version
 }
