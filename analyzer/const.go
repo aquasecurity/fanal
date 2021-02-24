@@ -38,4 +38,5 @@ const (
 	TypeYaml = Type("yaml")
 	TypeTOML = Type("toml")
 	TypeHCL1 = Type("hcl1")
+	TypeHCL2 = Type("hcl2")
 )
