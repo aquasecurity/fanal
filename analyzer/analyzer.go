@@ -1,6 +1,7 @@
 package analyzer
 
 import (
+	"fmt"
 	"os"
 	"sort"
 	"strings"
@@ -113,6 +114,7 @@ func (r *AnalysisResult) Merge(new *AnalysisResult) {
 type Analyzer struct {
 	drivers       []analyzer
 	configDrivers []configAnalyzer
+	disabled      []Type
 }
 
 func NewAnalyzer(disabledAnalyzers []Type) Analyzer {
@@ -135,21 +137,34 @@ func NewAnalyzer(disabledAnalyzers []Type) Analyzer {
 	return Analyzer{
 		drivers:       drivers,
 		configDrivers: configDrivers,
+		disabled:      disabledAnalyzers,
 	}
 }
 
-func (a Analyzer) AnalyzerVersions() map[string]int {
-	versions := map[string]int{}
-	for _, d := range a.drivers {
-		versions[string(d.Type())] = d.Version()
+// AnalyzerVersions returns analyzer version identifier used for cache suffixes.
+// e.g. alpine: 1, amazon: 3, debian: 2 => 132
+// When the amazon analyzer is disabled => 102
+func (a Analyzer) AnalyzerVersions() string {
+	var versions string
+	for _, driver := range analyzers {
+		if isDisabled(driver.Type(), a.disabled) {
+			versions += "0"
+			continue
+		}
+		versions += fmt.Sprint(driver.Version())
 	}
 	return versions
 }
 
-func (a Analyzer) ImageConfigAnalyzerVersions() map[string]int {
-	versions := map[string]int{}
-	for _, d := range a.configDrivers {
-		versions[string(d.Type())] = d.Version()
+// ImageConfigAnalyzerVersions returns analyzer version identifier used for cache suffixes.
+func (a Analyzer) ImageConfigAnalyzerVersions() string {
+	var versions string
+	for _, driver := range configAnalyzers {
+		if isDisabled(driver.Type(), a.disabled) {
+			versions += "0"
+			continue
+		}
+		versions += fmt.Sprint(driver.Version())
 	}
 	return versions
 }
