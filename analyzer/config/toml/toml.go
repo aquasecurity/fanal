@@ -18,9 +18,9 @@ func init() {
 	})
 }
 
-var (
-	requiredExts = []string{".toml"}
-)
+const version = 1
+
+var requiredExts = []string{".toml"}
 
 type tomlConfigAnalyzer struct {
 	parser *toml.Parser
@@ -52,4 +52,8 @@ func (a tomlConfigAnalyzer) Required(filePath string, _ os.FileInfo) bool {
 
 func (a tomlConfigAnalyzer) Type() analyzer.Type {
 	return analyzer.TypeTOML
+}
+
+func (a tomlConfigAnalyzer) Version() int {
+	return version
 }
