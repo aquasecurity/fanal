@@ -15,6 +15,8 @@ import (
 	"golang.org/x/xerrors"
 )
 
+const oracleAnalyzerVersion = 1
+
 func init() {
 	analyzer.RegisterAnalyzer(&oracleOSAnalyzer{})
 }
@@ -50,5 +52,5 @@ func (a oracleOSAnalyzer) Type() analyzer.Type {
 }
 
 func (a oracleOSAnalyzer) Version() int {
-	return 1
+	return oracleAnalyzerVersion
 }

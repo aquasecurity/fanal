@@ -21,6 +21,7 @@ import (
 
 const (
 	envApkIndexArchiveURL = "FANAL_APK_INDEX_ARCHIVE_URL"
+	analyzerVersion       = 1
 )
 
 var apkIndexArchiveURL = "https://raw.githubusercontent.com/knqyf263/apkIndex-archive/master/alpine/v%s/main/x86_64/history.json"
@@ -277,5 +278,5 @@ func (a alpineCmdAnalyzer) Type() analyzer.Type {
 }
 
 func (a alpineCmdAnalyzer) Version() int {
-	return 1
+	return analyzerVersion
 }

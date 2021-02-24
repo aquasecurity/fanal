@@ -14,6 +14,8 @@ import (
 	"golang.org/x/xerrors"
 )
 
+const centosAnalyzerVersion = 1
+
 func init() {
 	analyzer.RegisterAnalyzer(&centOSAnalyzer{})
 }
@@ -53,5 +55,5 @@ func (a centOSAnalyzer) Type() analyzer.Type {
 }
 
 func (a centOSAnalyzer) Version() int {
-	return 1
+	return centosAnalyzerVersion
 }
