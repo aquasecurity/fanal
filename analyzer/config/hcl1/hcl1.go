@@ -18,9 +18,9 @@ func init() {
 	})
 }
 
-var (
-	requiredExts = []string{".hcl"}
-)
+const version = 1
+
+var requiredExts = []string{".hcl"}
 
 type hcl1ConfigAnalyzer struct {
 	parser *hcl1.Parser
@@ -52,4 +52,8 @@ func (a hcl1ConfigAnalyzer) Required(filePath string, _ os.FileInfo) bool {
 
 func (a hcl1ConfigAnalyzer) Type() analyzer.Type {
 	return analyzer.TypeHCL1
+}
+
+func (a hcl1ConfigAnalyzer) Version() int {
+	return version
 }
