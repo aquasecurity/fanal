@@ -3,11 +3,9 @@ package image
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"io"
 	"os"
 	"reflect"
-	"strings"
 	"sync"
 
 	v1 "github.com/google/go-containerregistry/pkg/v1"
@@ -20,8 +18,6 @@ import (
 	"github.com/aquasecurity/fanal/types"
 	"github.com/aquasecurity/fanal/walker"
 )
-
-const keySeparator = "/"
 
 type Artifact struct {
 	image    image.Image
@@ -72,13 +68,13 @@ func (a Artifact) Inspect(ctx context.Context) (types.ArtifactReference, error) 
 func (a Artifact) withVersionSuffix(imageID string, diffIDs []string) (string, []string) {
 	// e.g. sha256:5c534be56eca62e756ef2ef51523feda0f19cd7c15bb0c015e3d6e3ae090bf6e
 	//   => sha256:5c534be56eca62e756ef2ef51523feda0f19cd7c15bb0c015e3d6e3ae090bf6e/1
-	imageID = fmt.Sprintf("%s%s%s", imageID, keySeparator, a.analyzer.ImageConfigAnalyzerVersions())
+	imageID = cache.WithVersionSuffix(imageID, a.analyzer.ImageConfigAnalyzerVersions())
 
 	var blobIDs []string
 	for _, diffID := range diffIDs {
 		// e.g. sha256:0fcbbeeeb0d7fc5c06362d7a6717b999e605574c7210eff4f7418f6e9be9fbfe
 		//   => sha256:0fcbbeeeb0d7fc5c06362d7a6717b999e605574c7210eff4f7418f6e9be9fbfe/121110111321
-		blobID := fmt.Sprintf("%s%s%s", diffID, keySeparator, a.analyzer.AnalyzerVersions())
+		blobID := cache.WithVersionSuffix(diffID, a.analyzer.AnalyzerVersions())
 		blobIDs = append(blobIDs, blobID)
 	}
 	return imageID, blobIDs
@@ -91,7 +87,7 @@ func (a Artifact) inspect(ctx context.Context, imageID string, missingImage bool
 	var osFound types.OS
 	for _, d := range diffIDs {
 		go func(versionedDiffID string) {
-			diffID := trimVersionSuffix(versionedDiffID)
+			diffID := cache.TrimVersionSuffix(versionedDiffID)
 			layerInfo, err := a.inspectLayer(diffID)
 			if err != nil {
 				errCh <- xerrors.Errorf("failed to analyze layer: %s : %w", diffID, err)
@@ -228,12 +224,4 @@ func (a Artifact) inspectConfig(imageID string, osFound types.OS) error {
 	}
 
 	return nil
-}
-
-func trimVersionSuffix(versioned string) string {
-	ss := strings.Split(versioned, keySeparator)
-	if len(ss) < 2 {
-		return versioned
-	}
-	return ss[0]
 }

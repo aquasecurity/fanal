@@ -4,7 +4,6 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -76,7 +75,7 @@ func (a Artifact) Inspect(_ context.Context) (types.ArtifactReference, error) {
 	d := digest.NewDigest(digest.SHA256, h)
 	diffID := d.String()
 	blobInfo.DiffID = diffID
-	versionedDiffID := fmt.Sprintf("%s/%s", diffID, a.analyzer.AnalyzerVersions())
+	versionedDiffID := cache.WithVersionSuffix(diffID, a.analyzer.AnalyzerVersions())
 
 	if err = a.cache.PutBlob(versionedDiffID, blobInfo); err != nil {
 		return types.ArtifactReference{}, xerrors.Errorf("failed to store blob (%s) in cache: %w", diffID, err)
