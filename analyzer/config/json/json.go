@@ -51,7 +51,7 @@ func (a jsonConfigAnalyzer) Required(filePath string, _ os.FileInfo) bool {
 }
 
 func (a jsonConfigAnalyzer) Type() analyzer.Type {
-	return analyzer.TypeYaml
+	return analyzer.TypeJSON
 }
 
 func (a jsonConfigAnalyzer) Version() int {

@@ -135,3 +135,12 @@ func Test_jsonConfigAnalyzer_Required(t *testing.T) {
 		})
 	}
 }
+
+func Test_jsonConfigAnalyzer_Type(t *testing.T) {
+	want := analyzer.TypeJSON
+	a := jsonConfigAnalyzer{
+		parser: &json.Parser{},
+	}
+	got := a.Type()
+	assert.Equal(t, want, got)
+}
