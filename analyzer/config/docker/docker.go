@@ -21,7 +21,7 @@ func init() {
 
 const version = 1
 
-var requiredExts = []string{"Dockerfile"}
+var requiredFile = "Dockerfile"
 
 type dockerConfigAnalyzer struct {
 	parser *docker.Parser
@@ -30,7 +30,7 @@ type dockerConfigAnalyzer struct {
 func (a dockerConfigAnalyzer) Analyze(target analyzer.AnalysisTarget) (*analyzer.AnalysisResult, error) {
 	var parsed interface{}
 	if err := a.parser.Unmarshal(target.Content, &parsed); err != nil {
-		return nil, xerrors.Errorf("unable to parse Docker (%s): %w", target.FilePath, err)
+		return nil, xerrors.Errorf("unable to parse Dockerfile (%s): %w", target.FilePath, err)
 	}
 	return &analyzer.AnalysisResult{
 		Configs: []types.Config{{
@@ -41,18 +41,22 @@ func (a dockerConfigAnalyzer) Analyze(target analyzer.AnalysisTarget) (*analyzer
 	}, nil
 }
 
-// Required returns true if base filepath contains of the requiredExts
-// case-insensitive
+// Required does a case-insensitive check for filePath and returns true if
+// filePath equals/startsWith/hasExtension requiredFile
 func (a dockerConfigAnalyzer) Required(filePath string, _ os.FileInfo) bool {
 	base := filepath.Base(filePath)
-	for _, required := range requiredExts {
-		if strings.EqualFold(base, required) {
-			return true
-		}
-		if strings.Contains(strings.ToLower(base), strings.ToLower(required)) {
-			return true
-		}
+	if strings.EqualFold(base, requiredFile) {
+		return true
 	}
+	if strings.HasPrefix(strings.ToLower(base), strings.ToLower(requiredFile)) {
+		return true
+	}
+
+	ext := filepath.Ext(filePath)
+	if strings.EqualFold(strings.TrimLeft(ext, "."), requiredFile) {
+		return true
+	}
+
 	return false
 }
 

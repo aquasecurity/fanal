@@ -58,13 +58,13 @@ func Test_dockerConfigAnalyzer_Analyze(t *testing.T) {
 			},
 		},
 		{
-			name:      "happy path with multi-step",
-			inputFile: "testdata/Dockerfile.multistep",
+			name:      "happy path with multi-stage",
+			inputFile: "testdata/Dockerfile.multistage",
 			want: &analyzer.AnalysisResult{
 				Configs: []types.Config{
 					{
 						Type:     config.Dockerfile,
-						FilePath: "testdata/Dockerfile.multistep",
+						FilePath: "testdata/Dockerfile.multistage",
 						Content: []interface{}{
 							[]interface{}{
 								map[string]interface{}{
@@ -181,4 +181,13 @@ func Test_dockerConfigAnalyzer_Required(t *testing.T) {
 			assert.Equal(t, tt.want, got)
 		})
 	}
+}
+
+func Test_dockerConfigAnalyzer_Type(t *testing.T) {
+	want := analyzer.TypeDockerfile
+	a := dockerConfigAnalyzer{
+		parser: &docker.Parser{},
+	}
+	got := a.Type()
+	assert.Equal(t, want, got)
 }
