@@ -37,6 +37,5 @@ const (
 	// Structured Config
 	TypeYaml = Type("yaml")
 	TypeTOML = Type("toml")
-	TypeHCL1 = Type("hcl1")
-	TypeHCL2 = Type("hcl2")
+	TypeHCL  = Type("hcl")
 )
