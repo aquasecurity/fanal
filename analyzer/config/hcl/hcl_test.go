@@ -176,3 +176,13 @@ func Test_hclConfigAnalyzer_Required(t *testing.T) {
 		})
 	}
 }
+func Test_hclConfigAnalyzer_Type(t *testing.T) {
+	want := analyzer.TypeHCL
+	a := hclConfigAnalyzer{
+		hcl1Parser: &hcl1.Parser{},
+		hcl2Parser: &hcl2.Parser{},
+	}
+
+	got := a.Type()
+	assert.Equal(t, want, got)
+}
