@@ -2,6 +2,7 @@ package walker
 
 import (
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/aquasecurity/fanal/analyzer"
@@ -19,6 +20,7 @@ type WalkFunc func(filePath string, info os.FileInfo, opener analyzer.Opener) er
 
 func isIgnored(filePath string) bool {
 	filePath = strings.TrimLeft(filePath, "/")
+	filePath = filepath.Clean(filePath)
 	for _, path := range strings.Split(filePath, utils.PathSeparator) {
 		if utils.StringInSlice(path, library.IgnoreDirs) {
 			return true

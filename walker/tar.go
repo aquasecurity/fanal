@@ -31,6 +31,7 @@ func WalkLayerTar(layer io.Reader, analyzeFn WalkFunc) ([]string, []string, erro
 
 		filePath := hdr.Name
 		filePath = strings.TrimLeft(filepath.Clean(filePath), "/")
+		filePath = filepath.ToSlash(filePath)
 		fileDir, fileName := filepath.Split(filePath)
 
 		// e.g. etc/.wh..wh..opq
@@ -42,6 +43,7 @@ func WalkLayerTar(layer io.Reader, analyzeFn WalkFunc) ([]string, []string, erro
 		if strings.HasPrefix(fileName, wh) {
 			name := strings.TrimPrefix(fileName, wh)
 			fpath := filepath.Join(fileDir, name)
+			fpath = filepath.ToSlash(fpath)
 			whFiles = append(whFiles, fpath)
 			continue
 		}
