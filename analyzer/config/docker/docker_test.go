@@ -166,6 +166,26 @@ func Test_dockerConfigAnalyzer_Required(t *testing.T) {
 			want:     true,
 		},
 		{
+			name:     "Dockerfile as prefix",
+			filePath: "Dockerfilebuild",
+			want:     false,
+		},
+		{
+			name:     "Dockerfile as suffix",
+			filePath: "buildDockerfile",
+			want:     false,
+		},
+		{
+			name:     "Dockerfile as prefix with ext",
+			filePath: "Dockerfilebuild.sh",
+			want:     false,
+		},
+		{
+			name:     "Dockerfile as suffix with ext",
+			filePath: "buildDockerfile.sh",
+			want:     false,
+		},
+		{
 			name:     "json",
 			filePath: "deployment.json",
 			want:     false,

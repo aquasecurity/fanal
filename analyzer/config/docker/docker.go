@@ -48,12 +48,12 @@ func (a dockerConfigAnalyzer) Required(filePath string, _ os.FileInfo) bool {
 	if strings.EqualFold(base, requiredFile) {
 		return true
 	}
-	if strings.HasPrefix(strings.ToLower(base), strings.ToLower(requiredFile)) {
-		return true
-	}
 
 	ext := filepath.Ext(filePath)
-	if strings.EqualFold(strings.TrimLeft(ext, "."), requiredFile) {
+	if strings.EqualFold(filePath, requiredFile+ext) {
+		return true
+	}
+	if strings.EqualFold(ext, "."+requiredFile) {
 		return true
 	}
 
