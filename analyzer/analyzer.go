@@ -145,26 +145,40 @@ func NewAnalyzer(disabledAnalyzers []Type) Analyzer {
 // e.g. alpine: 1, amazon: 3, debian: 2 => 132
 // When the amazon analyzer is disabled => 102
 func (a Analyzer) AnalyzerVersions() string {
+	// Sort analyzers for the consistent version identifier
+	sorted := make([]analyzer, len(analyzers))
+	copy(sorted, analyzers)
+	sort.Slice(sorted, func(i, j int) bool {
+		return sorted[i].Type() < sorted[j].Type()
+	})
+
 	var versions string
-	for _, driver := range analyzers {
-		if isDisabled(driver.Type(), a.disabled) {
+	for _, s := range sorted {
+		if isDisabled(s.Type(), a.disabled) {
 			versions += "0"
 			continue
 		}
-		versions += fmt.Sprint(driver.Version())
+		versions += fmt.Sprint(s.Version())
 	}
 	return versions
 }
 
 // ImageConfigAnalyzerVersions returns analyzer version identifier used for cache suffixes.
 func (a Analyzer) ImageConfigAnalyzerVersions() string {
+	// Sort image config analyzers for the consistent version identifier.
+	sorted := make([]configAnalyzer, len(configAnalyzers))
+	copy(sorted, configAnalyzers)
+	sort.Slice(sorted, func(i, j int) bool {
+		return sorted[i].Type() < sorted[j].Type()
+	})
+
 	var versions string
-	for _, driver := range configAnalyzers {
-		if isDisabled(driver.Type(), a.disabled) {
+	for _, s := range sorted {
+		if isDisabled(s.Type(), a.disabled) {
 			versions += "0"
 			continue
 		}
-		versions += fmt.Sprint(driver.Version())
+		versions += fmt.Sprint(s.Version())
 	}
 	return versions
 }
