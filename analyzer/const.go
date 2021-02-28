@@ -39,4 +39,5 @@ const (
 	TypeYaml
 	TypeTOML
 	TypeJSON
+	TypeDockerfile
 )
