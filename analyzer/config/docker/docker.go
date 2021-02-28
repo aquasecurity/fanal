@@ -46,7 +46,7 @@ func (a dockerConfigAnalyzer) Analyze(target analyzer.AnalysisTarget) (*analyzer
 func (a dockerConfigAnalyzer) Required(filePath string, _ os.FileInfo) bool {
 	base := filepath.Base(filePath)
 	ext := filepath.Ext(base)
-	if strings.EqualFold(filePath, requiredFile+ext) {
+	if strings.EqualFold(base, requiredFile+ext) {
 		return true
 	}
 	if strings.EqualFold(ext, "."+requiredFile) {
