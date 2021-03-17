@@ -55,15 +55,15 @@ func RegisterConfigAnalyzer(analyzer configAnalyzer) {
 type Opener func() ([]byte, error)
 
 type AnalysisResult struct {
-	m            sync.Mutex
-	OS           *types.OS
-	PackageInfos []types.PackageInfo
-	Applications []types.Application
-	Configs      []types.Config
+	m                 sync.Mutex
+	OS                *types.OS
+	PackageInfos      []types.PackageInfo
+	Applications      []types.Application
+	Misconfigurations []types.Misconfiguration
 }
 
 func (r *AnalysisResult) isEmpty() bool {
-	return r.OS == nil && len(r.PackageInfos) == 0 && len(r.Applications) == 0 && len(r.Configs) == 0
+	return r.OS == nil && len(r.PackageInfos) == 0 && len(r.Applications) == 0 && len(r.Misconfigurations) == 0
 }
 
 func (r *AnalysisResult) Sort() {
@@ -71,12 +71,27 @@ func (r *AnalysisResult) Sort() {
 		return r.PackageInfos[i].FilePath < r.PackageInfos[j].FilePath
 	})
 
+	for _, pi := range r.PackageInfos {
+		sort.Slice(pi.Packages, func(i, j int) bool {
+			return pi.Packages[i].Name < pi.Packages[j].Name
+		})
+	}
+
 	sort.Slice(r.Applications, func(i, j int) bool {
 		return r.Applications[i].FilePath < r.Applications[j].FilePath
 	})
 
-	sort.Slice(r.Configs, func(i, j int) bool {
-		return r.Configs[i].FilePath < r.Configs[j].FilePath
+	for _, app := range r.Applications {
+		sort.Slice(app.Libraries, func(i, j int) bool {
+			if app.Libraries[i].Library.Name != app.Libraries[j].Library.Name {
+				return app.Libraries[i].Library.Name < app.Libraries[j].Library.Name
+			}
+			return app.Libraries[i].Library.Version < app.Libraries[j].Library.Version
+		})
+	}
+
+	sort.Slice(r.Misconfigurations, func(i, j int) bool {
+		return r.Misconfigurations[i].FilePath < r.Misconfigurations[j].FilePath
 	})
 }
 
@@ -106,8 +121,8 @@ func (r *AnalysisResult) Merge(new *AnalysisResult) {
 		r.Applications = append(r.Applications, new.Applications...)
 	}
 
-	if len(new.Configs) > 0 {
-		r.Configs = append(r.Configs, new.Configs...)
+	if len(new.Misconfigurations) > 0 {
+		r.Misconfigurations = append(r.Misconfigurations, new.Misconfigurations...)
 	}
 }
 

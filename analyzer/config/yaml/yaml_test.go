@@ -24,7 +24,7 @@ func Test_yamlConfigAnalyzer_Analyze(t *testing.T) {
 			name:      "happy path",
 			inputFile: "testdata/deployment.yaml",
 			want: &analyzer.AnalysisResult{
-				Configs: []types.Config{
+				Misconfigurations: []types.Config{
 					{
 						Type:     config.YAML,
 						FilePath: "testdata/deployment.yaml",
@@ -46,7 +46,7 @@ func Test_yamlConfigAnalyzer_Analyze(t *testing.T) {
 			name:      "happy path using anchors",
 			inputFile: "testdata/anchor.yaml",
 			want: &analyzer.AnalysisResult{
-				Configs: []types.Config{
+				Misconfigurations: []types.Config{
 					{
 						Type:     config.YAML,
 						FilePath: "testdata/anchor.yaml",
@@ -77,7 +77,7 @@ func Test_yamlConfigAnalyzer_Analyze(t *testing.T) {
 			name:      "happy path using multiple yaml",
 			inputFile: "testdata/multiple.yaml",
 			want: &analyzer.AnalysisResult{
-				Configs: []types.Config{
+				Misconfigurations: []types.Config{
 					{
 						Type:     config.YAML,
 						FilePath: "testdata/multiple.yaml",
@@ -129,7 +129,7 @@ func Test_yamlConfigAnalyzer_Analyze(t *testing.T) {
 			b, err := ioutil.ReadFile(tt.inputFile)
 			require.NoError(t, err)
 
-			a := yamlConfigAnalyzer{
+			a := ConfigScanner{
 				parser: &yaml.Parser{},
 			}
 
@@ -173,7 +173,7 @@ func Test_yamlConfigAnalyzer_Required(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			a := yamlConfigAnalyzer{
+			a := ConfigScanner{
 				parser: &yaml.Parser{},
 			}
 

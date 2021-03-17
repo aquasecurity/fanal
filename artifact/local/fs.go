@@ -14,6 +14,7 @@ import (
 	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/fanal/analyzer"
+	"github.com/aquasecurity/fanal/analyzer/config"
 	_ "github.com/aquasecurity/fanal/analyzer/os/alpine"
 	_ "github.com/aquasecurity/fanal/analyzer/pkg/apk"
 	"github.com/aquasecurity/fanal/artifact"
@@ -23,16 +24,21 @@ import (
 )
 
 type Artifact struct {
-	dir      string
-	cache    cache.ArtifactCache
-	analyzer analyzer.Analyzer
+	dir                 string
+	cache               cache.ArtifactCache
+	analyzer            analyzer.Analyzer
+	configScannerOption config.ScannerOption
 }
 
-func NewArtifact(dir string, c cache.ArtifactCache, disabled []analyzer.Type) artifact.Artifact {
+func NewArtifact(dir string, c cache.ArtifactCache, disabled []analyzer.Type, opt config.ScannerOption) artifact.Artifact {
+	// Register config scanners as analyzers
+	config.RegisterConfigScanners(opt)
+
 	return Artifact{
-		dir:      dir,
-		cache:    c,
-		analyzer: analyzer.NewAnalyzer(disabled),
+		dir:                 dir,
+		cache:               c,
+		analyzer:            analyzer.NewAnalyzer(disabled),
+		configScannerOption: opt,
 	}
 }
 
@@ -59,11 +65,11 @@ func (a Artifact) Inspect(_ context.Context) (types.ArtifactReference, error) {
 	result.Sort()
 
 	blobInfo := types.BlobInfo{
-		SchemaVersion: types.BlobJSONSchemaVersion,
-		OS:            result.OS,
-		PackageInfos:  result.PackageInfos,
-		Applications:  result.Applications,
-		Configs:       result.Configs,
+		SchemaVersion:     types.BlobJSONSchemaVersion,
+		OS:                result.OS,
+		PackageInfos:      result.PackageInfos,
+		Applications:      result.Applications,
+		Misconfigurations: result.Misconfigurations,
 	}
 
 	// calculate hash of JSON and use it as pseudo artifactID and blobID
@@ -75,9 +81,12 @@ func (a Artifact) Inspect(_ context.Context) (types.ArtifactReference, error) {
 	d := digest.NewDigest(digest.SHA256, h)
 	diffID := d.String()
 	blobInfo.DiffID = diffID
-	versionedDiffID := cache.WithVersionSuffix(diffID, a.analyzer.AnalyzerVersions())
+	cacheKey, err := cache.CalcKey(diffID, a.analyzer.AnalyzerVersions(), &a.configScannerOption)
+	if err != nil {
+		return types.ArtifactReference{}, err
+	}
 
-	if err = a.cache.PutBlob(versionedDiffID, blobInfo); err != nil {
+	if err = a.cache.PutBlob(cacheKey, blobInfo); err != nil {
 		return types.ArtifactReference{}, xerrors.Errorf("failed to store blob (%s) in cache: %w", diffID, err)
 	}
 
@@ -92,7 +101,7 @@ func (a Artifact) Inspect(_ context.Context) (types.ArtifactReference, error) {
 
 	return types.ArtifactReference{
 		Name:    hostName,
-		ID:      versionedDiffID, // use diffID as pseudo artifactID
-		BlobIDs: []string{versionedDiffID},
+		ID:      cacheKey, // use diffID as pseudo artifactID
+		BlobIDs: []string{cacheKey},
 	}, nil
 }

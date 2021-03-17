@@ -24,7 +24,7 @@ func Test_dockerConfigAnalyzer_Analyze(t *testing.T) {
 			name:      "happy path",
 			inputFile: "testdata/Dockerfile.deployment",
 			want: &analyzer.AnalysisResult{
-				Configs: []types.Config{
+				Misconfigurations: []types.Config{
 					{
 						Type:     config.Dockerfile,
 						FilePath: "testdata/Dockerfile.deployment",
@@ -61,7 +61,7 @@ func Test_dockerConfigAnalyzer_Analyze(t *testing.T) {
 			name:      "happy path with multi-stage",
 			inputFile: "testdata/Dockerfile.multistage",
 			want: &analyzer.AnalysisResult{
-				Configs: []types.Config{
+				Misconfigurations: []types.Config{
 					{
 						Type:     config.Dockerfile,
 						FilePath: "testdata/Dockerfile.multistage",
@@ -119,7 +119,7 @@ func Test_dockerConfigAnalyzer_Analyze(t *testing.T) {
 			b, err := ioutil.ReadFile(tt.inputFile)
 			require.NoError(t, err)
 
-			a := dockerConfigAnalyzer{
+			a := ConfigScanner{
 				parser: &docker.Parser{},
 			}
 
@@ -198,7 +198,7 @@ func Test_dockerConfigAnalyzer_Required(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			a := dockerConfigAnalyzer{
+			a := ConfigScanner{
 				parser: &docker.Parser{},
 			}
 
@@ -210,7 +210,7 @@ func Test_dockerConfigAnalyzer_Required(t *testing.T) {
 
 func Test_dockerConfigAnalyzer_Type(t *testing.T) {
 	want := analyzer.TypeDockerfile
-	a := dockerConfigAnalyzer{
+	a := ConfigScanner{
 		parser: &docker.Parser{},
 	}
 	got := a.Type()

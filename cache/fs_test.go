@@ -218,7 +218,7 @@ func TestFSCache_PutBlob(t *testing.T) {
 				  ],
 				  "Applications": [
 				    {
-				      "Type": "composer",
+				      "FileType": "composer",
 				      "FilePath": "php-app/composer.lock",
 				      "Libraries": [
                         {

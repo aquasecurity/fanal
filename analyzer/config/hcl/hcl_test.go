@@ -25,7 +25,7 @@ func Test_hclConfigAnalyzer_Analyze(t *testing.T) {
 			name:      "HCL1: happy path",
 			inputFile: "testdata/deployment.hcl1",
 			want: &analyzer.AnalysisResult{
-				Configs: []types.Config{
+				Misconfigurations: []types.Config{
 					{
 						Type:     config.HCL1,
 						FilePath: "testdata/deployment.hcl1",
@@ -56,7 +56,7 @@ func Test_hclConfigAnalyzer_Analyze(t *testing.T) {
 			name:      "HCL2: happy path",
 			inputFile: "testdata/deployment.hcl2",
 			want: &analyzer.AnalysisResult{
-				Configs: []types.Config{
+				Misconfigurations: []types.Config{
 					{
 						Type:     config.HCL2,
 						FilePath: "testdata/deployment.hcl2",
@@ -83,7 +83,7 @@ func Test_hclConfigAnalyzer_Analyze(t *testing.T) {
 			name:      "HCL2: deprecated",
 			inputFile: "testdata/deprecated.hcl",
 			want: &analyzer.AnalysisResult{
-				Configs: []types.Config{
+				Misconfigurations: []types.Config{
 					{
 						Type:     config.HCL1,
 						FilePath: "testdata/deprecated.hcl",
@@ -111,7 +111,7 @@ func Test_hclConfigAnalyzer_Analyze(t *testing.T) {
 			b, err := ioutil.ReadFile(tt.inputFile)
 			require.NoError(t, err)
 
-			a := hclConfigAnalyzer{
+			a := ConfigScanner{
 				hcl1Parser: &hcl1.Parser{},
 				hcl2Parser: &hcl2.Parser{},
 			}
@@ -166,7 +166,7 @@ func Test_hclConfigAnalyzer_Required(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			a := hclConfigAnalyzer{
+			a := ConfigScanner{
 				hcl1Parser: &hcl1.Parser{},
 				hcl2Parser: &hcl2.Parser{},
 			}
@@ -178,7 +178,7 @@ func Test_hclConfigAnalyzer_Required(t *testing.T) {
 }
 func Test_hclConfigAnalyzer_Type(t *testing.T) {
 	want := analyzer.TypeHCL
-	a := hclConfigAnalyzer{
+	a := ConfigScanner{
 		hcl1Parser: &hcl1.Parser{},
 		hcl2Parser: &hcl2.Parser{},
 	}

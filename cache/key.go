@@ -1,24 +1,39 @@
 package cache
 
 import (
+	"crypto/sha256"
 	"fmt"
-	"strings"
+
+	"golang.org/x/mod/sumdb/dirhash"
+
+	"github.com/aquasecurity/fanal/analyzer/config"
 )
 
-const keySeparator = "/"
+func CalcKey(id, version string, opt *config.ScannerOption) (string, error) {
+	// Sort options for consistent results
+	opt.Sort()
 
-func WithVersionSuffix(key, version string) string {
-	// e.g. sha256:5c534be56eca62e756ef2ef51523feda0f19cd7c15bb0c015e3d6e3ae090bf6e
-	//   => sha256:5c534be56eca62e756ef2ef51523feda0f19cd7c15bb0c015e3d6e3ae090bf6e/11201101
-	return fmt.Sprintf("%s%s%s", key, keySeparator, version)
-}
+	h := sha256.New()
 
-func TrimVersionSuffix(versioned string) string {
-	// e.g.sha256:5c534be56eca62e756ef2ef51523feda0f19cd7c15bb0c015e3d6e3ae090bf6e/11201101
-	//  => sha256:5c534be56eca62e756ef2ef51523feda0f19cd7c15bb0c015e3d6e3ae090bf6e
-	ss := strings.Split(versioned, keySeparator)
-	if len(ss) < 2 {
-		return versioned
+	for _, s := range append([]string{id, version}, opt.FilePatterns...) {
+		_, err := h.Write([]byte(s))
+		if err != nil {
+			return "", err
+		}
 	}
-	return ss[0]
+
+	for _, paths := range [][]string{opt.PolicyPaths, opt.DataPaths} {
+		for _, p := range paths {
+			s, err := dirhash.HashDir(p, "", dirhash.DefaultHash)
+			if err != nil {
+				return "", err
+			}
+
+			if _, err = h.Write([]byte(s)); err != nil {
+				return "", err
+			}
+		}
+	}
+
+	return fmt.Sprintf("sha256:%x", h.Sum(nil)), nil
 }

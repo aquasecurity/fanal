@@ -24,7 +24,7 @@ func Test_jsonConfigAnalyzer_Analyze(t *testing.T) {
 			name:      "happy path",
 			inputFile: "testdata/deployment.json",
 			want: &analyzer.AnalysisResult{
-				Configs: []types.Config{
+				Misconfigurations: []types.Config{
 					{
 						Type:     config.JSON,
 						FilePath: "testdata/deployment.json",
@@ -46,7 +46,7 @@ func Test_jsonConfigAnalyzer_Analyze(t *testing.T) {
 			name:      "happy path: json array",
 			inputFile: "testdata/array.json",
 			want: &analyzer.AnalysisResult{
-				Configs: []types.Config{
+				Misconfigurations: []types.Config{
 					{
 						Type:     config.JSON,
 						FilePath: "testdata/array.json",
@@ -87,7 +87,7 @@ func Test_jsonConfigAnalyzer_Analyze(t *testing.T) {
 			b, err := ioutil.ReadFile(tt.inputFile)
 			require.NoError(t, err)
 
-			a := jsonConfigAnalyzer{
+			a := ConfigScanner{
 				parser: &json.Parser{},
 			}
 
@@ -126,7 +126,7 @@ func Test_jsonConfigAnalyzer_Required(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			a := jsonConfigAnalyzer{
+			a := ConfigScanner{
 				parser: &json.Parser{},
 			}
 
@@ -138,7 +138,7 @@ func Test_jsonConfigAnalyzer_Required(t *testing.T) {
 
 func Test_jsonConfigAnalyzer_Type(t *testing.T) {
 	want := analyzer.TypeJSON
-	a := jsonConfigAnalyzer{
+	a := ConfigScanner{
 		parser: &json.Parser{},
 	}
 	got := a.Type()

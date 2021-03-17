@@ -24,7 +24,7 @@ func Test_tomlConfigAnalyzer_Analyze(t *testing.T) {
 			name:      "happy path",
 			inputFile: "testdata/deployment.toml",
 			want: &analyzer.AnalysisResult{
-				Configs: []types.Config{
+				Misconfigurations: []types.Config{
 					{
 						Type:     config.TOML,
 						FilePath: "testdata/deployment.toml",
@@ -53,7 +53,7 @@ func Test_tomlConfigAnalyzer_Analyze(t *testing.T) {
 			b, err := ioutil.ReadFile(tt.inputFile)
 			require.NoError(t, err)
 
-			a := tomlConfigAnalyzer{
+			a := ConfigScanner{
 				parser: &toml.Parser{},
 			}
 
@@ -92,7 +92,7 @@ func Test_tomlConfigAnalyzer_Required(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			a := tomlConfigAnalyzer{
+			a := ConfigScanner{
 				parser: &toml.Parser{},
 			}
 
