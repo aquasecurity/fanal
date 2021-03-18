@@ -13,6 +13,8 @@ import (
 	"github.com/aquasecurity/fanal/types"
 )
 
+const namespace = "main"
+
 type Scanner struct {
 	filePattern *regexp.Regexp
 	policyPaths []string
@@ -46,16 +48,14 @@ func (s Scanner) ScanConfig(fileType, fileName string, content interface{}) (
 		return nil, xerrors.Errorf("policy load error: %w", err)
 	}
 
-	var results []types.Misconfiguration
-	for _, namespace := range engine.Namespaces() {
-		result, err := engine.Check(ctx, configs, namespace)
-		if err != nil {
-			return nil, xerrors.Errorf("query rule: %w", err)
-		}
+	result, err := engine.Check(ctx, configs, namespace)
+	if err != nil {
+		return nil, xerrors.Errorf("query rule: %w", err)
+	}
 
-		for _, r := range result {
-			results = append(results, toMisconfiguration(fileType, r))
-		}
+	var results []types.Misconfiguration
+	for _, r := range result {
+		results = append(results, toMisconfiguration(fileType, r))
 	}
 
 	return results, nil
