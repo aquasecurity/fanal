@@ -9,33 +9,52 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/aquasecurity/fanal/analyzer"
-	"github.com/aquasecurity/fanal/analyzer/config"
 	"github.com/aquasecurity/fanal/types"
 )
 
 func Test_jsonConfigAnalyzer_Analyze(t *testing.T) {
 	tests := []struct {
-		name      string
-		inputFile string
-		want      *analyzer.AnalysisResult
-		wantErr   string
+		name        string
+		policyPaths []string
+		inputFile   string
+		want        *analyzer.AnalysisResult
+		wantErr     string
 	}{
 		{
-			name:      "happy path",
-			inputFile: "testdata/deployment.json",
+			name:        "happy path",
+			policyPaths: []string{"testdata/non.rego"},
+			inputFile:   "testdata/deployment.json",
 			want: &analyzer.AnalysisResult{
-				Misconfigurations: []types.Config{
-					{
-						Type:     config.JSON,
-						FilePath: "testdata/deployment.json",
-						Content: map[string]interface{}{
-							"apiVersion": "apps/v1",
-							"kind":       "Deployment",
-							"metadata": map[string]interface{}{
-								"name": "hello-kubernetes",
-							},
-							"spec": map[string]interface{}{
-								"replicas": float64(3),
+				Misconfigurations: []types.Misconfiguration{
+					types.Misconfiguration{
+						FileType:  "json",
+						FilePath:  "testdata/deployment.json",
+						Namespace: "testdata",
+						Successes: 1,
+						Warnings:  nil,
+						Failures:  nil,
+					},
+				},
+			},
+		},
+		{
+			name:        "deny",
+			policyPaths: []string{"testdata/deny.rego"},
+			inputFile:   "testdata/deployment.json",
+			want: &analyzer.AnalysisResult{
+				Misconfigurations: []types.Misconfiguration{
+					types.Misconfiguration{
+						FileType:  "json",
+						FilePath:  "testdata/deployment.json",
+						Namespace: "testdata",
+						Successes: 0,
+						Warnings:  nil,
+						Failures: []types.MisconfResult{
+							types.MisconfResult{
+								Type:     "",
+								ID:       "UNKNOWN",
+								Message:  `deny: too many replicas: 3`,
+								Severity: "UNKNOWN",
 							},
 						},
 					},
@@ -43,33 +62,23 @@ func Test_jsonConfigAnalyzer_Analyze(t *testing.T) {
 			},
 		},
 		{
-			name:      "happy path: json array",
-			inputFile: "testdata/array.json",
+			name:        "violation",
+			policyPaths: []string{"testdata/violation.rego"},
+			inputFile:   "testdata/deployment.json",
 			want: &analyzer.AnalysisResult{
-				Misconfigurations: []types.Config{
-					{
-						Type:     config.JSON,
-						FilePath: "testdata/array.json",
-						Content: []interface{}{
-							map[string]interface{}{
-								"apiVersion": "apps/v1",
-								"kind":       "Deployment",
-								"metadata": map[string]interface{}{
-									"name": "hello-kubernetes",
-								},
-								"spec": map[string]interface{}{
-									"replicas": float64(3),
-								},
-							},
-							map[string]interface{}{
-								"apiVersion": "apps/v2",
-								"kind":       "Deployment",
-								"metadata": map[string]interface{}{
-									"name": "hello-kubernetes",
-								},
-								"spec": map[string]interface{}{
-									"replicas": float64(3),
-								},
+				Misconfigurations: []types.Misconfiguration{
+					types.Misconfiguration{
+						FileType:  "json",
+						FilePath:  "testdata/deployment.json",
+						Namespace: "testdata",
+						Successes: 0,
+						Warnings:  nil,
+						Failures: []types.MisconfResult{
+							types.MisconfResult{
+								Type:     "",
+								ID:       "UNKNOWN",
+								Message:  `violation: too many replicas: 3`,
+								Severity: "UNKNOWN",
 							},
 						},
 					},
@@ -77,19 +86,60 @@ func Test_jsonConfigAnalyzer_Analyze(t *testing.T) {
 			},
 		},
 		{
-			name:      "broken JSON",
-			inputFile: "testdata/broken.json",
-			wantErr:   "unmarshal json",
+			name:        "warn",
+			policyPaths: []string{"testdata/warn.rego"},
+			inputFile:   "testdata/deployment.json",
+			want: &analyzer.AnalysisResult{
+				Misconfigurations: []types.Misconfiguration{
+					types.Misconfiguration{
+						FileType:  "json",
+						FilePath:  "testdata/deployment.json",
+						Namespace: "testdata",
+						Successes: 0,
+						Warnings: []types.MisconfResult{
+							types.MisconfResult{
+								Type:     "",
+								ID:       "UNKNOWN",
+								Message:  `warn: too many replicas: 3`,
+								Severity: "UNKNOWN",
+							},
+						},
+						Failures: nil,
+					},
+				},
+			},
+		},
+		{
+			name:        "happy path: json array",
+			policyPaths: []string{"testdata/non.rego"},
+			inputFile:   "testdata/array.json",
+			want: &analyzer.AnalysisResult{
+				Misconfigurations: []types.Misconfiguration{
+					types.Misconfiguration{
+						FileType:  "json",
+						FilePath:  "testdata/array.json",
+						Namespace: "testdata",
+						Successes: 2,
+						Warnings:  nil,
+						Failures:  nil,
+					},
+				},
+			},
+		},
+		{
+			name:        "broken JSON",
+			policyPaths: []string{"testdata/non.rego"},
+			inputFile:   "testdata/broken.json",
+			wantErr:     "unmarshal json",
 		},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			b, err := ioutil.ReadFile(tt.inputFile)
 			require.NoError(t, err)
 
-			a := ConfigScanner{
-				parser: &json.Parser{},
-			}
+			a := NewConfigScanner(nil, tt.policyPaths, nil)
 
 			got, err := a.Analyze(analyzer.AnalysisTarget{
 				FilePath: tt.inputFile,
