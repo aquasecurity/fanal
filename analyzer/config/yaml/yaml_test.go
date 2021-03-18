@@ -27,7 +27,7 @@ func Test_yamlConfigAnalyzer_Analyze(t *testing.T) {
 			want: &analyzer.AnalysisResult{
 				Misconfigurations: []types.Misconfiguration{
 					types.Misconfiguration{
-						FileType:  "yaml",
+						FileType:  types.YAML,
 						FilePath:  "testdata/deployment.yaml",
 						Namespace: "testdata",
 						Successes: 1,
@@ -44,7 +44,7 @@ func Test_yamlConfigAnalyzer_Analyze(t *testing.T) {
 			want: &analyzer.AnalysisResult{
 				Misconfigurations: []types.Misconfiguration{
 					types.Misconfiguration{
-						FileType:  "yaml",
+						FileType:  types.YAML,
 						FilePath:  "testdata/deployment.yaml",
 						Namespace: "testdata",
 						Successes: 0,
@@ -68,7 +68,7 @@ func Test_yamlConfigAnalyzer_Analyze(t *testing.T) {
 			want: &analyzer.AnalysisResult{
 				Misconfigurations: []types.Misconfiguration{
 					types.Misconfiguration{
-						FileType:  "yaml",
+						FileType:  types.YAML,
 						FilePath:  "testdata/deployment.yaml",
 						Namespace: "testdata",
 						Successes: 0,
@@ -92,7 +92,7 @@ func Test_yamlConfigAnalyzer_Analyze(t *testing.T) {
 			want: &analyzer.AnalysisResult{
 				Misconfigurations: []types.Misconfiguration{
 					types.Misconfiguration{
-						FileType:  "yaml",
+						FileType:  types.YAML,
 						FilePath:  "testdata/deployment.yaml",
 						Namespace: "testdata",
 						Successes: 0,
@@ -116,7 +116,7 @@ func Test_yamlConfigAnalyzer_Analyze(t *testing.T) {
 			want: &analyzer.AnalysisResult{
 				Misconfigurations: []types.Misconfiguration{
 					types.Misconfiguration{
-						FileType:  "yaml",
+						FileType:  types.YAML,
 						FilePath:  "testdata/anchor.yaml",
 						Namespace: "testdata",
 						Successes: 1,
@@ -133,7 +133,7 @@ func Test_yamlConfigAnalyzer_Analyze(t *testing.T) {
 			want: &analyzer.AnalysisResult{
 				Misconfigurations: []types.Misconfiguration{
 					types.Misconfiguration{
-						FileType:  "yaml",
+						FileType:  types.YAML,
 						FilePath:  "testdata/multiple.yaml",
 						Namespace: "testdata",
 						Successes: 2,
@@ -211,4 +211,13 @@ func Test_yamlConfigAnalyzer_Required(t *testing.T) {
 			assert.Equal(t, tt.want, got)
 		})
 	}
+}
+
+func Test_yamlConfigAnalyzer_Type(t *testing.T) {
+	want := analyzer.TypeYaml
+	a := ConfigScanner{
+		parser: &yaml.Parser{},
+	}
+	got := a.Type()
+	assert.Equal(t, want, got)
 }

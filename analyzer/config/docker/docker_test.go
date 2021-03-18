@@ -2,7 +2,6 @@ package docker
 
 import (
 	"io/ioutil"
-	"regexp"
 	"testing"
 
 	"github.com/open-policy-agent/conftest/parser/docker"
@@ -11,10 +10,6 @@ import (
 
 	"github.com/aquasecurity/fanal/analyzer"
 	"github.com/aquasecurity/fanal/types"
-)
-
-var (
-	dockerRe = regexp.MustCompile(`(^Dockerfile\..*)|(^.*\.Dockerfile$)/i`)
 )
 
 func Test_dockerConfigAnalyzer_Analyze(t *testing.T) {
@@ -34,7 +29,7 @@ func Test_dockerConfigAnalyzer_Analyze(t *testing.T) {
 					types.Misconfiguration{
 						FileType:  types.Dockerfile,
 						FilePath:  "testdata/Dockerfile.deployment",
-						Namespace: "non",
+						Namespace: "testdata",
 						Successes: 1,
 						Warnings:  nil,
 						Failures:  nil,
@@ -51,7 +46,7 @@ func Test_dockerConfigAnalyzer_Analyze(t *testing.T) {
 					types.Misconfiguration{
 						FileType:  types.Dockerfile,
 						FilePath:  "testdata/Dockerfile.multistage",
-						Namespace: "non",
+						Namespace: "testdata",
 						Successes: 1,
 						Warnings:  nil,
 						Failures:  nil,
@@ -68,7 +63,7 @@ func Test_dockerConfigAnalyzer_Analyze(t *testing.T) {
 					types.Misconfiguration{
 						FileType:  types.Dockerfile,
 						FilePath:  "testdata/Dockerfile.deployment",
-						Namespace: "foo",
+						Namespace: "testdata",
 						Successes: 0,
 						Warnings:  nil,
 						Failures: []types.MisconfResult{
@@ -92,7 +87,7 @@ func Test_dockerConfigAnalyzer_Analyze(t *testing.T) {
 					types.Misconfiguration{
 						FileType:  types.Dockerfile,
 						FilePath:  "testdata/Dockerfile.deployment",
-						Namespace: "foo",
+						Namespace: "testdata",
 						Successes: 0,
 						Warnings:  nil,
 						Failures: []types.MisconfResult{
@@ -116,7 +111,7 @@ func Test_dockerConfigAnalyzer_Analyze(t *testing.T) {
 					types.Misconfiguration{
 						FileType:  types.Dockerfile,
 						FilePath:  "testdata/Dockerfile.deployment",
-						Namespace: "foo",
+						Namespace: "testdata",
 						Successes: 0,
 						Warnings: []types.MisconfResult{
 							types.MisconfResult{
@@ -143,7 +138,7 @@ func Test_dockerConfigAnalyzer_Analyze(t *testing.T) {
 			b, err := ioutil.ReadFile(tt.inputFile)
 			require.NoError(t, err)
 
-			a := NewConfigScanner(dockerRe, tt.policyPaths, nil)
+			a := NewConfigScanner(nil, tt.policyPaths, nil)
 
 			got, err := a.Analyze(analyzer.AnalysisTarget{
 				FilePath: tt.inputFile,

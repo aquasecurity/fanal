@@ -27,7 +27,7 @@ func Test_jsonConfigAnalyzer_Analyze(t *testing.T) {
 			want: &analyzer.AnalysisResult{
 				Misconfigurations: []types.Misconfiguration{
 					types.Misconfiguration{
-						FileType:  "json",
+						FileType:  types.JSON,
 						FilePath:  "testdata/deployment.json",
 						Namespace: "testdata",
 						Successes: 1,
@@ -44,7 +44,7 @@ func Test_jsonConfigAnalyzer_Analyze(t *testing.T) {
 			want: &analyzer.AnalysisResult{
 				Misconfigurations: []types.Misconfiguration{
 					types.Misconfiguration{
-						FileType:  "json",
+						FileType:  types.JSON,
 						FilePath:  "testdata/deployment.json",
 						Namespace: "testdata",
 						Successes: 0,
@@ -68,7 +68,7 @@ func Test_jsonConfigAnalyzer_Analyze(t *testing.T) {
 			want: &analyzer.AnalysisResult{
 				Misconfigurations: []types.Misconfiguration{
 					types.Misconfiguration{
-						FileType:  "json",
+						FileType:  types.JSON,
 						FilePath:  "testdata/deployment.json",
 						Namespace: "testdata",
 						Successes: 0,
@@ -92,7 +92,7 @@ func Test_jsonConfigAnalyzer_Analyze(t *testing.T) {
 			want: &analyzer.AnalysisResult{
 				Misconfigurations: []types.Misconfiguration{
 					types.Misconfiguration{
-						FileType:  "json",
+						FileType:  types.JSON,
 						FilePath:  "testdata/deployment.json",
 						Namespace: "testdata",
 						Successes: 0,
@@ -116,7 +116,7 @@ func Test_jsonConfigAnalyzer_Analyze(t *testing.T) {
 			want: &analyzer.AnalysisResult{
 				Misconfigurations: []types.Misconfiguration{
 					types.Misconfiguration{
-						FileType:  "json",
+						FileType:  types.JSON,
 						FilePath:  "testdata/array.json",
 						Namespace: "testdata",
 						Successes: 2,

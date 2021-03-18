@@ -1,4 +1,4 @@
-package non
+package testdata
 
 denylist = [
 ]

@@ -28,7 +28,7 @@ func Test_hclConfigAnalyzer_Analyze(t *testing.T) {
 			want: &analyzer.AnalysisResult{
 				Misconfigurations: []types.Misconfiguration{
 					types.Misconfiguration{
-						FileType:  "hcl",
+						FileType:  types.HCL,
 						FilePath:  "testdata/deployment.hcl1",
 						Namespace: "testdata",
 						Successes: 1,
@@ -45,7 +45,7 @@ func Test_hclConfigAnalyzer_Analyze(t *testing.T) {
 			want: &analyzer.AnalysisResult{
 				Misconfigurations: []types.Misconfiguration{
 					types.Misconfiguration{
-						FileType:  "hcl",
+						FileType:  types.HCL,
 						FilePath:  "testdata/deployment.hcl1",
 						Namespace: "testdata",
 						Successes: 0,
@@ -69,7 +69,7 @@ func Test_hclConfigAnalyzer_Analyze(t *testing.T) {
 			want: &analyzer.AnalysisResult{
 				Misconfigurations: []types.Misconfiguration{
 					types.Misconfiguration{
-						FileType:  "hcl",
+						FileType:  types.HCL,
 						FilePath:  "testdata/deployment.hcl1",
 						Namespace: "testdata",
 						Successes: 0,
@@ -93,7 +93,7 @@ func Test_hclConfigAnalyzer_Analyze(t *testing.T) {
 			want: &analyzer.AnalysisResult{
 				Misconfigurations: []types.Misconfiguration{
 					types.Misconfiguration{
-						FileType:  "hcl",
+						FileType:  types.HCL,
 						FilePath:  "testdata/deployment.hcl1",
 						Namespace: "testdata",
 						Successes: 0,
@@ -123,7 +123,7 @@ func Test_hclConfigAnalyzer_Analyze(t *testing.T) {
 			want: &analyzer.AnalysisResult{
 				Misconfigurations: []types.Misconfiguration{
 					types.Misconfiguration{
-						FileType:  "hcl",
+						FileType:  types.HCL,
 						FilePath:  "testdata/deployment.hcl2",
 						Namespace: "testdata",
 						Successes: 1,
@@ -146,7 +146,7 @@ func Test_hclConfigAnalyzer_Analyze(t *testing.T) {
 			want: &analyzer.AnalysisResult{
 				Misconfigurations: []types.Misconfiguration{
 					types.Misconfiguration{
-						FileType:  "hcl",
+						FileType:  types.HCL,
 						FilePath:  "testdata/deprecated.hcl",
 						Namespace: "testdata",
 						Successes: 1,

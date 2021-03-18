@@ -27,7 +27,7 @@ func Test_tomlConfigAnalyzer_Analyze(t *testing.T) {
 			want: &analyzer.AnalysisResult{
 				Misconfigurations: []types.Misconfiguration{
 					types.Misconfiguration{
-						FileType:  "toml",
+						FileType:  types.TOML,
 						FilePath:  "testdata/deployment.toml",
 						Namespace: "testdata",
 						Successes: 1,
@@ -44,7 +44,7 @@ func Test_tomlConfigAnalyzer_Analyze(t *testing.T) {
 			want: &analyzer.AnalysisResult{
 				Misconfigurations: []types.Misconfiguration{
 					types.Misconfiguration{
-						FileType:  "toml",
+						FileType:  types.TOML,
 						FilePath:  "testdata/deployment.toml",
 						Namespace: "testdata",
 						Successes: 0,
@@ -68,7 +68,7 @@ func Test_tomlConfigAnalyzer_Analyze(t *testing.T) {
 			want: &analyzer.AnalysisResult{
 				Misconfigurations: []types.Misconfiguration{
 					types.Misconfiguration{
-						FileType:  "toml",
+						FileType:  types.TOML,
 						FilePath:  "testdata/deployment.toml",
 						Namespace: "testdata",
 						Successes: 0,
@@ -92,7 +92,7 @@ func Test_tomlConfigAnalyzer_Analyze(t *testing.T) {
 			want: &analyzer.AnalysisResult{
 				Misconfigurations: []types.Misconfiguration{
 					types.Misconfiguration{
-						FileType:  "toml",
+						FileType:  types.TOML,
 						FilePath:  "testdata/deployment.toml",
 						Namespace: "testdata",
 						Successes: 0,
@@ -166,4 +166,13 @@ func Test_tomlConfigAnalyzer_Required(t *testing.T) {
 			assert.Equal(t, tt.want, got)
 		})
 	}
+}
+
+func Test_tomlConfigAnalyzer_Type(t *testing.T) {
+	want := analyzer.TypeTOML
+	a := ConfigScanner{
+		parser: &toml.Parser{},
+	}
+	got := a.Type()
+	assert.Equal(t, want, got)
 }
