@@ -9,33 +9,52 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/aquasecurity/fanal/analyzer"
-	"github.com/aquasecurity/fanal/analyzer/config"
 	"github.com/aquasecurity/fanal/types"
 )
 
 func Test_yamlConfigAnalyzer_Analyze(t *testing.T) {
 	tests := []struct {
-		name      string
-		inputFile string
-		want      *analyzer.AnalysisResult
-		wantErr   string
+		name        string
+		policyPaths []string
+		inputFile   string
+		want        *analyzer.AnalysisResult
+		wantErr     string
 	}{
 		{
-			name:      "happy path",
-			inputFile: "testdata/deployment.yaml",
+			name:        "happy path",
+			policyPaths: []string{"testdata/non.rego"},
+			inputFile:   "testdata/deployment.yaml",
 			want: &analyzer.AnalysisResult{
-				Misconfigurations: []types.Config{
-					{
-						Type:     config.YAML,
-						FilePath: "testdata/deployment.yaml",
-						Content: map[string]interface{}{
-							"apiVersion": "apps/v1",
-							"kind":       "Deployment",
-							"metadata": map[string]interface{}{
-								"name": "hello-kubernetes",
-							},
-							"spec": map[string]interface{}{
-								"replicas": float64(3),
+				Misconfigurations: []types.Misconfiguration{
+					types.Misconfiguration{
+						FileType:  "yaml",
+						FilePath:  "testdata/deployment.yaml",
+						Namespace: "testdata",
+						Successes: 1,
+						Warnings:  nil,
+						Failures:  nil,
+					},
+				},
+			},
+		},
+		{
+			name:        "deny",
+			policyPaths: []string{"testdata/deny.rego"},
+			inputFile:   "testdata/deployment.yaml",
+			want: &analyzer.AnalysisResult{
+				Misconfigurations: []types.Misconfiguration{
+					types.Misconfiguration{
+						FileType:  "yaml",
+						FilePath:  "testdata/deployment.yaml",
+						Namespace: "testdata",
+						Successes: 0,
+						Warnings:  nil,
+						Failures: []types.MisconfResult{
+							types.MisconfResult{
+								Type:     "",
+								ID:       "UNKNOWN",
+								Message:  `deny: too many replicas: 3`,
+								Severity: "UNKNOWN",
 							},
 						},
 					},
@@ -43,30 +62,23 @@ func Test_yamlConfigAnalyzer_Analyze(t *testing.T) {
 			},
 		},
 		{
-			name:      "happy path using anchors",
-			inputFile: "testdata/anchor.yaml",
+			name:        "violation",
+			policyPaths: []string{"testdata/violation.rego"},
+			inputFile:   "testdata/deployment.yaml",
 			want: &analyzer.AnalysisResult{
-				Misconfigurations: []types.Config{
-					{
-						Type:     config.YAML,
-						FilePath: "testdata/anchor.yaml",
-						Content: map[string]interface{}{
-							"default": map[string]interface{}{
-								"line": "single line",
-							},
-							"john": map[string]interface{}{
-								"john_name": "john",
-							},
-							"fred": map[string]interface{}{
-								"fred_name": "fred",
-							},
-							"main": map[string]interface{}{
-								"line": "single line",
-								"name": map[string]interface{}{
-									"john_name": "john",
-									"fred_name": "fred",
-								},
-								"comment": "multi\nline\n",
+				Misconfigurations: []types.Misconfiguration{
+					types.Misconfiguration{
+						FileType:  "yaml",
+						FilePath:  "testdata/deployment.yaml",
+						Namespace: "testdata",
+						Successes: 0,
+						Warnings:  nil,
+						Failures: []types.MisconfResult{
+							types.MisconfResult{
+								Type:     "",
+								ID:       "UNKNOWN",
+								Message:  `violation: too many replicas: 3`,
+								Severity: "UNKNOWN",
 							},
 						},
 					},
@@ -74,54 +86,74 @@ func Test_yamlConfigAnalyzer_Analyze(t *testing.T) {
 			},
 		},
 		{
-			name:      "happy path using multiple yaml",
-			inputFile: "testdata/multiple.yaml",
+			name:        "warn",
+			policyPaths: []string{"testdata/warn.rego"},
+			inputFile:   "testdata/deployment.yaml",
 			want: &analyzer.AnalysisResult{
-				Misconfigurations: []types.Config{
-					{
-						Type:     config.YAML,
-						FilePath: "testdata/multiple.yaml",
-						Content: []interface{}{
-							map[string]interface{}{
-								"apiVersion": "apps/v1",
-								"kind":       "Deployment",
-								"metadata": map[string]interface{}{
-									"name": "hello-kubernetes",
-								},
-								"spec": map[string]interface{}{
-									"replicas": float64(3),
-								},
-							},
-							map[string]interface{}{
-								"apiVersion": "v1",
-								"kind":       "Service",
-								"metadata": map[string]interface{}{
-									"name": "hello-kubernetes",
-								},
-								"spec": map[string]interface{}{
-									"ports": []interface{}{
-										map[string]interface{}{
-											"protocol":   "TCP",
-											"port":       float64(80),
-											"targetPort": float64(8080),
-										},
-									},
-								},
+				Misconfigurations: []types.Misconfiguration{
+					types.Misconfiguration{
+						FileType:  "yaml",
+						FilePath:  "testdata/deployment.yaml",
+						Namespace: "testdata",
+						Successes: 0,
+						Warnings: []types.MisconfResult{
+							types.MisconfResult{
+								Type:     "",
+								ID:       "UNKNOWN",
+								Message:  `warn: too many replicas: 3`,
+								Severity: "UNKNOWN",
 							},
 						},
+						Failures: nil,
 					},
 				},
 			},
 		},
 		{
-			name:      "broken YAML",
-			inputFile: "testdata/broken.yaml",
-			wantErr:   "unmarshal yaml",
+			name:        "happy path using anchors",
+			policyPaths: []string{"testdata/non.rego"},
+			inputFile:   "testdata/anchor.yaml",
+			want: &analyzer.AnalysisResult{
+				Misconfigurations: []types.Misconfiguration{
+					types.Misconfiguration{
+						FileType:  "yaml",
+						FilePath:  "testdata/anchor.yaml",
+						Namespace: "testdata",
+						Successes: 1,
+						Warnings:  nil,
+						Failures:  nil,
+					},
+				},
+			},
 		},
 		{
-			name:      "invalid circular references yaml",
-			inputFile: "testdata/circular_references.yaml",
-			wantErr:   "yaml: anchor 'circular' value contains itself",
+			name:        "happy path using multiple yaml",
+			policyPaths: []string{"testdata/non.rego"},
+			inputFile:   "testdata/multiple.yaml",
+			want: &analyzer.AnalysisResult{
+				Misconfigurations: []types.Misconfiguration{
+					types.Misconfiguration{
+						FileType:  "yaml",
+						FilePath:  "testdata/multiple.yaml",
+						Namespace: "testdata",
+						Successes: 2,
+						Warnings:  nil,
+						Failures:  nil,
+					},
+				},
+			},
+		},
+		{
+			name:        "broken YAML",
+			policyPaths: []string{"testdata/non.rego"},
+			inputFile:   "testdata/broken.yaml",
+			wantErr:     "unmarshal yaml",
+		},
+		{
+			name:        "invalid circular references yaml",
+			policyPaths: []string{"testdata/non.rego"},
+			inputFile:   "testdata/circular_references.yaml",
+			wantErr:     "yaml: anchor 'circular' value contains itself",
 		},
 	}
 	for _, tt := range tests {
@@ -129,9 +161,7 @@ func Test_yamlConfigAnalyzer_Analyze(t *testing.T) {
 			b, err := ioutil.ReadFile(tt.inputFile)
 			require.NoError(t, err)
 
-			a := ConfigScanner{
-				parser: &yaml.Parser{},
-			}
+			a := NewConfigScanner(nil, tt.policyPaths, nil)
 
 			got, err := a.Analyze(analyzer.AnalysisTarget{
 				FilePath: tt.inputFile,
