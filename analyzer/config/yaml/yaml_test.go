@@ -22,7 +22,7 @@ func Test_yamlConfigAnalyzer_Analyze(t *testing.T) {
 	}{
 		{
 			name:        "happy path",
-			policyPaths: []string{"testdata/non.rego"},
+			policyPaths: []string{"../testdata/non.rego"},
 			inputFile:   "testdata/deployment.yaml",
 			want: &analyzer.AnalysisResult{
 				Misconfigurations: []types.Misconfiguration{
@@ -30,7 +30,7 @@ func Test_yamlConfigAnalyzer_Analyze(t *testing.T) {
 						FileType:  types.YAML,
 						FilePath:  "testdata/deployment.yaml",
 						Namespace: "testdata",
-						Successes: 1,
+						Successes: 2,
 						Warnings:  nil,
 						Failures:  nil,
 					},
@@ -39,7 +39,7 @@ func Test_yamlConfigAnalyzer_Analyze(t *testing.T) {
 		},
 		{
 			name:        "deny",
-			policyPaths: []string{"testdata/deny.rego"},
+			policyPaths: []string{"../testdata/deny.rego"},
 			inputFile:   "testdata/deployment.yaml",
 			want: &analyzer.AnalysisResult{
 				Misconfigurations: []types.Misconfiguration{
@@ -47,7 +47,7 @@ func Test_yamlConfigAnalyzer_Analyze(t *testing.T) {
 						FileType:  types.YAML,
 						FilePath:  "testdata/deployment.yaml",
 						Namespace: "testdata",
-						Successes: 0,
+						Successes: 1,
 						Warnings:  nil,
 						Failures: []types.MisconfResult{
 							types.MisconfResult{
@@ -63,7 +63,7 @@ func Test_yamlConfigAnalyzer_Analyze(t *testing.T) {
 		},
 		{
 			name:        "violation",
-			policyPaths: []string{"testdata/violation.rego"},
+			policyPaths: []string{"../testdata/violation.rego"},
 			inputFile:   "testdata/deployment.yaml",
 			want: &analyzer.AnalysisResult{
 				Misconfigurations: []types.Misconfiguration{
@@ -71,7 +71,7 @@ func Test_yamlConfigAnalyzer_Analyze(t *testing.T) {
 						FileType:  types.YAML,
 						FilePath:  "testdata/deployment.yaml",
 						Namespace: "testdata",
-						Successes: 0,
+						Successes: 1,
 						Warnings:  nil,
 						Failures: []types.MisconfResult{
 							types.MisconfResult{
@@ -87,7 +87,7 @@ func Test_yamlConfigAnalyzer_Analyze(t *testing.T) {
 		},
 		{
 			name:        "warn",
-			policyPaths: []string{"testdata/warn.rego"},
+			policyPaths: []string{"../testdata/warn.rego"},
 			inputFile:   "testdata/deployment.yaml",
 			want: &analyzer.AnalysisResult{
 				Misconfigurations: []types.Misconfiguration{
@@ -95,7 +95,7 @@ func Test_yamlConfigAnalyzer_Analyze(t *testing.T) {
 						FileType:  types.YAML,
 						FilePath:  "testdata/deployment.yaml",
 						Namespace: "testdata",
-						Successes: 0,
+						Successes: 1,
 						Warnings: []types.MisconfResult{
 							types.MisconfResult{
 								Type:     "",
@@ -111,30 +111,13 @@ func Test_yamlConfigAnalyzer_Analyze(t *testing.T) {
 		},
 		{
 			name:        "happy path using anchors",
-			policyPaths: []string{"testdata/non.rego"},
+			policyPaths: []string{"../testdata/non.rego"},
 			inputFile:   "testdata/anchor.yaml",
 			want: &analyzer.AnalysisResult{
 				Misconfigurations: []types.Misconfiguration{
 					types.Misconfiguration{
 						FileType:  types.YAML,
 						FilePath:  "testdata/anchor.yaml",
-						Namespace: "testdata",
-						Successes: 1,
-						Warnings:  nil,
-						Failures:  nil,
-					},
-				},
-			},
-		},
-		{
-			name:        "happy path using multiple yaml",
-			policyPaths: []string{"testdata/non.rego"},
-			inputFile:   "testdata/multiple.yaml",
-			want: &analyzer.AnalysisResult{
-				Misconfigurations: []types.Misconfiguration{
-					types.Misconfiguration{
-						FileType:  types.YAML,
-						FilePath:  "testdata/multiple.yaml",
 						Namespace: "testdata",
 						Successes: 2,
 						Warnings:  nil,
@@ -144,14 +127,31 @@ func Test_yamlConfigAnalyzer_Analyze(t *testing.T) {
 			},
 		},
 		{
+			name:        "happy path using multiple yaml",
+			policyPaths: []string{"../testdata/non.rego"},
+			inputFile:   "testdata/multiple.yaml",
+			want: &analyzer.AnalysisResult{
+				Misconfigurations: []types.Misconfiguration{
+					types.Misconfiguration{
+						FileType:  types.YAML,
+						FilePath:  "testdata/multiple.yaml",
+						Namespace: "testdata",
+						Successes: 4,
+						Warnings:  nil,
+						Failures:  nil,
+					},
+				},
+			},
+		},
+		{
 			name:        "broken YAML",
-			policyPaths: []string{"testdata/non.rego"},
+			policyPaths: []string{"../testdata/non.rego"},
 			inputFile:   "testdata/broken.yaml",
 			wantErr:     "unmarshal yaml",
 		},
 		{
 			name:        "invalid circular references yaml",
-			policyPaths: []string{"testdata/non.rego"},
+			policyPaths: []string{"../testdata/non.rego"},
 			inputFile:   "testdata/circular_references.yaml",
 			wantErr:     "yaml: anchor 'circular' value contains itself",
 		},

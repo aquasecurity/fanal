@@ -22,7 +22,7 @@ func Test_tomlConfigAnalyzer_Analyze(t *testing.T) {
 	}{
 		{
 			name:        "happy path",
-			policyPaths: []string{"testdata/non.rego"},
+			policyPaths: []string{"../testdata/non.rego"},
 			inputFile:   "testdata/deployment.toml",
 			want: &analyzer.AnalysisResult{
 				Misconfigurations: []types.Misconfiguration{
@@ -30,7 +30,7 @@ func Test_tomlConfigAnalyzer_Analyze(t *testing.T) {
 						FileType:  types.TOML,
 						FilePath:  "testdata/deployment.toml",
 						Namespace: "testdata",
-						Successes: 1,
+						Successes: 2,
 						Warnings:  nil,
 						Failures:  nil,
 					},
@@ -39,7 +39,7 @@ func Test_tomlConfigAnalyzer_Analyze(t *testing.T) {
 		},
 		{
 			name:        "deny",
-			policyPaths: []string{"testdata/deny.rego"},
+			policyPaths: []string{"../testdata/deny.rego"},
 			inputFile:   "testdata/deployment.toml",
 			want: &analyzer.AnalysisResult{
 				Misconfigurations: []types.Misconfiguration{
@@ -47,7 +47,7 @@ func Test_tomlConfigAnalyzer_Analyze(t *testing.T) {
 						FileType:  types.TOML,
 						FilePath:  "testdata/deployment.toml",
 						Namespace: "testdata",
-						Successes: 0,
+						Successes: 1,
 						Warnings:  nil,
 						Failures: []types.MisconfResult{
 							types.MisconfResult{
@@ -63,7 +63,7 @@ func Test_tomlConfigAnalyzer_Analyze(t *testing.T) {
 		},
 		{
 			name:        "violation",
-			policyPaths: []string{"testdata/violation.rego"},
+			policyPaths: []string{"../testdata/violation.rego"},
 			inputFile:   "testdata/deployment.toml",
 			want: &analyzer.AnalysisResult{
 				Misconfigurations: []types.Misconfiguration{
@@ -71,7 +71,7 @@ func Test_tomlConfigAnalyzer_Analyze(t *testing.T) {
 						FileType:  types.TOML,
 						FilePath:  "testdata/deployment.toml",
 						Namespace: "testdata",
-						Successes: 0,
+						Successes: 1,
 						Warnings:  nil,
 						Failures: []types.MisconfResult{
 							types.MisconfResult{
@@ -87,7 +87,7 @@ func Test_tomlConfigAnalyzer_Analyze(t *testing.T) {
 		},
 		{
 			name:        "warn",
-			policyPaths: []string{"testdata/warn.rego"},
+			policyPaths: []string{"../testdata/warn.rego"},
 			inputFile:   "testdata/deployment.toml",
 			want: &analyzer.AnalysisResult{
 				Misconfigurations: []types.Misconfiguration{
@@ -95,7 +95,7 @@ func Test_tomlConfigAnalyzer_Analyze(t *testing.T) {
 						FileType:  types.TOML,
 						FilePath:  "testdata/deployment.toml",
 						Namespace: "testdata",
-						Successes: 0,
+						Successes: 1,
 						Warnings: []types.MisconfResult{
 							types.MisconfResult{
 								Type:     "",
@@ -111,7 +111,7 @@ func Test_tomlConfigAnalyzer_Analyze(t *testing.T) {
 		},
 		{
 			name:        "broken TOML",
-			policyPaths: []string{"testdata/non.rego"},
+			policyPaths: []string{"../testdata/non.rego"},
 			inputFile:   "testdata/broken.toml",
 			wantErr:     "unmarshal toml",
 		},

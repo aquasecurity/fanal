@@ -22,7 +22,7 @@ func Test_jsonConfigAnalyzer_Analyze(t *testing.T) {
 	}{
 		{
 			name:        "happy path",
-			policyPaths: []string{"testdata/non.rego"},
+			policyPaths: []string{"../testdata/non.rego"},
 			inputFile:   "testdata/deployment.json",
 			want: &analyzer.AnalysisResult{
 				Misconfigurations: []types.Misconfiguration{
@@ -30,7 +30,7 @@ func Test_jsonConfigAnalyzer_Analyze(t *testing.T) {
 						FileType:  types.JSON,
 						FilePath:  "testdata/deployment.json",
 						Namespace: "testdata",
-						Successes: 1,
+						Successes: 2,
 						Warnings:  nil,
 						Failures:  nil,
 					},
@@ -39,7 +39,7 @@ func Test_jsonConfigAnalyzer_Analyze(t *testing.T) {
 		},
 		{
 			name:        "deny",
-			policyPaths: []string{"testdata/deny.rego"},
+			policyPaths: []string{"../testdata/deny.rego"},
 			inputFile:   "testdata/deployment.json",
 			want: &analyzer.AnalysisResult{
 				Misconfigurations: []types.Misconfiguration{
@@ -47,7 +47,7 @@ func Test_jsonConfigAnalyzer_Analyze(t *testing.T) {
 						FileType:  types.JSON,
 						FilePath:  "testdata/deployment.json",
 						Namespace: "testdata",
-						Successes: 0,
+						Successes: 1,
 						Warnings:  nil,
 						Failures: []types.MisconfResult{
 							types.MisconfResult{
@@ -63,7 +63,7 @@ func Test_jsonConfigAnalyzer_Analyze(t *testing.T) {
 		},
 		{
 			name:        "violation",
-			policyPaths: []string{"testdata/violation.rego"},
+			policyPaths: []string{"../testdata/violation.rego"},
 			inputFile:   "testdata/deployment.json",
 			want: &analyzer.AnalysisResult{
 				Misconfigurations: []types.Misconfiguration{
@@ -71,7 +71,7 @@ func Test_jsonConfigAnalyzer_Analyze(t *testing.T) {
 						FileType:  types.JSON,
 						FilePath:  "testdata/deployment.json",
 						Namespace: "testdata",
-						Successes: 0,
+						Successes: 1,
 						Warnings:  nil,
 						Failures: []types.MisconfResult{
 							types.MisconfResult{
@@ -87,7 +87,7 @@ func Test_jsonConfigAnalyzer_Analyze(t *testing.T) {
 		},
 		{
 			name:        "warn",
-			policyPaths: []string{"testdata/warn.rego"},
+			policyPaths: []string{"../testdata/warn.rego"},
 			inputFile:   "testdata/deployment.json",
 			want: &analyzer.AnalysisResult{
 				Misconfigurations: []types.Misconfiguration{
@@ -95,7 +95,7 @@ func Test_jsonConfigAnalyzer_Analyze(t *testing.T) {
 						FileType:  types.JSON,
 						FilePath:  "testdata/deployment.json",
 						Namespace: "testdata",
-						Successes: 0,
+						Successes: 1,
 						Warnings: []types.MisconfResult{
 							types.MisconfResult{
 								Type:     "",
@@ -111,7 +111,7 @@ func Test_jsonConfigAnalyzer_Analyze(t *testing.T) {
 		},
 		{
 			name:        "happy path: json array",
-			policyPaths: []string{"testdata/non.rego"},
+			policyPaths: []string{"../testdata/non.rego"},
 			inputFile:   "testdata/array.json",
 			want: &analyzer.AnalysisResult{
 				Misconfigurations: []types.Misconfiguration{
@@ -119,7 +119,7 @@ func Test_jsonConfigAnalyzer_Analyze(t *testing.T) {
 						FileType:  types.JSON,
 						FilePath:  "testdata/array.json",
 						Namespace: "testdata",
-						Successes: 2,
+						Successes: 4,
 						Warnings:  nil,
 						Failures:  nil,
 					},
@@ -128,7 +128,7 @@ func Test_jsonConfigAnalyzer_Analyze(t *testing.T) {
 		},
 		{
 			name:        "broken JSON",
-			policyPaths: []string{"testdata/non.rego"},
+			policyPaths: []string{"../testdata/non.rego"},
 			inputFile:   "testdata/broken.json",
 			wantErr:     "unmarshal json",
 		},

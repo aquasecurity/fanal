@@ -22,7 +22,7 @@ func Test_dockerConfigAnalyzer_Analyze(t *testing.T) {
 	}{
 		{
 			name:        "happy path",
-			policyPaths: []string{"testdata/non.rego"},
+			policyPaths: []string{"../testdata/docker_non.rego"},
 			inputFile:   "testdata/Dockerfile.deployment",
 			want: &analyzer.AnalysisResult{
 				Misconfigurations: []types.Misconfiguration{
@@ -39,7 +39,7 @@ func Test_dockerConfigAnalyzer_Analyze(t *testing.T) {
 		},
 		{
 			name:        "happy path with multi-stage",
-			policyPaths: []string{"testdata/non.rego"},
+			policyPaths: []string{"../testdata/docker_non.rego"},
 			inputFile:   "testdata/Dockerfile.multistage",
 			want: &analyzer.AnalysisResult{
 				Misconfigurations: []types.Misconfiguration{
@@ -56,7 +56,7 @@ func Test_dockerConfigAnalyzer_Analyze(t *testing.T) {
 		},
 		{
 			name:        "deny",
-			policyPaths: []string{"testdata/deny.rego"},
+			policyPaths: []string{"../testdata/docker_deny.rego"},
 			inputFile:   "testdata/Dockerfile.deployment",
 			want: &analyzer.AnalysisResult{
 				Misconfigurations: []types.Misconfiguration{
@@ -80,7 +80,7 @@ func Test_dockerConfigAnalyzer_Analyze(t *testing.T) {
 		},
 		{
 			name:        "violation",
-			policyPaths: []string{"testdata/violation.rego"},
+			policyPaths: []string{"../testdata/docker_violation.rego"},
 			inputFile:   "testdata/Dockerfile.deployment",
 			want: &analyzer.AnalysisResult{
 				Misconfigurations: []types.Misconfiguration{
@@ -104,7 +104,7 @@ func Test_dockerConfigAnalyzer_Analyze(t *testing.T) {
 		},
 		{
 			name:        "warn",
-			policyPaths: []string{"testdata/warn.rego"},
+			policyPaths: []string{"../testdata/docker_warn.rego"},
 			inputFile:   "testdata/Dockerfile.deployment",
 			want: &analyzer.AnalysisResult{
 				Misconfigurations: []types.Misconfiguration{
@@ -128,7 +128,7 @@ func Test_dockerConfigAnalyzer_Analyze(t *testing.T) {
 		},
 		{
 			name:        "broken Docker: env no value",
-			policyPaths: []string{"testdata/bar.rego"},
+			policyPaths: []string{"../testdata/docker_non.rego"},
 			inputFile:   "testdata/Dockerfile.broken",
 			wantErr:     "parse dockerfile: ENV must have two arguments",
 		},

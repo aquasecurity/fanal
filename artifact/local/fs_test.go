@@ -14,7 +14,7 @@ import (
 	"github.com/aquasecurity/fanal/types"
 )
 
-func Test_localArtifact_Inspect(t *testing.T) {
+func TestArtifact_Inspect(t *testing.T) {
 	type fields struct {
 		dir string
 	}

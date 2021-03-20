@@ -23,7 +23,7 @@ func Test_hclConfigAnalyzer_Analyze(t *testing.T) {
 	}{
 		{
 			name:        "HCL1: happy path",
-			policyPaths: []string{"testdata/non.rego"},
+			policyPaths: []string{"../testdata/non.rego"},
 			inputFile:   "testdata/deployment.hcl1",
 			want: &analyzer.AnalysisResult{
 				Misconfigurations: []types.Misconfiguration{
@@ -31,7 +31,7 @@ func Test_hclConfigAnalyzer_Analyze(t *testing.T) {
 						FileType:  types.HCL,
 						FilePath:  "testdata/deployment.hcl1",
 						Namespace: "testdata",
-						Successes: 1,
+						Successes: 2,
 						Warnings:  nil,
 						Failures:  nil,
 					},
@@ -40,7 +40,7 @@ func Test_hclConfigAnalyzer_Analyze(t *testing.T) {
 		},
 		{
 			name:        "HCL1: deny",
-			policyPaths: []string{"testdata/deny.rego"},
+			policyPaths: []string{"../testdata/deny.rego"},
 			inputFile:   "testdata/deployment.hcl1",
 			want: &analyzer.AnalysisResult{
 				Misconfigurations: []types.Misconfiguration{
@@ -48,7 +48,7 @@ func Test_hclConfigAnalyzer_Analyze(t *testing.T) {
 						FileType:  types.HCL,
 						FilePath:  "testdata/deployment.hcl1",
 						Namespace: "testdata",
-						Successes: 0,
+						Successes: 1,
 						Warnings:  nil,
 						Failures: []types.MisconfResult{
 							types.MisconfResult{
@@ -64,7 +64,7 @@ func Test_hclConfigAnalyzer_Analyze(t *testing.T) {
 		},
 		{
 			name:        "HCL1: violation",
-			policyPaths: []string{"testdata/violation.rego"},
+			policyPaths: []string{"../testdata/violation.rego"},
 			inputFile:   "testdata/deployment.hcl1",
 			want: &analyzer.AnalysisResult{
 				Misconfigurations: []types.Misconfiguration{
@@ -72,7 +72,7 @@ func Test_hclConfigAnalyzer_Analyze(t *testing.T) {
 						FileType:  types.HCL,
 						FilePath:  "testdata/deployment.hcl1",
 						Namespace: "testdata",
-						Successes: 0,
+						Successes: 1,
 						Warnings:  nil,
 						Failures: []types.MisconfResult{
 							types.MisconfResult{
@@ -88,7 +88,7 @@ func Test_hclConfigAnalyzer_Analyze(t *testing.T) {
 		},
 		{
 			name:        "HCL1: warn",
-			policyPaths: []string{"testdata/warn.rego"},
+			policyPaths: []string{"../testdata/warn.rego"},
 			inputFile:   "testdata/deployment.hcl1",
 			want: &analyzer.AnalysisResult{
 				Misconfigurations: []types.Misconfiguration{
@@ -96,7 +96,7 @@ func Test_hclConfigAnalyzer_Analyze(t *testing.T) {
 						FileType:  types.HCL,
 						FilePath:  "testdata/deployment.hcl1",
 						Namespace: "testdata",
-						Successes: 0,
+						Successes: 1,
 						Warnings: []types.MisconfResult{
 							types.MisconfResult{
 								Type:     "",
@@ -112,13 +112,13 @@ func Test_hclConfigAnalyzer_Analyze(t *testing.T) {
 		},
 		{
 			name:        "HCL1: broken",
-			policyPaths: []string{"testdata/non.rego"},
+			policyPaths: []string{"../testdata/non.rego"},
 			inputFile:   "testdata/broken.hcl1",
 			wantErr:     "unmarshal hcl",
 		},
 		{
 			name:        "HCL2: happy path",
-			policyPaths: []string{"testdata/non.rego"},
+			policyPaths: []string{"../testdata/non.rego"},
 			inputFile:   "testdata/deployment.hcl2",
 			want: &analyzer.AnalysisResult{
 				Misconfigurations: []types.Misconfiguration{
@@ -126,7 +126,7 @@ func Test_hclConfigAnalyzer_Analyze(t *testing.T) {
 						FileType:  types.HCL,
 						FilePath:  "testdata/deployment.hcl2",
 						Namespace: "testdata",
-						Successes: 1,
+						Successes: 2,
 						Warnings:  nil,
 						Failures:  nil,
 					},
@@ -135,13 +135,13 @@ func Test_hclConfigAnalyzer_Analyze(t *testing.T) {
 		},
 		{
 			name:        "HCL2: broken",
-			policyPaths: []string{"testdata/non.rego"},
+			policyPaths: []string{"../testdata/non.rego"},
 			inputFile:   "testdata/broken.hcl2",
 			wantErr:     "unable to parse HCL2",
 		},
 		{
 			name:        "HCL2: deprecated",
-			policyPaths: []string{"testdata/non.rego"},
+			policyPaths: []string{"../testdata/non.rego"},
 			inputFile:   "testdata/deprecated.hcl",
 			want: &analyzer.AnalysisResult{
 				Misconfigurations: []types.Misconfiguration{
@@ -149,7 +149,7 @@ func Test_hclConfigAnalyzer_Analyze(t *testing.T) {
 						FileType:  types.HCL,
 						FilePath:  "testdata/deprecated.hcl",
 						Namespace: "testdata",
-						Successes: 1,
+						Successes: 2,
 						Warnings:  nil,
 						Failures:  nil,
 					},

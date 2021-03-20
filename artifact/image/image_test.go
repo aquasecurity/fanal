@@ -26,7 +26,7 @@ import (
 	depTypes "github.com/aquasecurity/go-dep-parser/pkg/types"
 )
 
-func Test_imageArtifact_Inspect(t *testing.T) {
+func TestArtifact_Inspect(t *testing.T) {
 	tests := []struct {
 		name                    string
 		imagePath               string
