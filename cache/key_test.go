@@ -22,7 +22,6 @@ func TestCalcKey(t *testing.T) {
 		data     []string
 		want     string
 		wantErr  string
-		skip     string
 	}{
 		{
 			name: "happy path",
@@ -33,7 +32,16 @@ func TestCalcKey(t *testing.T) {
 			want: "sha256:1acfb4a0eb0acb0b1e8d462df18841581b960d5df190b32f3327df4820e5bc7b",
 		},
 		{
-			name: "empty slice file patterns",
+			name: "with nil file patterns",
+			args: args{
+				key:     "sha256:5c534be56eca62e756ef2ef51523feda0f19cd7c15bb0c015e3d6e3ae090bf6e",
+				version: "111101112110013",
+			},
+			patterns: nil,
+			want:     "sha256:1acfb4a0eb0acb0b1e8d462df18841581b960d5df190b32f3327df4820e5bc7b",
+		},
+		{
+			name: "with empty slice file patterns",
 			args: args{
 				key:     "sha256:5c534be56eca62e756ef2ef51523feda0f19cd7c15bb0c015e3d6e3ae090bf6e",
 				version: "111101112110013",
@@ -42,7 +50,7 @@ func TestCalcKey(t *testing.T) {
 			want:     "sha256:1acfb4a0eb0acb0b1e8d462df18841581b960d5df190b32f3327df4820e5bc7b",
 		},
 		{
-			name: "empty string in file patterns",
+			name: "with single empty string in file patterns",
 			args: args{
 				key:     "sha256:5c534be56eca62e756ef2ef51523feda0f19cd7c15bb0c015e3d6e3ae090bf6e",
 				version: "111101112110013",
@@ -51,16 +59,7 @@ func TestCalcKey(t *testing.T) {
 			want:     "sha256:1acfb4a0eb0acb0b1e8d462df18841581b960d5df190b32f3327df4820e5bc7b",
 		},
 		{
-			name: "multiple empty string in file patterns",
-			args: args{
-				key:     "sha256:5c534be56eca62e756ef2ef51523feda0f19cd7c15bb0c015e3d6e3ae090bf6e",
-				version: "111101112110013",
-			},
-			patterns: []string{"", ""},
-			want:     "sha256:1acfb4a0eb0acb0b1e8d462df18841581b960d5df190b32f3327df4820e5bc7b",
-		},
-		{
-			name: "non empty string in file patterns",
+			name: "with single non empty string in file patterns",
 			args: args{
 				key:     "sha256:5c534be56eca62e756ef2ef51523feda0f19cd7c15bb0c015e3d6e3ae090bf6e",
 				version: "111101112110013",
@@ -69,7 +68,7 @@ func TestCalcKey(t *testing.T) {
 			want:     "sha256:7bbca3f56a19cc7d892879d17ba2204f62d37fd9122ca74271e5bb4ab0817bc1",
 		},
 		{
-			name: "empty and non empty string in file patterns",
+			name: "with non empty followed by empty string in file patterns",
 			args: args{
 				key:     "sha256:5c534be56eca62e756ef2ef51523feda0f19cd7c15bb0c015e3d6e3ae090bf6e",
 				version: "111101112110013",
@@ -78,29 +77,13 @@ func TestCalcKey(t *testing.T) {
 			want:     "sha256:7bbca3f56a19cc7d892879d17ba2204f62d37fd9122ca74271e5bb4ab0817bc1",
 		},
 		{
-			name: "empty slice policy paths",
+			name: "with non empty preceded by empty string in file patterns",
 			args: args{
 				key:     "sha256:5c534be56eca62e756ef2ef51523feda0f19cd7c15bb0c015e3d6e3ae090bf6e",
 				version: "111101112110013",
 			},
-			policy: []string{},
-			want:   "sha256:1acfb4a0eb0acb0b1e8d462df18841581b960d5df190b32f3327df4820e5bc7b",
-		},
-		{
-			name: "empty string in policy paths",
-			skip: "returns unique hash on each run",
-		},
-		{
-			name: "multiple empty string in policy paths",
-			skip: "returns unique hash on each run, different hash from single empty string",
-		},
-		{
-			name: "dot in policy paths",
-			skip: "returns unique hash on each run, as it depends on dir content, different has from single empty string",
-		},
-		{
-			name: "updir in policy paths",
-			skip: "returns unique hash on each run, as it depends on dir content",
+			patterns: []string{"", "test"},
+			want:     "sha256:7bbca3f56a19cc7d892879d17ba2204f62d37fd9122ca74271e5bb4ab0817bc1",
 		},
 		{
 			name: "with policy",
@@ -122,10 +105,6 @@ func TestCalcKey(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		if tt.skip != "" {
-			t.Logf("%s: skipped as not testable: %s", tt.name, tt.skip)
-			continue
-		}
 		t.Run(tt.name, func(t *testing.T) {
 			opt := &config.ScannerOption{
 				FilePatterns: tt.patterns,
