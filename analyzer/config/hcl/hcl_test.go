@@ -52,10 +52,10 @@ func Test_hclConfigAnalyzer_Analyze(t *testing.T) {
 						Warnings:  nil,
 						Failures: []types.MisconfResult{
 							types.MisconfResult{
-								Type:     "",
-								ID:       "UNKNOWN",
-								Message:  `deny: too many replicas: 3`,
-								Severity: "UNKNOWN",
+								Type:     "Metadata Name Settings",
+								ID:       "RULE-10",
+								Message:  `deny: hello-kubernetes contains banned: hello`,
+								Severity: "MEDIUM",
 							},
 						},
 					},
@@ -106,6 +106,37 @@ func Test_hclConfigAnalyzer_Analyze(t *testing.T) {
 							},
 						},
 						Failures: nil,
+					},
+				},
+			},
+		},
+		{
+			name:        "HCL1: warn and deny",
+			policyPaths: []string{"../testdata/warn.rego", "../testdata/deny.rego"},
+			inputFile:   "testdata/deployment.hcl1",
+			want: &analyzer.AnalysisResult{
+				Misconfigurations: []types.Misconfiguration{
+					types.Misconfiguration{
+						FileType:  types.HCL,
+						FilePath:  "testdata/deployment.hcl1",
+						Namespace: "testdata",
+						Successes: 2,
+						Warnings: []types.MisconfResult{
+							types.MisconfResult{
+								Type:     "Replica Settings",
+								ID:       "RULE-100",
+								Message:  `warn: too many replicas: 3`,
+								Severity: "LOW",
+							},
+						},
+						Failures: []types.MisconfResult{
+							types.MisconfResult{
+								Type:     "Metadata Name Settings",
+								ID:       "RULE-10",
+								Message:  `deny: hello-kubernetes contains banned: hello`,
+								Severity: "MEDIUM",
+							},
+						},
 					},
 				},
 			},

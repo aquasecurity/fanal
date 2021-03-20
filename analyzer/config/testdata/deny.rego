@@ -1,13 +1,30 @@
 package testdata
 
-deny[msg] {
-	rpl = input.spec[_].replicas
-	rpl > 2
-	msg = sprintf("deny: too many replicas: %d", [rpl])
+denylist = [
+	"hello"
+]
+
+deny[res] {
+	val = input.metadata[_].name
+	contains(val, denylist[_])
+
+	res = {
+		"type": "Metadata Name Settings",
+		"msg": sprintf("deny: %s contains banned: %s", [val, denylist[i]]),
+		"severity": "MEDIUM",
+		"id": "RULE-10"
+	}
 }
 
-deny[msg] {
-	rpl = input.spec.replicas
-	rpl > 2
-	msg = sprintf("deny: too many replicas: %d", [rpl])
+deny[res] {
+	val = input.metadata.name
+	contains(val, denylist[_])
+
+	res = {
+		"type": "Metadata Name Settings",
+		"msg": sprintf("deny: %s contains banned: %s", [val, denylist[i]]),
+		"severity": "MEDIUM",
+		"id": "RULE-10"
+	}
 }
+

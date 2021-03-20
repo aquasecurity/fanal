@@ -51,10 +51,10 @@ func Test_jsonConfigAnalyzer_Analyze(t *testing.T) {
 						Warnings:  nil,
 						Failures: []types.MisconfResult{
 							types.MisconfResult{
-								Type:     "",
-								ID:       "UNKNOWN",
-								Message:  `deny: too many replicas: 3`,
-								Severity: "UNKNOWN",
+								Type:     "Metadata Name Settings",
+								ID:       "RULE-10",
+								Message:  `deny: hello-kubernetes contains banned: hello`,
+								Severity: "MEDIUM",
 							},
 						},
 					},
@@ -111,7 +111,7 @@ func Test_jsonConfigAnalyzer_Analyze(t *testing.T) {
 		},
 		{
 			name:        "warn and deny",
-			policyPaths: []string{"../testdata/multi.rego"},
+			policyPaths: []string{"../testdata/warn.rego", "../testdata/deny.rego"},
 			inputFile:   "testdata/deployment.json",
 			want: &analyzer.AnalysisResult{
 				Misconfigurations: []types.Misconfiguration{
@@ -119,7 +119,7 @@ func Test_jsonConfigAnalyzer_Analyze(t *testing.T) {
 						FileType:  types.JSON,
 						FilePath:  "testdata/deployment.json",
 						Namespace: "testdata",
-						Successes: 0,
+						Successes: 2,
 						Warnings: []types.MisconfResult{
 							types.MisconfResult{
 								Type:     "Replica Settings",
