@@ -4,10 +4,10 @@ denylist = [
 	"foo"
 ]
 
-deny[msg] {
+deny[res] {
 	input[i].Cmd == "from"
 	val := input[i].Value
 	contains(val[i], denylist[_])
 
-	msg = sprintf("deny: image found %s", [val])
+	res = {"type": "Docker Security Check", "msg": sprintf("deny: image found %s", [val]), "severity": "HIGH", "id": "RULE-100"}
 }

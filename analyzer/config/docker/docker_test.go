@@ -68,10 +68,10 @@ func Test_dockerConfigAnalyzer_Analyze(t *testing.T) {
 						Warnings:  nil,
 						Failures: []types.MisconfResult{
 							types.MisconfResult{
-								Type:     "",
-								ID:       "UNKNOWN",
+								Type:     "Docker Security Check",
+								ID:       "RULE-100",
 								Message:  `deny: image found ["foo"]`,
-								Severity: "UNKNOWN",
+								Severity: "HIGH",
 							},
 						},
 					},
@@ -122,6 +122,37 @@ func Test_dockerConfigAnalyzer_Analyze(t *testing.T) {
 							},
 						},
 						Failures: nil,
+					},
+				},
+			},
+		},
+		{
+			name:        "warn and deny",
+			policyPaths: []string{"../testdata/docker_multi.rego"},
+			inputFile:   "testdata/Dockerfile.deployment",
+			want: &analyzer.AnalysisResult{
+				Misconfigurations: []types.Misconfiguration{
+					types.Misconfiguration{
+						FileType:  types.Dockerfile,
+						FilePath:  "testdata/Dockerfile.deployment",
+						Namespace: "testdata",
+						Successes: 0,
+						Warnings: []types.MisconfResult{
+							types.MisconfResult{
+								Type:     "Docker Security Check",
+								ID:       "RULE-10",
+								Message:  `warn: command ["echo hello"] contains banned: ["echo"]`,
+								Severity: "LOW",
+							},
+						},
+						Failures: []types.MisconfResult{
+							types.MisconfResult{
+								Type:     "Docker Security Check",
+								ID:       "RULE-100",
+								Message:  `deny: image found ["foo"]`,
+								Severity: "HIGH",
+							},
+						},
 					},
 				},
 			},

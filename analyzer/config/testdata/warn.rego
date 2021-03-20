@@ -1,13 +1,13 @@
 package testdata
 
-warn[msg] {
+warn[res] {
 	rpl = input.spec[_].replicas
 	rpl > 2
-	msg = sprintf("warn: too many replicas: %d", [rpl])
+	res = {"type": "Replica Settings", "msg": sprintf("warn: too many replicas: %d", [rpl]), "severity": "LOW", "id": "RULE-100"}
 }
 
-warn[msg] {
+warn[res] {
 	rpl = input.spec.replicas
 	rpl > 2
-	msg = sprintf("warn: too many replicas: %d", [rpl])
+	res = {"type": "Replica Settings", "msg": sprintf("warn: too many replicas: %d", [rpl]), "severity": "LOW", "id": "RULE-100"}
 }

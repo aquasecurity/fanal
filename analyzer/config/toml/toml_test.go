@@ -98,10 +98,10 @@ func Test_tomlConfigAnalyzer_Analyze(t *testing.T) {
 						Successes: 1,
 						Warnings: []types.MisconfResult{
 							types.MisconfResult{
-								Type:     "",
-								ID:       "UNKNOWN",
-								Message:  "warn: too many replicas: 3",
-								Severity: "UNKNOWN",
+								Type:     "Replica Settings",
+								ID:       "RULE-100",
+								Message:  `warn: too many replicas: 3`,
+								Severity: "LOW",
 							},
 						},
 						Failures: nil,

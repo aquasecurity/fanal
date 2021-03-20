@@ -99,10 +99,10 @@ func Test_hclConfigAnalyzer_Analyze(t *testing.T) {
 						Successes: 1,
 						Warnings: []types.MisconfResult{
 							types.MisconfResult{
-								Type:     "",
-								ID:       "UNKNOWN",
+								Type:     "Replica Settings",
+								ID:       "RULE-100",
 								Message:  `warn: too many replicas: 3`,
-								Severity: "UNKNOWN",
+								Severity: "LOW",
 							},
 						},
 						Failures: nil,
