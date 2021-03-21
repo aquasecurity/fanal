@@ -12,6 +12,7 @@ import (
 	"github.com/aquasecurity/fanal/analyzer/config/toml"
 	"github.com/aquasecurity/fanal/analyzer/config/yaml"
 	"github.com/aquasecurity/fanal/log"
+	"github.com/aquasecurity/fanal/types"
 )
 
 const separator = ":"
@@ -51,16 +52,18 @@ func RegisterConfigScanners(opt ScannerOption) {
 		}
 
 		switch fileType {
-		case "dockerfile":
+		case types.Dockerfile:
 			dockerRegexp = r
-		case "hcl":
+		case types.HCL:
 			hclRegexp = r
-		case "json":
+		case types.JSON:
 			jsonRegexp = r
-		case "toml":
+		case types.TOML:
 			tomlRegexp = r
-		case "yaml":
+		case types.YAML:
 			yamlRegexp = r
+		default:
+			log.Logger.Warnf("unknown file type: %s, pattern: %s", fileType, pattern)
 		}
 	}
 
