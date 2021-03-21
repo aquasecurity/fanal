@@ -2,7 +2,6 @@ package analyzer_test
 
 import (
 	"errors"
-	"io/ioutil"
 	"os"
 	"sync"
 	"testing"
@@ -247,8 +246,7 @@ func TestAnalysisResult_Merge(t *testing.T) {
 func TestAnalyzeFile(t *testing.T) {
 	type args struct {
 		filePath          string
-		info              os.FileInfo
-		opener            analyzer.Opener
+		testFilePath      string
 		disabledAnalyzers []analyzer.Type
 	}
 	tests := []struct {
@@ -260,10 +258,8 @@ func TestAnalyzeFile(t *testing.T) {
 		{
 			name: "happy path with os analyzer",
 			args: args{
-				filePath: "/etc/alpine-release",
-				opener: func() ([]byte, error) {
-					return ioutil.ReadFile("testdata/etc/alpine-release")
-				},
+				filePath:     "/etc/alpine-release",
+				testFilePath: "testdata/etc/alpine-release",
 			},
 			want: &analyzer.AnalysisResult{
 				OS: &types.OS{
@@ -275,10 +271,8 @@ func TestAnalyzeFile(t *testing.T) {
 		{
 			name: "happy path with disabled os analyzer",
 			args: args{
-				filePath: "/etc/alpine-release",
-				opener: func() ([]byte, error) {
-					return ioutil.ReadFile("testdata/etc/alpine-release")
-				},
+				filePath:          "/etc/alpine-release",
+				testFilePath:      "testdata/etc/alpine-release",
 				disabledAnalyzers: []analyzer.Type{analyzer.TypeAlpine},
 			},
 			want: &analyzer.AnalysisResult{},
@@ -286,10 +280,8 @@ func TestAnalyzeFile(t *testing.T) {
 		{
 			name: "happy path with package analyzer",
 			args: args{
-				filePath: "/lib/apk/db/installed",
-				opener: func() ([]byte, error) {
-					return ioutil.ReadFile("testdata/lib/apk/db/installed")
-				},
+				filePath:     "/lib/apk/db/installed",
+				testFilePath: "testdata/lib/apk/db/installed",
 			},
 			want: &analyzer.AnalysisResult{
 				PackageInfos: []types.PackageInfo{
@@ -305,10 +297,8 @@ func TestAnalyzeFile(t *testing.T) {
 		{
 			name: "happy path with disabled package analyzer",
 			args: args{
-				filePath: "/lib/apk/db/installed",
-				opener: func() ([]byte, error) {
-					return ioutil.ReadFile("testdata/lib/apk/db/installed")
-				},
+				filePath:          "/lib/apk/db/installed",
+				testFilePath:      "testdata/lib/apk/db/installed",
 				disabledAnalyzers: []analyzer.Type{analyzer.TypeApk},
 			},
 			want: &analyzer.AnalysisResult{},
@@ -316,10 +306,8 @@ func TestAnalyzeFile(t *testing.T) {
 		{
 			name: "happy path with library analyzer",
 			args: args{
-				filePath: "/app/Gemfile.lock",
-				opener: func() ([]byte, error) {
-					return ioutil.ReadFile("testdata/app/Gemfile.lock")
-				},
+				filePath:     "/app/Gemfile.lock",
+				testFilePath: "testdata/app/Gemfile.lock",
 			},
 			want: &analyzer.AnalysisResult{
 				Applications: []types.Application{
@@ -341,20 +329,24 @@ func TestAnalyzeFile(t *testing.T) {
 		{
 			name: "happy path with invalid os information",
 			args: args{
-				filePath: "/etc/lsb-release",
-				opener: func() ([]byte, error) {
-					return []byte(`foo`), nil
-				},
+				filePath:     "/etc/lsb-release",
+				testFilePath: "testdata/etc/hostname",
+			},
+			want: &analyzer.AnalysisResult{},
+		},
+		{
+			name: "happy path with a directory",
+			args: args{
+				filePath:     "/etc/lsb-release",
+				testFilePath: "testdata/etc",
 			},
 			want: &analyzer.AnalysisResult{},
 		},
 		{
 			name: "sad path with opener error",
 			args: args{
-				filePath: "/lib/apk/db/installed",
-				opener: func() ([]byte, error) {
-					return nil, xerrors.New("error")
-				},
+				filePath:     "/lib/apk/db/installed",
+				testFilePath: "testdata/error",
 			},
 			wantErr: "unable to open a file (/lib/apk/db/installed)",
 		},
@@ -364,7 +356,16 @@ func TestAnalyzeFile(t *testing.T) {
 			var wg sync.WaitGroup
 			got := new(analyzer.AnalysisResult)
 			a := analyzer.NewAnalyzer(tt.args.disabledAnalyzers)
-			err := a.AnalyzeFile(&wg, got, tt.args.filePath, tt.args.info, tt.args.opener)
+
+			info, err := os.Stat(tt.args.testFilePath)
+			require.NoError(t, err)
+
+			err = a.AnalyzeFile(&wg, got, tt.args.filePath, info, func() ([]byte, error) {
+				if tt.args.testFilePath == "testdata/error" {
+					return nil, xerrors.New("error")
+				}
+				return os.ReadFile(tt.args.testFilePath)
+			})
 
 			wg.Wait()
 			if tt.wantErr != "" {
