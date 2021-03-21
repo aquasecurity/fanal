@@ -10,6 +10,7 @@ import (
 	"golang.org/x/xerrors"
 
 	aos "github.com/aquasecurity/fanal/analyzer/os"
+	"github.com/aquasecurity/fanal/log"
 	"github.com/aquasecurity/fanal/types"
 )
 
@@ -216,6 +217,7 @@ func (a Analyzer) AnalyzeFile(wg *sync.WaitGroup, result *AnalysisResult, filePa
 
 			ret, err := a.Analyze(target)
 			if err != nil {
+				log.Logger.Debugf("Analysis error: %s", err)
 				return
 			}
 			result.Merge(ret)

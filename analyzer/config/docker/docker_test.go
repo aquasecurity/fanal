@@ -26,10 +26,10 @@ func Test_dockerConfigAnalyzer_Analyze(t *testing.T) {
 			inputFile:   "testdata/Dockerfile.deployment",
 			want: &analyzer.AnalysisResult{
 				Misconfigurations: []types.Misconfiguration{
-					types.Misconfiguration{
+					{
 						FileType:  types.Dockerfile,
 						FilePath:  "testdata/Dockerfile.deployment",
-						Namespace: "testdata",
+						Namespace: "main",
 						Successes: 1,
 						Warnings:  nil,
 						Failures:  nil,
@@ -43,10 +43,10 @@ func Test_dockerConfigAnalyzer_Analyze(t *testing.T) {
 			inputFile:   "testdata/Dockerfile.multistage",
 			want: &analyzer.AnalysisResult{
 				Misconfigurations: []types.Misconfiguration{
-					types.Misconfiguration{
+					{
 						FileType:  types.Dockerfile,
 						FilePath:  "testdata/Dockerfile.multistage",
-						Namespace: "testdata",
+						Namespace: "main",
 						Successes: 1,
 						Warnings:  nil,
 						Failures:  nil,
@@ -60,14 +60,14 @@ func Test_dockerConfigAnalyzer_Analyze(t *testing.T) {
 			inputFile:   "testdata/Dockerfile.deployment",
 			want: &analyzer.AnalysisResult{
 				Misconfigurations: []types.Misconfiguration{
-					types.Misconfiguration{
+					{
 						FileType:  types.Dockerfile,
 						FilePath:  "testdata/Dockerfile.deployment",
-						Namespace: "testdata",
+						Namespace: "main",
 						Successes: 0,
 						Warnings:  nil,
 						Failures: []types.MisconfResult{
-							types.MisconfResult{
+							{
 								Type:     "Docker Security Check",
 								ID:       "RULE-100",
 								Message:  `deny: image found ["foo"]`,
@@ -84,16 +84,16 @@ func Test_dockerConfigAnalyzer_Analyze(t *testing.T) {
 			inputFile:   "testdata/Dockerfile.deployment",
 			want: &analyzer.AnalysisResult{
 				Misconfigurations: []types.Misconfiguration{
-					types.Misconfiguration{
+					{
 						FileType:  types.Dockerfile,
 						FilePath:  "testdata/Dockerfile.deployment",
-						Namespace: "testdata",
+						Namespace: "main",
 						Successes: 0,
 						Warnings:  nil,
 						Failures: []types.MisconfResult{
-							types.MisconfResult{
-								Type:     "",
-								ID:       "UNKNOWN",
+							{
+								Type:     "N/A",
+								ID:       "N/A",
 								Message:  `violation: image found ["foo"]`,
 								Severity: "UNKNOWN",
 							},
@@ -108,15 +108,15 @@ func Test_dockerConfigAnalyzer_Analyze(t *testing.T) {
 			inputFile:   "testdata/Dockerfile.deployment",
 			want: &analyzer.AnalysisResult{
 				Misconfigurations: []types.Misconfiguration{
-					types.Misconfiguration{
+					{
 						FileType:  types.Dockerfile,
 						FilePath:  "testdata/Dockerfile.deployment",
-						Namespace: "testdata",
+						Namespace: "main",
 						Successes: 0,
 						Warnings: []types.MisconfResult{
-							types.MisconfResult{
-								Type:     "",
-								ID:       "UNKNOWN",
+							{
+								Type:     "N/A",
+								ID:       "N/A",
 								Message:  `warn: image found ["foo"]`,
 								Severity: "UNKNOWN",
 							},
@@ -132,13 +132,13 @@ func Test_dockerConfigAnalyzer_Analyze(t *testing.T) {
 			inputFile:   "testdata/Dockerfile.deployment",
 			want: &analyzer.AnalysisResult{
 				Misconfigurations: []types.Misconfiguration{
-					types.Misconfiguration{
+					{
 						FileType:  types.Dockerfile,
 						FilePath:  "testdata/Dockerfile.deployment",
-						Namespace: "testdata",
+						Namespace: "main",
 						Successes: 0,
 						Warnings: []types.MisconfResult{
-							types.MisconfResult{
+							{
 								Type:     "Docker Security Check",
 								ID:       "RULE-10",
 								Message:  `warn: command ["echo hello"] contains banned: ["echo"]`,
@@ -146,7 +146,7 @@ func Test_dockerConfigAnalyzer_Analyze(t *testing.T) {
 							},
 						},
 						Failures: []types.MisconfResult{
-							types.MisconfResult{
+							{
 								Type:     "Docker Security Check",
 								ID:       "RULE-100",
 								Message:  `deny: image found ["foo"]`,

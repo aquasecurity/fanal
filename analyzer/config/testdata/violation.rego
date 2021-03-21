@@ -1,4 +1,4 @@
-package testdata
+package main
 
 violation[{"msg": msg, "details":{}}] {
 	rpl = input.spec[_].replicas

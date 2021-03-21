@@ -1,4 +1,4 @@
-package testdata
+package main
 
 warn[res] {
 	rpl = input.spec[_].replicas

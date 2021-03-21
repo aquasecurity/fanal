@@ -83,7 +83,7 @@ func toMisconfiguration(fileType string, r output.CheckResult) types.Misconfigur
 }
 
 func parseResult(r output.Result) types.MisconfResult {
-	policyID := "UNKNOWN"
+	policyID := "N/A"
 	if v, ok := r.Metadata["id"]; ok {
 		switch vv := v.(type) {
 		case string:
@@ -93,7 +93,7 @@ func parseResult(r output.Result) types.MisconfResult {
 		}
 	}
 
-	var checkType string
+	checkType := "N/A"
 	if v, ok := r.Metadata["type"]; ok {
 		switch vv := v.(type) {
 		case string:

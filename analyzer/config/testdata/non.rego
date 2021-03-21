@@ -1,4 +1,4 @@
-package testdata
+package main
 
 deny[msg] {
 	rpl = input.spec[_].replicas

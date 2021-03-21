@@ -27,10 +27,10 @@ func Test_hclConfigAnalyzer_Analyze(t *testing.T) {
 			inputFile:   "testdata/deployment.hcl1",
 			want: &analyzer.AnalysisResult{
 				Misconfigurations: []types.Misconfiguration{
-					types.Misconfiguration{
+					{
 						FileType:  types.HCL,
 						FilePath:  "testdata/deployment.hcl1",
-						Namespace: "testdata",
+						Namespace: "main",
 						Successes: 2,
 						Warnings:  nil,
 						Failures:  nil,
@@ -44,10 +44,10 @@ func Test_hclConfigAnalyzer_Analyze(t *testing.T) {
 			inputFile:   "testdata/deployment.hcl1",
 			want: &analyzer.AnalysisResult{
 				Misconfigurations: []types.Misconfiguration{
-					types.Misconfiguration{
+					{
 						FileType:  types.HCL,
 						FilePath:  "testdata/deployment.hcl1",
-						Namespace: "testdata",
+						Namespace: "main",
 						Successes: 1,
 						Warnings:  nil,
 						Failures: []types.MisconfResult{
@@ -68,16 +68,16 @@ func Test_hclConfigAnalyzer_Analyze(t *testing.T) {
 			inputFile:   "testdata/deployment.hcl1",
 			want: &analyzer.AnalysisResult{
 				Misconfigurations: []types.Misconfiguration{
-					types.Misconfiguration{
+					{
 						FileType:  types.HCL,
 						FilePath:  "testdata/deployment.hcl1",
-						Namespace: "testdata",
+						Namespace: "main",
 						Successes: 1,
 						Warnings:  nil,
 						Failures: []types.MisconfResult{
-							types.MisconfResult{
-								Type:     "",
-								ID:       "UNKNOWN",
+							{
+								Type:     "N/A",
+								ID:       "N/A",
 								Message:  `violation: too many replicas: 3`,
 								Severity: "UNKNOWN",
 							},
@@ -92,10 +92,10 @@ func Test_hclConfigAnalyzer_Analyze(t *testing.T) {
 			inputFile:   "testdata/deployment.hcl1",
 			want: &analyzer.AnalysisResult{
 				Misconfigurations: []types.Misconfiguration{
-					types.Misconfiguration{
+					{
 						FileType:  types.HCL,
 						FilePath:  "testdata/deployment.hcl1",
-						Namespace: "testdata",
+						Namespace: "main",
 						Successes: 1,
 						Warnings: []types.MisconfResult{
 							types.MisconfResult{
@@ -116,13 +116,13 @@ func Test_hclConfigAnalyzer_Analyze(t *testing.T) {
 			inputFile:   "testdata/deployment.hcl1",
 			want: &analyzer.AnalysisResult{
 				Misconfigurations: []types.Misconfiguration{
-					types.Misconfiguration{
+					{
 						FileType:  types.HCL,
 						FilePath:  "testdata/deployment.hcl1",
-						Namespace: "testdata",
+						Namespace: "main",
 						Successes: 2,
 						Warnings: []types.MisconfResult{
-							types.MisconfResult{
+							{
 								Type:     "Replica Settings",
 								ID:       "RULE-100",
 								Message:  `warn: too many replicas: 3`,
@@ -130,7 +130,7 @@ func Test_hclConfigAnalyzer_Analyze(t *testing.T) {
 							},
 						},
 						Failures: []types.MisconfResult{
-							types.MisconfResult{
+							{
 								Type:     "Metadata Name Settings",
 								ID:       "RULE-10",
 								Message:  `deny: hello-kubernetes contains banned: hello`,
@@ -153,10 +153,10 @@ func Test_hclConfigAnalyzer_Analyze(t *testing.T) {
 			inputFile:   "testdata/deployment.hcl2",
 			want: &analyzer.AnalysisResult{
 				Misconfigurations: []types.Misconfiguration{
-					types.Misconfiguration{
+					{
 						FileType:  types.HCL,
 						FilePath:  "testdata/deployment.hcl2",
-						Namespace: "testdata",
+						Namespace: "main",
 						Successes: 2,
 						Warnings:  nil,
 						Failures:  nil,
@@ -176,10 +176,10 @@ func Test_hclConfigAnalyzer_Analyze(t *testing.T) {
 			inputFile:   "testdata/deprecated.hcl",
 			want: &analyzer.AnalysisResult{
 				Misconfigurations: []types.Misconfiguration{
-					types.Misconfiguration{
+					{
 						FileType:  types.HCL,
 						FilePath:  "testdata/deprecated.hcl",
-						Namespace: "testdata",
+						Namespace: "main",
 						Successes: 2,
 						Warnings:  nil,
 						Failures:  nil,

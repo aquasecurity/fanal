@@ -26,10 +26,10 @@ func Test_tomlConfigAnalyzer_Analyze(t *testing.T) {
 			inputFile:   "testdata/deployment.toml",
 			want: &analyzer.AnalysisResult{
 				Misconfigurations: []types.Misconfiguration{
-					types.Misconfiguration{
+					{
 						FileType:  types.TOML,
 						FilePath:  "testdata/deployment.toml",
-						Namespace: "testdata",
+						Namespace: "main",
 						Successes: 2,
 						Warnings:  nil,
 						Failures:  nil,
@@ -43,14 +43,14 @@ func Test_tomlConfigAnalyzer_Analyze(t *testing.T) {
 			inputFile:   "testdata/deployment.toml",
 			want: &analyzer.AnalysisResult{
 				Misconfigurations: []types.Misconfiguration{
-					types.Misconfiguration{
+					{
 						FileType:  types.TOML,
 						FilePath:  "testdata/deployment.toml",
-						Namespace: "testdata",
+						Namespace: "main",
 						Successes: 1,
 						Warnings:  nil,
 						Failures: []types.MisconfResult{
-							types.MisconfResult{
+							{
 								Type:     "Metadata Name Settings",
 								ID:       "RULE-10",
 								Message:  `deny: hello-kubernetes contains banned: hello`,
@@ -67,16 +67,16 @@ func Test_tomlConfigAnalyzer_Analyze(t *testing.T) {
 			inputFile:   "testdata/deployment.toml",
 			want: &analyzer.AnalysisResult{
 				Misconfigurations: []types.Misconfiguration{
-					types.Misconfiguration{
+					{
 						FileType:  types.TOML,
 						FilePath:  "testdata/deployment.toml",
-						Namespace: "testdata",
+						Namespace: "main",
 						Successes: 1,
 						Warnings:  nil,
 						Failures: []types.MisconfResult{
-							types.MisconfResult{
-								Type:     "",
-								ID:       "UNKNOWN",
+							{
+								Type:     "N/A",
+								ID:       "N/A",
 								Message:  "violation: too many replicas: 3",
 								Severity: "UNKNOWN",
 							},
@@ -91,13 +91,13 @@ func Test_tomlConfigAnalyzer_Analyze(t *testing.T) {
 			inputFile:   "testdata/deployment.toml",
 			want: &analyzer.AnalysisResult{
 				Misconfigurations: []types.Misconfiguration{
-					types.Misconfiguration{
+					{
 						FileType:  types.TOML,
 						FilePath:  "testdata/deployment.toml",
-						Namespace: "testdata",
+						Namespace: "main",
 						Successes: 1,
 						Warnings: []types.MisconfResult{
-							types.MisconfResult{
+							{
 								Type:     "Replica Settings",
 								ID:       "RULE-100",
 								Message:  `warn: too many replicas: 3`,
@@ -115,13 +115,13 @@ func Test_tomlConfigAnalyzer_Analyze(t *testing.T) {
 			inputFile:   "testdata/deployment.toml",
 			want: &analyzer.AnalysisResult{
 				Misconfigurations: []types.Misconfiguration{
-					types.Misconfiguration{
+					{
 						FileType:  types.TOML,
 						FilePath:  "testdata/deployment.toml",
-						Namespace: "testdata",
+						Namespace: "main",
 						Successes: 2,
 						Warnings: []types.MisconfResult{
-							types.MisconfResult{
+							{
 								Type:     "Replica Settings",
 								ID:       "RULE-100",
 								Message:  `warn: too many replicas: 3`,
@@ -129,7 +129,7 @@ func Test_tomlConfigAnalyzer_Analyze(t *testing.T) {
 							},
 						},
 						Failures: []types.MisconfResult{
-							types.MisconfResult{
+							{
 								Type:     "Metadata Name Settings",
 								ID:       "RULE-10",
 								Message:  `deny: hello-kubernetes contains banned: hello`,
