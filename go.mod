@@ -36,7 +36,7 @@ require (
 	github.com/sosedoff/gitkit v0.2.0
 	github.com/stretchr/testify v1.7.0
 	github.com/testcontainers/testcontainers-go v0.9.1-0.20210218153226-c8e070a2f18d
-	github.com/urfave/cli/v2 v2.2.0
+	github.com/urfave/cli/v2 v2.3.0
 	go.etcd.io/bbolt v1.3.5
 	go.opencensus.io v0.22.6 // indirect
 	go.uber.org/zap v1.16.0
