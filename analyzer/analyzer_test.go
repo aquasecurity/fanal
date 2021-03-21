@@ -11,15 +11,9 @@ import (
 	"github.com/stretchr/testify/require"
 	"golang.org/x/xerrors"
 
-	// Change the order in which "init()" is called intentionally
-	_ "github.com/aquasecurity/fanal/analyzer/os/ubuntu"
-
 	"github.com/aquasecurity/fanal/analyzer"
-	_ "github.com/aquasecurity/fanal/analyzer/command/apk"
-	_ "github.com/aquasecurity/fanal/analyzer/library/bundler"
+	_ "github.com/aquasecurity/fanal/analyzer/all"
 	aos "github.com/aquasecurity/fanal/analyzer/os"
-	_ "github.com/aquasecurity/fanal/analyzer/os/alpine"
-	_ "github.com/aquasecurity/fanal/analyzer/pkg/apk"
 	"github.com/aquasecurity/fanal/types"
 	godeptypes "github.com/aquasecurity/go-dep-parser/pkg/types"
 )
@@ -488,12 +482,12 @@ func TestAnalyzer_AnalyzerVersions(t *testing.T) {
 		{
 			name:     "happy path",
 			disabled: []analyzer.Type{},
-			want:     "1111",
+			want:     "1111111111111111111111",
 		},
 		{
 			name:     "disable analyzers",
 			disabled: []analyzer.Type{analyzer.TypeAlpine, analyzer.TypeUbuntu},
-			want:     "0011",
+			want:     "0111111110111111111111",
 		},
 	}
 	for _, tt := range tests {
