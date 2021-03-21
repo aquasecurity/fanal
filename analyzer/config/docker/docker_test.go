@@ -9,48 +9,69 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/aquasecurity/fanal/analyzer"
-	"github.com/aquasecurity/fanal/analyzer/config"
 	"github.com/aquasecurity/fanal/types"
 )
 
 func Test_dockerConfigAnalyzer_Analyze(t *testing.T) {
 	tests := []struct {
-		name      string
-		inputFile string
-		want      *analyzer.AnalysisResult
-		wantErr   string
+		name        string
+		policyPaths []string
+		inputFile   string
+		want        *analyzer.AnalysisResult
+		wantErr     string
 	}{
 		{
-			name:      "happy path",
-			inputFile: "testdata/Dockerfile.deployment",
+			name:        "happy path",
+			policyPaths: []string{"../testdata/docker_non.rego"},
+			inputFile:   "testdata/Dockerfile.deployment",
 			want: &analyzer.AnalysisResult{
-				Misconfigurations: []types.Config{
-					{
-						Type:     config.Dockerfile,
-						FilePath: "testdata/Dockerfile.deployment",
-						Content: []interface{}{
-							[]interface{}{
-								map[string]interface{}{
-									"Cmd":    "from",
-									"SubCmd": "",
-									"JSON":   false,
-									"Flags":  []interface{}{},
-									"Value":  []interface{}{"foo"},
-								},
-								map[string]interface{}{
-									"Cmd":    "copy",
-									"SubCmd": "",
-									"JSON":   false,
-									"Flags":  []interface{}{},
-									"Value":  []interface{}{".", "/"},
-								},
-								map[string]interface{}{
-									"Cmd":    "run",
-									"SubCmd": "",
-									"JSON":   false,
-									"Flags":  []interface{}{},
-									"Value":  []interface{}{"echo hello"},
-								},
+				Misconfigurations: []types.Misconfiguration{
+					types.Misconfiguration{
+						FileType:  types.Dockerfile,
+						FilePath:  "testdata/Dockerfile.deployment",
+						Namespace: "testdata",
+						Successes: 1,
+						Warnings:  nil,
+						Failures:  nil,
+					},
+				},
+			},
+		},
+		{
+			name:        "happy path with multi-stage",
+			policyPaths: []string{"../testdata/docker_non.rego"},
+			inputFile:   "testdata/Dockerfile.multistage",
+			want: &analyzer.AnalysisResult{
+				Misconfigurations: []types.Misconfiguration{
+					types.Misconfiguration{
+						FileType:  types.Dockerfile,
+						FilePath:  "testdata/Dockerfile.multistage",
+						Namespace: "testdata",
+						Successes: 1,
+						Warnings:  nil,
+						Failures:  nil,
+					},
+				},
+			},
+		},
+		{
+			name:        "deny",
+			policyPaths: []string{"../testdata/docker_deny.rego"},
+			inputFile:   "testdata/Dockerfile.deployment",
+			want: &analyzer.AnalysisResult{
+				Misconfigurations: []types.Misconfiguration{
+					types.Misconfiguration{
+						FileType:  types.Dockerfile,
+						FilePath:  "testdata/Dockerfile.deployment",
+						Namespace: "testdata",
+						Successes: 0,
+						Warnings:  nil,
+						Failures: []types.MisconfResult{
+							types.MisconfResult{
+								Type:     "Docker Security Check",
+								ID:       "RULE-100",
+								Message:  `deny: image found ["foo"]`,
+								Severity: "HIGH",
 							},
 						},
 					},
@@ -58,50 +79,23 @@ func Test_dockerConfigAnalyzer_Analyze(t *testing.T) {
 			},
 		},
 		{
-			name:      "happy path with multi-stage",
-			inputFile: "testdata/Dockerfile.multistage",
+			name:        "violation",
+			policyPaths: []string{"../testdata/docker_violation.rego"},
+			inputFile:   "testdata/Dockerfile.deployment",
 			want: &analyzer.AnalysisResult{
-				Misconfigurations: []types.Config{
-					{
-						Type:     config.Dockerfile,
-						FilePath: "testdata/Dockerfile.multistage",
-						Content: []interface{}{
-							[]interface{}{
-								map[string]interface{}{
-									"Cmd":    "from",
-									"SubCmd": "",
-									"JSON":   false,
-									"Flags":  []interface{}{},
-									"Value":  []interface{}{"foo", "AS", "build"},
-								},
-								map[string]interface{}{
-									"Cmd":    "copy",
-									"SubCmd": "",
-									"JSON":   false,
-									"Flags":  []interface{}{},
-									"Value":  []interface{}{".", "/"},
-								},
-								map[string]interface{}{
-									"Cmd":    "run",
-									"SubCmd": "",
-									"JSON":   false,
-									"Flags":  []interface{}{},
-									"Value":  []interface{}{"echo hello"},
-								},
-								map[string]interface{}{
-									"Cmd":    "from",
-									"SubCmd": "",
-									"JSON":   false,
-									"Flags":  []interface{}{},
-									"Value":  []interface{}{"scratch"},
-								},
-								map[string]interface{}{
-									"Cmd":    "copy",
-									"SubCmd": "",
-									"JSON":   false,
-									"Flags":  []interface{}{"--from=build"},
-									"Value":  []interface{}{"/bar", "/bar"},
-								},
+				Misconfigurations: []types.Misconfiguration{
+					types.Misconfiguration{
+						FileType:  types.Dockerfile,
+						FilePath:  "testdata/Dockerfile.deployment",
+						Namespace: "testdata",
+						Successes: 0,
+						Warnings:  nil,
+						Failures: []types.MisconfResult{
+							types.MisconfResult{
+								Type:     "",
+								ID:       "UNKNOWN",
+								Message:  `violation: image found ["foo"]`,
+								Severity: "UNKNOWN",
 							},
 						},
 					},
@@ -109,9 +103,65 @@ func Test_dockerConfigAnalyzer_Analyze(t *testing.T) {
 			},
 		},
 		{
-			name:      "broken Docker: env no value",
-			inputFile: "testdata/Dockerfile.broken",
-			wantErr:   "parse dockerfile: ENV must have two arguments",
+			name:        "warn",
+			policyPaths: []string{"../testdata/docker_warn.rego"},
+			inputFile:   "testdata/Dockerfile.deployment",
+			want: &analyzer.AnalysisResult{
+				Misconfigurations: []types.Misconfiguration{
+					types.Misconfiguration{
+						FileType:  types.Dockerfile,
+						FilePath:  "testdata/Dockerfile.deployment",
+						Namespace: "testdata",
+						Successes: 0,
+						Warnings: []types.MisconfResult{
+							types.MisconfResult{
+								Type:     "",
+								ID:       "UNKNOWN",
+								Message:  `warn: image found ["foo"]`,
+								Severity: "UNKNOWN",
+							},
+						},
+						Failures: nil,
+					},
+				},
+			},
+		},
+		{
+			name:        "warn and deny",
+			policyPaths: []string{"../testdata/docker_multi.rego"},
+			inputFile:   "testdata/Dockerfile.deployment",
+			want: &analyzer.AnalysisResult{
+				Misconfigurations: []types.Misconfiguration{
+					types.Misconfiguration{
+						FileType:  types.Dockerfile,
+						FilePath:  "testdata/Dockerfile.deployment",
+						Namespace: "testdata",
+						Successes: 0,
+						Warnings: []types.MisconfResult{
+							types.MisconfResult{
+								Type:     "Docker Security Check",
+								ID:       "RULE-10",
+								Message:  `warn: command ["echo hello"] contains banned: ["echo"]`,
+								Severity: "LOW",
+							},
+						},
+						Failures: []types.MisconfResult{
+							types.MisconfResult{
+								Type:     "Docker Security Check",
+								ID:       "RULE-100",
+								Message:  `deny: image found ["foo"]`,
+								Severity: "HIGH",
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name:        "broken Docker: env no value",
+			policyPaths: []string{"../testdata/docker_non.rego"},
+			inputFile:   "testdata/Dockerfile.broken",
+			wantErr:     "parse dockerfile: ENV must have two arguments",
 		},
 	}
 	for _, tt := range tests {
@@ -119,9 +169,7 @@ func Test_dockerConfigAnalyzer_Analyze(t *testing.T) {
 			b, err := ioutil.ReadFile(tt.inputFile)
 			require.NoError(t, err)
 
-			a := ConfigScanner{
-				parser: &docker.Parser{},
-			}
+			a := NewConfigScanner(nil, tt.policyPaths, nil)
 
 			got, err := a.Analyze(analyzer.AnalysisTarget{
 				FilePath: tt.inputFile,
