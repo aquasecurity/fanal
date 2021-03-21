@@ -10,7 +10,7 @@ Static Analysis Library for Containers
 - Detect OS
 - Extract OS packages
 - Extract libraries used by an application
-  - Bundler, Composer, npm, Yarn, Pipenv, Poetry, Cargo
+  - Bundler, Composer, npm, Yarn, Pipenv, Poetry, Cargo, GoBinary, Java Archive, NuGet
 
 ## Example
 See [`cmd/fanal/`](cmd/fanal)
