@@ -16,6 +16,7 @@ import (
 	"time"
 
 	_ "github.com/aquasecurity/fanal/analyzer/command/apk"
+	"github.com/aquasecurity/fanal/analyzer/config"
 	_ "github.com/aquasecurity/fanal/analyzer/library/bundler"
 	_ "github.com/aquasecurity/fanal/analyzer/library/cargo"
 	_ "github.com/aquasecurity/fanal/analyzer/library/composer"
@@ -142,7 +143,7 @@ func TestFanal_Library_DockerLessMode(t *testing.T) {
 			require.NoError(t, err, tc.name)
 			defer cleanup()
 
-			ar := aimage.NewArtifact(img, c, nil)
+			ar := aimage.NewArtifact(img, c, nil, config.ScannerOption{})
 			applier := applier.NewApplier(c)
 
 			// run tests twice, one without cache and with cache
@@ -190,7 +191,7 @@ func TestFanal_Library_DockerMode(t *testing.T) {
 			require.NoError(t, err, tc.name)
 			defer cleanup()
 
-			ar := aimage.NewArtifact(img, c, nil)
+			ar := aimage.NewArtifact(img, c, nil, config.ScannerOption{})
 			applier := applier.NewApplier(c)
 
 			// run tests twice, one without cache and with cache
@@ -234,7 +235,7 @@ func TestFanal_Library_TarMode(t *testing.T) {
 			img, err := image.NewArchiveImage(tc.imageFile)
 			require.NoError(t, err, tc.name)
 
-			ar := aimage.NewArtifact(img, c, nil)
+			ar := aimage.NewArtifact(img, c, nil, config.ScannerOption{})
 			applier := applier.NewApplier(c)
 
 			runChecks(t, ctx, ar, applier, tc)

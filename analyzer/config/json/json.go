@@ -37,7 +37,7 @@ func (s ConfigScanner) Analyze(target analyzer.AnalysisTarget) (*analyzer.Analys
 
 	results, err := s.ScanConfig(types.JSON, target.FilePath, parsed)
 	if err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("unable to scan JSON (%s): %w", target.FilePath, err)
 	}
 
 	return &analyzer.AnalysisResult{Misconfigurations: results}, nil

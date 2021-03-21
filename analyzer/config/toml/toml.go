@@ -37,7 +37,7 @@ func (s ConfigScanner) Analyze(target analyzer.AnalysisTarget) (*analyzer.Analys
 
 	results, err := s.ScanConfig(types.TOML, target.FilePath, parsed)
 	if err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("unable to scan TOML (%s): %w", target.FilePath, err)
 	}
 
 	return &analyzer.AnalysisResult{Misconfigurations: results}, nil

@@ -38,12 +38,12 @@ func NewConfigScanner(filePattern *regexp.Regexp, policyPaths, dataPaths []strin
 func (s ConfigScanner) Analyze(target analyzer.AnalysisTarget) (*analyzer.AnalysisResult, error) {
 	parsed, err := s.analyze(target)
 	if err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("unable to parse HCL (%s): %w", target.FilePath, err)
 	}
 
 	results, err := s.ScanConfig(types.HCL, target.FilePath, parsed)
 	if err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("unable to scan HCL (%s): %w", target.FilePath, err)
 	}
 
 	return &analyzer.AnalysisResult{
