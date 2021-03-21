@@ -94,6 +94,21 @@ func (r *AnalysisResult) Sort() {
 	sort.Slice(r.Misconfigurations, func(i, j int) bool {
 		return r.Misconfigurations[i].FilePath < r.Misconfigurations[j].FilePath
 	})
+
+	for _, misconf := range r.Misconfigurations {
+		sort.Slice(misconf.Failures, func(i, j int) bool {
+			failures := misconf.Failures
+			switch {
+			case failures[i].Type != failures[j].Type:
+				return failures[i].Type < failures[j].Type
+			case failures[i].Severity != failures[j].Severity:
+				return failures[i].Severity < failures[j].Severity
+			case failures[i].ID != failures[j].ID:
+				return failures[i].ID < failures[j].ID
+			}
+			return failures[i].Message < failures[j].Message
+		})
+	}
 }
 
 func (r *AnalysisResult) Merge(new *AnalysisResult) {
