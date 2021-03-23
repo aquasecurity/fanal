@@ -2,11 +2,13 @@ package scanner
 
 import (
 	"regexp"
+	"sort"
 	"testing"
 
-	"github.com/open-policy-agent/conftest/parser"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/aquasecurity/fanal/types"
 )
 
 func TestScanner_Match(t *testing.T) {
@@ -48,34 +50,104 @@ func TestScanner_ScanConfig(t *testing.T) {
 		name        string
 		policyPaths []string
 		dataPaths   []string
-		fileType    string // NOTE might want to make fanal/types and conftest/parser equal
-		fileName    string
+		configType  string
+		content     interface{}
+		namespaces  []string
+		want        []types.Misconfiguration
 		wantErr     string
 	}{
 		{
 			name:        "happy path",
-			policyPaths: []string{"testdata/valid.rego"},
-			fileType:    parser.YAML,
-			fileName:    "testdata/deployment.yaml",
+			policyPaths: []string{"testdata/valid/100.rego"},
+			configType:  types.Kubernetes,
+			content: map[string]interface{}{
+				"apiVersion": "apps/v1",
+				"kind":       "Deployment",
+			},
+			namespaces: []string{"testdata"},
+			want: []types.Misconfiguration{
+				{
+					FileType:  "kubernetes",
+					FilePath:  "deployment.yaml",
+					Namespace: "testdata.kubernetes.id_100",
+					Successes: 0,
+					Failures: []types.MisconfResult{
+						{
+							Type:     "Kubernetes Check",
+							ID:       "ID-100",
+							Message:  "deny",
+							Severity: "CRITICAL",
+						},
+					},
+				},
+			},
 		},
 		{
-			name:     "policy load error/not supplied",
-			fileType: parser.YAML,
-			fileName: "testdata/deployment.yaml",
-			wantErr:  "policy load error",
+			name:        "happy path with multiple policies",
+			policyPaths: []string{"testdata/valid/"},
+			configType:  types.Kubernetes,
+			content: map[string]interface{}{
+				"apiVersion": "apps/v1",
+				"kind":       "Deployment",
+			},
+			namespaces: []string{"testdata"},
+			want: []types.Misconfiguration{
+				{
+					FileType:  types.Kubernetes,
+					FilePath:  "deployment.yaml",
+					Namespace: "testdata.kubernetes.id_100",
+					Successes: 0,
+					Failures: []types.MisconfResult{
+						{
+							Type:     "Kubernetes Check",
+							ID:       "ID-100",
+							Message:  "deny",
+							Severity: "CRITICAL",
+						},
+					},
+				},
+				{
+					FileType:  types.Kubernetes,
+					FilePath:  "deployment.yaml",
+					Namespace: "testdata.kubernetes.id_200",
+					Successes: 0,
+					Failures: []types.MisconfResult{
+						{
+							Type:     "Kubernetes Check",
+							ID:       "ID-200",
+							Message:  "deny",
+							Severity: "HIGH",
+						},
+					},
+				},
+			},
+		},
+		{
+			name:        "happy path with namespace exceptions",
+			policyPaths: []string{"testdata/valid/", "testdata/namespaces.rego"},
+			configType:  types.Kubernetes,
+			content: map[string]interface{}{
+				"apiVersion": "apps/v1",
+				"kind":       "Deployment",
+			},
+			namespaces: []string{"testdata"},
+			want:       nil,
+		},
+		{
+			name:       "policy load error/not supplied",
+			configType: types.Kubernetes,
+			wantErr:    "policy load error",
 		},
 		{
 			name:        "policy load error/no policy found",
 			policyPaths: []string{"testdata/noexist.rego"},
-			fileType:    parser.YAML,
-			fileName:    "testdata/deployment.yaml",
+			configType:  types.Kubernetes,
 			wantErr:     "policy load error",
 		},
 		{
 			name:        "policy load error/invalid",
-			policyPaths: []string{"testdata/invalid.rego"},
-			fileType:    parser.YAML,
-			fileName:    "testdata/deployment.yaml",
+			policyPaths: []string{"testdata/invalid"},
+			configType:  types.Kubernetes,
 			wantErr:     "policy load error",
 		},
 	}
@@ -83,17 +155,20 @@ func TestScanner_ScanConfig(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			scanner := NewScanner(nil, tt.policyPaths, tt.dataPaths)
-			content, err := parser.ParseConfigurationsAs([]string{tt.fileName}, tt.fileType)
-			require.NoError(t, err)
-
-			got, err := scanner.ScanConfig(tt.fileType, tt.fileName, content)
+			got, err := scanner.ScanConfig(tt.configType, "deployment.yaml", tt.namespaces, tt.content)
 			if tt.wantErr != "" {
 				require.Error(t, err)
 				assert.Contains(t, err.Error(), tt.wantErr)
 				assert.Nil(t, got)
 				return
 			}
-			assert.NotNil(t, got)
+
+			sort.Slice(got, func(i, j int) bool {
+				return got[i].Namespace < got[j].Namespace
+			})
+
+			require.NoError(t, err)
+			assert.Equal(t, tt.want, got)
 		})
 	}
 }

@@ -25,11 +25,11 @@ type ConfigScanner struct {
 	scanner.Scanner
 }
 
-func NewConfigScanner(filePattern *regexp.Regexp, policyPaths, dataPaths []string) ConfigScanner {
+func NewConfigScanner(filePattern *regexp.Regexp, namespaces, policyPaths, dataPaths []string) ConfigScanner {
 	return ConfigScanner{
 		hcl1Parser: &hcl1.Parser{},
 		hcl2Parser: &hcl2.Parser{},
-		Scanner:    scanner.NewScanner(filePattern, policyPaths, dataPaths),
+		Scanner:    scanner.NewScanner(filePattern, namespaces, policyPaths, dataPaths),
 	}
 }
 

@@ -18,6 +18,7 @@ import (
 const separator = ":"
 
 type ScannerOption struct {
+	Namespaces   []string
 	FilePatterns []string
 	PolicyPaths  []string
 	DataPaths    []string
@@ -67,9 +68,9 @@ func RegisterConfigScanners(opt ScannerOption) {
 		}
 	}
 
-	analyzer.RegisterAnalyzer(docker.NewConfigScanner(dockerRegexp, opt.PolicyPaths, opt.DataPaths))
-	analyzer.RegisterAnalyzer(hcl.NewConfigScanner(hclRegexp, opt.PolicyPaths, opt.DataPaths))
-	analyzer.RegisterAnalyzer(json.NewConfigScanner(jsonRegexp, opt.PolicyPaths, opt.DataPaths))
-	analyzer.RegisterAnalyzer(toml.NewConfigScanner(tomlRegexp, opt.PolicyPaths, opt.DataPaths))
-	analyzer.RegisterAnalyzer(yaml.NewConfigScanner(yamlRegexp, opt.PolicyPaths, opt.DataPaths))
+	analyzer.RegisterAnalyzer(docker.NewConfigScanner(dockerRegexp, opt.Namespaces, opt.PolicyPaths, opt.DataPaths))
+	analyzer.RegisterAnalyzer(hcl.NewConfigScanner(hclRegexp, opt.Namespaces, opt.PolicyPaths, opt.DataPaths))
+	analyzer.RegisterAnalyzer(json.NewConfigScanner(jsonRegexp, opt.Namespaces, opt.PolicyPaths, opt.DataPaths))
+	analyzer.RegisterAnalyzer(toml.NewConfigScanner(tomlRegexp, opt.Namespaces, opt.PolicyPaths, opt.DataPaths))
+	analyzer.RegisterAnalyzer(yaml.NewConfigScanner(yamlRegexp, opt.Namespaces, opt.PolicyPaths, opt.DataPaths))
 }
