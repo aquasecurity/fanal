@@ -27,7 +27,7 @@ func Test_yamlConfigAnalyzer_Analyze(t *testing.T) {
 			want: &analyzer.AnalysisResult{
 				Misconfigurations: []types.Misconfiguration{
 					{
-						FileType:  types.YAML,
+						FileType:  types.Kubernetes,
 						FilePath:  "testdata/deployment.yaml",
 						Namespace: "main",
 						Successes: 2,
@@ -44,7 +44,7 @@ func Test_yamlConfigAnalyzer_Analyze(t *testing.T) {
 			want: &analyzer.AnalysisResult{
 				Misconfigurations: []types.Misconfiguration{
 					{
-						FileType:  types.YAML,
+						FileType:  types.Kubernetes,
 						FilePath:  "testdata/deployment.yaml",
 						Namespace: "main",
 						Successes: 1,
@@ -68,7 +68,7 @@ func Test_yamlConfigAnalyzer_Analyze(t *testing.T) {
 			want: &analyzer.AnalysisResult{
 				Misconfigurations: []types.Misconfiguration{
 					{
-						FileType:  types.YAML,
+						FileType:  types.Kubernetes,
 						FilePath:  "testdata/deployment.yaml",
 						Namespace: "main",
 						Successes: 1,
@@ -92,7 +92,7 @@ func Test_yamlConfigAnalyzer_Analyze(t *testing.T) {
 			want: &analyzer.AnalysisResult{
 				Misconfigurations: []types.Misconfiguration{
 					{
-						FileType:  types.YAML,
+						FileType:  types.Kubernetes,
 						FilePath:  "testdata/deployment.yaml",
 						Namespace: "main",
 						Successes: 1,
@@ -116,7 +116,7 @@ func Test_yamlConfigAnalyzer_Analyze(t *testing.T) {
 			want: &analyzer.AnalysisResult{
 				Misconfigurations: []types.Misconfiguration{
 					{
-						FileType:  types.YAML,
+						FileType:  types.Kubernetes,
 						FilePath:  "testdata/deployment.yaml",
 						Namespace: "main",
 						Successes: 2,
@@ -164,7 +164,7 @@ func Test_yamlConfigAnalyzer_Analyze(t *testing.T) {
 			want: &analyzer.AnalysisResult{
 				Misconfigurations: []types.Misconfiguration{
 					{
-						FileType:  types.YAML,
+						FileType:  types.Kubernetes,
 						FilePath:  "testdata/multiple.yaml",
 						Namespace: "main",
 						Successes: 4,

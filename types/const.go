@@ -18,9 +18,12 @@ const (
 	Jar      = "jar"
 
 	// Config files
-	YAML       = "yaml"
-	JSON       = "json"
-	TOML       = "toml"
-	Dockerfile = "dockerfile"
-	HCL        = "hcl"
+	YAML           = "yaml"
+	JSON           = "json"
+	TOML           = "toml"
+	Dockerfile     = "dockerfile"
+	HCL            = "hcl"
+	Kubernetes     = "kubernetes"
+	CloudFormation = "cloudformation"
+	Ansible        = "ansible"
 )

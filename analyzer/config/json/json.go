@@ -1,6 +1,7 @@
 package json
 
 import (
+	"context"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -35,7 +36,15 @@ func (s ConfigScanner) Analyze(target analyzer.AnalysisTarget) (*analyzer.Analys
 		return nil, xerrors.Errorf("unable to parse JSON (%s): %w", target.FilePath, err)
 	}
 
-	results, err := s.ScanConfig(types.JSON, target.FilePath, parsed)
+	configType, err := s.DetectType(context.TODO(), parsed)
+	if err != nil {
+		return nil, err
+	}
+	if configType == "" {
+		configType = types.JSON
+	}
+
+	results, err := s.ScanConfig(configType, target.FilePath, parsed)
 	if err != nil {
 		return nil, xerrors.Errorf("unable to scan JSON (%s): %w", target.FilePath, err)
 	}

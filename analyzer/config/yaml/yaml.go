@@ -1,6 +1,7 @@
 package yaml
 
 import (
+	"context"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -34,7 +35,16 @@ func (s ConfigScanner) Analyze(target analyzer.AnalysisTarget) (*analyzer.Analys
 	if err := s.parser.Unmarshal(target.Content, &parsed); err != nil {
 		return nil, xerrors.Errorf("unable to parse YAML (%s): %w", target.FilePath, err)
 	}
-	results, err := s.ScanConfig(types.YAML, target.FilePath, parsed)
+
+	configType, err := s.DetectType(context.TODO(), parsed)
+	if err != nil {
+		return nil, err
+	}
+	if configType == "" {
+		configType = types.YAML
+	}
+
+	results, err := s.ScanConfig(configType, target.FilePath, parsed)
 	if err != nil {
 		return nil, xerrors.Errorf("unable to scan YAML (%s): %w", target.FilePath, err)
 	}

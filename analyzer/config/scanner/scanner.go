@@ -7,6 +7,7 @@ import (
 
 	"github.com/open-policy-agent/conftest/output"
 	"github.com/open-policy-agent/conftest/policy"
+	"github.com/open-policy-agent/opa/rego"
 	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/fanal/log"
@@ -14,6 +15,12 @@ import (
 )
 
 const namespace = "main"
+var (
+	//go:embed detection.rego
+	defaultModule string
+
+	namespaces = []string{"appshield", "user"}
+)
 
 type Scanner struct {
 	filePattern *regexp.Regexp
@@ -36,7 +43,36 @@ func (s Scanner) Match(filePath string) bool {
 	return s.filePattern.MatchString(filePath)
 }
 
-func (s Scanner) ScanConfig(fileType, fileName string, content interface{}) (
+func (s Scanner) DetectType(ctx context.Context, input interface{}) (string, error) {
+	// The input might include sub documents. In that case, it takes the first element.
+	contents, ok := input.([]interface{})
+	if ok {
+		input = contents[0]
+	}
+
+	results, err := rego.New(
+		rego.Input(input),
+		rego.Query("x = data.config.type.detect"),
+		rego.Module("detection.rego", defaultModule),
+	).Eval(ctx)
+
+	if err != nil {
+		return "", err
+	}
+
+	for _, result := range results {
+		for _, configType := range result.Bindings["x"].([]interface{}) {
+			v, ok := configType.(string)
+			if !ok {
+				return "", xerrors.Errorf("'detect' must return string")
+			}
+			// Return the first element
+			return v, nil
+		}
+	}
+	return "", nil
+}
+
 	[]types.Misconfiguration, error) {
 	ctx := context.TODO()
 	configs := map[string]interface{}{

@@ -27,7 +27,7 @@ func Test_jsonConfigAnalyzer_Analyze(t *testing.T) {
 			want: &analyzer.AnalysisResult{
 				Misconfigurations: []types.Misconfiguration{
 					{
-						FileType:  types.JSON,
+						FileType:  types.Kubernetes,
 						FilePath:  "testdata/deployment.json",
 						Namespace: "main",
 						Successes: 2,
@@ -44,7 +44,7 @@ func Test_jsonConfigAnalyzer_Analyze(t *testing.T) {
 			want: &analyzer.AnalysisResult{
 				Misconfigurations: []types.Misconfiguration{
 					{
-						FileType:  types.JSON,
+						FileType:  types.Kubernetes,
 						FilePath:  "testdata/deployment.json",
 						Namespace: "main",
 						Successes: 1,
@@ -68,7 +68,7 @@ func Test_jsonConfigAnalyzer_Analyze(t *testing.T) {
 			want: &analyzer.AnalysisResult{
 				Misconfigurations: []types.Misconfiguration{
 					{
-						FileType:  types.JSON,
+						FileType:  types.Kubernetes,
 						FilePath:  "testdata/deployment.json",
 						Namespace: "main",
 						Successes: 1,
@@ -92,7 +92,7 @@ func Test_jsonConfigAnalyzer_Analyze(t *testing.T) {
 			want: &analyzer.AnalysisResult{
 				Misconfigurations: []types.Misconfiguration{
 					{
-						FileType:  types.JSON,
+						FileType:  types.Kubernetes,
 						FilePath:  "testdata/deployment.json",
 						Namespace: "main",
 						Successes: 1,
@@ -116,7 +116,7 @@ func Test_jsonConfigAnalyzer_Analyze(t *testing.T) {
 			want: &analyzer.AnalysisResult{
 				Misconfigurations: []types.Misconfiguration{
 					{
-						FileType:  types.JSON,
+						FileType:  types.Kubernetes,
 						FilePath:  "testdata/deployment.json",
 						Namespace: "main",
 						Successes: 2,
@@ -147,7 +147,7 @@ func Test_jsonConfigAnalyzer_Analyze(t *testing.T) {
 			want: &analyzer.AnalysisResult{
 				Misconfigurations: []types.Misconfiguration{
 					{
-						FileType:  types.JSON,
+						FileType:  types.Kubernetes,
 						FilePath:  "testdata/array.json",
 						Namespace: "main",
 						Successes: 4,
