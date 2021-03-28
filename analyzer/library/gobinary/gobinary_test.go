@@ -78,11 +78,6 @@ func Test_gobinaryLibraryAnalyzer_Required(t *testing.T) {
 			want:     true,
 		},
 		{
-			name:     "file perm 0645",
-			filePath: "testdata/0645",
-			want:     true,
-		},
-		{
 			name:     "file perm 0644",
 			filePath: "testdata/0644",
 			want:     false,
@@ -94,7 +89,7 @@ func Test_gobinaryLibraryAnalyzer_Required(t *testing.T) {
 			fileInfo, err := os.Stat(tt.filePath)
 			require.NoError(t, err)
 			got := a.Required(tt.filePath, fileInfo)
-			assert.Equal(t, tt.want, got)
+			assert.Equal(t, tt.want, got, fileInfo.Mode().Perm())
 		})
 	}
 
