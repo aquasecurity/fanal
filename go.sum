@@ -166,6 +166,8 @@ github.com/apparentlymart/go-textseg/v12 v12.0.0 h1:bNEQyAGak9tojivJNkoqWErVCQbj
 github.com/apparentlymart/go-textseg/v12 v12.0.0/go.mod h1:S/4uRK2UtaQttw1GenVJEynmyUenKwP++x/+DdGV/Ec=
 github.com/aquasecurity/go-dep-parser v0.0.0-20210214113128-b97635cfd627 h1:ccLbhkZ54xTmI6Q+CyBL8sll+OXIEzX0aDDjmy8pVWQ=
 github.com/aquasecurity/go-dep-parser v0.0.0-20210214113128-b97635cfd627/go.mod h1:KHiF3uK6FOE1v27YK+5CWEJ1jd0OvA2Gmk8VFjT3utk=
+github.com/aquasecurity/go-dep-parser v0.0.0-20210321185305-b7b332b6fa9c h1:pHQNjE+TCJSr7y1jUVcTxB5y0IS9adYSKt+jyQtLXag=
+github.com/aquasecurity/go-dep-parser v0.0.0-20210321185305-b7b332b6fa9c/go.mod h1:kbK5J6NDsKc7CCCj9YlvrkUMoiI6Cw7fFKA0YiqUIw0=
 github.com/aquasecurity/testdocker v0.0.0-20210106133225-0b17fe083674 h1:Xq/HxWFGaB4G/prC6czH/F5woB91GMCCilJxs/5DnDk=
 github.com/aquasecurity/testdocker v0.0.0-20210106133225-0b17fe083674/go.mod h1:psfu0MVaiTDLpNxCoNsTeILSKY2EICBwv345f3M+Ffs=
 github.com/armon/circbuf v0.0.0-20150827004946-bbbad097214e/go.mod h1:3U/XgcO3hCbHZ8TKRvWD2dDTCfh9M9ya+I9JpbB7O8o=
