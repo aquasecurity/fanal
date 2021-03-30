@@ -28,16 +28,18 @@ type Artifact struct {
 	configScannerOption config.ScannerOption
 }
 
-func NewArtifact(img image.Image, c cache.ArtifactCache, disabled []analyzer.Type, opt config.ScannerOption) artifact.Artifact {
+func NewArtifact(img image.Image, c cache.ArtifactCache, disabled []analyzer.Type, opt config.ScannerOption) (artifact.Artifact, error) {
 	// Register config scanners as analyzers
-	config.RegisterConfigScanners(opt)
+	if err := config.RegisterConfigScanners(opt); err != nil {
+		return nil, xerrors.Errorf("config scanner error: %w", err)
+	}
 
 	return Artifact{
 		image:               img,
 		cache:               c,
 		analyzer:            analyzer.NewAnalyzer(disabled),
 		configScannerOption: opt,
-	}
+	}, nil
 }
 
 func (a Artifact) Inspect(ctx context.Context) (types.ArtifactReference, error) {

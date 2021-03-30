@@ -140,9 +140,13 @@ func archiveAction(c *cli.Context, fsCache cache.Cache) error {
 }
 
 func fsAction(c *cli.Context, fsCache cache.Cache) error {
-	art := local.NewArtifact(c.Args().First(), fsCache, nil, config.ScannerOption{
+	art, err := local.NewArtifact(c.Args().First(), fsCache, nil, config.ScannerOption{
 		PolicyPaths: c.StringSlice("policy"),
 	})
+	if err != nil {
+		return err
+	}
+
 	return inspect(c.Context, art, fsCache)
 }
 
@@ -197,7 +201,12 @@ func imageArtifact(ctx context.Context, imageName string, c cache.ArtifactCache,
 	if err != nil {
 		return nil, func() {}, err
 	}
-	return aimage.NewArtifact(img, c, nil, opt), cleanup, nil
+
+	art, err := aimage.NewArtifact(img, c, nil, opt)
+	if err != nil {
+		return nil, func() {}, err
+	}
+	return art, cleanup, nil
 }
 
 func archiveImageArtifact(imagePath string, c cache.ArtifactCache) (artifact.Artifact, error) {
@@ -206,7 +215,11 @@ func archiveImageArtifact(imagePath string, c cache.ArtifactCache) (artifact.Art
 		return nil, err
 	}
 
-	return aimage.NewArtifact(img, c, nil, config.ScannerOption{}), nil
+	art, err := aimage.NewArtifact(img, c, nil, config.ScannerOption{})
+	if err != nil {
+		return nil, err
+	}
+	return art, nil
 }
 
 func remoteArtifact(dir string, c cache.ArtifactCache) (artifact.Artifact, func(), error) {

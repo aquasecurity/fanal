@@ -53,19 +53,25 @@ type Application struct {
 }
 
 type Misconfiguration struct {
-	FileType  string          `json:",omitempty"`
-	FilePath  string          `json:",omitempty"`
-	Namespace string          `json:",omitempty"`
-	Successes int             `json:",omitempty"`
-	Warnings  []MisconfResult `json:",omitempty"`
-	Failures  []MisconfResult `json:",omitempty"`
-	Layer     Layer           `json:",omitempty"`
+	FileType   string          `json:",omitempty"`
+	FilePath   string          `json:",omitempty"`
+	Successes  []MisconfResult `json:",omitempty"`
+	Warnings   []MisconfResult `json:",omitempty"`
+	Failures   []MisconfResult `json:",omitempty"`
+	Exceptions []MisconfResult `json:",omitempty"`
+	Layer      Layer           `json:",omitempty"`
 }
 
 type MisconfResult struct {
-	Type     string `json:",omitempty"`
+	Namespace       string `json:",omitempty"`
+	Message         string `json:",omitempty"`
+	MisconfMetadata `json:",omitempty"`
+}
+
+type MisconfMetadata struct {
 	ID       string `json:",omitempty"`
-	Message  string `json:",omitempty"`
+	Type     string `json:",omitempty"`
+	Title    string `json:",omitempty"`
 	Severity string `json:",omitempty"`
 }
 

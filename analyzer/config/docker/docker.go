@@ -23,11 +23,16 @@ type ConfigScanner struct {
 	scanner.Scanner
 }
 
-func NewConfigScanner(filePattern *regexp.Regexp, namespaces, policyPaths, dataPaths []string) ConfigScanner {
+func NewConfigScanner(filePattern *regexp.Regexp, namespaces, policyPaths, dataPaths []string) (ConfigScanner, error) {
+	s, err := scanner.New(filePattern, namespaces, policyPaths, dataPaths)
+	if err != nil {
+		return ConfigScanner{}, xerrors.Errorf("unable to initialize config scanner: %w", err)
+	}
+
 	return ConfigScanner{
 		parser:  &docker.Parser{},
-		Scanner: scanner.NewScanner(filePattern, namespaces, policyPaths, dataPaths),
-	}
+		Scanner: s,
+	}, nil
 }
 
 func (s ConfigScanner) Analyze(target analyzer.AnalysisTarget) (*analyzer.AnalysisResult, error) {
@@ -36,12 +41,14 @@ func (s ConfigScanner) Analyze(target analyzer.AnalysisTarget) (*analyzer.Analys
 		return nil, xerrors.Errorf("unable to parse Dockerfile (%s): %w", target.FilePath, err)
 	}
 
-	results, err := s.ScanConfig(types.Dockerfile, target.FilePath, parsed)
+	result, err := s.ScanConfig(types.Dockerfile, target.FilePath, parsed)
 	if err != nil {
 		return nil, xerrors.Errorf("unable to scan Dockerfile (%s): %w", target.FilePath, err)
 	}
 
-	return &analyzer.AnalysisResult{Misconfigurations: results}, nil
+	return &analyzer.AnalysisResult{
+		Misconfigurations: []types.Misconfiguration{result},
+	}, nil
 }
 
 // Required does a case-insensitive check for filePath and returns true if

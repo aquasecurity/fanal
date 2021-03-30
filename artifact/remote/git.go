@@ -14,7 +14,8 @@ import (
 	"github.com/aquasecurity/fanal/cache"
 )
 
-func NewArtifact(rawurl string, c cache.ArtifactCache, disabled []analyzer.Type, opt config.ScannerOption) (artifact.Artifact, func(), error) {
+func NewArtifact(rawurl string, c cache.ArtifactCache, disabled []analyzer.Type, opt config.ScannerOption) (
+	artifact.Artifact, func(), error) {
 	cleanup := func() {}
 
 	u, err := newURL(rawurl)
@@ -43,7 +44,11 @@ func NewArtifact(rawurl string, c cache.ArtifactCache, disabled []analyzer.Type,
 	// JAR/WAR/EAR doesn't need to be analyzed in git repositories.
 	disabled = append(disabled, analyzer.TypeJar)
 
-	return local.NewArtifact(tmpDir, c, disabled, opt), cleanup, nil
+	art, err := local.NewArtifact(tmpDir, c, disabled, opt)
+	if err != nil {
+		return nil, cleanup, err
+	}
+	return art, cleanup, nil
 }
 
 func newURL(rawurl string) (*url.URL, error) {

@@ -37,7 +37,7 @@ func TestScanner_Match(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			scanner := NewScanner(tt.re, nil, nil)
+			scanner := New(tt.re, nil, nil, nil)
 			assert.Equal(t, tt.want, scanner.Match(tt.path))
 		})
 	}
@@ -123,17 +123,6 @@ func TestScanner_ScanConfig(t *testing.T) {
 			},
 		},
 		{
-			name:        "happy path with namespace exceptions",
-			policyPaths: []string{"testdata/valid/", "testdata/namespaces.rego"},
-			configType:  types.Kubernetes,
-			content: map[string]interface{}{
-				"apiVersion": "apps/v1",
-				"kind":       "Deployment",
-			},
-			namespaces: []string{"testdata"},
-			want:       nil,
-		},
-		{
 			name:       "policy load error/not supplied",
 			configType: types.Kubernetes,
 			wantErr:    "policy load error",
@@ -154,8 +143,8 @@ func TestScanner_ScanConfig(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			scanner := NewScanner(nil, tt.policyPaths, tt.dataPaths)
-			got, err := scanner.ScanConfig(tt.configType, "deployment.yaml", tt.namespaces, tt.content)
+			scanner := New(nil, tt.namespaces, tt.policyPaths, tt.dataPaths)
+			got, err := scanner.ScanConfig(tt.configType, "deployment.yaml", tt.content)
 			if tt.wantErr != "" {
 				require.Error(t, err)
 				assert.Contains(t, err.Error(), tt.wantErr)

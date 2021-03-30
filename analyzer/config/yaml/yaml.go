@@ -23,11 +23,16 @@ type ConfigScanner struct {
 	scanner.Scanner
 }
 
-func NewConfigScanner(filePattern *regexp.Regexp, namespaces, policyPaths, dataPaths []string) ConfigScanner {
+func NewConfigScanner(filePattern *regexp.Regexp, namespaces, policyPaths, dataPaths []string) (ConfigScanner, error) {
+	s, err := scanner.New(filePattern, namespaces, policyPaths, dataPaths)
+	if err != nil {
+		return ConfigScanner{}, xerrors.Errorf("unable to initialize config scanner: %w", err)
+	}
+
 	return ConfigScanner{
 		parser:  &yaml.Parser{},
-		Scanner: scanner.NewScanner(filePattern, namespaces, policyPaths, dataPaths),
-	}
+		Scanner: s,
+	}, nil
 }
 
 func (s ConfigScanner) Analyze(target analyzer.AnalysisTarget) (*analyzer.AnalysisResult, error) {
@@ -44,12 +49,14 @@ func (s ConfigScanner) Analyze(target analyzer.AnalysisTarget) (*analyzer.Analys
 		configType = types.YAML
 	}
 
-	results, err := s.ScanConfig(configType, target.FilePath, parsed)
+	result, err := s.ScanConfig(configType, target.FilePath, parsed)
 	if err != nil {
 		return nil, xerrors.Errorf("unable to scan YAML (%s): %w", target.FilePath, err)
 	}
 
-	return &analyzer.AnalysisResult{Misconfigurations: results}, nil
+	return &analyzer.AnalysisResult{
+		Misconfigurations: []types.Misconfiguration{result},
+	}, nil
 }
 
 func (s ConfigScanner) Required(filePath string, _ os.FileInfo) bool {

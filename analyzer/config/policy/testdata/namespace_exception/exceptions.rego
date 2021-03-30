@@ -4,5 +4,5 @@ import data.namespaces
 
 exception[ns] {
     ns := data.namespaces[_]
-    glob.match("testdata.**", [], ns)
+    ns == "testdata.kubernetes.xyz_100"
 }

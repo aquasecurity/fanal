@@ -25,12 +25,17 @@ type ConfigScanner struct {
 	scanner.Scanner
 }
 
-func NewConfigScanner(filePattern *regexp.Regexp, namespaces, policyPaths, dataPaths []string) ConfigScanner {
+func NewConfigScanner(filePattern *regexp.Regexp, namespaces, policyPaths, dataPaths []string) (ConfigScanner, error) {
+	s, err := scanner.New(filePattern, namespaces, policyPaths, dataPaths)
+	if err != nil {
+		return ConfigScanner{}, xerrors.Errorf("unable to initialize config scanner: %w", err)
+	}
+
 	return ConfigScanner{
 		hcl1Parser: &hcl1.Parser{},
 		hcl2Parser: &hcl2.Parser{},
-		Scanner:    scanner.NewScanner(filePattern, namespaces, policyPaths, dataPaths),
-	}
+		Scanner:    s,
+	}, nil
 }
 
 // Analyze analyzes HCL-based config files, defaulting to HCL2.0 spec
@@ -41,13 +46,13 @@ func (s ConfigScanner) Analyze(target analyzer.AnalysisTarget) (*analyzer.Analys
 		return nil, xerrors.Errorf("unable to parse HCL (%s): %w", target.FilePath, err)
 	}
 
-	results, err := s.ScanConfig(types.HCL, target.FilePath, parsed)
+	result, err := s.ScanConfig(types.HCL, target.FilePath, parsed)
 	if err != nil {
 		return nil, xerrors.Errorf("unable to scan HCL (%s): %w", target.FilePath, err)
 	}
 
 	return &analyzer.AnalysisResult{
-		Misconfigurations: results,
+		Misconfigurations: []types.Misconfiguration{result},
 	}, nil
 }
 
