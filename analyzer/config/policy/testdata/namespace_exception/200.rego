@@ -8,7 +8,7 @@ __rego_metadata__ := {
     "type": "Kubernetes Security Check",
 }
 
-deny[msg] {
+deny[res] {
   input.kind == "Deployment"
-  msg := sprintf("deny 200 %s", [input.metadata.name])
+  res := {"msg": sprintf("deny 200 %s", [input.metadata.name])}
 }

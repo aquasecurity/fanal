@@ -78,7 +78,7 @@ func (s Scanner) ScanConfig(configType, fileName string, content interface{}) (t
 
 	misconf, err := s.engine.Check(ctx, configType, fileName, content, s.namespaces)
 	if err != nil {
-		return types.Misconfiguration{}, nil
+		return types.Misconfiguration{}, xerrors.Errorf("failed to scan %s: %w", fileName, err)
 	}
 
 	return misconf, nil

@@ -11,6 +11,67 @@ import (
 	"github.com/aquasecurity/fanal/types"
 )
 
+func TestLoad(t *testing.T) {
+	type args struct {
+		policyPaths []string
+		dataPaths   []string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr string
+	}{
+		{
+			name: "happy path",
+			args: args{
+				policyPaths: []string{"testdata/happy"},
+				dataPaths:   []string{"testdata/data"},
+			},
+		},
+		{
+			name: "broken policy",
+			args: args{
+				policyPaths: []string{"testdata/sad/broken_rule.rego"},
+				dataPaths:   []string{"testdata/data"},
+			},
+			wantErr: "var msg is unsafe",
+		},
+		{
+			name: "no policies",
+			args: args{
+				policyPaths: []string{"testdata/data/"},
+			},
+			wantErr: "no policies found in [testdata/data/]",
+		},
+		{
+			name: "non-existent policy path",
+			args: args{
+				policyPaths: []string{"testdata/non-existent/"},
+			},
+			wantErr: "no such file or directory",
+		},
+		{
+			name: "non-existent data path",
+			args: args{
+				policyPaths: []string{"testdata/happy"},
+				dataPaths:   []string{"testdata/non-existent/"},
+			},
+			wantErr: "no such file or directory",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := policy.Load(tt.args.policyPaths, tt.args.dataPaths)
+			if tt.wantErr != "" {
+				require.NotNil(t, err)
+				assert.Contains(t, err.Error(), tt.wantErr)
+				return
+			}
+			assert.NoError(t, err)
+		})
+	}
+}
+
 func TestEngine_Check(t *testing.T) {
 	type args struct {
 		configType string
@@ -29,6 +90,7 @@ func TestEngine_Check(t *testing.T) {
 		{
 			name:        "happy path",
 			policyPaths: []string{"testdata/happy"},
+			dataPaths:   []string{"testdata/data"},
 			args: args{
 				configType: types.Kubernetes,
 				filePath:   "deployment.yaml",
@@ -72,6 +134,7 @@ func TestEngine_Check(t *testing.T) {
 		{
 			name:        "sub configs",
 			policyPaths: []string{"testdata/happy"},
+			dataPaths:   []string{"testdata/data"},
 			args: args{
 				configType: types.Kubernetes,
 				filePath:   "deployment.yaml",
@@ -206,6 +269,98 @@ func TestEngine_Check(t *testing.T) {
 					},
 				},
 			},
+		},
+		{
+			name:        "missing id and severity",
+			policyPaths: []string{"testdata/sad/missing_metadata_fields.rego"},
+			args: args{
+				configType: types.Kubernetes,
+				filePath:   "deployment.yaml",
+				config: map[string]interface{}{
+					"apiVersion": "apps/v1",
+					"kind":       "Deployment",
+					"metadata": map[string]interface{}{
+						"name": "test",
+					},
+				},
+				namespaces: []string{"testdata", "dummy"},
+			},
+			want: types.Misconfiguration{
+				FileType: types.Kubernetes,
+				FilePath: "deployment.yaml",
+				Failures: []types.MisconfResult{
+					{
+						Namespace: "testdata.kubernetes.xyz_100",
+						Message:   "deny test",
+						MisconfMetadata: types.MisconfMetadata{
+							ID:       "N/A",
+							Type:     "Kubernetes Security Check",
+							Title:    "Bad Deployment",
+							Severity: "UNKNOWN",
+						},
+					},
+				},
+			},
+		},
+		{
+			name:        "missing __rego_metadata__",
+			policyPaths: []string{"testdata/sad/missing_metadata.rego"},
+			args: args{
+				configType: types.Kubernetes,
+				filePath:   "deployment.yaml",
+				config: map[string]interface{}{
+					"apiVersion": "apps/v1",
+					"kind":       "Deployment",
+					"metadata": map[string]interface{}{
+						"name": "test",
+					},
+				},
+				namespaces: []string{"testdata", "dummy"},
+			},
+			want: types.Misconfiguration{
+				FileType: types.Kubernetes,
+				FilePath: "deployment.yaml",
+				Failures: []types.MisconfResult{
+					{
+						Namespace: "testdata.kubernetes.xyz_100",
+						Message:   "deny test",
+						MisconfMetadata: types.MisconfMetadata{
+							ID:       "N/A",
+							Type:     "N/A",
+							Title:    "N/A",
+							Severity: "UNKNOWN",
+						},
+					},
+				},
+			},
+		},
+		{
+			name:        "broken __rego_metadata__",
+			policyPaths: []string{"testdata/sad/broken_metadata.rego"},
+			args: args{
+				configType: types.Kubernetes,
+				filePath:   "deployment.yaml",
+				config: map[string]interface{}{
+					"apiVersion": "apps/v1",
+					"kind":       "Deployment",
+				},
+				namespaces: []string{"testdata", "dummy"},
+			},
+			wantErr: "'__rego_metadata__' must be map",
+		},
+		{
+			name:        "broken msg",
+			policyPaths: []string{"testdata/sad/broken_msg.rego"},
+			args: args{
+				configType: types.Kubernetes,
+				filePath:   "deployment.yaml",
+				config: map[string]interface{}{
+					"apiVersion": "apps/v1",
+					"kind":       "Deployment",
+				},
+				namespaces: []string{"testdata", "dummy"},
+			},
+			wantErr: "rule missing 'msg' field",
 		},
 	}
 	for _, tt := range tests {

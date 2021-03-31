@@ -1,17 +1,14 @@
-package testdata.kubernetes.xyz_100
-
-import data.services
+package testdata.kubernetes.xyz_200
 
 __rego_metadata__ := {
-    "id": "XYZ-100",
+    "id": "XYZ-200",
     "title": "Bad Deployment",
     "version": "v1.0.0",
     "severity": "HIGH",
     "type": "Kubernetes Security Check",
 }
 
-deny[msg] {
+deny[res] {
   input.kind == "Deployment"
-  services.ports[_] == 22
-  msg := sprintf("deny %s", [input.metadata.name])
+  res := {"hello": "world"}
 }

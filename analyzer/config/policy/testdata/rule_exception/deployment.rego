@@ -9,12 +9,12 @@ __rego_metadata__ := {
 }
 
 deny_foo[msg] {
-  input.kind = "Deployment"
+  input.kind == "Deployment"
   msg := sprintf("deny foo %s", [input.metadata.name])
 }
 
 deny_bar[msg] {
-  input.kind = "Deployment"
+  input.kind == "Deployment"
   msg := sprintf("deny bar %s", [input.metadata.name])
 }
 

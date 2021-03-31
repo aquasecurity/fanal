@@ -9,6 +9,6 @@ __rego_metadata__ := {
 }
 
 deny[msg] {
-  input.kind = "Pod"
+  input.kind == "Pod"
   msg := sprintf("deny %s", [input.metadata.name])
 }
