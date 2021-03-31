@@ -10,11 +10,11 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/mitchellh/mapstructure"
 	"github.com/open-policy-agent/opa/ast"
 	"github.com/open-policy-agent/opa/loader"
 	"github.com/open-policy-agent/opa/rego"
 	"github.com/open-policy-agent/opa/storage"
-	"github.com/open-policy-agent/opa/storage/inmem"
 	"github.com/open-policy-agent/opa/topdown"
 	"github.com/open-policy-agent/opa/version"
 	"golang.org/x/xerrors"
@@ -27,12 +27,11 @@ const metadataSymbol = "__rego_metadata__"
 
 // Engine represents the policy engine.
 type Engine struct {
-	modules    map[string]*ast.Module
-	compiler   *ast.Compiler
-	store      storage.Store
-	policies   map[string]string
-	docs       map[string]string
-	namespaces []string
+	modules  map[string]*ast.Module
+	compiler *ast.Compiler
+	store    storage.Store
+	policies map[string]string
+	docs     map[string]string
 }
 
 // Load returns an Engine after loading all of the specified policies and data paths.
@@ -57,20 +56,19 @@ func Load(policyPaths []string, dataPaths []string) (*Engine, error) {
 		policyContents[path] = module.String()
 	}
 
-	store, docs, err := loadData(dataPaths)
+	modules := policies.ParsedModules()
+
+	store, docs, err := loadData(dataPaths, allNamespaces(modules))
 	if err != nil {
 		return nil, xerrors.Errorf("unable to load data: %w", err)
 	}
 
-	modules := policies.ParsedModules()
-
 	return &Engine{
-		modules:    modules,
-		compiler:   compiler,
-		policies:   policyContents,
-		store:      store,
-		docs:       docs,
-		namespaces: allNamespaces(modules),
+		modules:  modules,
+		compiler: compiler,
+		policies: policyContents,
+		store:    store,
+		docs:     docs,
 	}, nil
 }
 
@@ -88,11 +86,7 @@ func allNamespaces(modules map[string]*ast.Module) []string {
 	return namespaces
 }
 
-func loadData(dataPaths []string) (storage.Store, map[string]string, error) {
-	if len(dataPaths) == 0 {
-		return nil, nil, nil
-	}
-
+func loadData(dataPaths, namespaces []string) (storage.Store, map[string]string, error) {
 	// FilteredPaths will recursively find all file paths that contain a valid document
 	// extension from the given list of data paths.
 	allDocumentPaths, err := loader.FilteredPaths(dataPaths, func(abspath string, info os.FileInfo, depth int) bool {
@@ -110,6 +104,10 @@ func loadData(dataPaths []string) (storage.Store, map[string]string, error) {
 	if err != nil {
 		return nil, nil, xerrors.Errorf("load documents: %w", err)
 	}
+
+	// Pass all namespaces so that Rego rule can refer to namespaces as data.namespaces
+	documents.Documents["namespaces"] = namespaces
+
 	store, err := documents.Store()
 	if err != nil {
 		return nil, nil, xerrors.Errorf("get documents store: %w", err)
@@ -149,18 +147,6 @@ func (e *Engine) Check(ctx context.Context, configType, filePath string, config 
 	}
 
 	return result, nil
-}
-
-// Namespaces returns all of the namespaces in the engine.
-func (e *Engine) Namespaces() []string {
-	return e.namespaces
-}
-
-// Documents returns all of the documents loaded into the engine.
-// The result is a map where the key is the filepath of the document
-// and its value is the raw contents of the loaded document.
-func (e *Engine) Documents() map[string]string {
-	return e.docs
 }
 
 // Compiler returns the compiler from the loaded policies.
@@ -210,13 +196,15 @@ func (e *Engine) check(ctx context.Context, configType, filePath string, configs
 			continue
 		}
 
+		metadata, err := e.queryMetadata(ctx, currentNamespace)
+		if err != nil {
+			return types.Misconfiguration{}, err
+		}
+
 		var rules []string
-		var metadata types.MisconfMetadata
 		for r := range module.Rules {
 			currentRule := module.Rules[r].Head.Name.String()
-			if currentRule == metadataSymbol {
-				metadata = parseMetadata(module.Rules[r].Head)
-			} else if isFailure(currentRule) || isWarning(currentRule) {
+			if isFailure(currentRule) || isWarning(currentRule) {
 				rules = append(rules, currentRule)
 			}
 		}
@@ -327,18 +315,12 @@ func (e *Engine) ruleExceptions(ctx context.Context, namespace, rule string, con
 // data.main.deny to query the deny rule in the main namespace
 // data.main.warn to query the warn rule in the main namespace
 func (e *Engine) query(ctx context.Context, input interface{}, query string) (queryResult, error) {
-	// Pass all namespaces so that Rego rule can refer to namespaces as data.namespaces
-	nsStore := inmem.NewFromObject(map[string]interface{}{
-		"namespaces": e.Namespaces(),
-	})
-
 	stdout := topdown.NewBufferTracer()
 	options := []func(r *rego.Rego){
 		rego.Input(input),
 		rego.Query(query),
 		rego.Compiler(e.Compiler()),
 		rego.Store(e.Store()),
-		rego.Store(nsStore),
 		rego.Runtime(e.Runtime()),
 		rego.QueryTracer(stdout),
 	}
@@ -405,26 +387,40 @@ func (e *Engine) query(ctx context.Context, input interface{}, query string) (qu
 	}, nil
 }
 
-func parseMetadata(head *ast.Head) types.MisconfMetadata {
-	value := head.Value
-	return types.MisconfMetadata{
-		ID:       queryTerm(value, "id", "N/A"),
-		Type:     queryTerm(value, "type", "N/A"),
-		Title:    queryTerm(value, "title", "N/A"),
-		Severity: queryTerm(value, "severity", "UNKNOWN"),
+func (e *Engine) queryMetadata(ctx context.Context, namespace string) (types.MisconfMetadata, error) {
+	query := fmt.Sprintf("x = data.%s.__rego_metadata__", namespace)
+	options := []func(r *rego.Rego){
+		rego.Query(query),
+		rego.Compiler(e.Compiler()),
+		rego.Store(e.Store()),
 	}
-}
+	resultSet, err := rego.New(options...).Eval(ctx)
+	if err != nil {
+		return types.MisconfMetadata{}, xerrors.Errorf("evaluating '__rego_metadata__': %w", err)
+	}
 
-func queryTerm(term *ast.Term, key, defaultValue string) string {
-	v := term.Get(ast.StringTerm(key))
-	if v == nil {
-		return defaultValue
+	// Set default values
+	metadata := types.MisconfMetadata{
+		ID:       "N/A",
+		Type:     "N/A",
+		Title:    "N/A",
+		Severity: "UNKNOWN",
 	}
-	s, ok := v.Value.(ast.String)
+
+	if len(resultSet) == 0 {
+		return metadata, nil
+	}
+
+	result, ok := resultSet[0].Bindings["x"].(map[string]interface{})
 	if !ok {
-		return defaultValue
+		return types.MisconfMetadata{}, xerrors.New("'__rego_metadata__' must be map")
 	}
-	return string(s)
+
+	if err = mapstructure.Decode(result, &metadata); err != nil {
+		return types.MisconfMetadata{}, xerrors.Errorf("decode error: %w", err)
+	}
+
+	return metadata, nil
 }
 
 func isWarning(rule string) bool {
