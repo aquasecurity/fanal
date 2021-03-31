@@ -28,6 +28,7 @@ require (
 	github.com/knqyf263/nested v0.0.1
 	github.com/kylelemons/godebug v1.1.0
 	github.com/magefile/mage v1.11.0 // indirect
+	github.com/mitchellh/mapstructure v1.4.1
 	github.com/open-policy-agent/conftest v0.23.0
 	github.com/open-policy-agent/opa v0.25.2
 	github.com/opencontainers/go-digest v1.0.0
