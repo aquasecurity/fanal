@@ -5,11 +5,13 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	git "github.com/go-git/go-git/v5"
 	"github.com/sosedoff/gitkit"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/aquasecurity/fanal/cache"
+	remotecfg "github.com/aquasecurity/fanal/remote"
 )
 
 func setupGitServer() (*httptest.Server, error) {
@@ -34,43 +36,95 @@ func TestNewArtifact(t *testing.T) {
 	defer ts.Close()
 
 	type args struct {
-		rawurl string
+		remote remotecfg.Remote
 		c      cache.ArtifactCache
 	}
 	tests := []struct {
 		name    string
 		args    args
-		wantErr bool
+		wantErr string
 	}{
 		{
 			name: "happy path",
 			args: args{
-				rawurl: ts.URL + "/test.git",
-				c:      nil,
+				remote: remotecfg.Remote{
+					IsBare: false,
+					CloneOpts: &git.CloneOptions{
+						URL:   ts.URL + "/test.git",
+						Depth: 1,
+					},
+				},
+				c: nil,
 			},
 		},
 		{
-			name: "sad path",
+			name: "happy path commit",
 			args: args{
-				rawurl: ts.URL + "/unknown.git",
-				c:      nil,
+				remote: remotecfg.Remote{
+					IsBare: false,
+					Commit: "HEAD~1",
+					CloneOpts: &git.CloneOptions{
+						URL:   ts.URL + "/test.git",
+						Depth: 1,
+					},
+				},
+				c: nil,
 			},
-			wantErr: true,
+		},
+		{
+			name: "sad path unknown repo",
+			args: args{
+				remote: remotecfg.Remote{
+					IsBare: false,
+					CloneOpts: &git.CloneOptions{
+						URL:   ts.URL + "/unknown.git",
+						Depth: 1,
+					},
+				},
+				c: nil,
+			},
+			wantErr: "repository not found",
+		},
+		{
+			name: "sad path unknown commit",
+			args: args{
+				remote: remotecfg.Remote{
+					IsBare: false,
+					Commit: "baddigest",
+					CloneOpts: &git.CloneOptions{
+						URL:   ts.URL + "/test.git",
+						Depth: 1,
+					},
+				},
+				c: nil,
+			},
+			wantErr: "object not found",
 		},
 		{
 			name: "invalid url",
 			args: args{
-				rawurl: "ht tp://foo.com",
-				c:      nil,
+				remote: remotecfg.Remote{
+					IsBare: false,
+					CloneOpts: &git.CloneOptions{
+						URL:   "ht tp://foo.com",
+						Depth: 1,
+					},
+				},
+				c: nil,
 			},
-			wantErr: true,
+			wantErr: "first path segment in URL cannot contain colon",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_, cleanup, err := NewArtifact(tt.args.rawurl, tt.args.c, nil)
-			assert.Equal(t, tt.wantErr, err != nil)
+			_, cleanup, err := NewArtifact(tt.args.remote, tt.args.c, nil)
+			if tt.wantErr != "" {
+				require.NotNil(t, err)
+				assert.Contains(t, err.Error(), tt.wantErr)
+			} else {
+				require.NoError(t, err)
+			}
 			defer cleanup()
 		})
 	}
@@ -101,6 +155,13 @@ func Test_newURL(t *testing.T) {
 			want: "https://github.com/aquasecurity/fanal",
 		},
 		{
+			name: "happy path: ssh url",
+			args: args{
+				rawurl: "github.com:foo/bar",
+			},
+			want: "github.com:foo/bar",
+		},
+		{
 			name: "sad path: invalid url",
 			args: args{
 				rawurl: "ht tp://foo.com",
@@ -119,7 +180,7 @@ func Test_newURL(t *testing.T) {
 				require.NoError(t, err)
 			}
 
-			assert.Equal(t, tt.want, got.String())
+			assert.Equal(t, tt.want, got)
 		})
 	}
 }

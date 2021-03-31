@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	git "github.com/go-git/go-git/v5"
 	"github.com/go-redis/redis/v8"
 	"github.com/urfave/cli/v2"
 	"golang.org/x/xerrors"
@@ -41,6 +42,7 @@ import (
 	"github.com/aquasecurity/fanal/artifact/remote"
 	"github.com/aquasecurity/fanal/cache"
 	"github.com/aquasecurity/fanal/image"
+	remotecfg "github.com/aquasecurity/fanal/remote"
 	"github.com/aquasecurity/fanal/types"
 	"github.com/aquasecurity/fanal/utils"
 )
@@ -212,6 +214,15 @@ func localArtifact(dir string, c cache.ArtifactCache) artifact.Artifact {
 	return local.NewArtifact(dir, c, nil)
 }
 
-func remoteArtifact(dir string, c cache.ArtifactCache) (artifact.Artifact, func(), error) {
-	return remote.NewArtifact(dir, c, nil)
+func remoteArtifact(url string, c cache.ArtifactCache) (artifact.Artifact, func(), error) {
+	opts := &git.CloneOptions{
+		URL:      url,
+		Depth:    1,
+		Progress: os.Stdout,
+	}
+	config := remotecfg.Remote{
+		IsBare:    false,
+		CloneOpts: opts,
+	}
+	return remote.NewArtifact(config, c, nil)
 }
