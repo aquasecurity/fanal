@@ -2,6 +2,7 @@ package analyzer_test
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"sync"
 	"testing"
@@ -33,7 +34,7 @@ func (mockConfigAnalyzer) Analyze(targetOS types.OS, configBlob []byte) ([]types
 }
 
 func (mockConfigAnalyzer) Type() analyzer.Type {
-	return analyzer.Type(999)
+	return analyzer.Type("test")
 }
 
 func (mockConfigAnalyzer) Version() int {
@@ -478,23 +479,70 @@ func TestAnalyzer_AnalyzerVersions(t *testing.T) {
 	tests := []struct {
 		name     string
 		disabled []analyzer.Type
-		want     string
+		want     map[string]int
 	}{
 		{
 			name:     "happy path",
 			disabled: []analyzer.Type{},
-			want:     "1111111111111111111111",
+			want: map[string]int{
+				"alpine":   1,
+				"amazon":   1,
+				"apk":      1,
+				"bundler":  1,
+				"cargo":    1,
+				"centos":   1,
+				"composer": 1,
+				"debian":   1,
+				"dpkg":     1,
+				"fedora":   1,
+				"jar":      1,
+				"npm":      1,
+				"nuget":    1,
+				"oracle":   1,
+				"photon":   1,
+				"pipenv":   1,
+				"poetry":   1,
+				"redhat":   1,
+				"rpm":      1,
+				"suse":     1,
+				"ubuntu":   1,
+				"yarn":     1,
+			},
 		},
 		{
 			name:     "disable analyzers",
 			disabled: []analyzer.Type{analyzer.TypeAlpine, analyzer.TypeUbuntu},
-			want:     "0111111110111111111111",
+			want: map[string]int{
+				"alpine":   0,
+				"amazon":   1,
+				"apk":      1,
+				"bundler":  1,
+				"cargo":    1,
+				"centos":   1,
+				"composer": 1,
+				"debian":   1,
+				"dpkg":     1,
+				"fedora":   1,
+				"jar":      1,
+				"npm":      1,
+				"nuget":    1,
+				"oracle":   1,
+				"photon":   1,
+				"pipenv":   1,
+				"poetry":   1,
+				"redhat":   1,
+				"rpm":      1,
+				"suse":     1,
+				"ubuntu":   0,
+				"yarn":     1,
+			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			a := analyzer.NewAnalyzer(tt.disabled)
 			got := a.AnalyzerVersions()
+			fmt.Printf("%v\n", got)
 			assert.Equal(t, tt.want, got)
 		})
 	}
@@ -504,17 +552,23 @@ func TestAnalyzer_ImageConfigAnalyzerVersions(t *testing.T) {
 	tests := []struct {
 		name     string
 		disabled []analyzer.Type
-		want     string
+		want     map[string]int
 	}{
 		{
 			name:     "happy path",
 			disabled: []analyzer.Type{},
-			want:     "11", // mockConfigAnalyzer is added
+			want: map[string]int{
+				"apk-command": 1,
+				"test":        1,
+			},
 		},
 		{
 			name:     "disable analyzers",
 			disabled: []analyzer.Type{analyzer.TypeAlpine, analyzer.TypeApkCommand},
-			want:     "01", // mockConfigAnalyzer is added
+			want: map[string]int{
+				"apk-command": 0,
+				"test":        1,
+			},
 		},
 	}
 	for _, tt := range tests {

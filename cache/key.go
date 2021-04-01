@@ -2,31 +2,35 @@ package cache
 
 import (
 	"crypto/sha256"
+	"encoding/json"
 	"fmt"
+
+	"golang.org/x/xerrors"
 
 	"golang.org/x/mod/sumdb/dirhash"
 
 	"github.com/aquasecurity/fanal/analyzer/config"
 )
 
-func CalcKey(id, version string, opt *config.ScannerOption) (string, error) {
+func CalcKey(id string, versions map[string]int, opt *config.ScannerOption) (string, error) {
 	// Sort options for consistent results
 	opt.Sort()
 
 	h := sha256.New()
 
-	for _, s := range append([]string{id, version}, opt.FilePatterns...) {
-		_, err := h.Write([]byte(s))
-		if err != nil {
-			return "", err
-		}
+	if _, err := h.Write([]byte(id)); err != nil {
+		return "", xerrors.Errorf("sha256 error: %w", err)
+	}
+
+	if err := json.NewEncoder(h).Encode(versions); err != nil {
+		return "", xerrors.Errorf("json encode error: %w", err)
 	}
 
 	for _, paths := range [][]string{opt.PolicyPaths, opt.DataPaths} {
 		for _, p := range paths {
 			s, err := dirhash.HashDir(p, "", dirhash.DefaultHash)
 			if err != nil {
-				return "", err
+				return "", xerrors.Errorf("hash dir (%s): %w", p, err)
 			}
 
 			if _, err = h.Write([]byte(s)); err != nil {
