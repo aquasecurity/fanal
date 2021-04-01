@@ -1,60 +1,79 @@
-package toml
+package toml_test
 
 import (
 	"io/ioutil"
+	"regexp"
 	"testing"
 
-	"github.com/open-policy-agent/conftest/parser/toml"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/aquasecurity/fanal/analyzer"
+	"github.com/aquasecurity/fanal/analyzer/config/toml"
 	"github.com/aquasecurity/fanal/types"
 )
 
 func Test_tomlConfigAnalyzer_Analyze(t *testing.T) {
-	tests := []struct {
-		name        string
+	type args struct {
+		namespaces  []string
 		policyPaths []string
-		inputFile   string
-		want        *analyzer.AnalysisResult
-		wantErr     string
+	}
+	tests := []struct {
+		name      string
+		args      args
+		inputFile string
+		want      *analyzer.AnalysisResult
+		wantErr   string
 	}{
 		{
-			name:        "happy path",
-			policyPaths: []string{"../testdata/non.rego"},
-			inputFile:   "testdata/deployment.toml",
+			name: "happy path",
+			args: args{
+				namespaces:  []string{"main"},
+				policyPaths: []string{"../testdata/kubernetes.rego"},
+			},
+			inputFile: "testdata/deployment.toml",
 			want: &analyzer.AnalysisResult{
 				Misconfigurations: []types.Misconfiguration{
 					{
-						FileType:  types.TOML,
-						FilePath:  "testdata/deployment.toml",
-						Namespace: "main",
-						Successes: 2,
-						Warnings:  nil,
-						Failures:  nil,
+						FileType: types.Kubernetes,
+						FilePath: "testdata/deployment.toml",
+						Successes: []types.MisconfResult{
+							{
+								Namespace: "main.kubernetes.xyz_100",
+								MisconfMetadata: types.MisconfMetadata{
+									ID:       "XYZ-100",
+									Type:     "Kubernetes Security Check",
+									Title:    "Bad Kubernetes Replicas",
+									Severity: "HIGH",
+								},
+							},
+						},
 					},
 				},
 			},
 		},
 		{
-			name:        "deny",
-			policyPaths: []string{"../testdata/deny.rego"},
-			inputFile:   "testdata/deployment.toml",
+			name: "deny",
+			args: args{
+				namespaces:  []string{"main"},
+				policyPaths: []string{"../testdata/kubernetes.rego"},
+			},
+			inputFile: "testdata/deployment_deny.toml",
 			want: &analyzer.AnalysisResult{
 				Misconfigurations: []types.Misconfiguration{
 					{
-						FileType:  types.TOML,
-						FilePath:  "testdata/deployment.toml",
-						Namespace: "main",
-						Successes: 1,
-						Warnings:  nil,
+						FileType: types.Kubernetes,
+						FilePath: "testdata/deployment_deny.toml",
 						Failures: []types.MisconfResult{
 							{
-								Type:     "Metadata Name Settings",
-								ID:       "RULE-10",
-								Message:  `deny: hello-kubernetes contains banned: hello`,
-								Severity: "MEDIUM",
+								Namespace: "main.kubernetes.xyz_100",
+								Message:   "too many replicas: 4",
+								MisconfMetadata: types.MisconfMetadata{
+									ID:       "XYZ-100",
+									Type:     "Kubernetes Security Check",
+									Title:    "Bad Kubernetes Replicas",
+									Severity: "HIGH",
+								},
 							},
 						},
 					},
@@ -62,89 +81,13 @@ func Test_tomlConfigAnalyzer_Analyze(t *testing.T) {
 			},
 		},
 		{
-			name:        "violation",
-			policyPaths: []string{"../testdata/violation.rego"},
-			inputFile:   "testdata/deployment.toml",
-			want: &analyzer.AnalysisResult{
-				Misconfigurations: []types.Misconfiguration{
-					{
-						FileType:  types.TOML,
-						FilePath:  "testdata/deployment.toml",
-						Namespace: "main",
-						Successes: 1,
-						Warnings:  nil,
-						Failures: []types.MisconfResult{
-							{
-								Type:     "N/A",
-								ID:       "N/A",
-								Message:  "violation: too many replicas: 3",
-								Severity: "UNKNOWN",
-							},
-						},
-					},
-				},
+			name: "broken TOML",
+			args: args{
+				namespaces:  []string{"main"},
+				policyPaths: []string{"../testdata/kubernetes.rego"},
 			},
-		},
-		{
-			name:        "warn",
-			policyPaths: []string{"../testdata/warn.rego"},
-			inputFile:   "testdata/deployment.toml",
-			want: &analyzer.AnalysisResult{
-				Misconfigurations: []types.Misconfiguration{
-					{
-						FileType:  types.TOML,
-						FilePath:  "testdata/deployment.toml",
-						Namespace: "main",
-						Successes: 1,
-						Warnings: []types.MisconfResult{
-							{
-								Type:     "Replica Settings",
-								ID:       "RULE-100",
-								Message:  `warn: too many replicas: 3`,
-								Severity: "LOW",
-							},
-						},
-						Failures: nil,
-					},
-				},
-			},
-		},
-		{
-			name:        "warn and deny",
-			policyPaths: []string{"../testdata/warn.rego", "../testdata/deny.rego"},
-			inputFile:   "testdata/deployment.toml",
-			want: &analyzer.AnalysisResult{
-				Misconfigurations: []types.Misconfiguration{
-					{
-						FileType:  types.TOML,
-						FilePath:  "testdata/deployment.toml",
-						Namespace: "main",
-						Successes: 2,
-						Warnings: []types.MisconfResult{
-							{
-								Type:     "Replica Settings",
-								ID:       "RULE-100",
-								Message:  `warn: too many replicas: 3`,
-								Severity: "LOW",
-							},
-						},
-						Failures: []types.MisconfResult{
-							{
-								Type:     "Metadata Name Settings",
-								ID:       "RULE-10",
-								Message:  `deny: hello-kubernetes contains banned: hello`,
-								Severity: "MEDIUM",
-							},
-						},
-					},
-				},
-			},
-		},
-		{
-			name:        "broken TOML",
-			policyPaths: []string{"../testdata/non.rego"},
-			inputFile:   "testdata/broken.toml",
-			wantErr:     "unmarshal toml",
+			inputFile: "testdata/broken.toml",
+			wantErr:   "unmarshal toml",
 		},
 	}
 	for _, tt := range tests {
@@ -152,7 +95,8 @@ func Test_tomlConfigAnalyzer_Analyze(t *testing.T) {
 			b, err := ioutil.ReadFile(tt.inputFile)
 			require.NoError(t, err)
 
-			a := NewConfigScanner(nil, tt.policyPaths, nil)
+			a, err := toml.NewConfigScanner(nil, tt.args.namespaces, tt.args.policyPaths, nil)
+			require.NoError(t, err)
 
 			got, err := a.Analyze(analyzer.AnalysisTarget{
 				FilePath: tt.inputFile,
@@ -172,9 +116,10 @@ func Test_tomlConfigAnalyzer_Analyze(t *testing.T) {
 
 func Test_tomlConfigAnalyzer_Required(t *testing.T) {
 	tests := []struct {
-		name     string
-		filePath string
-		want     bool
+		name        string
+		filePattern *regexp.Regexp
+		filePath    string
+		want        bool
 	}{
 		{
 			name:     "toml",
@@ -186,24 +131,29 @@ func Test_tomlConfigAnalyzer_Required(t *testing.T) {
 			filePath: "deployment.json",
 			want:     false,
 		},
+		{
+			name:        "file pattern",
+			filePattern: regexp.MustCompile(`foo*`),
+			filePath:    "foo_file",
+			want:        true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			a := ConfigScanner{
-				parser: &toml.Parser{},
-			}
+			s, err := toml.NewConfigScanner(tt.filePattern, nil, []string{"../testdata"}, nil)
+			require.NoError(t, err)
 
-			got := a.Required(tt.filePath, nil)
+			got := s.Required(tt.filePath, nil)
 			assert.Equal(t, tt.want, got)
 		})
 	}
 }
 
 func Test_tomlConfigAnalyzer_Type(t *testing.T) {
+	s, err := toml.NewConfigScanner(nil, nil, []string{"../testdata"}, nil)
+	require.NoError(t, err)
+
 	want := analyzer.TypeTOML
-	a := ConfigScanner{
-		parser: &toml.Parser{},
-	}
-	got := a.Type()
+	got := s.Type()
 	assert.Equal(t, want, got)
 }

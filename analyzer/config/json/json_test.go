@@ -1,60 +1,79 @@
-package json
+package json_test
 
 import (
 	"io/ioutil"
+	"regexp"
 	"testing"
 
-	"github.com/open-policy-agent/conftest/parser/json"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/aquasecurity/fanal/analyzer"
+	"github.com/aquasecurity/fanal/analyzer/config/json"
 	"github.com/aquasecurity/fanal/types"
 )
 
 func Test_jsonConfigAnalyzer_Analyze(t *testing.T) {
-	tests := []struct {
-		name        string
+	type args struct {
+		namespaces  []string
 		policyPaths []string
-		inputFile   string
-		want        *analyzer.AnalysisResult
-		wantErr     string
+	}
+	tests := []struct {
+		name      string
+		args      args
+		inputFile string
+		want      *analyzer.AnalysisResult
+		wantErr   string
 	}{
 		{
-			name:        "happy path",
-			policyPaths: []string{"../testdata/non.rego"},
-			inputFile:   "testdata/deployment.json",
+			name: "happy path",
+			args: args{
+				namespaces:  []string{"main"},
+				policyPaths: []string{"../testdata/kubernetes.rego"},
+			},
+			inputFile: "testdata/deployment.json",
 			want: &analyzer.AnalysisResult{
 				Misconfigurations: []types.Misconfiguration{
 					{
-						FileType:  types.Kubernetes,
-						FilePath:  "testdata/deployment.json",
-						Namespace: "main",
-						Successes: 2,
-						Warnings:  nil,
-						Failures:  nil,
+						FileType: types.Kubernetes,
+						FilePath: "testdata/deployment.json",
+						Successes: []types.MisconfResult{
+							{
+								Namespace: "main.kubernetes.xyz_100",
+								MisconfMetadata: types.MisconfMetadata{
+									ID:       "XYZ-100",
+									Type:     "Kubernetes Security Check",
+									Title:    "Bad Kubernetes Replicas",
+									Severity: "HIGH",
+								},
+							},
+						},
 					},
 				},
 			},
 		},
 		{
-			name:        "deny",
-			policyPaths: []string{"../testdata/deny.rego"},
-			inputFile:   "testdata/deployment.json",
+			name: "deny",
+			args: args{
+				namespaces:  []string{"main"},
+				policyPaths: []string{"../testdata/kubernetes.rego"},
+			},
+			inputFile: "testdata/deployment_deny.json",
 			want: &analyzer.AnalysisResult{
 				Misconfigurations: []types.Misconfiguration{
 					{
-						FileType:  types.Kubernetes,
-						FilePath:  "testdata/deployment.json",
-						Namespace: "main",
-						Successes: 1,
-						Warnings:  nil,
+						FileType: types.Kubernetes,
+						FilePath: "testdata/deployment_deny.json",
 						Failures: []types.MisconfResult{
 							{
-								Type:     "Metadata Name Settings",
-								ID:       "RULE-10",
-								Message:  `deny: hello-kubernetes contains banned: hello`,
-								Severity: "MEDIUM",
+								Namespace: "main.kubernetes.xyz_100",
+								Message:   "too many replicas: 4",
+								MisconfMetadata: types.MisconfMetadata{
+									ID:       "XYZ-100",
+									Type:     "Kubernetes Security Check",
+									Title:    "Bad Kubernetes Replicas",
+									Severity: "HIGH",
+								},
 							},
 						},
 					},
@@ -62,78 +81,37 @@ func Test_jsonConfigAnalyzer_Analyze(t *testing.T) {
 			},
 		},
 		{
-			name:        "violation",
-			policyPaths: []string{"../testdata/violation.rego"},
-			inputFile:   "testdata/deployment.json",
+			name: "json array",
+			args: args{
+				namespaces:  []string{"main"},
+				policyPaths: []string{"../testdata/kubernetes.rego"},
+			},
+			inputFile: "testdata/array.json",
 			want: &analyzer.AnalysisResult{
 				Misconfigurations: []types.Misconfiguration{
 					{
-						FileType:  types.Kubernetes,
-						FilePath:  "testdata/deployment.json",
-						Namespace: "main",
-						Successes: 1,
-						Warnings:  nil,
+						FileType: types.Kubernetes,
+						FilePath: "testdata/array.json",
 						Failures: []types.MisconfResult{
 							{
-								Type:     "N/A",
-								ID:       "N/A",
-								Message:  `violation: too many replicas: 3`,
-								Severity: "UNKNOWN",
+								Namespace: "main.kubernetes.xyz_100",
+								Message:   "too many replicas: 4",
+								MisconfMetadata: types.MisconfMetadata{
+									ID:       "XYZ-100",
+									Type:     "Kubernetes Security Check",
+									Title:    "Bad Kubernetes Replicas",
+									Severity: "HIGH",
+								},
 							},
-						},
-					},
-				},
-			},
-		},
-		{
-			name:        "warn",
-			policyPaths: []string{"../testdata/warn.rego"},
-			inputFile:   "testdata/deployment.json",
-			want: &analyzer.AnalysisResult{
-				Misconfigurations: []types.Misconfiguration{
-					{
-						FileType:  types.Kubernetes,
-						FilePath:  "testdata/deployment.json",
-						Namespace: "main",
-						Successes: 1,
-						Warnings: []types.MisconfResult{
 							{
-								Type:     "Replica Settings",
-								ID:       "RULE-100",
-								Message:  `warn: too many replicas: 3`,
-								Severity: "LOW",
-							},
-						},
-						Failures: nil,
-					},
-				},
-			},
-		},
-		{
-			name:        "warn and deny",
-			policyPaths: []string{"../testdata/warn.rego", "../testdata/deny.rego"},
-			inputFile:   "testdata/deployment.json",
-			want: &analyzer.AnalysisResult{
-				Misconfigurations: []types.Misconfiguration{
-					{
-						FileType:  types.Kubernetes,
-						FilePath:  "testdata/deployment.json",
-						Namespace: "main",
-						Successes: 2,
-						Warnings: []types.MisconfResult{
-							{
-								Type:     "Replica Settings",
-								ID:       "RULE-100",
-								Message:  `warn: too many replicas: 3`,
-								Severity: "LOW",
-							},
-						},
-						Failures: []types.MisconfResult{
-							{
-								Type:     "Metadata Name Settings",
-								ID:       "RULE-10",
-								Message:  `deny: hello-kubernetes contains banned: hello`,
-								Severity: "MEDIUM",
+								Namespace: "main.kubernetes.xyz_100",
+								Message:   "too many replicas: 5",
+								MisconfMetadata: types.MisconfMetadata{
+									ID:       "XYZ-100",
+									Type:     "Kubernetes Security Check",
+									Title:    "Bad Kubernetes Replicas",
+									Severity: "HIGH",
+								},
 							},
 						},
 					},
@@ -141,27 +119,13 @@ func Test_jsonConfigAnalyzer_Analyze(t *testing.T) {
 			},
 		},
 		{
-			name:        "happy path: json array",
-			policyPaths: []string{"../testdata/non.rego"},
-			inputFile:   "testdata/array.json",
-			want: &analyzer.AnalysisResult{
-				Misconfigurations: []types.Misconfiguration{
-					{
-						FileType:  types.Kubernetes,
-						FilePath:  "testdata/array.json",
-						Namespace: "main",
-						Successes: 4,
-						Warnings:  nil,
-						Failures:  nil,
-					},
-				},
+			name: "broken JSON",
+			args: args{
+				namespaces:  []string{"main"},
+				policyPaths: []string{"../testdata/kubernetes.rego"},
 			},
-		},
-		{
-			name:        "broken JSON",
-			policyPaths: []string{"../testdata/non.rego"},
-			inputFile:   "testdata/broken.json",
-			wantErr:     "unmarshal json",
+			inputFile: "testdata/broken.json",
+			wantErr:   "unmarshal json",
 		},
 	}
 
@@ -170,9 +134,10 @@ func Test_jsonConfigAnalyzer_Analyze(t *testing.T) {
 			b, err := ioutil.ReadFile(tt.inputFile)
 			require.NoError(t, err)
 
-			a := NewConfigScanner(nil, tt.policyPaths, nil)
+			s, err := json.NewConfigScanner(nil, tt.args.namespaces, tt.args.policyPaths, nil)
+			require.NoError(t, err)
 
-			got, err := a.Analyze(analyzer.AnalysisTarget{
+			got, err := s.Analyze(analyzer.AnalysisTarget{
 				FilePath: tt.inputFile,
 				Content:  b,
 			})
@@ -190,9 +155,10 @@ func Test_jsonConfigAnalyzer_Analyze(t *testing.T) {
 
 func Test_jsonConfigAnalyzer_Required(t *testing.T) {
 	tests := []struct {
-		name     string
-		filePath string
-		want     bool
+		name        string
+		filePattern *regexp.Regexp
+		filePath    string
+		want        bool
 	}{
 		{
 			name:     "json",
@@ -204,24 +170,29 @@ func Test_jsonConfigAnalyzer_Required(t *testing.T) {
 			filePath: "deployment.yaml",
 			want:     false,
 		},
+		{
+			name:        "file pattern",
+			filePattern: regexp.MustCompile(`foo*`),
+			filePath:    "foo_file",
+			want:        true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			a := ConfigScanner{
-				parser: &json.Parser{},
-			}
+			s, err := json.NewConfigScanner(tt.filePattern, nil, []string{"../testdata"}, nil)
+			require.NoError(t, err)
 
-			got := a.Required(tt.filePath, nil)
+			got := s.Required(tt.filePath, nil)
 			assert.Equal(t, tt.want, got)
 		})
 	}
 }
 
 func Test_jsonConfigAnalyzer_Type(t *testing.T) {
+	s, err := json.NewConfigScanner(nil, nil, []string{"../testdata"}, nil)
+	require.NoError(t, err)
+
 	want := analyzer.TypeJSON
-	a := ConfigScanner{
-		parser: &json.Parser{},
-	}
-	got := a.Type()
+	got := s.Type()
 	assert.Equal(t, want, got)
 }

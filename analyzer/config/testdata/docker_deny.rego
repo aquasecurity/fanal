@@ -1,4 +1,12 @@
-package main
+package users.dockerfile.xyz_100
+
+__rego_metadata__ := {
+    "id": "XYZ-100",
+    "title": "Bad Dockerfile",
+    "version": "v1.0.0",
+    "severity": "HIGH",
+    "type": "Docker Security Check",
+}
 
 denylist = [
 	"foo"

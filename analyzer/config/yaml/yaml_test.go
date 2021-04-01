@@ -1,60 +1,79 @@
-package yaml
+package yaml_test
 
 import (
 	"io/ioutil"
+	"regexp"
 	"testing"
 
-	"github.com/open-policy-agent/conftest/parser/yaml"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/aquasecurity/fanal/analyzer"
+	"github.com/aquasecurity/fanal/analyzer/config/yaml"
 	"github.com/aquasecurity/fanal/types"
 )
 
 func Test_yamlConfigAnalyzer_Analyze(t *testing.T) {
-	tests := []struct {
-		name        string
+	type args struct {
+		namespaces  []string
 		policyPaths []string
-		inputFile   string
-		want        *analyzer.AnalysisResult
-		wantErr     string
+	}
+	tests := []struct {
+		name      string
+		args      args
+		inputFile string
+		want      *analyzer.AnalysisResult
+		wantErr   string
 	}{
 		{
-			name:        "happy path",
-			policyPaths: []string{"../testdata/non.rego"},
-			inputFile:   "testdata/deployment.yaml",
+			name: "happy path",
+			args: args{
+				namespaces:  []string{"main"},
+				policyPaths: []string{"../testdata/kubernetes.rego"},
+			},
+			inputFile: "testdata/deployment.yaml",
 			want: &analyzer.AnalysisResult{
 				Misconfigurations: []types.Misconfiguration{
 					{
-						FileType:  types.Kubernetes,
-						FilePath:  "testdata/deployment.yaml",
-						Namespace: "main",
-						Successes: 2,
-						Warnings:  nil,
-						Failures:  nil,
+						FileType: types.Kubernetes,
+						FilePath: "testdata/deployment.yaml",
+						Successes: []types.MisconfResult{
+							{
+								Namespace: "main.kubernetes.xyz_100",
+								MisconfMetadata: types.MisconfMetadata{
+									ID:       "XYZ-100",
+									Type:     "Kubernetes Security Check",
+									Title:    "Bad Kubernetes Replicas",
+									Severity: "HIGH",
+								},
+							},
+						},
 					},
 				},
 			},
 		},
 		{
-			name:        "deny",
-			policyPaths: []string{"../testdata/deny.rego"},
-			inputFile:   "testdata/deployment.yaml",
+			name: "deny",
+			args: args{
+				namespaces:  []string{"main"},
+				policyPaths: []string{"../testdata/kubernetes.rego"},
+			},
+			inputFile: "testdata/deployment_deny.yaml",
 			want: &analyzer.AnalysisResult{
 				Misconfigurations: []types.Misconfiguration{
 					{
-						FileType:  types.Kubernetes,
-						FilePath:  "testdata/deployment.yaml",
-						Namespace: "main",
-						Successes: 1,
-						Warnings:  nil,
+						FileType: types.Kubernetes,
+						FilePath: "testdata/deployment_deny.yaml",
 						Failures: []types.MisconfResult{
 							{
-								Type:     "Metadata Name Settings",
-								ID:       "RULE-10",
-								Message:  `deny: hello-kubernetes contains banned: hello`,
-								Severity: "MEDIUM",
+								Namespace: "main.kubernetes.xyz_100",
+								Message:   "too many replicas: 4",
+								MisconfMetadata: types.MisconfMetadata{
+									ID:       "XYZ-100",
+									Type:     "Kubernetes Security Check",
+									Title:    "Bad Kubernetes Replicas",
+									Severity: "HIGH",
+								},
 							},
 						},
 					},
@@ -62,23 +81,27 @@ func Test_yamlConfigAnalyzer_Analyze(t *testing.T) {
 			},
 		},
 		{
-			name:        "violation",
-			policyPaths: []string{"../testdata/violation.rego"},
-			inputFile:   "testdata/deployment.yaml",
+			name: "happy path using anchors",
+			args: args{
+				namespaces:  []string{"main"},
+				policyPaths: []string{"testdata/deny.rego"},
+			},
+			inputFile: "testdata/anchor.yaml",
 			want: &analyzer.AnalysisResult{
 				Misconfigurations: []types.Misconfiguration{
 					{
-						FileType:  types.Kubernetes,
-						FilePath:  "testdata/deployment.yaml",
-						Namespace: "main",
-						Successes: 1,
-						Warnings:  nil,
+						FileType: types.YAML,
+						FilePath: "testdata/anchor.yaml",
 						Failures: []types.MisconfResult{
 							{
-								Type:     "N/A",
-								ID:       "N/A",
-								Message:  `violation: too many replicas: 3`,
-								Severity: "UNKNOWN",
+								Namespace: "main.yaml.xyz_123",
+								Message:   "bad",
+								MisconfMetadata: types.MisconfMetadata{
+									ID:       "XYZ-123",
+									Type:     "YAML Security Check",
+									Title:    "Bad YAML",
+									Severity: "CRITICAL",
+								},
 							},
 						},
 					},
@@ -86,54 +109,38 @@ func Test_yamlConfigAnalyzer_Analyze(t *testing.T) {
 			},
 		},
 		{
-			name:        "warn",
-			policyPaths: []string{"../testdata/warn.rego"},
-			inputFile:   "testdata/deployment.yaml",
-			want: &analyzer.AnalysisResult{
-				Misconfigurations: []types.Misconfiguration{
-					{
-						FileType:  types.Kubernetes,
-						FilePath:  "testdata/deployment.yaml",
-						Namespace: "main",
-						Successes: 1,
-						Warnings: []types.MisconfResult{
-							{
-								Type:     "Replica Settings",
-								ID:       "RULE-100",
-								Message:  `warn: too many replicas: 3`,
-								Severity: "LOW",
-							},
-						},
-						Failures: nil,
-					},
-				},
+			name: "multiple yaml",
+			args: args{
+				namespaces:  []string{"main"},
+				policyPaths: []string{"../testdata/kubernetes.rego"},
 			},
-		},
-		{
-			name:        "warn and deny",
-			policyPaths: []string{"../testdata/warn.rego", "../testdata/deny.rego"},
-			inputFile:   "testdata/deployment.yaml",
+			inputFile: "testdata/multiple.yaml",
 			want: &analyzer.AnalysisResult{
 				Misconfigurations: []types.Misconfiguration{
 					{
-						FileType:  types.Kubernetes,
-						FilePath:  "testdata/deployment.yaml",
-						Namespace: "main",
-						Successes: 2,
-						Warnings: []types.MisconfResult{
+						FileType: types.Kubernetes,
+						FilePath: "testdata/multiple.yaml",
+						Successes: []types.MisconfResult{
 							{
-								Type:     "Replica Settings",
-								ID:       "RULE-100",
-								Message:  `warn: too many replicas: 3`,
-								Severity: "LOW",
+								Namespace: "main.kubernetes.xyz_100",
+								MisconfMetadata: types.MisconfMetadata{
+									ID:       "XYZ-100",
+									Type:     "Kubernetes Security Check",
+									Title:    "Bad Kubernetes Replicas",
+									Severity: "HIGH",
+								},
 							},
 						},
 						Failures: []types.MisconfResult{
 							{
-								Type:     "Metadata Name Settings",
-								ID:       "RULE-10",
-								Message:  `deny: hello-kubernetes contains banned: hello`,
-								Severity: "MEDIUM",
+								Namespace: "main.kubernetes.xyz_100",
+								Message:   "too many replicas: 4",
+								MisconfMetadata: types.MisconfMetadata{
+									ID:       "XYZ-100",
+									Type:     "Kubernetes Security Check",
+									Title:    "Bad Kubernetes Replicas",
+									Severity: "HIGH",
+								},
 							},
 						},
 					},
@@ -141,50 +148,22 @@ func Test_yamlConfigAnalyzer_Analyze(t *testing.T) {
 			},
 		},
 		{
-			name:        "happy path using anchors",
-			policyPaths: []string{"../testdata/non.rego"},
-			inputFile:   "testdata/anchor.yaml",
-			want: &analyzer.AnalysisResult{
-				Misconfigurations: []types.Misconfiguration{
-					{
-						FileType:  types.YAML,
-						FilePath:  "testdata/anchor.yaml",
-						Namespace: "main",
-						Successes: 2,
-						Warnings:  nil,
-						Failures:  nil,
-					},
-				},
+			name: "broken YAML",
+			args: args{
+				namespaces:  []string{"main"},
+				policyPaths: []string{"../testdata/kubernetes.rego"},
 			},
+			inputFile: "testdata/broken.yaml",
+			wantErr:   "unmarshal yaml",
 		},
 		{
-			name:        "happy path using multiple yaml",
-			policyPaths: []string{"../testdata/non.rego"},
-			inputFile:   "testdata/multiple.yaml",
-			want: &analyzer.AnalysisResult{
-				Misconfigurations: []types.Misconfiguration{
-					{
-						FileType:  types.Kubernetes,
-						FilePath:  "testdata/multiple.yaml",
-						Namespace: "main",
-						Successes: 4,
-						Warnings:  nil,
-						Failures:  nil,
-					},
-				},
+			name: "invalid circular references yaml",
+			args: args{
+				namespaces:  []string{"main"},
+				policyPaths: []string{"../testdata/kubernetes.rego"},
 			},
-		},
-		{
-			name:        "broken YAML",
-			policyPaths: []string{"../testdata/non.rego"},
-			inputFile:   "testdata/broken.yaml",
-			wantErr:     "unmarshal yaml",
-		},
-		{
-			name:        "invalid circular references yaml",
-			policyPaths: []string{"../testdata/non.rego"},
-			inputFile:   "testdata/circular_references.yaml",
-			wantErr:     "yaml: anchor 'circular' value contains itself",
+			inputFile: "testdata/circular_references.yaml",
+			wantErr:   "yaml: anchor 'circular' value contains itself",
 		},
 	}
 	for _, tt := range tests {
@@ -192,7 +171,8 @@ func Test_yamlConfigAnalyzer_Analyze(t *testing.T) {
 			b, err := ioutil.ReadFile(tt.inputFile)
 			require.NoError(t, err)
 
-			a := NewConfigScanner(nil, tt.policyPaths, nil)
+			a, err := yaml.NewConfigScanner(nil, tt.args.namespaces, tt.args.policyPaths, nil)
+			require.NoError(t, err)
 
 			got, err := a.Analyze(analyzer.AnalysisTarget{
 				FilePath: tt.inputFile,
@@ -212,9 +192,10 @@ func Test_yamlConfigAnalyzer_Analyze(t *testing.T) {
 
 func Test_yamlConfigAnalyzer_Required(t *testing.T) {
 	tests := []struct {
-		name     string
-		filePath string
-		want     bool
+		name        string
+		filePattern *regexp.Regexp
+		filePath    string
+		want        bool
 	}{
 		{
 			name:     "yaml",
@@ -231,24 +212,29 @@ func Test_yamlConfigAnalyzer_Required(t *testing.T) {
 			filePath: "deployment.json",
 			want:     false,
 		},
+		{
+			name:        "file pattern",
+			filePattern: regexp.MustCompile(`foo*`),
+			filePath:    "foo_file",
+			want:        true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			a := ConfigScanner{
-				parser: &yaml.Parser{},
-			}
+			s, err := yaml.NewConfigScanner(tt.filePattern, nil, []string{"../testdata"}, nil)
+			require.NoError(t, err)
 
-			got := a.Required(tt.filePath, nil)
+			got := s.Required(tt.filePath, nil)
 			assert.Equal(t, tt.want, got)
 		})
 	}
 }
 
 func Test_yamlConfigAnalyzer_Type(t *testing.T) {
+	s, err := yaml.NewConfigScanner(nil, nil, []string{"../testdata"}, nil)
+	require.NoError(t, err)
+
 	want := analyzer.TypeYaml
-	a := ConfigScanner{
-		parser: &yaml.Parser{},
-	}
-	got := a.Type()
+	got := s.Type()
 	assert.Equal(t, want, got)
 }

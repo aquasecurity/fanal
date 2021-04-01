@@ -1,4 +1,4 @@
-package main
+package main.dockerfile.id_100
 
 violationlist = [
   "foo"

@@ -1,11 +1,12 @@
-package hcl
+package hcl_test
 
 import (
 	"io/ioutil"
+	"regexp"
 	"testing"
 
-	"github.com/open-policy-agent/conftest/parser/hcl1"
-	"github.com/open-policy-agent/conftest/parser/hcl2"
+	"github.com/aquasecurity/fanal/analyzer/config/hcl"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -14,127 +15,68 @@ import (
 )
 
 func Test_hclConfigAnalyzer_Analyze(t *testing.T) {
-	tests := []struct {
-		name        string
+	type args struct {
+		namespaces  []string
 		policyPaths []string
-		inputFile   string
-		want        *analyzer.AnalysisResult
-		wantErr     string
+	}
+	tests := []struct {
+		name      string
+		args      args
+		inputFile string
+		want      *analyzer.AnalysisResult
+		wantErr   string
 	}{
 		{
-			name:        "HCL1: happy path",
-			policyPaths: []string{"../testdata/non.rego"},
-			inputFile:   "testdata/deployment.hcl1",
-			want: &analyzer.AnalysisResult{
-				Misconfigurations: []types.Misconfiguration{
-					{
-						FileType:  types.HCL,
-						FilePath:  "testdata/deployment.hcl1",
-						Namespace: "main",
-						Successes: 2,
-						Warnings:  nil,
-						Failures:  nil,
-					},
-				},
+			name: "HCL1: happy path",
+			args: args{
+				namespaces:  []string{"main"},
+				policyPaths: []string{"testdata/hcl.rego"},
 			},
-		},
-		{
-			name:        "HCL1: deny",
-			policyPaths: []string{"../testdata/deny.rego"},
-			inputFile:   "testdata/deployment.hcl1",
+			inputFile: "testdata/deployment.hcl1",
 			want: &analyzer.AnalysisResult{
 				Misconfigurations: []types.Misconfiguration{
 					{
-						FileType:  types.HCL,
-						FilePath:  "testdata/deployment.hcl1",
-						Namespace: "main",
-						Successes: 1,
-						Warnings:  nil,
-						Failures: []types.MisconfResult{
-							types.MisconfResult{
-								Type:     "Metadata Name Settings",
-								ID:       "RULE-10",
-								Message:  `deny: hello-kubernetes contains banned: hello`,
-								Severity: "MEDIUM",
-							},
-						},
-					},
-				},
-			},
-		},
-		{
-			name:        "HCL1: violation",
-			policyPaths: []string{"../testdata/violation.rego"},
-			inputFile:   "testdata/deployment.hcl1",
-			want: &analyzer.AnalysisResult{
-				Misconfigurations: []types.Misconfiguration{
-					{
-						FileType:  types.HCL,
-						FilePath:  "testdata/deployment.hcl1",
-						Namespace: "main",
-						Successes: 1,
-						Warnings:  nil,
-						Failures: []types.MisconfResult{
+						FileType: types.HCL,
+						FilePath: "testdata/deployment.hcl1",
+						Successes: []types.MisconfResult{
 							{
-								Type:     "N/A",
-								ID:       "N/A",
-								Message:  `violation: too many replicas: 3`,
-								Severity: "UNKNOWN",
+								Namespace: "main.hcl.xyz_100",
+								MisconfMetadata: types.MisconfMetadata{
+									ID:       "XYZ-100",
+									Type:     "HCL Security Check",
+									Title:    "Bad HCL",
+									Severity: "HIGH",
+								},
 							},
 						},
-					},
-				},
-			},
-		},
-		{
-			name:        "HCL1: warn",
-			policyPaths: []string{"../testdata/warn.rego"},
-			inputFile:   "testdata/deployment.hcl1",
-			want: &analyzer.AnalysisResult{
-				Misconfigurations: []types.Misconfiguration{
-					{
-						FileType:  types.HCL,
-						FilePath:  "testdata/deployment.hcl1",
-						Namespace: "main",
-						Successes: 1,
-						Warnings: []types.MisconfResult{
-							types.MisconfResult{
-								Type:     "Replica Settings",
-								ID:       "RULE-100",
-								Message:  `warn: too many replicas: 3`,
-								Severity: "LOW",
-							},
-						},
+						Warnings: nil,
 						Failures: nil,
 					},
 				},
 			},
 		},
 		{
-			name:        "HCL1: warn and deny",
-			policyPaths: []string{"../testdata/warn.rego", "../testdata/deny.rego"},
-			inputFile:   "testdata/deployment.hcl1",
+			name: "HCL2: deny",
+			args: args{
+				namespaces:  []string{"main"},
+				policyPaths: []string{"testdata/hcl.rego"},
+			},
+			inputFile: "testdata/deployment.hcl2",
 			want: &analyzer.AnalysisResult{
 				Misconfigurations: []types.Misconfiguration{
 					{
-						FileType:  types.HCL,
-						FilePath:  "testdata/deployment.hcl1",
-						Namespace: "main",
-						Successes: 2,
-						Warnings: []types.MisconfResult{
-							{
-								Type:     "Replica Settings",
-								ID:       "RULE-100",
-								Message:  `warn: too many replicas: 3`,
-								Severity: "LOW",
-							},
-						},
+						FileType: types.HCL,
+						FilePath: "testdata/deployment.hcl2",
 						Failures: []types.MisconfResult{
 							{
-								Type:     "Metadata Name Settings",
-								ID:       "RULE-10",
-								Message:  `deny: hello-kubernetes contains banned: hello`,
-								Severity: "MEDIUM",
+								Namespace: "main.hcl.xyz_100",
+								Message:   "too many replicas: 4",
+								MisconfMetadata: types.MisconfMetadata{
+									ID:       "XYZ-100",
+									Type:     "HCL Security Check",
+									Title:    "Bad HCL",
+									Severity: "HIGH",
+								},
 							},
 						},
 					},
@@ -142,47 +84,46 @@ func Test_hclConfigAnalyzer_Analyze(t *testing.T) {
 			},
 		},
 		{
-			name:        "HCL1: broken",
-			policyPaths: []string{"../testdata/non.rego"},
-			inputFile:   "testdata/broken.hcl1",
-			wantErr:     "unmarshal hcl",
-		},
-		{
-			name:        "HCL2: happy path",
-			policyPaths: []string{"../testdata/non.rego"},
-			inputFile:   "testdata/deployment.hcl2",
-			want: &analyzer.AnalysisResult{
-				Misconfigurations: []types.Misconfiguration{
-					{
-						FileType:  types.HCL,
-						FilePath:  "testdata/deployment.hcl2",
-						Namespace: "main",
-						Successes: 2,
-						Warnings:  nil,
-						Failures:  nil,
-					},
-				},
+			name: "HCL1: broken",
+			args: args{
+				namespaces:  []string{"main"},
+				policyPaths: []string{"testdata/hcl.rego"},
 			},
+			inputFile: "testdata/broken.hcl1",
+			wantErr:   "unmarshal hcl",
 		},
 		{
-			name:        "HCL2: broken",
-			policyPaths: []string{"../testdata/non.rego"},
-			inputFile:   "testdata/broken.hcl2",
-			wantErr:     "unable to parse HCL2",
+			name: "HCL2: broken",
+			args: args{
+				namespaces:  []string{"main"},
+				policyPaths: []string{"testdata/hcl.rego"},
+			},
+			inputFile: "testdata/broken.hcl2",
+			wantErr:   "unable to parse HCL2",
 		},
 		{
-			name:        "HCL2: deprecated",
-			policyPaths: []string{"../testdata/non.rego"},
-			inputFile:   "testdata/deprecated.hcl",
+			name: "HCL2: deprecated",
+			args: args{
+				namespaces:  []string{"main"},
+				policyPaths: []string{"testdata/hcl.rego"},
+			},
+			inputFile: "testdata/deprecated.hcl",
 			want: &analyzer.AnalysisResult{
 				Misconfigurations: []types.Misconfiguration{
 					{
-						FileType:  types.HCL,
-						FilePath:  "testdata/deprecated.hcl",
-						Namespace: "main",
-						Successes: 2,
-						Warnings:  nil,
-						Failures:  nil,
+						FileType: types.HCL,
+						FilePath: "testdata/deprecated.hcl",
+						Successes: []types.MisconfResult{
+							{
+								Namespace: "main.hcl.xyz_100",
+								MisconfMetadata: types.MisconfMetadata{
+									ID:       "XYZ-100",
+									Type:     "HCL Security Check",
+									Title:    "Bad HCL",
+									Severity: "HIGH",
+								},
+							},
+						},
 					},
 				},
 			},
@@ -193,7 +134,8 @@ func Test_hclConfigAnalyzer_Analyze(t *testing.T) {
 			b, err := ioutil.ReadFile(tt.inputFile)
 			require.NoError(t, err)
 
-			a := NewConfigScanner(nil, tt.policyPaths, nil)
+			a, err := hcl.NewConfigScanner(nil, tt.args.namespaces, tt.args.policyPaths, nil)
+			require.NoError(t, err)
 
 			got, err := a.Analyze(analyzer.AnalysisTarget{
 				FilePath: tt.inputFile,
@@ -213,9 +155,10 @@ func Test_hclConfigAnalyzer_Analyze(t *testing.T) {
 
 func Test_hclConfigAnalyzer_Required(t *testing.T) {
 	tests := []struct {
-		name     string
-		filePath string
-		want     bool
+		name        string
+		filePattern *regexp.Regexp
+		filePath    string
+		want        bool
 	}{
 		{
 			name:     "hcl",
@@ -242,26 +185,28 @@ func Test_hclConfigAnalyzer_Required(t *testing.T) {
 			filePath: "deployment.json",
 			want:     false,
 		},
+		{
+			name:        "file pattern",
+			filePattern: regexp.MustCompile(`foo*`),
+			filePath:    "foo_file",
+			want:        true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			a := ConfigScanner{
-				hcl1Parser: &hcl1.Parser{},
-				hcl2Parser: &hcl2.Parser{},
-			}
+			s, err := hcl.NewConfigScanner(tt.filePattern, nil, []string{"../testdata"}, nil)
+			require.NoError(t, err)
 
-			got := a.Required(tt.filePath, nil)
+			got := s.Required(tt.filePath, nil)
 			assert.Equal(t, tt.want, got)
 		})
 	}
 }
 func Test_hclConfigAnalyzer_Type(t *testing.T) {
-	want := analyzer.TypeHCL
-	a := ConfigScanner{
-		hcl1Parser: &hcl1.Parser{},
-		hcl2Parser: &hcl2.Parser{},
-	}
+	s, err := hcl.NewConfigScanner(nil, nil, []string{"../testdata"}, nil)
+	require.NoError(t, err)
 
-	got := a.Type()
+	want := analyzer.TypeHCL
+	got := s.Type()
 	assert.Equal(t, want, got)
 }

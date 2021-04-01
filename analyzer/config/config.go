@@ -38,6 +38,10 @@ func (o *ScannerOption) Sort() {
 }
 
 func RegisterConfigScanners(opt ScannerOption) error {
+	if len(opt.PolicyPaths) == 0 {
+		return nil
+	}
+
 	var dockerRegexp, hclRegexp, jsonRegexp, tomlRegexp, yamlRegexp *regexp.Regexp
 	for _, p := range opt.FilePatterns {
 		// e.g. "dockerfile:my_dockerfile_*"

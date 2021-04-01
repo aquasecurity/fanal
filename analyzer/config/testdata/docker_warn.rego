@@ -1,4 +1,10 @@
-package main
+package main.dockerfile.xyz_100
+
+__rego_metadata__ := {
+    "id": "XYZ-100",
+    "title": "Bad Dockerfile",
+    "version": "v1.0.0",
+}
 
 warnlist = [
 	"foo"

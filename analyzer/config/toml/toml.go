@@ -1,6 +1,7 @@
 package toml
 
 import (
+	"context"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -40,7 +41,15 @@ func (s ConfigScanner) Analyze(target analyzer.AnalysisTarget) (*analyzer.Analys
 		return nil, xerrors.Errorf("unable to parse TOML (%s): %w", target.FilePath, err)
 	}
 
-	result, err := s.ScanConfig(types.TOML, target.FilePath, parsed)
+	configType, err := s.DetectType(context.TODO(), parsed)
+	if err != nil {
+		return nil, err
+	}
+	if configType == "" {
+		configType = types.TOML
+	}
+
+	result, err := s.ScanConfig(configType, target.FilePath, parsed)
 	if err != nil {
 		return nil, xerrors.Errorf("unable to scan TOML (%s): %w", target.FilePath, err)
 	}
