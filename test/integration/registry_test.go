@@ -202,7 +202,11 @@ func analyze(ctx context.Context, imageRef string, opt types.DockerOption) (*typ
 	}
 	defer cleanup()
 
-	ar := aimage.NewArtifact(img, c, nil, config.ScannerOption{})
+	ar, err := aimage.NewArtifact(img, c, nil, config.ScannerOption{})
+	if err != nil {
+		return nil, err
+	}
+
 	ap := applier.NewApplier(c)
 
 	imageInfo, err := ar.Inspect(ctx)
