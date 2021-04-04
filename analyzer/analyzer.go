@@ -95,18 +95,10 @@ func (r *AnalysisResult) Sort() {
 	})
 
 	for _, misconf := range r.Misconfigurations {
-		sort.Slice(misconf.Failures, func(i, j int) bool {
-			failures := misconf.Failures
-			switch {
-			case failures[i].Type != failures[j].Type:
-				return failures[i].Type < failures[j].Type
-			case failures[i].Severity != failures[j].Severity:
-				return failures[i].Severity < failures[j].Severity
-			case failures[i].ID != failures[j].ID:
-				return failures[i].ID < failures[j].ID
-			}
-			return failures[i].Message < failures[j].Message
-		})
+		sort.Sort(misconf.Successes)
+		sort.Sort(misconf.Failures)
+		sort.Sort(misconf.Warnings)
+		sort.Sort(misconf.Exceptions)
 	}
 }
 
@@ -136,8 +128,10 @@ func (r *AnalysisResult) Merge(new *AnalysisResult) {
 		r.Applications = append(r.Applications, new.Applications...)
 	}
 
-	if len(new.Misconfigurations) > 0 {
-		r.Misconfigurations = append(r.Misconfigurations, new.Misconfigurations...)
+	for _, m := range new.Misconfigurations {
+		if len(m.Successes) > 0 || len(m.Failures) > 0 || len(m.Warnings) > 0 || len(m.Exceptions) > 0 {
+			r.Misconfigurations = append(r.Misconfigurations, m)
+		}
 	}
 }
 

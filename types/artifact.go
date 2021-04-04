@@ -52,29 +52,6 @@ type Application struct {
 	Libraries []LibraryInfo
 }
 
-type Misconfiguration struct {
-	FileType   string          `json:",omitempty"`
-	FilePath   string          `json:",omitempty"`
-	Successes  []MisconfResult `json:",omitempty"`
-	Warnings   []MisconfResult `json:",omitempty"`
-	Failures   []MisconfResult `json:",omitempty"`
-	Exceptions []MisconfResult `json:",omitempty"`
-	Layer      Layer           `json:",omitempty"`
-}
-
-type MisconfResult struct {
-	Namespace       string `json:",omitempty"`
-	Message         string `json:",omitempty"`
-	MisconfMetadata `json:",omitempty"`
-}
-
-type MisconfMetadata struct {
-	ID       string `json:",omitempty"`
-	Type     string `json:",omitempty"`
-	Title    string `json:",omitempty"`
-	Severity string `json:",omitempty"`
-}
-
 // ArtifactReference represents a reference of container image, local filesystem and repository
 type ArtifactReference struct {
 	Name        string // image name, tar file name, directory or repository name
