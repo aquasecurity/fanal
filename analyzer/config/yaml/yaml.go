@@ -1,7 +1,6 @@
 package yaml
 
 import (
-	"context"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -10,7 +9,7 @@ import (
 	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/fanal/analyzer"
-	"github.com/aquasecurity/fanal/analyzer/config/scanner"
+	"github.com/aquasecurity/fanal/config/scanner"
 	"github.com/aquasecurity/fanal/types"
 )
 
@@ -41,21 +40,14 @@ func (s ConfigScanner) Analyze(target analyzer.AnalysisTarget) (*analyzer.Analys
 		return nil, xerrors.Errorf("unable to parse YAML (%s): %w", target.FilePath, err)
 	}
 
-	configType, err := s.DetectType(context.TODO(), parsed)
-	if err != nil {
-		return nil, err
-	}
-	if configType == "" {
-		configType = types.YAML
-	}
-
-	result, err := s.ScanConfig(configType, target.FilePath, parsed)
-	if err != nil {
-		return nil, xerrors.Errorf("unable to scan YAML (%s): %w", target.FilePath, err)
-	}
-
 	return &analyzer.AnalysisResult{
-		Misconfigurations: []types.Misconfiguration{result},
+		Configs: []types.Config{
+			{
+				Type:     types.YAML,
+				FilePath: target.FilePath,
+				Content:  parsed,
+			},
+		},
 	}, nil
 }
 

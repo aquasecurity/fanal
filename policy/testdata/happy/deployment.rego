@@ -1,4 +1,4 @@
-package testdata.kubernetes.xyz_100
+package testdata.xyz_100
 
 import data.services
 
@@ -8,6 +8,13 @@ __rego_metadata__ := {
     "version": "v1.0.0",
     "severity": "HIGH",
     "type": "Kubernetes Security Check",
+}
+
+__rego_XXX__ := {
+    "selector": {
+        "types": ["kubernetes"]
+    },
+    "combine": true,
 }
 
 deny[msg] {

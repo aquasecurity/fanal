@@ -10,7 +10,7 @@ import (
 	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/fanal/analyzer"
-	"github.com/aquasecurity/fanal/analyzer/config/scanner"
+	"github.com/aquasecurity/fanal/config/scanner"
 	"github.com/aquasecurity/fanal/types"
 )
 
@@ -41,13 +41,14 @@ func (s ConfigScanner) Analyze(target analyzer.AnalysisTarget) (*analyzer.Analys
 		return nil, xerrors.Errorf("unable to parse Dockerfile (%s): %w", target.FilePath, err)
 	}
 
-	result, err := s.ScanConfig(types.Dockerfile, target.FilePath, parsed)
-	if err != nil {
-		return nil, xerrors.Errorf("unable to scan Dockerfile (%s): %w", target.FilePath, err)
-	}
-
 	return &analyzer.AnalysisResult{
-		Misconfigurations: []types.Misconfiguration{result},
+		Configs: []types.Config{
+			{
+				Type:     types.Dockerfile,
+				FilePath: target.FilePath,
+				Content:  parsed,
+			},
+		},
 	}, nil
 }
 

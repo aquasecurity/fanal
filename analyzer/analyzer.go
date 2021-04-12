@@ -55,15 +55,15 @@ func RegisterConfigAnalyzer(analyzer configAnalyzer) {
 type Opener func() ([]byte, error)
 
 type AnalysisResult struct {
-	m                 sync.Mutex
-	OS                *types.OS
-	PackageInfos      []types.PackageInfo
-	Applications      []types.Application
-	Misconfigurations []types.Misconfiguration
+	m            sync.Mutex
+	OS           *types.OS
+	PackageInfos []types.PackageInfo
+	Applications []types.Application
+	Configs      []types.Config
 }
 
 func (r *AnalysisResult) isEmpty() bool {
-	return r.OS == nil && len(r.PackageInfos) == 0 && len(r.Applications) == 0 && len(r.Misconfigurations) == 0
+	return r.OS == nil && len(r.PackageInfos) == 0 && len(r.Applications) == 0 && len(r.Configs) == 0
 }
 
 func (r *AnalysisResult) Sort() {
@@ -88,17 +88,6 @@ func (r *AnalysisResult) Sort() {
 			}
 			return app.Libraries[i].Library.Version < app.Libraries[j].Library.Version
 		})
-	}
-
-	sort.Slice(r.Misconfigurations, func(i, j int) bool {
-		return r.Misconfigurations[i].FilePath < r.Misconfigurations[j].FilePath
-	})
-
-	for _, misconf := range r.Misconfigurations {
-		sort.Sort(misconf.Successes)
-		sort.Sort(misconf.Failures)
-		sort.Sort(misconf.Warnings)
-		sort.Sort(misconf.Exceptions)
 	}
 }
 
@@ -128,10 +117,8 @@ func (r *AnalysisResult) Merge(new *AnalysisResult) {
 		r.Applications = append(r.Applications, new.Applications...)
 	}
 
-	for _, m := range new.Misconfigurations {
-		if len(m.Successes) > 0 || len(m.Failures) > 0 || len(m.Warnings) > 0 || len(m.Exceptions) > 0 {
-			r.Misconfigurations = append(r.Misconfigurations, m)
-		}
+	for _, m := range new.Configs {
+		r.Configs = append(r.Configs, m)
 	}
 }
 

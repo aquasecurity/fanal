@@ -23,8 +23,6 @@ import (
 	"github.com/aquasecurity/fanal/utils"
 )
 
-const metadataSymbol = "__rego_metadata__"
-
 // Engine represents the policy engine.
 type Engine struct {
 	modules  map[string]*ast.Module

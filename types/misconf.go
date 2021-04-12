@@ -23,6 +23,11 @@ type MisconfMetadata struct {
 	Type     string `json:",omitempty"`
 	Title    string `json:",omitempty"`
 	Severity string `json:",omitempty"`
+	Combine  bool
+}
+
+type MisconfSelector struct {
+	Types []string `json:",omitempty"`
 }
 
 func (r MisconfResults) Len() int {

@@ -8,7 +8,7 @@ import (
 	"github.com/open-policy-agent/opa/rego"
 	"golang.org/x/xerrors"
 
-	"github.com/aquasecurity/fanal/analyzer/config/policy"
+	"github.com/aquasecurity/fanal/policy"
 	"github.com/aquasecurity/fanal/types"
 )
 
@@ -57,7 +57,7 @@ func (s Scanner) DetectType(ctx context.Context, input interface{}) (string, err
 	).Eval(ctx)
 
 	if err != nil {
-		return "", err
+		return "", xerrors.Errorf("rego eval error: %w", err)
 	}
 
 	for _, result := range results {
@@ -73,9 +73,36 @@ func (s Scanner) DetectType(ctx context.Context, input interface{}) (string, err
 	return "", nil
 }
 
-func (s Scanner) ScanConfig(configType, fileName string, content interface{}) (types.Misconfiguration, error) {
-	ctx := context.TODO()
+func (s Scanner) ScanConfigs(ctx context.Context, configs []types.Config) (types.Misconfiguration, error) {
+	var configs []types.Config
+	for _, config := range configs {
+		// Detect config types
+		configType, err := s.DetectType(ctx, config)
+		if err != nil {
+			return types.Misconfiguration{}, err
+		}
+		if configType != "" {
+			config.Type = configType
+		}
 
+		// It is possible for a configuration to have multiple configurations. An example of this
+		// are multi-document yaml files where a single filepath represents multiple configs.
+		//
+		// If the current configuration contains multiple configurations, evaluate each policy
+		// independent from one another and aggregate the results under the same file name.
+		if subconfigs, ok := config.Content.([]interface{}); ok {
+			for _, subconfig := range subconfigs {
+				configs = append(configs, types.Config{
+					Type:     config.Type,
+					FilePath: config.FilePath,
+					Content:  subconfig,
+				})
+			}
+		} else {
+			configs = append(configs, config)
+		}
+
+	}
 	misconf, err := s.engine.Check(ctx, configType, fileName, content, s.namespaces)
 	if err != nil {
 		return types.Misconfiguration{}, xerrors.Errorf("failed to scan %s: %w", fileName, err)

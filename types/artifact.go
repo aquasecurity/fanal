@@ -52,6 +52,12 @@ type Application struct {
 	Libraries []LibraryInfo
 }
 
+type Config struct {
+	Type     string
+	FilePath string
+	Content  interface{}
+}
+
 // ArtifactReference represents a reference of container image, local filesystem and repository
 type ArtifactReference struct {
 	Name        string // image name, tar file name, directory or repository name
