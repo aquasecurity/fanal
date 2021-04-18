@@ -41,7 +41,7 @@ func Test_hclConfigAnalyzer_Analyze(t *testing.T) {
 						Successes: []types.MisconfResult{
 							{
 								Namespace: "main.hcl.xyz_100",
-								MisconfMetadata: types.MisconfMetadata{
+								PolicyMetadata: types.PolicyMetadata{
 									ID:       "XYZ-100",
 									Type:     "HCL Security Check",
 									Title:    "Bad HCL",
@@ -71,7 +71,7 @@ func Test_hclConfigAnalyzer_Analyze(t *testing.T) {
 							{
 								Namespace: "main.hcl.xyz_100",
 								Message:   "too many replicas: 4",
-								MisconfMetadata: types.MisconfMetadata{
+								PolicyMetadata: types.PolicyMetadata{
 									ID:       "XYZ-100",
 									Type:     "HCL Security Check",
 									Title:    "Bad HCL",
@@ -116,7 +116,7 @@ func Test_hclConfigAnalyzer_Analyze(t *testing.T) {
 						Successes: []types.MisconfResult{
 							{
 								Namespace: "main.hcl.xyz_100",
-								MisconfMetadata: types.MisconfMetadata{
+								PolicyMetadata: types.PolicyMetadata{
 									ID:       "XYZ-100",
 									Type:     "HCL Security Check",
 									Title:    "Bad HCL",
@@ -134,7 +134,7 @@ func Test_hclConfigAnalyzer_Analyze(t *testing.T) {
 			b, err := ioutil.ReadFile(tt.inputFile)
 			require.NoError(t, err)
 
-			a, err := hcl.NewConfigScanner(nil, tt.args.namespaces, tt.args.policyPaths, nil)
+			a, err := hcl.NewConfigAnalyzer(nil, tt.args.namespaces, tt.args.policyPaths, nil)
 			require.NoError(t, err)
 
 			got, err := a.Analyze(analyzer.AnalysisTarget{
@@ -194,7 +194,7 @@ func Test_hclConfigAnalyzer_Required(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s, err := hcl.NewConfigScanner(tt.filePattern, nil, []string{"../testdata"}, nil)
+			s, err := hcl.NewConfigAnalyzer(tt.filePattern, nil, []string{"../testdata"}, nil)
 			require.NoError(t, err)
 
 			got := s.Required(tt.filePath, nil)
@@ -203,7 +203,7 @@ func Test_hclConfigAnalyzer_Required(t *testing.T) {
 	}
 }
 func Test_hclConfigAnalyzer_Type(t *testing.T) {
-	s, err := hcl.NewConfigScanner(nil, nil, []string{"../testdata"}, nil)
+	s, err := hcl.NewConfigAnalyzer(nil, nil, []string{"../testdata"}, nil)
 	require.NoError(t, err)
 
 	want := analyzer.TypeHCL

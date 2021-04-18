@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"sort"
 	"strings"
 
 	"github.com/mitchellh/mapstructure"
@@ -126,27 +127,6 @@ func loadData(dataPaths, namespaces []string) (storage.Store, map[string]string,
 	return store, documentContents, nil
 }
 
-// Check executes all of the loaded policies against the input and returns the results.
-func (e *Engine) Check(ctx context.Context, configType, filePath string, config interface{}, namespaces []string) (
-	types.Misconfiguration, error) {
-	// It is possible for a configuration to have multiple configurations. An example of this
-	// are multi-document yaml files where a single filepath represents multiple configs.
-	//
-	// If the current configuration contains multiple configurations, evaluate each policy
-	// independent from one another and aggregate the results under the same file name.
-	configs := []interface{}{config}
-	if subconfigs, ok := config.([]interface{}); ok {
-		configs = subconfigs
-	}
-
-	result, err := e.check(ctx, configType, filePath, configs, namespaces)
-	if err != nil {
-		return types.Misconfiguration{}, xerrors.Errorf("check: %w", err)
-	}
-
-	return result, nil
-}
-
 // Compiler returns the compiler from the loaded policies.
 func (e *Engine) Compiler() *ast.Compiler {
 	return e.compiler
@@ -182,21 +162,29 @@ func (e *Engine) Runtime() *ast.Term {
 	return ast.NewTerm(obj)
 }
 
-func (e *Engine) check(ctx context.Context, configType, filePath string, configs []interface{}, namespaces []string) (
-	types.Misconfiguration, error) {
-	misconf := types.Misconfiguration{
-		FilePath: filePath,
-		FileType: configType,
+// Check executes all of the loaded policies against the input and returns the results.
+func (e *Engine) Check(ctx context.Context, configs []types.Config, namespaces []string) ([]types.Misconfiguration, error) {
+	// e.g. kubernetes => {Type: "kubernetes",  FilePath: "deployment.yaml", Conetnt: ...}
+	typedConfigs := map[string][]types.Config{}
+	for _, c := range configs {
+		typedConfigs[c.Type] = append(typedConfigs[c.Type], c)
 	}
+
+	uniqMisconfs := map[string]types.Misconfiguration{}
 	for _, module := range e.Modules() {
 		currentNamespace := strings.Replace(module.Package.Path.String(), "data.", "", 1)
-		if !underNamespaces(currentNamespace, configType, namespaces) {
+		if !underNamespaces(currentNamespace, namespaces) {
 			continue
 		}
 
 		metadata, err := e.queryMetadata(ctx, currentNamespace)
 		if err != nil {
-			return types.Misconfiguration{}, err
+			return nil, xerrors.Errorf("failed to query metadata: %w", err)
+		}
+
+		inputOption, err := e.queryInputOption(ctx, currentNamespace)
+		if err != nil {
+			return nil, xerrors.Errorf("failed to query input option: %w", err)
 		}
 
 		var rules []string
@@ -207,69 +195,233 @@ func (e *Engine) check(ctx context.Context, configType, filePath string, configs
 			}
 		}
 
-		for _, rule := range rules {
-			for _, config := range configs {
-				successes, warnings, failures, exceptions, err := e.checkRule(ctx, currentNamespace, rule, config, metadata)
-				if err != nil {
-					return types.Misconfiguration{}, xerrors.Errorf("check rule: %w", err)
-				}
-				misconf.Successes = append(misconf.Successes, successes...)
-				misconf.Warnings = append(misconf.Warnings, warnings...)
-				misconf.Failures = append(misconf.Failures, failures...)
-				misconf.Exceptions = append(misconf.Exceptions, exceptions...)
+		var selectedConfigs []types.Config
+		if len(inputOption.Selector.Types) > 0 {
+			// Pass only the config files that match the selector types
+			for _, t := range inputOption.Selector.Types {
+				selectedConfigs = append(selectedConfigs, typedConfigs[t]...)
 			}
+		} else {
+			// When the 'types' is not specified, it means '*'.
+			selectedConfigs = configs
+		}
+
+		var result map[string]types.Misconfiguration
+		if inputOption.Combine {
+			result, err = e.checkCombined(ctx, currentNamespace, rules, selectedConfigs, metadata)
+		} else {
+			result, err = e.check(ctx, currentNamespace, rules, selectedConfigs, metadata)
+		}
+		if err != nil {
+			return nil, xerrors.Errorf("policy check error: %w", err)
+		}
+
+		for filePath, misconf := range result {
+			uniqMisconfs[filePath] = mergeMisconfs(misconf, uniqMisconfs[filePath])
 		}
 	}
 
-	misconf.Successes = uniqueSuccesses(misconf.Successes)
-	return misconf, nil
+	return toMisconfigurations(uniqMisconfs), nil
 }
 
-func (e *Engine) checkRule(ctx context.Context, namespace, rule string, config interface{}, metadata types.MisconfMetadata) (
-	[]types.MisconfResult, []types.MisconfResult, []types.MisconfResult, []types.MisconfResult, error) {
+func (e Engine) check(ctx context.Context, currentNamespace string, rules []string, configs []types.Config,
+	metadata types.PolicyMetadata) (map[string]types.Misconfiguration, error) {
 
-	exception, err := e.namespaceExceptions(ctx, namespace, config)
-	if err != nil {
-		return nil, nil, nil, nil, xerrors.Errorf("namespace exceptions: %w", err)
-	} else if len(exception) > 0 {
-		return nil, nil, nil, exception, nil
+	// Initialize misconfigurations
+	misconfs := map[string]types.Misconfiguration{}
+	for _, c := range configs {
+		misconfs[c.FilePath] = types.Misconfiguration{
+			FileType: c.Type,
+			FilePath: c.FilePath,
+		}
 	}
 
-	exception, err = e.ruleExceptions(ctx, namespace, rule, config)
+	for _, config := range configs {
+		for _, rule := range rules {
+			result, err := e.checkRule(ctx, currentNamespace, rule, config.Content, metadata)
+			if err != nil {
+				return nil, xerrors.Errorf("check rule: %w", err)
+			}
+			misconfs[config.FilePath] = mergeMisconfs(misconfs[config.FilePath], result)
+		}
+	}
+
+	return misconfs, nil
+}
+
+type combinedInput struct {
+	Path     string      `json:"path"`
+	Contents interface{} `json:"contents"`
+}
+
+func (e Engine) checkCombined(ctx context.Context, currentNamespace string, rules []string, configs []types.Config,
+	metadata types.PolicyMetadata) (map[string]types.Misconfiguration, error) {
+	var inputs []combinedInput
+	misconfs := map[string]types.Misconfiguration{}
+	for _, c := range configs {
+		inputs = append(inputs, combinedInput{
+			Path:     c.FilePath,
+			Contents: c.Content,
+		})
+		misconfs[c.FilePath] = types.Misconfiguration{
+			FileType: c.Type,
+			FilePath: c.FilePath,
+		}
+	}
+
+	for _, rule := range rules {
+		results, err := e.checkRuleCombined(ctx, currentNamespace, rule, inputs, metadata)
+		if err != nil {
+			return nil, err
+		}
+
+		for filePath, res := range results {
+			misconfs[filePath] = mergeMisconfs(misconfs[filePath], res)
+		}
+	}
+
+	return misconfs, nil
+}
+
+func (e *Engine) checkRule(ctx context.Context, namespace, rule string, input interface{}, metadata types.PolicyMetadata) (
+	types.Misconfiguration, error) {
+	// Exceptions based on namespace and rule
+	exceptions, err := e.exceptions(ctx, namespace, rule, input, metadata)
 	if err != nil {
-		return nil, nil, nil, nil, xerrors.Errorf("rule exceptions: %w", err)
-	} else if len(exception) > 0 {
-		return nil, nil, nil, exception, nil
+		return types.Misconfiguration{}, xerrors.Errorf("exception error: %w", err)
+	} else if len(exceptions) > 0 {
+		return types.Misconfiguration{
+			Exceptions: exceptions,
+		}, nil
 	}
 
 	ruleQuery := fmt.Sprintf("data.%s.%s", namespace, rule)
-	ruleQueryResult, err := e.query(ctx, config, ruleQuery)
+	ruleQueryResult, err := e.query(ctx, input, ruleQuery)
 	if err != nil {
-		return nil, nil, nil, nil, xerrors.Errorf("query rule: %w", err)
+		return types.Misconfiguration{}, xerrors.Errorf("query rule: %w", err)
 	}
 
 	var successes, failures, warnings []types.MisconfResult
 	for _, ruleResult := range ruleQueryResult.results {
-		ruleResult.Namespace = namespace
-		ruleResult.MisconfMetadata = metadata
+		result := types.MisconfResult{
+			Namespace:      namespace,
+			Message:        ruleResult.Message,
+			PolicyMetadata: metadata,
+		}
 
 		if ruleResult.Message == "" {
-			successes = append(successes, ruleResult)
+			continue
 		} else if isFailure(rule) {
-			failures = append(failures, ruleResult)
+			failures = append(failures, result)
 		} else {
-			warnings = append(warnings, ruleResult)
+			warnings = append(warnings, result)
 		}
 	}
 
-	return successes, warnings, failures, nil, nil
+	if len(failures) == 0 && len(warnings) == 0 {
+		successes = append(successes, types.MisconfResult{
+			Namespace:      namespace,
+			PolicyMetadata: metadata,
+		})
+	}
+
+	return types.Misconfiguration{
+		Successes: successes,
+		Failures:  failures,
+		Warnings:  warnings,
+	}, nil
 }
 
-func (e *Engine) namespaceExceptions(ctx context.Context, namespace string, config interface{}) ([]types.MisconfResult, error) {
+func (e *Engine) checkRuleCombined(ctx context.Context, namespace, rule string, inputs []combinedInput, metadata types.PolicyMetadata) (
+	map[string]types.Misconfiguration, error) {
+	misconfs := map[string]types.Misconfiguration{}
+
+	// Exceptions based on namespace and rule
+	exceptions, err := e.exceptions(ctx, namespace, rule, inputs, metadata)
+	if err != nil {
+		return nil, xerrors.Errorf("exception error: %w", err)
+	} else if len(exceptions) > 0 {
+		for _, input := range inputs {
+			misconfs[input.Path] = types.Misconfiguration{
+				FilePath:   input.Path,
+				Exceptions: exceptions,
+			}
+		}
+		return misconfs, nil
+	}
+
+	ruleQuery := fmt.Sprintf("data.%s.%s", namespace, rule)
+	ruleQueryResult, err := e.query(ctx, inputs, ruleQuery)
+	if err != nil {
+		return nil, xerrors.Errorf("query rule: %w", err)
+	}
+
+	// Fill failures and warnings
+	for _, ruleResult := range ruleQueryResult.results {
+		switch {
+		case ruleResult.Message == "":
+			continue
+		case ruleResult.FilePath == "":
+			return nil, xerrors.Errorf("rule missing 'filepath' field")
+		}
+
+		misconf := misconfs[ruleResult.FilePath]
+		result := types.MisconfResult{
+			Namespace:      namespace,
+			Message:        ruleResult.Message,
+			PolicyMetadata: metadata,
+		}
+
+		if isFailure(rule) {
+			misconf.Failures = append(misconf.Failures, result)
+		} else {
+			misconf.Warnings = append(misconf.Warnings, result)
+		}
+		misconfs[ruleResult.FilePath] = misconf
+	}
+
+	// Fill successes
+	success := types.MisconfResult{
+		Namespace:      namespace,
+		PolicyMetadata: metadata,
+	}
+	for _, input := range inputs {
+		misconf, ok := misconfs[input.Path]
+		if ok {
+			continue
+		}
+		misconf.Successes = append(misconf.Successes, success)
+		misconfs[input.Path] = misconf
+	}
+
+	return misconfs, nil
+}
+
+func (e *Engine) exceptions(ctx context.Context, namespace, rule string, config interface{},
+	metadata types.PolicyMetadata) ([]types.MisconfResult, error) {
+	exceptions, err := e.namespaceExceptions(ctx, namespace, config, metadata)
+	if err != nil {
+		return nil, xerrors.Errorf("namespace exceptions: %w", err)
+	} else if len(exceptions) > 0 {
+		return exceptions, nil
+	}
+
+	exceptions, err = e.ruleExceptions(ctx, namespace, rule, config, metadata)
+	if err != nil {
+		return nil, xerrors.Errorf("rule exceptions: %w", err)
+	} else if len(exceptions) > 0 {
+		return exceptions, nil
+	}
+
+	return nil, nil
+}
+
+func (e *Engine) namespaceExceptions(ctx context.Context, namespace string, config interface{},
+	metadata types.PolicyMetadata) ([]types.MisconfResult, error) {
 	exceptionQuery := fmt.Sprintf("data.namespace.exceptions.exception[_] == %q", namespace)
 	exceptionQueryResult, err := e.query(ctx, config, exceptionQuery)
 	if err != nil {
-		return nil, xerrors.Errorf("query namespace exception: %w", err)
+		return nil, xerrors.Errorf("query namespace exceptions: %w", err)
 	}
 
 	var exceptions []types.MisconfResult
@@ -278,19 +430,22 @@ func (e *Engine) namespaceExceptions(ctx context.Context, namespace string, conf
 		// to the query that triggered the exception so that it is known
 		// which exception was triggered.
 		if exceptionResult.Message == "" {
-			exceptionResult.Namespace = namespace
-			exceptionResult.Message = exceptionQuery
-			exceptions = append(exceptions, exceptionResult)
+			exceptions = append(exceptions, types.MisconfResult{
+				Namespace:      namespace,
+				Message:        exceptionQuery,
+				PolicyMetadata: metadata,
+			})
 		}
 	}
 	return exceptions, nil
 }
 
-func (e *Engine) ruleExceptions(ctx context.Context, namespace, rule string, config interface{}) ([]types.MisconfResult, error) {
+func (e *Engine) ruleExceptions(ctx context.Context, namespace, rule string, config interface{},
+	metadata types.PolicyMetadata) ([]types.MisconfResult, error) {
 	exceptionQuery := fmt.Sprintf("data.%s.exception[_][_] == %q", namespace, removeRulePrefix(rule))
 	exceptionQueryResult, err := e.query(ctx, config, exceptionQuery)
 	if err != nil {
-		return nil, xerrors.Errorf("query rule exception: %w", err)
+		return nil, xerrors.Errorf("query rule exceptions: %w", err)
 	}
 
 	var exceptions []types.MisconfResult
@@ -299,12 +454,36 @@ func (e *Engine) ruleExceptions(ctx context.Context, namespace, rule string, con
 		// to the query that triggered the exception so that it is known
 		// which exception was triggered.
 		if exceptionResult.Message == "" {
-			exceptionResult.Namespace = namespace
-			exceptionResult.Message = exceptionQuery
-			exceptions = append(exceptions, exceptionResult)
+			exceptions = append(exceptions, types.MisconfResult{
+				Namespace:      namespace,
+				Message:        exceptionQuery,
+				PolicyMetadata: metadata,
+			})
 		}
 	}
 	return exceptions, nil
+}
+
+// queryResult describes the result of evaluating a query.
+type queryResult struct {
+
+	// Query is the fully qualified query that was used
+	// to determine the result. Ex: (data.main.deny)
+	query string
+
+	// Results are the individual results of the query.
+	// When querying data.main.deny, multiple deny rules can
+	// exist, producing multiple results.
+	results []queryValue
+
+	// Traces represents a single trace of how the query was
+	// evaluated. Each trace value is a trace line.
+	traces []string
+}
+
+type queryValue struct {
+	FilePath string
+	Message  string
 }
 
 // query is a low-level method that has no notion of a failed policy or successful policy. // It only returns the result of executing a single query against the input.
@@ -338,10 +517,9 @@ func (e *Engine) query(ctx context.Context, input interface{}, query string) (qu
 		}
 	}
 
-	var results []types.MisconfResult
+	var results []queryValue
 	for _, result := range resultSet {
 		for _, expression := range result.Expressions {
-
 			// Rego rules that are intended for evaluation should return a slice of values.
 			// For example, deny[msg] or violation[{"msg": msg}].
 			//
@@ -352,27 +530,25 @@ func (e *Engine) query(ctx context.Context, input interface{}, query string) (qu
 				expressionValues = expression.Value.([]interface{})
 			}
 			if len(expressionValues) == 0 {
-				results = append(results, types.MisconfResult{})
+				results = append(results, queryValue{})
 				continue
 			}
 
 			for _, v := range expressionValues {
 				switch val := v.(type) {
-
-				// Policies that only return a single string (e.g. deny[msg])
 				case string:
-					results = append(results, types.MisconfResult{
-						Message: val,
-					})
-
-				// Policies that return metadata (e.g. deny[{"msg": msg}])
+					// Policies that only return a single string (e.g. deny[msg])
+					results = append(results, queryValue{Message: val})
 				case map[string]interface{}:
-					res, err := newResult(val)
+					msg, filePath, err := parseResult(val)
 					if err != nil {
-						return queryResult{}, xerrors.Errorf("new result: %w", err)
+						return queryResult{}, xerrors.Errorf("failed to parse query result: %w", err)
 					}
 
-					results = append(results, res)
+					results = append(results, queryValue{
+						Message:  strings.TrimSpace(msg),
+						FilePath: filePath,
+					})
 				}
 			}
 		}
@@ -385,7 +561,7 @@ func (e *Engine) query(ctx context.Context, input interface{}, query string) (qu
 	}, nil
 }
 
-func (e *Engine) queryMetadata(ctx context.Context, namespace string) (types.MisconfMetadata, error) {
+func (e *Engine) queryMetadata(ctx context.Context, namespace string) (types.PolicyMetadata, error) {
 	query := fmt.Sprintf("x = data.%s.__rego_metadata__", namespace)
 	options := []func(r *rego.Rego){
 		rego.Query(query),
@@ -394,11 +570,11 @@ func (e *Engine) queryMetadata(ctx context.Context, namespace string) (types.Mis
 	}
 	resultSet, err := rego.New(options...).Eval(ctx)
 	if err != nil {
-		return types.MisconfMetadata{}, xerrors.Errorf("evaluating '__rego_metadata__': %w", err)
+		return types.PolicyMetadata{}, xerrors.Errorf("evaluating '__rego_metadata__': %w", err)
 	}
 
 	// Set default values
-	metadata := types.MisconfMetadata{
+	metadata := types.PolicyMetadata{
 		ID:       "N/A",
 		Type:     "N/A",
 		Title:    "N/A",
@@ -411,14 +587,63 @@ func (e *Engine) queryMetadata(ctx context.Context, namespace string) (types.Mis
 
 	result, ok := resultSet[0].Bindings["x"].(map[string]interface{})
 	if !ok {
-		return types.MisconfMetadata{}, xerrors.New("'__rego_metadata__' must be map")
+		return types.PolicyMetadata{}, xerrors.New("'__rego_metadata__' must be map")
 	}
 
 	if err = mapstructure.Decode(result, &metadata); err != nil {
-		return types.MisconfMetadata{}, xerrors.Errorf("decode error: %w", err)
+		return types.PolicyMetadata{}, xerrors.Errorf("decode error: %w", err)
 	}
 
 	return metadata, nil
+}
+
+func (e *Engine) queryInputOption(ctx context.Context, namespace string) (types.PolicyInputOption, error) {
+	query := fmt.Sprintf("x = data.%s.__rego_input__", namespace)
+	options := []func(r *rego.Rego){
+		rego.Query(query),
+		rego.Compiler(e.Compiler()),
+		rego.Store(e.Store()),
+	}
+	resultSet, err := rego.New(options...).Eval(ctx)
+	if err != nil {
+		return types.PolicyInputOption{}, xerrors.Errorf("evaluating '__rego_input__': %w", err)
+	}
+
+	if len(resultSet) == 0 {
+		return types.PolicyInputOption{}, nil
+	}
+
+	result, ok := resultSet[0].Bindings["x"].(map[string]interface{})
+	if !ok {
+		return types.PolicyInputOption{}, xerrors.New("'__rego_input__' must be map")
+	}
+
+	// Set default values
+	var inputOption types.PolicyInputOption
+	if err = mapstructure.Decode(result, &inputOption); err != nil {
+		return types.PolicyInputOption{}, xerrors.Errorf("decode error: %w", err)
+	}
+
+	return inputOption, nil
+}
+
+func parseResult(r map[string]interface{}) (string, string, error) {
+	// Policies that return metadata (e.g. deny[{"msg": msg}])
+	if _, ok := r["msg"]; !ok {
+		return "", "", xerrors.Errorf("rule missing 'msg' field: %v", r)
+	}
+
+	msg, ok := r["msg"].(string)
+	if !ok {
+		return "", "", xerrors.Errorf("'msg' field must be string: %v", r)
+	}
+
+	filePath, ok := r["filepath"].(string)
+	if !ok {
+		return msg, "", nil
+	}
+
+	return msg, filePath, nil
 }
 
 func isWarning(rule string) bool {
@@ -441,26 +666,26 @@ func removeRulePrefix(rule string) string {
 	return rule
 }
 
-func uniqueSuccesses(successes []types.MisconfResult) []types.MisconfResult {
+func uniqueResults(results []types.MisconfResult) []types.MisconfResult {
 	uniq := map[string]types.MisconfResult{}
-	for _, success := range successes {
-		uniq[success.ID+":"+success.Namespace] = success
+	for _, result := range results {
+		key := fmt.Sprintf("%s::%s::%s", result.ID, result.Namespace, result.Message)
+		uniq[key] = result
 	}
 
-	var uniqSuccesses []types.MisconfResult
+	var uniqResults []types.MisconfResult
 	for _, s := range uniq {
-		uniqSuccesses = append(uniqSuccesses, s)
+		uniqResults = append(uniqResults, s)
 	}
-	return uniqSuccesses
+	return uniqResults
 }
 
-func underNamespaces(current, configType string, namespaces []string) bool {
+func underNamespaces(current string, namespaces []string) bool {
 	// e.g.
-	//  current: 'main.kubernetes',     configType: kubernetes, namespaces: []string{'main'} => true
-	//  current: 'main.kubernetes.foo', configType: kubernetes, namespaces: []string{'main'} => true
-	//  current: 'main.docker.foo',     configType: kubernetes, namespaces: []string{'main'} => false
+	//  current: 'main',     namespaces: []string{'main'}     => true
+	//  current: 'main.foo', namespaces: []string{'main'}     => true
+	//  current: 'main.foo', namespaces: []string{'main.bar'} => false
 	for _, ns := range namespaces {
-		ns += fmt.Sprintf(".%s", configType)
 		if current == ns || strings.HasPrefix(current, ns+".") {
 			return true
 		}
@@ -468,34 +693,36 @@ func underNamespaces(current, configType string, namespaces []string) bool {
 	return false
 }
 
-// queryResult describes the result of evaluting a query.
-type queryResult struct {
+func toMisconfigurations(misconfs map[string]types.Misconfiguration) []types.Misconfiguration {
+	var results []types.Misconfiguration
+	for _, misconf := range misconfs {
+		// Remove duplicates
+		misconf.Successes = uniqueResults(misconf.Successes)
 
-	// Query is the fully qualified query that was used
-	// to determine the result. Ex: (data.main.deny)
-	query string
+		// Sort results
+		sort.Sort(misconf.Successes)
+		sort.Sort(misconf.Warnings)
+		sort.Sort(misconf.Failures)
+		sort.Sort(misconf.Exceptions)
 
-	// Results are the individual results of the query.
-	// When querying data.main.deny, multiple deny rules can
-	// exist, producing multiple results.
-	results []types.MisconfResult
+		results = append(results, misconf)
+	}
 
-	// Traces represents a single trace of how the query was
-	// evaluated. Each trace value is a trace line.
-	traces []string
+	// Sort misconfigurations
+	sort.Slice(results, func(i, j int) bool {
+		if results[i].FileType != results[j].FileType {
+			return results[i].FileType < results[j].FileType
+		}
+		return results[i].FilePath < results[j].FilePath
+	})
+
+	return results
 }
 
-func newResult(r map[string]interface{}) (types.MisconfResult, error) {
-	if _, ok := r["msg"]; !ok {
-		return types.MisconfResult{}, xerrors.Errorf("rule missing 'msg' field: %v", r)
-	}
-
-	msg, ok := r["msg"].(string)
-	if !ok {
-		return types.MisconfResult{}, xerrors.Errorf("'msg' field must be string: %v", r)
-	}
-
-	return types.MisconfResult{
-		Message: strings.TrimSpace(msg),
-	}, nil
+func mergeMisconfs(a, b types.Misconfiguration) types.Misconfiguration {
+	a.Successes = append(a.Successes, b.Successes...)
+	a.Warnings = append(a.Warnings, b.Warnings...)
+	a.Failures = append(a.Failures, b.Failures...)
+	a.Exceptions = append(a.Exceptions, b.Exceptions...)
+	return a
 }

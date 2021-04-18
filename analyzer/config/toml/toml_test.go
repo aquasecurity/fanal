@@ -40,7 +40,7 @@ func Test_tomlConfigAnalyzer_Analyze(t *testing.T) {
 						Successes: []types.MisconfResult{
 							{
 								Namespace: "main.kubernetes.xyz_100",
-								MisconfMetadata: types.MisconfMetadata{
+								PolicyMetadata: types.PolicyMetadata{
 									ID:       "XYZ-100",
 									Type:     "Kubernetes Security Check",
 									Title:    "Bad Kubernetes Replicas",
@@ -68,7 +68,7 @@ func Test_tomlConfigAnalyzer_Analyze(t *testing.T) {
 							{
 								Namespace: "main.kubernetes.xyz_100",
 								Message:   "too many replicas: 4",
-								MisconfMetadata: types.MisconfMetadata{
+								PolicyMetadata: types.PolicyMetadata{
 									ID:       "XYZ-100",
 									Type:     "Kubernetes Security Check",
 									Title:    "Bad Kubernetes Replicas",
@@ -95,7 +95,7 @@ func Test_tomlConfigAnalyzer_Analyze(t *testing.T) {
 			b, err := ioutil.ReadFile(tt.inputFile)
 			require.NoError(t, err)
 
-			a, err := toml.NewConfigScanner(nil, tt.args.namespaces, tt.args.policyPaths, nil)
+			a, err := toml.NewConfigAnalyzer(nil, tt.args.namespaces, tt.args.policyPaths, nil)
 			require.NoError(t, err)
 
 			got, err := a.Analyze(analyzer.AnalysisTarget{
@@ -140,7 +140,7 @@ func Test_tomlConfigAnalyzer_Required(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s, err := toml.NewConfigScanner(tt.filePattern, nil, []string{"../testdata"}, nil)
+			s, err := toml.NewConfigAnalyzer(tt.filePattern, nil, []string{"../testdata"}, nil)
 			require.NoError(t, err)
 
 			got := s.Required(tt.filePath, nil)
@@ -150,7 +150,7 @@ func Test_tomlConfigAnalyzer_Required(t *testing.T) {
 }
 
 func Test_tomlConfigAnalyzer_Type(t *testing.T) {
-	s, err := toml.NewConfigScanner(nil, nil, []string{"../testdata"}, nil)
+	s, err := toml.NewConfigAnalyzer(nil, nil, []string{"../testdata"}, nil)
 	require.NoError(t, err)
 
 	want := analyzer.TypeTOML

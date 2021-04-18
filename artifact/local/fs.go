@@ -19,6 +19,7 @@ import (
 	_ "github.com/aquasecurity/fanal/analyzer/pkg/apk"
 	"github.com/aquasecurity/fanal/artifact"
 	"github.com/aquasecurity/fanal/cache"
+	"github.com/aquasecurity/fanal/config/scanner"
 	"github.com/aquasecurity/fanal/types"
 	"github.com/aquasecurity/fanal/walker"
 )
@@ -27,24 +28,31 @@ type Artifact struct {
 	dir                 string
 	cache               cache.ArtifactCache
 	analyzer            analyzer.Analyzer
+	scanner             scanner.Scanner
 	configScannerOption config.ScannerOption
 }
 
 func NewArtifact(dir string, c cache.ArtifactCache, disabled []analyzer.Type, opt config.ScannerOption) (artifact.Artifact, error) {
-	// Register config scanners as analyzers
-	if err := config.RegisterConfigScanners(opt); err != nil {
-		return nil, xerrors.Errorf("config scanner error: %w", err)
+	// Register config analyzers
+	if err := config.RegisterConfigAnalyzers(opt.FilePatterns); err != nil {
+		return nil, xerrors.Errorf("config analyzer error: %w", err)
+	}
+
+	s, err := scanner.New(opt.Namespaces, opt.PolicyPaths, opt.DataPaths)
+	if err != nil {
+		return nil, xerrors.Errorf("scanner error: %w", err)
 	}
 
 	return Artifact{
 		dir:                 dir,
 		cache:               c,
 		analyzer:            analyzer.NewAnalyzer(disabled),
+		scanner:             s,
 		configScannerOption: opt,
 	}, nil
 }
 
-func (a Artifact) Inspect(_ context.Context) (types.ArtifactReference, error) {
+func (a Artifact) Inspect(ctx context.Context) (types.ArtifactReference, error) {
 	var wg sync.WaitGroup
 	result := new(analyzer.AnalysisResult)
 	err := walker.WalkDir(a.dir, func(filePath string, info os.FileInfo, opener analyzer.Opener) error {
@@ -58,20 +66,27 @@ func (a Artifact) Inspect(_ context.Context) (types.ArtifactReference, error) {
 		return nil
 	})
 	if err != nil {
-		return types.ArtifactReference{}, err
+		return types.ArtifactReference{}, xerrors.Errorf("filesystem walk error: %w", err)
 	}
 
 	// Wait for all the goroutine to finish.
 	wg.Wait()
 
+	// Sort the analysis result for consistent results
 	result.Sort()
+
+	// Scan config files
+	misconfs, err := a.scanner.ScanConfigs(ctx, result.Configs)
+	if err != nil {
+		return types.ArtifactReference{}, xerrors.Errorf("config scan error: %w", err)
+	}
 
 	blobInfo := types.BlobInfo{
 		SchemaVersion:     types.BlobJSONSchemaVersion,
 		OS:                result.OS,
 		PackageInfos:      result.PackageInfos,
 		Applications:      result.Applications,
-		Misconfigurations: result.Misconfigurations,
+		Misconfigurations: misconfs,
 	}
 
 	// calculate hash of JSON and use it as pseudo artifactID and blobID

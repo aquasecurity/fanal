@@ -9,7 +9,6 @@ import (
 	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/fanal/analyzer"
-	"github.com/aquasecurity/fanal/config/scanner"
 	"github.com/aquasecurity/fanal/types"
 )
 
@@ -17,24 +16,19 @@ const version = 1
 
 var requiredExts = []string{".json"}
 
-type ConfigScanner struct {
-	parser *json.Parser
-	scanner.Scanner
+type ConfigAnalyzer struct {
+	parser      *json.Parser
+	filePattern *regexp.Regexp
 }
 
-func NewConfigScanner(filePattern *regexp.Regexp, namespaces, policyPaths, dataPaths []string) (ConfigScanner, error) {
-	s, err := scanner.New(filePattern, namespaces, policyPaths, dataPaths)
-	if err != nil {
-		return ConfigScanner{}, xerrors.Errorf("unable to initialize config scanner: %w", err)
+func NewConfigAnalyzer(filePattern *regexp.Regexp) ConfigAnalyzer {
+	return ConfigAnalyzer{
+		parser:      &json.Parser{},
+		filePattern: filePattern,
 	}
-
-	return ConfigScanner{
-		parser:  &json.Parser{},
-		Scanner: s,
-	}, nil
 }
 
-func (s ConfigScanner) Analyze(target analyzer.AnalysisTarget) (*analyzer.AnalysisResult, error) {
+func (s ConfigAnalyzer) Analyze(target analyzer.AnalysisTarget) (*analyzer.AnalysisResult, error) {
 	var parsed interface{}
 	if err := s.parser.Unmarshal(target.Content, &parsed); err != nil {
 		return nil, xerrors.Errorf("unable to parse JSON (%s): %w", target.FilePath, err)
@@ -51,8 +45,8 @@ func (s ConfigScanner) Analyze(target analyzer.AnalysisTarget) (*analyzer.Analys
 	}, nil
 }
 
-func (s ConfigScanner) Required(filePath string, _ os.FileInfo) bool {
-	if s.Match(filePath) {
+func (s ConfigAnalyzer) Required(filePath string, _ os.FileInfo) bool {
+	if s.filePattern != nil && s.filePattern.MatchString(filePath) {
 		return true
 	}
 
@@ -65,10 +59,10 @@ func (s ConfigScanner) Required(filePath string, _ os.FileInfo) bool {
 	return false
 }
 
-func (s ConfigScanner) Type() analyzer.Type {
+func (s ConfigAnalyzer) Type() analyzer.Type {
 	return analyzer.TypeJSON
 }
 
-func (s ConfigScanner) Version() int {
+func (s ConfigAnalyzer) Version() int {
 	return version
 }

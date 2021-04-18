@@ -15,6 +15,7 @@ import (
 	"github.com/aquasecurity/fanal/analyzer/config"
 	"github.com/aquasecurity/fanal/artifact"
 	"github.com/aquasecurity/fanal/cache"
+	"github.com/aquasecurity/fanal/config/scanner"
 	"github.com/aquasecurity/fanal/image"
 	"github.com/aquasecurity/fanal/log"
 	"github.com/aquasecurity/fanal/types"
@@ -25,19 +26,26 @@ type Artifact struct {
 	image               image.Image
 	cache               cache.ArtifactCache
 	analyzer            analyzer.Analyzer
+	scanner             scanner.Scanner
 	configScannerOption config.ScannerOption
 }
 
 func NewArtifact(img image.Image, c cache.ArtifactCache, disabled []analyzer.Type, opt config.ScannerOption) (artifact.Artifact, error) {
-	// Register config scanners as analyzers
-	if err := config.RegisterConfigScanners(opt); err != nil {
+	// Register config analyzers
+	if err := config.RegisterConfigAnalyzers(opt.FilePatterns); err != nil {
 		return nil, xerrors.Errorf("config scanner error: %w", err)
+	}
+
+	s, err := scanner.New(opt.Namespaces, opt.PolicyPaths, opt.DataPaths)
+	if err != nil {
+		return nil, xerrors.Errorf("scanner error: %w", err)
 	}
 
 	return Artifact{
 		image:               img,
 		cache:               c,
 		analyzer:            analyzer.NewAnalyzer(disabled),
+		scanner:             s,
 		configScannerOption: opt,
 	}, nil
 }
@@ -117,7 +125,7 @@ func (a Artifact) inspect(ctx context.Context, missingImage string, layerKeys []
 	for _, k := range layerKeys {
 		go func(layerKey string) {
 			diffID := layerKeyMap[layerKey]
-			layerInfo, err := a.inspectLayer(diffID)
+			layerInfo, err := a.inspectLayer(ctx, diffID)
 			if err != nil {
 				errCh <- xerrors.Errorf("failed to analyze layer: %s : %w", diffID, err)
 				return
@@ -154,7 +162,7 @@ func (a Artifact) inspect(ctx context.Context, missingImage string, layerKeys []
 
 }
 
-func (a Artifact) inspectLayer(diffID string) (types.BlobInfo, error) {
+func (a Artifact) inspectLayer(ctx context.Context, diffID string) (types.BlobInfo, error) {
 	log.Logger.Debugf("Missing diff ID: %s", diffID)
 
 	layerDigest, r, err := a.uncompressedLayer(diffID)
@@ -178,7 +186,14 @@ func (a Artifact) inspectLayer(diffID string) (types.BlobInfo, error) {
 	// Wait for all the goroutine to finish.
 	wg.Wait()
 
+	// Sort the analysis result for consistent results
 	result.Sort()
+
+	// Scan config files
+	misconfs, err := a.scanner.ScanConfigs(ctx, result.Configs)
+	if err != nil {
+		return types.BlobInfo{}, xerrors.Errorf("config scan error: %w", err)
+	}
 
 	layerInfo := types.BlobInfo{
 		SchemaVersion:     types.BlobJSONSchemaVersion,
@@ -187,7 +202,7 @@ func (a Artifact) inspectLayer(diffID string) (types.BlobInfo, error) {
 		OS:                result.OS,
 		PackageInfos:      result.PackageInfos,
 		Applications:      result.Applications,
-		Misconfigurations: result.Misconfigurations,
+		Misconfigurations: misconfs,
 		OpaqueDirs:        opqDirs,
 		WhiteoutFiles:     whFiles,
 	}

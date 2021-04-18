@@ -37,13 +37,9 @@ func (o *ScannerOption) Sort() {
 	})
 }
 
-func RegisterConfigScanners(opt ScannerOption) error {
-	if len(opt.PolicyPaths) == 0 {
-		return nil
-	}
-
+func RegisterConfigAnalyzers(filePatterns []string) error {
 	var dockerRegexp, hclRegexp, jsonRegexp, tomlRegexp, yamlRegexp *regexp.Regexp
-	for _, p := range opt.FilePatterns {
+	for _, p := range filePatterns {
 		// e.g. "dockerfile:my_dockerfile_*"
 		s := strings.SplitN(p, separator, 2)
 		if len(s) != 2 {
@@ -71,36 +67,11 @@ func RegisterConfigScanners(opt ScannerOption) error {
 		}
 	}
 
-	dockerScanner, err := docker.NewConfigScanner(dockerRegexp, opt.Namespaces, opt.PolicyPaths, opt.DataPaths)
-	if err != nil {
-		return xerrors.Errorf("Dockerfile scanner error: %w", err)
-	}
-
-	hclScanner, err := hcl.NewConfigScanner(hclRegexp, opt.Namespaces, opt.PolicyPaths, opt.DataPaths)
-	if err != nil {
-		return xerrors.Errorf("HCL scanner error: %w", err)
-	}
-
-	jsonScanner, err := json.NewConfigScanner(jsonRegexp, opt.Namespaces, opt.PolicyPaths, opt.DataPaths)
-	if err != nil {
-		return xerrors.Errorf("JSON scanner error: %w", err)
-	}
-
-	tomlScanner, err := toml.NewConfigScanner(tomlRegexp, opt.Namespaces, opt.PolicyPaths, opt.DataPaths)
-	if err != nil {
-		return xerrors.Errorf("TOML scanner error: %w", err)
-	}
-
-	yamlScanner, err := yaml.NewConfigScanner(yamlRegexp, opt.Namespaces, opt.PolicyPaths, opt.DataPaths)
-	if err != nil {
-		return xerrors.Errorf("YAML scanner error: %w", err)
-	}
-
-	analyzer.RegisterAnalyzer(dockerScanner)
-	analyzer.RegisterAnalyzer(hclScanner)
-	analyzer.RegisterAnalyzer(jsonScanner)
-	analyzer.RegisterAnalyzer(tomlScanner)
-	analyzer.RegisterAnalyzer(yamlScanner)
+	analyzer.RegisterAnalyzer(docker.NewConfigAnalyzer(dockerRegexp))
+	analyzer.RegisterAnalyzer(hcl.NewConfigAnalyzer(hclRegexp))
+	analyzer.RegisterAnalyzer(json.NewConfigAnalyzer(jsonRegexp))
+	analyzer.RegisterAnalyzer(toml.NewConfigAnalyzer(tomlRegexp))
+	analyzer.RegisterAnalyzer(yaml.NewConfigAnalyzer(yamlRegexp))
 
 	return nil
 }

@@ -41,7 +41,7 @@ func Test_dockerConfigAnalyzer_Analyze(t *testing.T) {
 						Successes: []types.MisconfResult{
 							{
 								Namespace: "main.dockerfile",
-								MisconfMetadata: types.MisconfMetadata{
+								PolicyMetadata: types.PolicyMetadata{
 									ID:       "XYZ-100",
 									Type:     "Docker Security Check",
 									Title:    "Bad Dockerfile",
@@ -68,7 +68,7 @@ func Test_dockerConfigAnalyzer_Analyze(t *testing.T) {
 						Successes: []types.MisconfResult{
 							{
 								Namespace: "main.dockerfile",
-								MisconfMetadata: types.MisconfMetadata{
+								PolicyMetadata: types.PolicyMetadata{
 									ID:       "XYZ-100",
 									Type:     "Docker Security Check",
 									Title:    "Bad Dockerfile",
@@ -96,7 +96,7 @@ func Test_dockerConfigAnalyzer_Analyze(t *testing.T) {
 							{
 								Namespace: "users.dockerfile.xyz_100",
 								Message:   `deny: image found ["foo"]`,
-								MisconfMetadata: types.MisconfMetadata{
+								PolicyMetadata: types.PolicyMetadata{
 									ID:       "XYZ-100",
 									Type:     "Docker Security Check",
 									Title:    "Bad Dockerfile",
@@ -125,7 +125,7 @@ func Test_dockerConfigAnalyzer_Analyze(t *testing.T) {
 							{
 								Namespace: "main.dockerfile.id_100",
 								Message:   `violation: image found ["foo"]`,
-								MisconfMetadata: types.MisconfMetadata{
+								PolicyMetadata: types.PolicyMetadata{
 									Type:     "N/A",
 									ID:       "N/A",
 									Title:    "N/A",
@@ -153,7 +153,7 @@ func Test_dockerConfigAnalyzer_Analyze(t *testing.T) {
 							{
 								Namespace: "main.dockerfile.xyz_100",
 								Message:   `warn: image found ["foo"]`,
-								MisconfMetadata: types.MisconfMetadata{
+								PolicyMetadata: types.PolicyMetadata{
 									Type:     "N/A",
 									ID:       "XYZ-100",
 									Title:    "Bad Dockerfile",
@@ -182,7 +182,7 @@ func Test_dockerConfigAnalyzer_Analyze(t *testing.T) {
 							{
 								Namespace: "main.dockerfile",
 								Message:   `warn: command ["echo hello"] contains banned: ["echo"]`,
-								MisconfMetadata: types.MisconfMetadata{
+								PolicyMetadata: types.PolicyMetadata{
 									Type:     "N/A",
 									ID:       "N/A",
 									Title:    "N/A",
@@ -194,7 +194,7 @@ func Test_dockerConfigAnalyzer_Analyze(t *testing.T) {
 							{
 								Namespace: "main.dockerfile",
 								Message:   `deny: image found ["foo"]`,
-								MisconfMetadata: types.MisconfMetadata{
+								PolicyMetadata: types.PolicyMetadata{
 									Type:     "N/A",
 									ID:       "N/A",
 									Title:    "N/A",
@@ -221,7 +221,7 @@ func Test_dockerConfigAnalyzer_Analyze(t *testing.T) {
 			b, err := ioutil.ReadFile(tt.inputFile)
 			require.NoError(t, err)
 
-			a, err := docker.NewConfigScanner(nil, tt.args.namespaces, tt.args.policyPaths, nil)
+			a, err := docker.NewConfigAnalyzer(nil, tt.args.namespaces, tt.args.policyPaths, nil)
 			require.NoError(t, err)
 
 			got, err := a.Analyze(analyzer.AnalysisTarget{
@@ -306,7 +306,7 @@ func Test_dockerConfigAnalyzer_Required(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s, err := docker.NewConfigScanner(tt.filePattern, nil, []string{"../testdata"}, nil)
+			s, err := docker.NewConfigAnalyzer(tt.filePattern, nil, []string{"../testdata"}, nil)
 			require.NoError(t, err)
 
 			got := s.Required(tt.filePath, nil)
@@ -316,7 +316,7 @@ func Test_dockerConfigAnalyzer_Required(t *testing.T) {
 }
 
 func Test_dockerConfigAnalyzer_Type(t *testing.T) {
-	s, err := docker.NewConfigScanner(nil, nil, []string{"../testdata"}, nil)
+	s, err := docker.NewConfigAnalyzer(nil, nil, []string{"../testdata"}, nil)
 	require.NoError(t, err)
 
 	want := analyzer.TypeDockerfile

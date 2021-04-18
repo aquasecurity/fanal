@@ -11,7 +11,6 @@ import (
 	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/fanal/analyzer"
-	"github.com/aquasecurity/fanal/config/scanner"
 	"github.com/aquasecurity/fanal/types"
 )
 
@@ -19,28 +18,23 @@ const version = 1
 
 var requiredExts = []string{".hcl", ".hcl1", ".hcl2", ".tf"}
 
-type ConfigScanner struct {
-	hcl1Parser *hcl1.Parser
-	hcl2Parser *hcl2.Parser
-	scanner.Scanner
+type ConfigAnalyzer struct {
+	hcl1Parser  *hcl1.Parser
+	hcl2Parser  *hcl2.Parser
+	filePattern *regexp.Regexp
 }
 
-func NewConfigScanner(filePattern *regexp.Regexp, namespaces, policyPaths, dataPaths []string) (ConfigScanner, error) {
-	s, err := scanner.New(filePattern, namespaces, policyPaths, dataPaths)
-	if err != nil {
-		return ConfigScanner{}, xerrors.Errorf("unable to initialize config scanner: %w", err)
+func NewConfigAnalyzer(filePattern *regexp.Regexp) ConfigAnalyzer {
+	return ConfigAnalyzer{
+		hcl1Parser:  &hcl1.Parser{},
+		hcl2Parser:  &hcl2.Parser{},
+		filePattern: filePattern,
 	}
-
-	return ConfigScanner{
-		hcl1Parser: &hcl1.Parser{},
-		hcl2Parser: &hcl2.Parser{},
-		Scanner:    s,
-	}, nil
 }
 
 // Analyze analyzes HCL-based config files, defaulting to HCL2.0 spec
 // it returns error only if content does not comply to both HCL2.0 and HCL1.0 spec
-func (s ConfigScanner) Analyze(target analyzer.AnalysisTarget) (*analyzer.AnalysisResult, error) {
+func (s ConfigAnalyzer) Analyze(target analyzer.AnalysisTarget) (*analyzer.AnalysisResult, error) {
 	parsed, err := s.analyze(target)
 	if err != nil {
 		return nil, xerrors.Errorf("unable to parse HCL (%s): %w", target.FilePath, err)
@@ -57,7 +51,7 @@ func (s ConfigScanner) Analyze(target analyzer.AnalysisTarget) (*analyzer.Analys
 	}, nil
 }
 
-func (s ConfigScanner) analyze(target analyzer.AnalysisTarget) (interface{}, error) {
+func (s ConfigAnalyzer) analyze(target analyzer.AnalysisTarget) (interface{}, error) {
 	var errs error
 	var parsed interface{}
 
@@ -76,8 +70,8 @@ func (s ConfigScanner) analyze(target analyzer.AnalysisTarget) (interface{}, err
 	return nil, errs
 }
 
-func (s ConfigScanner) Required(filePath string, _ os.FileInfo) bool {
-	if s.Match(filePath) {
+func (s ConfigAnalyzer) Required(filePath string, _ os.FileInfo) bool {
+	if s.filePattern != nil && s.filePattern.MatchString(filePath) {
 		return true
 	}
 
@@ -90,10 +84,10 @@ func (s ConfigScanner) Required(filePath string, _ os.FileInfo) bool {
 	return false
 }
 
-func (s ConfigScanner) Type() analyzer.Type {
+func (s ConfigAnalyzer) Type() analyzer.Type {
 	return analyzer.TypeHCL
 }
 
-func (s ConfigScanner) Version() int {
+func (s ConfigAnalyzer) Version() int {
 	return version
 }

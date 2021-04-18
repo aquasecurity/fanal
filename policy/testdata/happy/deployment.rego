@@ -10,11 +10,11 @@ __rego_metadata__ := {
     "type": "Kubernetes Security Check",
 }
 
-__rego_XXX__ := {
+__rego_input__ := {
     "selector": {
         "types": ["kubernetes"]
     },
-    "combine": true,
+    "combine": false,
 }
 
 deny[msg] {

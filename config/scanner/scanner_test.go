@@ -74,7 +74,7 @@ func TestScanner_ScanConfig(t *testing.T) {
 					{
 						Namespace: "testdata.kubernetes.id_100",
 						Message:   "deny",
-						MisconfMetadata: types.MisconfMetadata{
+						PolicyMetadata: types.PolicyMetadata{
 							Type:     "Kubernetes Security Check",
 							Title:    "Bad Deployment",
 							ID:       "ID-100",
@@ -100,7 +100,7 @@ func TestScanner_ScanConfig(t *testing.T) {
 					{
 						Namespace: "testdata.kubernetes.id_100",
 						Message:   "deny",
-						MisconfMetadata: types.MisconfMetadata{
+						PolicyMetadata: types.PolicyMetadata{
 							Type:     "Kubernetes Security Check",
 							Title:    "Bad Deployment",
 							ID:       "ID-100",
@@ -110,7 +110,7 @@ func TestScanner_ScanConfig(t *testing.T) {
 					{
 						Namespace: "testdata.kubernetes.id_200",
 						Message:   "deny",
-						MisconfMetadata: types.MisconfMetadata{
+						PolicyMetadata: types.PolicyMetadata{
 							Type:     "Kubernetes Security Check",
 							Title:    "Bad Deployment",
 							ID:       "ID-200",

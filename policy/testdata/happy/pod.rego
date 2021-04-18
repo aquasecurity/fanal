@@ -1,11 +1,18 @@
-package testdata.kubernetes.xyz_200
+package testdata.xyz_300
 
 __rego_metadata__ := {
-    "id": "XYZ-200",
+    "id": "XYZ-300",
     "title": "Bad Pod",
     "version": "v1.0.0",
     "severity": "CRITICAL",
     "type": "Kubernetes Security Check",
+}
+
+__rego_input__ := {
+    "selector": {
+        "types": ["kubernetes"]
+    },
+    "combine": false,
 }
 
 deny[msg] {

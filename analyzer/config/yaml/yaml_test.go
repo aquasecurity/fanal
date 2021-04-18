@@ -40,7 +40,7 @@ func Test_yamlConfigAnalyzer_Analyze(t *testing.T) {
 						Successes: []types.MisconfResult{
 							{
 								Namespace: "main.kubernetes.xyz_100",
-								MisconfMetadata: types.MisconfMetadata{
+								PolicyMetadata: types.PolicyMetadata{
 									ID:       "XYZ-100",
 									Type:     "Kubernetes Security Check",
 									Title:    "Bad Kubernetes Replicas",
@@ -68,7 +68,7 @@ func Test_yamlConfigAnalyzer_Analyze(t *testing.T) {
 							{
 								Namespace: "main.kubernetes.xyz_100",
 								Message:   "too many replicas: 4",
-								MisconfMetadata: types.MisconfMetadata{
+								PolicyMetadata: types.PolicyMetadata{
 									ID:       "XYZ-100",
 									Type:     "Kubernetes Security Check",
 									Title:    "Bad Kubernetes Replicas",
@@ -96,7 +96,7 @@ func Test_yamlConfigAnalyzer_Analyze(t *testing.T) {
 							{
 								Namespace: "main.yaml.xyz_123",
 								Message:   "bad",
-								MisconfMetadata: types.MisconfMetadata{
+								PolicyMetadata: types.PolicyMetadata{
 									ID:       "XYZ-123",
 									Type:     "YAML Security Check",
 									Title:    "Bad YAML",
@@ -123,7 +123,7 @@ func Test_yamlConfigAnalyzer_Analyze(t *testing.T) {
 						Successes: []types.MisconfResult{
 							{
 								Namespace: "main.kubernetes.xyz_100",
-								MisconfMetadata: types.MisconfMetadata{
+								PolicyMetadata: types.PolicyMetadata{
 									ID:       "XYZ-100",
 									Type:     "Kubernetes Security Check",
 									Title:    "Bad Kubernetes Replicas",
@@ -135,7 +135,7 @@ func Test_yamlConfigAnalyzer_Analyze(t *testing.T) {
 							{
 								Namespace: "main.kubernetes.xyz_100",
 								Message:   "too many replicas: 4",
-								MisconfMetadata: types.MisconfMetadata{
+								PolicyMetadata: types.PolicyMetadata{
 									ID:       "XYZ-100",
 									Type:     "Kubernetes Security Check",
 									Title:    "Bad Kubernetes Replicas",
@@ -171,7 +171,7 @@ func Test_yamlConfigAnalyzer_Analyze(t *testing.T) {
 			b, err := ioutil.ReadFile(tt.inputFile)
 			require.NoError(t, err)
 
-			a, err := yaml.NewConfigScanner(nil, tt.args.namespaces, tt.args.policyPaths, nil)
+			a, err := yaml.NewConfigAnalyzer(nil, tt.args.namespaces, tt.args.policyPaths, nil)
 			require.NoError(t, err)
 
 			got, err := a.Analyze(analyzer.AnalysisTarget{
@@ -221,7 +221,7 @@ func Test_yamlConfigAnalyzer_Required(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s, err := yaml.NewConfigScanner(tt.filePattern, nil, []string{"../testdata"}, nil)
+			s, err := yaml.NewConfigAnalyzer(tt.filePattern, nil, []string{"../testdata"}, nil)
 			require.NoError(t, err)
 
 			got := s.Required(tt.filePath, nil)
@@ -231,7 +231,7 @@ func Test_yamlConfigAnalyzer_Required(t *testing.T) {
 }
 
 func Test_yamlConfigAnalyzer_Type(t *testing.T) {
-	s, err := yaml.NewConfigScanner(nil, nil, []string{"../testdata"}, nil)
+	s, err := yaml.NewConfigAnalyzer(nil, nil, []string{"../testdata"}, nil)
 	require.NoError(t, err)
 
 	want := analyzer.TypeYaml

@@ -11,23 +11,27 @@ type Misconfiguration struct {
 }
 
 type MisconfResult struct {
-	Namespace       string `json:",omitempty"`
-	Message         string `json:",omitempty"`
-	MisconfMetadata `json:",omitempty"`
+	Namespace      string `json:",omitempty"`
+	Message        string `json:",omitempty"`
+	PolicyMetadata `json:",omitempty"`
 }
 
 type MisconfResults []MisconfResult
 
-type MisconfMetadata struct {
+type PolicyMetadata struct {
 	ID       string `json:",omitempty"`
 	Type     string `json:",omitempty"`
 	Title    string `json:",omitempty"`
 	Severity string `json:",omitempty"`
-	Combine  bool
 }
 
-type MisconfSelector struct {
-	Types []string `json:",omitempty"`
+type PolicyInputOption struct {
+	Combine  bool
+	Selector PolicyInputSelector
+}
+
+type PolicyInputSelector struct {
+	Types []string
 }
 
 func (r MisconfResults) Len() int {

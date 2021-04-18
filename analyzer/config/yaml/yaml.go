@@ -5,11 +5,10 @@ import (
 	"path/filepath"
 	"regexp"
 
-	"github.com/open-policy-agent/conftest/parser/yaml"
 	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/fanal/analyzer"
-	"github.com/aquasecurity/fanal/config/scanner"
+	"github.com/aquasecurity/fanal/config/parser/yaml"
 	"github.com/aquasecurity/fanal/types"
 )
 
@@ -17,42 +16,46 @@ const version = 1
 
 var requiredExts = []string{".yaml", ".yml"}
 
-type ConfigScanner struct {
-	parser *yaml.Parser
-	scanner.Scanner
+type ConfigAnalyzer struct {
+	parser      *yaml.Parser
+	filePattern *regexp.Regexp
 }
 
-func NewConfigScanner(filePattern *regexp.Regexp, namespaces, policyPaths, dataPaths []string) (ConfigScanner, error) {
-	s, err := scanner.New(filePattern, namespaces, policyPaths, dataPaths)
-	if err != nil {
-		return ConfigScanner{}, xerrors.Errorf("unable to initialize config scanner: %w", err)
+func NewConfigAnalyzer(filePattern *regexp.Regexp) ConfigAnalyzer {
+	return ConfigAnalyzer{
+		parser:      &yaml.Parser{},
+		filePattern: filePattern,
 	}
-
-	return ConfigScanner{
-		parser:  &yaml.Parser{},
-		Scanner: s,
-	}, nil
 }
 
-func (s ConfigScanner) Analyze(target analyzer.AnalysisTarget) (*analyzer.AnalysisResult, error) {
-	var parsed interface{}
-	if err := s.parser.Unmarshal(target.Content, &parsed); err != nil {
-		return nil, xerrors.Errorf("unable to parse YAML (%s): %w", target.FilePath, err)
+func (s ConfigAnalyzer) Analyze(target analyzer.AnalysisTarget) (*analyzer.AnalysisResult, error) {
+	// YAML might have sub documents separated by "---"
+	//
+	// If the current configuration contains multiple configurations, evaluate each policy
+	// independent from one another and aggregate the results under the same file name.
+	docs := s.parser.SeparateSubDocuments(target.Content)
+
+	var configs []types.Config
+	for _, doc := range docs {
+		parsed, err := s.parser.Parse(doc)
+		if err != nil {
+			return nil, xerrors.Errorf("unable to parse YAML (%s): %w", target.FilePath, err)
+		}
+
+		configs = append(configs, types.Config{
+			Type:     types.YAML,
+			FilePath: target.FilePath,
+			Content:  parsed,
+		})
 	}
 
 	return &analyzer.AnalysisResult{
-		Configs: []types.Config{
-			{
-				Type:     types.YAML,
-				FilePath: target.FilePath,
-				Content:  parsed,
-			},
-		},
+		Configs: configs,
 	}, nil
 }
 
-func (s ConfigScanner) Required(filePath string, _ os.FileInfo) bool {
-	if s.Match(filePath) {
+func (s ConfigAnalyzer) Required(filePath string, _ os.FileInfo) bool {
+	if s.filePattern != nil && s.filePattern.MatchString(filePath) {
 		return true
 	}
 
@@ -65,10 +68,10 @@ func (s ConfigScanner) Required(filePath string, _ os.FileInfo) bool {
 	return false
 }
 
-func (s ConfigScanner) Type() analyzer.Type {
+func (s ConfigAnalyzer) Type() analyzer.Type {
 	return analyzer.TypeYaml
 }
 
-func (s ConfigScanner) Version() int {
+func (s ConfigAnalyzer) Version() int {
 	return version
 }
