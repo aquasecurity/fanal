@@ -37,7 +37,7 @@ func (s Scanner) ScanConfigs(ctx context.Context, files []types.Config) ([]types
 	var configs []types.Config
 	for _, file := range files {
 		// Detect config types such as CloudFormation and Kubernetes.
-		configType, err := detectType(ctx, file)
+		configType, err := detectType(ctx, file.Content)
 		if err != nil {
 			return nil, xerrors.Errorf("unable to detect config type: %w", err)
 		}
@@ -57,12 +57,6 @@ func (s Scanner) ScanConfigs(ctx context.Context, files []types.Config) ([]types
 }
 
 func detectType(ctx context.Context, input interface{}) (string, error) {
-	// The input might include sub documents. In that case, it takes the first element.
-	contents, ok := input.([]interface{})
-	if ok {
-		input = contents[0]
-	}
-
 	results, err := rego.New(
 		rego.Input(input),
 		rego.Query("x = data.config.type.detect"),

@@ -164,7 +164,7 @@ func (e *Engine) Runtime() *ast.Term {
 
 // Check executes all of the loaded policies against the input and returns the results.
 func (e *Engine) Check(ctx context.Context, configs []types.Config, namespaces []string) ([]types.Misconfiguration, error) {
-	// e.g. kubernetes => {Type: "kubernetes",  FilePath: "deployment.yaml", Conetnt: ...}
+	// e.g. kubernetes => {Type: "kubernetes",  FilePath: "deployment.yaml", Content: ...}
 	typedConfigs := map[string][]types.Config{}
 	for _, c := range configs {
 		typedConfigs[c.Type] = append(typedConfigs[c.Type], c)

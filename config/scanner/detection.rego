@@ -17,6 +17,7 @@ detect[type] {
 
 # Ansible Playbook
 detect[type] {
+   count(input) > 0
    count({x |
        input[x].name != "";
        input[x].hosts != "";
