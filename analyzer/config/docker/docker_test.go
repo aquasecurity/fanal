@@ -151,7 +151,7 @@ func Test_dockerConfigAnalyzer_Analyze(t *testing.T) {
 		{
 			name:      "broken Docker: env no value",
 			inputFile: "testdata/Dockerfile.broken",
-			wantErr:   "parse dockerfile: ENV must have two arguments",
+			wantErr:   "ENV must have two arguments",
 		},
 	}
 

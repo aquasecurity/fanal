@@ -1,6 +1,7 @@
 package toml_test
 
 import (
+	"github.com/aquasecurity/fanal/types"
 	"io/ioutil"
 	"regexp"
 	"testing"
@@ -10,7 +11,6 @@ import (
 
 	"github.com/aquasecurity/fanal/analyzer"
 	"github.com/aquasecurity/fanal/analyzer/config/toml"
-	"github.com/aquasecurity/fanal/types"
 )
 
 func Test_tomlConfigAnalyzer_Analyze(t *testing.T) {
@@ -33,24 +33,11 @@ func Test_tomlConfigAnalyzer_Analyze(t *testing.T) {
 			},
 			inputFile: "testdata/deployment.toml",
 			want: &analyzer.AnalysisResult{
-				Misconfigurations: []types.Misconfiguration{
-					{
-						FileType: types.Kubernetes,
-						FilePath: "testdata/deployment.toml",
-						Successes: []types.MisconfResult{
-							{
-								Namespace: "main.kubernetes.xyz_100",
-								PolicyMetadata: types.PolicyMetadata{
-									ID:       "XYZ-100",
-									Type:     "Kubernetes Security Check",
-									Title:    "Bad Kubernetes Replicas",
-									Severity: "HIGH",
-								},
-							},
-						},
-					},
-				},
-			},
+				OS:           (*types.OS)(nil),
+				PackageInfos: []types.PackageInfo(nil),
+				Applications: []types.Application(nil),
+				Configs: []types.Config{
+					types.Config{Type: "toml", FilePath: "testdata/deployment.toml", Content: map[string]interface{}{"apiVersion": "apps/v1", "kind": "Deployment", "metadata": map[string]interface{}{"name": "hello-kubernetes"}, "spec": map[string]interface{}{"replicas": int64(3)}}}}},
 		},
 		{
 			name: "deny",
@@ -60,25 +47,11 @@ func Test_tomlConfigAnalyzer_Analyze(t *testing.T) {
 			},
 			inputFile: "testdata/deployment_deny.toml",
 			want: &analyzer.AnalysisResult{
-				Misconfigurations: []types.Misconfiguration{
-					{
-						FileType: types.Kubernetes,
-						FilePath: "testdata/deployment_deny.toml",
-						Failures: []types.MisconfResult{
-							{
-								Namespace: "main.kubernetes.xyz_100",
-								Message:   "too many replicas: 4",
-								PolicyMetadata: types.PolicyMetadata{
-									ID:       "XYZ-100",
-									Type:     "Kubernetes Security Check",
-									Title:    "Bad Kubernetes Replicas",
-									Severity: "HIGH",
-								},
-							},
-						},
-					},
-				},
-			},
+				OS:           (*types.OS)(nil),
+				PackageInfos: []types.PackageInfo(nil),
+				Applications: []types.Application(nil),
+				Configs: []types.Config{
+					types.Config{Type: "toml", FilePath: "testdata/deployment_deny.toml", Content: map[string]interface{}{"apiVersion": "apps/v1", "kind": "Deployment", "metadata": map[string]interface{}{"name": "hello-kubernetes"}, "spec": map[string]interface{}{"replicas": int64(4)}}}}},
 		},
 		{
 			name: "broken TOML",
@@ -95,8 +68,7 @@ func Test_tomlConfigAnalyzer_Analyze(t *testing.T) {
 			b, err := ioutil.ReadFile(tt.inputFile)
 			require.NoError(t, err)
 
-			a, err := toml.NewConfigAnalyzer(nil, tt.args.namespaces, tt.args.policyPaths, nil)
-			require.NoError(t, err)
+			a := toml.NewConfigAnalyzer(nil)
 
 			got, err := a.Analyze(analyzer.AnalysisTarget{
 				FilePath: tt.inputFile,
@@ -140,8 +112,7 @@ func Test_tomlConfigAnalyzer_Required(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s, err := toml.NewConfigAnalyzer(tt.filePattern, nil, []string{"../testdata"}, nil)
-			require.NoError(t, err)
+			s := toml.NewConfigAnalyzer(tt.filePattern)
 
 			got := s.Required(tt.filePath, nil)
 			assert.Equal(t, tt.want, got)
@@ -150,8 +121,7 @@ func Test_tomlConfigAnalyzer_Required(t *testing.T) {
 }
 
 func Test_tomlConfigAnalyzer_Type(t *testing.T) {
-	s, err := toml.NewConfigAnalyzer(nil, nil, []string{"../testdata"}, nil)
-	require.NoError(t, err)
+	s := toml.NewConfigAnalyzer(nil)
 
 	want := analyzer.TypeTOML
 	got := s.Type()

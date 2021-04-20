@@ -1,7 +1,7 @@
 package scanner_test
 
 import (
-	"regexp"
+	"context"
 	"sort"
 	"testing"
 
@@ -11,39 +11,6 @@ import (
 	"github.com/aquasecurity/fanal/config/scanner"
 	"github.com/aquasecurity/fanal/types"
 )
-
-func TestScanner_Match(t *testing.T) {
-	tests := []struct {
-		name string
-		re   *regexp.Regexp
-		path string
-		want bool
-	}{
-		{
-			name: "nil pattern",
-			path: "path",
-		},
-		{
-			name: "not match",
-			re:   regexp.MustCompile("p"),
-			path: "dir",
-		},
-		{
-			name: "match",
-			re:   regexp.MustCompile("p"),
-			path: "path",
-			want: true,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			scanner, err := scanner.New(tt.re, nil, []string{"testdata/valid"}, nil)
-			require.NoError(t, err)
-			assert.Equal(t, tt.want, scanner.Match(tt.path))
-		})
-	}
-}
 
 func TestScanner_ScanConfig(t *testing.T) {
 	// only does basic tests
@@ -94,40 +61,37 @@ func TestScanner_ScanConfig(t *testing.T) {
 			},
 			namespaces: []string{"testdata"},
 			want: types.Misconfiguration{
-				FileType: types.Kubernetes,
-				FilePath: "deployment.yaml",
-				Failures: []types.MisconfResult{
-					{
-						Namespace: "testdata.kubernetes.id_100",
-						Message:   "deny",
-						PolicyMetadata: types.PolicyMetadata{
-							Type:     "Kubernetes Security Check",
-							Title:    "Bad Deployment",
-							ID:       "ID-100",
-							Severity: "HIGH",
-						},
+				FileType:  "kubernetes",
+				FilePath:  "deployment.yaml",
+				Successes: types.MisconfResults(nil),
+				Warnings:  types.MisconfResults(nil),
+				Failures: types.MisconfResults{
+					types.MisconfResult{
+						Namespace:      "testdata.docker.id_300",
+						Message:        "deny",
+						PolicyMetadata: types.PolicyMetadata{ID: "N/A", Type: "N/A", Title: "N/A", Severity: "UNKNOWN"},
 					},
-					{
-						Namespace: "testdata.kubernetes.id_200",
-						Message:   "deny",
-						PolicyMetadata: types.PolicyMetadata{
-							Type:     "Kubernetes Security Check",
-							Title:    "Bad Deployment",
-							ID:       "ID-200",
-							Severity: "CRITICAL",
-						},
+					types.MisconfResult{
+						Namespace:      "testdata.kubernetes.id_100",
+						Message:        "deny",
+						PolicyMetadata: types.PolicyMetadata{ID: "ID-100", Type: "Kubernetes Security Check", Title: "Bad Deployment", Severity: "HIGH"},
 					},
-				},
+					types.MisconfResult{
+						Namespace:      "testdata.kubernetes.id_200",
+						Message:        "deny",
+						PolicyMetadata: types.PolicyMetadata{ID: "ID-200", Type: "Kubernetes Security Check", Title: "Bad Deployment", Severity: "CRITICAL"},
+					},
+				}, Exceptions: types.MisconfResults(nil), Layer: types.Layer{Digest: "", DiffID: ""},
 			},
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s, err := scanner.New(nil, tt.namespaces, tt.policyPaths, tt.dataPaths)
+			s, err := scanner.New(tt.namespaces, tt.policyPaths, tt.dataPaths)
 			require.NoError(t, err)
 
-			got, err := s.ScanConfig(tt.configType, "deployment.yaml", tt.content)
+			got, err := s.ScanConfigs(context.Background(), []types.Config{{tt.configType, "deployment.yaml", tt.content}})
 			if tt.wantErr != "" {
 				require.Error(t, err)
 				assert.Contains(t, err.Error(), tt.wantErr)
@@ -135,12 +99,12 @@ func TestScanner_ScanConfig(t *testing.T) {
 				return
 			}
 
-			sort.Slice(got.Failures, func(i, j int) bool {
-				return got.Failures[i].Namespace < got.Failures[j].Namespace
+			sort.Slice(got[0].Failures, func(i, j int) bool {
+				return got[0].Failures[i].Namespace < got[0].Failures[j].Namespace
 			})
 
 			require.NoError(t, err)
-			assert.Equal(t, tt.want, got)
+			assert.Equal(t, tt.want, got[0])
 		})
 	}
 }
