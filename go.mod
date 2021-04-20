@@ -29,6 +29,7 @@ require (
 	github.com/kylelemons/godebug v1.1.0
 	github.com/magefile/mage v1.11.0 // indirect
 	github.com/mitchellh/mapstructure v1.4.1
+	github.com/moby/buildkit v0.8.1
 	github.com/open-policy-agent/conftest v0.23.0
 	github.com/open-policy-agent/opa v0.25.2
 	github.com/opencontainers/go-digest v1.0.0
@@ -50,4 +51,5 @@ require (
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1
 	google.golang.org/genproto v0.0.0-20210219173056-d891e3cb3b5b // indirect
 	google.golang.org/grpc v1.35.0 // indirect
+	gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c
 )
