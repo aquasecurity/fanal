@@ -33,8 +33,9 @@ func TestArtifact_Inspect(t *testing.T) {
 		wantErr                 string
 	}{
 		{
-			name:      "happy path",
-			imagePath: "../../test/testdata/alpine-311.tar.gz",
+			name:       "happy path",
+			imagePath:  "../../test/testdata/alpine-311.tar.gz",
+			scannerOpt: config.ScannerOption{PolicyPaths: []string{"testdata/valid.rego"}},
 			missingBlobsExpectation: cache.ArtifactCacheMissingBlobsExpectation{
 				Args: cache.ArtifactCacheMissingBlobsArgs{
 					ArtifactID: "sha256:cdb49675542ff0051aaf7bab6c7a81b6fe275a7dd57d1e0317724a51edb7d6a6",
@@ -105,8 +106,9 @@ func TestArtifact_Inspect(t *testing.T) {
 			},
 		},
 		{
-			name:      "happy path: include lock files",
-			imagePath: "../../test/testdata/vuln-image.tar.gz",
+			name:       "happy path: include lock files",
+			imagePath:  "../../test/testdata/vuln-image.tar.gz",
+			scannerOpt: config.ScannerOption{PolicyPaths: []string{"testdata/valid.rego"}},
 			missingBlobsExpectation: cache.ArtifactCacheMissingBlobsExpectation{
 				Args: cache.ArtifactCacheMissingBlobsArgs{
 					ArtifactID: "sha256:1a0f2e0e3a3ca6bf77692726db8b41793f3ac4edb7b64dd21a93d217ad8257e8",
@@ -306,6 +308,7 @@ func TestArtifact_Inspect(t *testing.T) {
 		{
 			name:             "happy path: disable analyzers",
 			imagePath:        "../../test/testdata/vuln-image.tar.gz",
+			scannerOpt:       config.ScannerOption{PolicyPaths: []string{"testdata/valid.rego"}},
 			disableAnalyzers: []analyzer.Type{analyzer.TypeDebian, analyzer.TypeDpkg, analyzer.TypeComposer, analyzer.TypeBundler},
 			missingBlobsExpectation: cache.ArtifactCacheMissingBlobsExpectation{
 				Args: cache.ArtifactCacheMissingBlobsArgs{
@@ -382,8 +385,9 @@ func TestArtifact_Inspect(t *testing.T) {
 			},
 		},
 		{
-			name:      "sad path, MissingBlobs returns an error",
-			imagePath: "../../test/testdata/alpine-311.tar.gz",
+			name:       "sad path, MissingBlobs returns an error",
+			imagePath:  "../../test/testdata/alpine-311.tar.gz",
+			scannerOpt: config.ScannerOption{PolicyPaths: []string{"testdata/valid.rego"}},
 			missingBlobsExpectation: cache.ArtifactCacheMissingBlobsExpectation{
 				Args: cache.ArtifactCacheMissingBlobsArgs{
 					ArtifactID: "sha256:cdb49675542ff0051aaf7bab6c7a81b6fe275a7dd57d1e0317724a51edb7d6a6",
@@ -396,8 +400,9 @@ func TestArtifact_Inspect(t *testing.T) {
 			wantErr: "MissingBlobs failed",
 		},
 		{
-			name:      "sad path, PutBlob returns an error",
-			imagePath: "../../test/testdata/alpine-311.tar.gz",
+			name:       "sad path, PutBlob returns an error",
+			imagePath:  "../../test/testdata/alpine-311.tar.gz",
+			scannerOpt: config.ScannerOption{PolicyPaths: []string{"testdata/valid.rego"}},
 			missingBlobsExpectation: cache.ArtifactCacheMissingBlobsExpectation{
 				Args: cache.ArtifactCacheMissingBlobsArgs{
 					ArtifactID: "sha256:cdb49675542ff0051aaf7bab6c7a81b6fe275a7dd57d1e0317724a51edb7d6a6",
@@ -451,8 +456,9 @@ func TestArtifact_Inspect(t *testing.T) {
 			wantErr: "put layer failed",
 		},
 		{
-			name:      "sad path, PutArtifact returns an error",
-			imagePath: "../../test/testdata/alpine-311.tar.gz",
+			name:       "sad path, PutArtifact returns an error",
+			imagePath:  "../../test/testdata/alpine-311.tar.gz",
+			scannerOpt: config.ScannerOption{PolicyPaths: []string{"testdata/valid.rego"}},
 			missingBlobsExpectation: cache.ArtifactCacheMissingBlobsExpectation{
 				Args: cache.ArtifactCacheMissingBlobsArgs{
 					ArtifactID: "sha256:cdb49675542ff0051aaf7bab6c7a81b6fe275a7dd57d1e0317724a51edb7d6a6",
