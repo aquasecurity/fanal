@@ -1,10 +1,11 @@
 package toml_test
 
 import (
-	"github.com/aquasecurity/fanal/types"
 	"io/ioutil"
 	"regexp"
 	"testing"
+
+	"github.com/aquasecurity/fanal/types"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -33,11 +34,23 @@ func Test_tomlConfigAnalyzer_Analyze(t *testing.T) {
 			},
 			inputFile: "testdata/deployment.toml",
 			want: &analyzer.AnalysisResult{
-				OS:           (*types.OS)(nil),
-				PackageInfos: []types.PackageInfo(nil),
-				Applications: []types.Application(nil),
 				Configs: []types.Config{
-					types.Config{Type: "toml", FilePath: "testdata/deployment.toml", Content: map[string]interface{}{"apiVersion": "apps/v1", "kind": "Deployment", "metadata": map[string]interface{}{"name": "hello-kubernetes"}, "spec": map[string]interface{}{"replicas": int64(3)}}}}},
+					{
+						Type:     "toml",
+						FilePath: "testdata/deployment.toml",
+						Content: map[string]interface{}{
+							"apiVersion": "apps/v1",
+							"kind":       "Deployment",
+							"metadata": map[string]interface{}{
+								"name": "hello-kubernetes",
+							},
+							"spec": map[string]interface{}{
+								"replicas": int64(3),
+							},
+						},
+					},
+				},
+			},
 		},
 		{
 			name: "deny",
@@ -47,11 +60,23 @@ func Test_tomlConfigAnalyzer_Analyze(t *testing.T) {
 			},
 			inputFile: "testdata/deployment_deny.toml",
 			want: &analyzer.AnalysisResult{
-				OS:           (*types.OS)(nil),
-				PackageInfos: []types.PackageInfo(nil),
-				Applications: []types.Application(nil),
 				Configs: []types.Config{
-					types.Config{Type: "toml", FilePath: "testdata/deployment_deny.toml", Content: map[string]interface{}{"apiVersion": "apps/v1", "kind": "Deployment", "metadata": map[string]interface{}{"name": "hello-kubernetes"}, "spec": map[string]interface{}{"replicas": int64(4)}}}}},
+					{
+						Type:     "toml",
+						FilePath: "testdata/deployment_deny.toml",
+						Content: map[string]interface{}{
+							"apiVersion": "apps/v1",
+							"kind":       "Deployment",
+							"metadata": map[string]interface{}{
+								"name": "hello-kubernetes",
+							},
+							"spec": map[string]interface{}{
+								"replicas": int64(4),
+							},
+						},
+					},
+				},
+			},
 		},
 		{
 			name: "broken TOML",

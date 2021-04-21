@@ -33,11 +33,23 @@ func Test_yamlConfigAnalyzer_Analyze(t *testing.T) {
 			},
 			inputFile: "testdata/deployment.yaml",
 			want: &analyzer.AnalysisResult{
-				OS:           (*types.OS)(nil),
-				PackageInfos: []types.PackageInfo(nil),
-				Applications: []types.Application(nil),
 				Configs: []types.Config{
-					types.Config{Type: "yaml", FilePath: "testdata/deployment.yaml", Content: map[string]interface{}{"apiVersion": "apps/v1", "kind": "Deployment", "metadata": map[string]interface{}{"name": "hello-kubernetes"}, "spec": map[string]interface{}{"replicas": 3}}}}},
+					{
+						Type:     "yaml",
+						FilePath: "testdata/deployment.yaml",
+						Content: map[string]interface{}{
+							"apiVersion": "apps/v1",
+							"kind":       "Deployment",
+							"metadata": map[string]interface{}{
+								"name": "hello-kubernetes",
+							},
+							"spec": map[string]interface{}{
+								"replicas": 3,
+							},
+						},
+					},
+				},
+			},
 		},
 		{
 			name: "deny",
@@ -50,7 +62,22 @@ func Test_yamlConfigAnalyzer_Analyze(t *testing.T) {
 				OS:           (*types.OS)(nil),
 				PackageInfos: []types.PackageInfo(nil),
 				Applications: []types.Application(nil), Configs: []types.Config{
-					types.Config{Type: "yaml", FilePath: "testdata/deployment_deny.yaml", Content: map[string]interface{}{"apiVersion": "apps/v1", "kind": "Deployment", "metadata": map[string]interface{}{"name": "hello-kubernetes"}, "spec": map[string]interface{}{"replicas": 4}}}}},
+					{
+						Type:     "yaml",
+						FilePath: "testdata/deployment_deny.yaml",
+						Content: map[string]interface{}{
+							"apiVersion": "apps/v1",
+							"kind":       "Deployment",
+							"metadata": map[string]interface{}{
+								"name": "hello-kubernetes",
+							},
+							"spec": map[string]interface{}{
+								"replicas": 4,
+							},
+						},
+					},
+				},
+			},
 		},
 		{
 			name: "happy path using anchors",
@@ -64,7 +91,31 @@ func Test_yamlConfigAnalyzer_Analyze(t *testing.T) {
 				PackageInfos: []types.PackageInfo(nil),
 				Applications: []types.Application(nil),
 				Configs: []types.Config{
-					types.Config{Type: "yaml", FilePath: "testdata/anchor.yaml", Content: map[string]interface{}{"default": map[string]interface{}{"line": "single line"}, "fred": map[string]interface{}{"fred_name": "fred"}, "john": map[string]interface{}{"john_name": "john"}, "main": map[interface{}]interface{}{"comment": "multi\nline\n", "line": "single line", "name": map[interface{}]interface{}{"fred_name": "fred", "john_name": "john"}}}}}},
+					{
+						Type:     "yaml",
+						FilePath: "testdata/anchor.yaml",
+						Content: map[string]interface{}{
+							"default": map[string]interface{}{
+								"line": "single line",
+							},
+							"fred": map[string]interface{}{
+								"fred_name": "fred",
+							},
+							"john": map[string]interface{}{
+								"john_name": "john",
+							},
+							"main": map[interface{}]interface{}{
+								"comment": "multi\nline\n",
+								"line":    "single line",
+								"name": map[interface{}]interface{}{
+									"fred_name": "fred",
+									"john_name": "john",
+								},
+							},
+						},
+					},
+				},
+			},
 		},
 		{
 			name: "multiple yaml",
@@ -78,8 +129,41 @@ func Test_yamlConfigAnalyzer_Analyze(t *testing.T) {
 				PackageInfos: []types.PackageInfo(nil),
 				Applications: []types.Application(nil),
 				Configs: []types.Config{
-					types.Config{Type: "yaml", FilePath: "testdata/multiple.yaml", Content: map[string]interface{}{"apiVersion": "apps/v1", "kind": "Deployment", "metadata": map[string]interface{}{"name": "hello-kubernetes"}, "spec": map[string]interface{}{"replicas": 4}}},
-					types.Config{Type: "yaml", FilePath: "testdata/multiple.yaml", Content: map[string]interface{}{"apiVersion": "v1", "kind": "Service", "metadata": map[string]interface{}{"name": "hello-kubernetes"}, "spec": map[string]interface{}{"ports": []interface{}{map[string]interface{}{"port": 80, "protocol": "TCP", "targetPort": 8080}}}}}}},
+					{
+						Type:     "yaml",
+						FilePath: "testdata/multiple.yaml",
+						Content: map[string]interface{}{
+							"apiVersion": "apps/v1",
+							"kind":       "Deployment",
+							"metadata": map[string]interface{}{
+								"name": "hello-kubernetes",
+							},
+							"spec": map[string]interface{}{
+								"replicas": 4,
+							},
+						},
+					},
+					{
+						Type:     "yaml",
+						FilePath: "testdata/multiple.yaml",
+						Content: map[string]interface{}{
+							"apiVersion": "v1",
+							"kind":       "Service",
+							"metadata": map[string]interface{}{
+								"name": "hello-kubernetes",
+							},
+							"spec": map[string]interface{}{
+								"ports": []interface{}{map[string]interface{}{
+									"port":       80,
+									"protocol":   "TCP",
+									"targetPort": 8080,
+								},
+								},
+							},
+						},
+					},
+				},
+			},
 		},
 		{
 			name: "broken YAML",

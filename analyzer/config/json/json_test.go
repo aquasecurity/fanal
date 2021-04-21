@@ -1,10 +1,11 @@
 package json_test
 
 import (
-	"github.com/aquasecurity/fanal/types"
 	"io/ioutil"
 	"regexp"
 	"testing"
+
+	"github.com/aquasecurity/fanal/types"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -33,11 +34,22 @@ func Test_jsonConfigAnalyzer_Analyze(t *testing.T) {
 			},
 			inputFile: "testdata/deployment.json",
 			want: &analyzer.AnalysisResult{
-				OS:           (*types.OS)(nil),
-				PackageInfos: []types.PackageInfo(nil),
-				Applications: []types.Application(nil),
 				Configs: []types.Config{
-					types.Config{Type: "json", FilePath: "testdata/deployment.json", Content: map[string]interface{}{"apiVersion": "apps/v1", "kind": "Deployment", "metadata": map[string]interface{}{"name": "hello-kubernetes"}, "spec": map[string]interface{}{"replicas": float64(3)}}}},
+					{
+						Type:     "json",
+						FilePath: "testdata/deployment.json",
+						Content: map[string]interface{}{
+							"apiVersion": "apps/v1",
+							"kind":       "Deployment",
+							"metadata": map[string]interface{}{
+								"name": "hello-kubernetes",
+							},
+							"spec": map[string]interface{}{
+								"replicas": float64(3),
+							},
+						},
+					},
+				},
 			},
 		},
 		{
@@ -48,9 +60,23 @@ func Test_jsonConfigAnalyzer_Analyze(t *testing.T) {
 			},
 			inputFile: "testdata/deployment_deny.json",
 			want: &analyzer.AnalysisResult{
-				OS:           (*types.OS)(nil),
-				PackageInfos: []types.PackageInfo(nil),
-				Applications: []types.Application(nil), Configs: []types.Config{types.Config{Type: "json", FilePath: "testdata/deployment_deny.json", Content: map[string]interface{}{"apiVersion": "apps/v1", "kind": "Deployment", "metadata": map[string]interface{}{"name": "hello-kubernetes"}, "spec": map[string]interface{}{"replicas": float64(4)}}}}},
+				Configs: []types.Config{
+					{
+						Type:     "json",
+						FilePath: "testdata/deployment_deny.json",
+						Content: map[string]interface{}{
+							"apiVersion": "apps/v1",
+							"kind":       "Deployment",
+							"metadata": map[string]interface{}{
+								"name": "hello-kubernetes",
+							},
+							"spec": map[string]interface{}{
+								"replicas": float64(4),
+							},
+						},
+					},
+				},
+			},
 		},
 		{
 			name: "json array",
@@ -60,11 +86,34 @@ func Test_jsonConfigAnalyzer_Analyze(t *testing.T) {
 			},
 			inputFile: "testdata/array.json",
 			want: &analyzer.AnalysisResult{
-				OS:           (*types.OS)(nil),
-				PackageInfos: []types.PackageInfo(nil),
-				Applications: []types.Application(nil),
 				Configs: []types.Config{
-					types.Config{Type: "json", FilePath: "testdata/array.json", Content: []interface{}{map[string]interface{}{"apiVersion": "apps/v1", "kind": "Deployment", "metadata": map[string]interface{}{"name": "hello-kubernetes"}, "spec": map[string]interface{}{"replicas": float64(4)}}, map[string]interface{}{"apiVersion": "apps/v2", "kind": "Deployment", "metadata": map[string]interface{}{"name": "hello-kubernetes"}, "spec": map[string]interface{}{"replicas": float64(5)}}}}}},
+					{
+						Type:     "json",
+						FilePath: "testdata/array.json",
+						Content: []interface{}{map[string]interface{}{
+							"apiVersion": "apps/v1",
+							"kind":       "Deployment",
+							"metadata": map[string]interface{}{
+								"name": "hello-kubernetes",
+							},
+							"spec": map[string]interface{}{
+								"replicas": float64(4),
+							},
+						},
+							map[string]interface{}{
+								"apiVersion": "apps/v2",
+								"kind":       "Deployment",
+								"metadata": map[string]interface{}{
+									"name": "hello-kubernetes",
+								},
+								"spec": map[string]interface{}{
+									"replicas": float64(5),
+								},
+							},
+						},
+					},
+				},
+			},
 		},
 		{
 			name: "broken JSON",
