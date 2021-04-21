@@ -33,19 +33,18 @@ func Test_yamlConfigAnalyzer_Analyze(t *testing.T) {
 			},
 			inputFile: "testdata/deployment.yaml",
 			want: &analyzer.AnalysisResult{
-				Misconfigurations: []types.Misconfiguration{
+				Configs: []types.Config{
 					{
-						FileType: types.Kubernetes,
+						Type:     "yaml",
 						FilePath: "testdata/deployment.yaml",
-						Successes: []types.MisconfResult{
-							{
-								Namespace: "main.kubernetes.xyz_100",
-								PolicyMetadata: types.PolicyMetadata{
-									ID:       "XYZ-100",
-									Type:     "Kubernetes Security Check",
-									Title:    "Bad Kubernetes Replicas",
-									Severity: "HIGH",
-								},
+						Content: map[string]interface{}{
+							"apiVersion": "apps/v1",
+							"kind":       "Deployment",
+							"metadata": map[string]interface{}{
+								"name": "hello-kubernetes",
+							},
+							"spec": map[string]interface{}{
+								"replicas": 3,
 							},
 						},
 					},
@@ -60,20 +59,20 @@ func Test_yamlConfigAnalyzer_Analyze(t *testing.T) {
 			},
 			inputFile: "testdata/deployment_deny.yaml",
 			want: &analyzer.AnalysisResult{
-				Misconfigurations: []types.Misconfiguration{
+				OS:           (*types.OS)(nil),
+				PackageInfos: []types.PackageInfo(nil),
+				Applications: []types.Application(nil), Configs: []types.Config{
 					{
-						FileType: types.Kubernetes,
+						Type:     "yaml",
 						FilePath: "testdata/deployment_deny.yaml",
-						Failures: []types.MisconfResult{
-							{
-								Namespace: "main.kubernetes.xyz_100",
-								Message:   "too many replicas: 4",
-								PolicyMetadata: types.PolicyMetadata{
-									ID:       "XYZ-100",
-									Type:     "Kubernetes Security Check",
-									Title:    "Bad Kubernetes Replicas",
-									Severity: "HIGH",
-								},
+						Content: map[string]interface{}{
+							"apiVersion": "apps/v1",
+							"kind":       "Deployment",
+							"metadata": map[string]interface{}{
+								"name": "hello-kubernetes",
+							},
+							"spec": map[string]interface{}{
+								"replicas": 4,
 							},
 						},
 					},
@@ -88,19 +87,29 @@ func Test_yamlConfigAnalyzer_Analyze(t *testing.T) {
 			},
 			inputFile: "testdata/anchor.yaml",
 			want: &analyzer.AnalysisResult{
-				Misconfigurations: []types.Misconfiguration{
+				OS:           (*types.OS)(nil),
+				PackageInfos: []types.PackageInfo(nil),
+				Applications: []types.Application(nil),
+				Configs: []types.Config{
 					{
-						FileType: types.YAML,
+						Type:     "yaml",
 						FilePath: "testdata/anchor.yaml",
-						Failures: []types.MisconfResult{
-							{
-								Namespace: "main.yaml.xyz_123",
-								Message:   "bad",
-								PolicyMetadata: types.PolicyMetadata{
-									ID:       "XYZ-123",
-									Type:     "YAML Security Check",
-									Title:    "Bad YAML",
-									Severity: "CRITICAL",
+						Content: map[string]interface{}{
+							"default": map[string]interface{}{
+								"line": "single line",
+							},
+							"fred": map[string]interface{}{
+								"fred_name": "fred",
+							},
+							"john": map[string]interface{}{
+								"john_name": "john",
+							},
+							"main": map[interface{}]interface{}{
+								"comment": "multi\nline\n",
+								"line":    "single line",
+								"name": map[interface{}]interface{}{
+									"fred_name": "fred",
+									"john_name": "john",
 								},
 							},
 						},
@@ -116,30 +125,39 @@ func Test_yamlConfigAnalyzer_Analyze(t *testing.T) {
 			},
 			inputFile: "testdata/multiple.yaml",
 			want: &analyzer.AnalysisResult{
-				Misconfigurations: []types.Misconfiguration{
+				OS:           (*types.OS)(nil),
+				PackageInfos: []types.PackageInfo(nil),
+				Applications: []types.Application(nil),
+				Configs: []types.Config{
 					{
-						FileType: types.Kubernetes,
+						Type:     "yaml",
 						FilePath: "testdata/multiple.yaml",
-						Successes: []types.MisconfResult{
-							{
-								Namespace: "main.kubernetes.xyz_100",
-								PolicyMetadata: types.PolicyMetadata{
-									ID:       "XYZ-100",
-									Type:     "Kubernetes Security Check",
-									Title:    "Bad Kubernetes Replicas",
-									Severity: "HIGH",
-								},
+						Content: map[string]interface{}{
+							"apiVersion": "apps/v1",
+							"kind":       "Deployment",
+							"metadata": map[string]interface{}{
+								"name": "hello-kubernetes",
+							},
+							"spec": map[string]interface{}{
+								"replicas": 4,
 							},
 						},
-						Failures: []types.MisconfResult{
-							{
-								Namespace: "main.kubernetes.xyz_100",
-								Message:   "too many replicas: 4",
-								PolicyMetadata: types.PolicyMetadata{
-									ID:       "XYZ-100",
-									Type:     "Kubernetes Security Check",
-									Title:    "Bad Kubernetes Replicas",
-									Severity: "HIGH",
+					},
+					{
+						Type:     "yaml",
+						FilePath: "testdata/multiple.yaml",
+						Content: map[string]interface{}{
+							"apiVersion": "v1",
+							"kind":       "Service",
+							"metadata": map[string]interface{}{
+								"name": "hello-kubernetes",
+							},
+							"spec": map[string]interface{}{
+								"ports": []interface{}{map[string]interface{}{
+									"port":       80,
+									"protocol":   "TCP",
+									"targetPort": 8080,
+								},
 								},
 							},
 						},
@@ -171,8 +189,7 @@ func Test_yamlConfigAnalyzer_Analyze(t *testing.T) {
 			b, err := ioutil.ReadFile(tt.inputFile)
 			require.NoError(t, err)
 
-			a, err := yaml.NewConfigAnalyzer(nil, tt.args.namespaces, tt.args.policyPaths, nil)
-			require.NoError(t, err)
+			a := yaml.NewConfigAnalyzer(nil)
 
 			got, err := a.Analyze(analyzer.AnalysisTarget{
 				FilePath: tt.inputFile,
@@ -221,8 +238,7 @@ func Test_yamlConfigAnalyzer_Required(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s, err := yaml.NewConfigAnalyzer(tt.filePattern, nil, []string{"../testdata"}, nil)
-			require.NoError(t, err)
+			s := yaml.NewConfigAnalyzer(tt.filePattern)
 
 			got := s.Required(tt.filePath, nil)
 			assert.Equal(t, tt.want, got)
@@ -231,8 +247,7 @@ func Test_yamlConfigAnalyzer_Required(t *testing.T) {
 }
 
 func Test_yamlConfigAnalyzer_Type(t *testing.T) {
-	s, err := yaml.NewConfigAnalyzer(nil, nil, []string{"../testdata"}, nil)
-	require.NoError(t, err)
+	s := yaml.NewConfigAnalyzer(nil)
 
 	want := analyzer.TypeYaml
 	got := s.Type()
