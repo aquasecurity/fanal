@@ -13,9 +13,14 @@ import (
 	"github.com/aquasecurity/fanal/types"
 )
 
+const (
+	ConcurrencyLimit = 5
+)
+
 var (
 	analyzers       []analyzer
 	configAnalyzers []configAnalyzer
+	limiter         = make(chan struct{}, ConcurrencyLimit)
 
 	// ErrUnknownOS occurs when unknown OS is analyzed.
 	ErrUnknownOS = xerrors.New("unknown OS")
@@ -23,10 +28,6 @@ var (
 	ErrPkgAnalysis = xerrors.New("failed to analyze packages")
 	// ErrNoPkgsDetected occurs when the required files for an OS package manager are not detected
 	ErrNoPkgsDetected = xerrors.New("no packages detected")
-)
-
-const (
-	ConcurrencyLimit = 10
 )
 
 type AnalysisTarget struct {
@@ -190,7 +191,6 @@ func (a Analyzer) ImageConfigAnalyzerVersions() string {
 func (a Analyzer) AnalyzeFile(wg *sync.WaitGroup, result *AnalysisResult, filePath string, info os.FileInfo,
 	opener Opener) error {
 
-	limiter := make(chan struct{}, ConcurrencyLimit)
 	for _, d := range a.drivers {
 		// filepath extracted from tar file doesn't have the prefix "/"
 		if !d.Required(strings.TrimLeft(filePath, "/"), info) {
