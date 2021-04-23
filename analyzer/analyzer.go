@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	ConcurrencyLimit = 5
+	ConcurrencyLimit = 10
 )
 
 var (
@@ -190,7 +190,6 @@ func (a Analyzer) ImageConfigAnalyzerVersions() string {
 
 func (a Analyzer) AnalyzeFile(wg *sync.WaitGroup, result *AnalysisResult, filePath string, info os.FileInfo,
 	opener Opener) error {
-
 	for _, d := range a.drivers {
 		// filepath extracted from tar file doesn't have the prefix "/"
 		if !d.Required(strings.TrimLeft(filePath, "/"), info) {
