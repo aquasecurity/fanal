@@ -133,8 +133,11 @@ func (a Artifact) inspectLayer(diffID string) (types.BlobInfo, error) {
 	var wg sync.WaitGroup
 	result := new(analyzer.AnalysisResult)
 
+	limiter := make(chan struct{}, artifact.ConcurrencyLimit)
+	defer close(limiter)
+
 	opqDirs, whFiles, err := walker.WalkLayerTar(r, func(filePath string, info os.FileInfo, opener analyzer.Opener) error {
-		if err = a.analyzer.AnalyzeFile(&wg, result, filePath, info, opener); err != nil {
+		if err = a.analyzer.AnalyzeFile(&wg, limiter, result, filePath, info, opener); err != nil {
 			return xerrors.Errorf("failed to analyze %s: %w", filePath, err)
 		}
 		return nil

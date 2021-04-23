@@ -368,9 +368,12 @@ func TestAnalyzeFile(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var wg sync.WaitGroup
+			limiter := make(chan struct{}, 10)
+			defer close(limiter)
+
 			got := new(analyzer.AnalysisResult)
 			a := analyzer.NewAnalyzer(tt.args.disabledAnalyzers)
-			err := a.AnalyzeFile(&wg, got, tt.args.filePath, tt.args.info, tt.args.opener)
+			err := a.AnalyzeFile(&wg, limiter, got, tt.args.filePath, tt.args.info, tt.args.opener)
 
 			wg.Wait()
 			if tt.wantErr != "" {

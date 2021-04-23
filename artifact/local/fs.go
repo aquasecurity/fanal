@@ -38,13 +38,17 @@ func NewArtifact(dir string, c cache.ArtifactCache, disabled []analyzer.Type) ar
 
 func (a Artifact) Inspect(_ context.Context) (types.ArtifactReference, error) {
 	var wg sync.WaitGroup
+
+	limiter := make(chan struct{}, artifact.ConcurrencyLimit)
+	defer close(limiter)
+
 	result := new(analyzer.AnalysisResult)
 	err := walker.WalkDir(a.dir, func(filePath string, info os.FileInfo, opener analyzer.Opener) error {
 		filePath, err := filepath.Rel(a.dir, filePath)
 		if err != nil {
 			return err
 		}
-		if err = a.analyzer.AnalyzeFile(&wg, result, filePath, info, opener); err != nil {
+		if err = a.analyzer.AnalyzeFile(&wg, limiter, result, filePath, info, opener); err != nil {
 			return err
 		}
 		return nil

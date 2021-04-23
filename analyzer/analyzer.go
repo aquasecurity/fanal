@@ -13,14 +13,9 @@ import (
 	"github.com/aquasecurity/fanal/types"
 )
 
-const (
-	ConcurrencyLimit = 10
-)
-
 var (
 	analyzers       []analyzer
 	configAnalyzers []configAnalyzer
-	limiter         = make(chan struct{}, ConcurrencyLimit)
 
 	// ErrUnknownOS occurs when unknown OS is analyzed.
 	ErrUnknownOS = xerrors.New("unknown OS")
@@ -188,7 +183,7 @@ func (a Analyzer) ImageConfigAnalyzerVersions() string {
 	return versions
 }
 
-func (a Analyzer) AnalyzeFile(wg *sync.WaitGroup, result *AnalysisResult, filePath string, info os.FileInfo,
+func (a Analyzer) AnalyzeFile(wg *sync.WaitGroup, limiter chan struct{}, result *AnalysisResult, filePath string, info os.FileInfo,
 	opener Opener) error {
 	for _, d := range a.drivers {
 		// filepath extracted from tar file doesn't have the prefix "/"
