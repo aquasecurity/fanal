@@ -49,10 +49,10 @@ func (a Artifact) Inspect(ctx context.Context) (types.ArtifactReference, error) 
 	err := walker.WalkDir(a.dir, func(filePath string, info os.FileInfo, opener analyzer.Opener) error {
 		filePath, err := filepath.Rel(a.dir, filePath)
 		if err != nil {
-			return err
+			return xerrors.Errorf("filepath rel (%s): %w", filePath, err)
 		}
 		if err = a.analyzer.AnalyzeFile(ctx, &wg, limit, result, filePath, info, opener); err != nil {
-			return xerrors.Errorf("analyze file: %w", err)
+			return xerrors.Errorf("analyze file (%s): %w", filePath, err)
 		}
 		return nil
 	})
