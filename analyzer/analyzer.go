@@ -1,12 +1,14 @@
 package analyzer
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"sort"
 	"strings"
 	"sync"
 
+	"golang.org/x/sync/semaphore"
 	"golang.org/x/xerrors"
 
 	aos "github.com/aquasecurity/fanal/analyzer/os"
@@ -183,8 +185,8 @@ func (a Analyzer) ImageConfigAnalyzerVersions() string {
 	return versions
 }
 
-func (a Analyzer) AnalyzeFile(wg *sync.WaitGroup, limiter chan struct{}, result *AnalysisResult, filePath string, info os.FileInfo,
-	opener Opener) error {
+func (a Analyzer) AnalyzeFile(ctx context.Context, wg *sync.WaitGroup, limit *semaphore.Weighted, result *AnalysisResult,
+	filePath string, info os.FileInfo, opener Opener) error {
 	for _, d := range a.drivers {
 		// filepath extracted from tar file doesn't have the prefix "/"
 		if !d.Required(strings.TrimLeft(filePath, "/"), info) {
@@ -195,18 +197,20 @@ func (a Analyzer) AnalyzeFile(wg *sync.WaitGroup, limiter chan struct{}, result 
 			return xerrors.Errorf("unable to open a file (%s): %w", filePath, err)
 		}
 
+		if err = limit.Acquire(ctx, 1); err != nil {
+			return xerrors.Errorf("semaphore acquire: %w", err)
+		}
 		wg.Add(1)
+
 		go func(a analyzer, target AnalysisTarget) {
+			defer limit.Release(1)
 			defer wg.Done()
-			limiter <- struct{}{}
 
 			ret, err := a.Analyze(target)
 			if err != nil {
 				return
 			}
 			result.Merge(ret)
-
-			<-limiter
 		}(d, AnalysisTarget{FilePath: filePath, Content: b})
 	}
 	return nil
