@@ -3,11 +3,11 @@ package gobinary
 import (
 	"os"
 
+	"golang.org/x/xerrors"
+
 	"github.com/aquasecurity/fanal/analyzer"
 	"github.com/aquasecurity/fanal/analyzer/library"
 	"github.com/aquasecurity/go-dep-parser/pkg/gobinary"
-
-	"golang.org/x/xerrors"
 )
 
 func init() {
