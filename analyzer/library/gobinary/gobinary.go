@@ -21,7 +21,7 @@ type gobinaryLibraryAnalyzer struct{}
 func (a gobinaryLibraryAnalyzer) Analyze(target analyzer.AnalysisTarget) (*analyzer.AnalysisResult, error) {
 	res, err := library.Analyze(library.GoBinary, target.FilePath, target.Content, gobinary.Parse)
 	if err != nil {
-		return nil, xerrors.Errorf("unable to parse executable gobinary: %w", err)
+		return nil, xerrors.Errorf("unable to parse %s: %w", target.FilePath, err)
 	}
 	return res, nil
 }
