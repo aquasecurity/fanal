@@ -18,9 +18,9 @@ func init() {
 
 const version = 1
 
-type gomodAnalyzer struct{}
-
 var requiredFiles = []string{"go.sum"}
+
+type gomodAnalyzer struct{}
 
 func (a gomodAnalyzer) Analyze(target analyzer.AnalysisTarget) (*analyzer.AnalysisResult, error) {
 	res, err := library.Analyze(library.GoMod, target.FilePath, target.Content, gomod.Parse)
