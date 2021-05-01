@@ -20,7 +20,7 @@ func WalkDir(root string, f WalkFunc) error {
 			return nil
 		} else if isIgnored(pathname) {
 			return filepath.SkipDir
-		} else if fi.Mode()&os.ModeSymlink == os.ModeSymlink {
+		} else if !fi.Mode().IsRegular() {
 			return filepath.SkipDir
 		}
 		pathname = filepath.Clean(pathname)
