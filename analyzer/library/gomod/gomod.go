@@ -3,7 +3,6 @@ package gomod
 import (
 	"os"
 	"path/filepath"
-	"strings"
 
 	"golang.org/x/xerrors"
 
@@ -11,6 +10,7 @@ import (
 
 	"github.com/aquasecurity/fanal/analyzer"
 	"github.com/aquasecurity/fanal/analyzer/library"
+	"github.com/aquasecurity/fanal/utils"
 )
 
 func init() {
@@ -21,24 +21,19 @@ const version = 1
 
 type gomodAnalyzer struct{}
 
-var requiredExtensions = []string{".sum"}
+var requiredFiles = []string{"go.sum"}
 
 func (a gomodAnalyzer) Analyze(target analyzer.AnalysisTarget) (*analyzer.AnalysisResult, error) {
 	res, err := library.Analyze(library.GoMod, target.FilePath, target.Content, gomod.Parse)
 	if err != nil {
-		return nil, xerrors.Errorf("error with go.sum: %w", err)
+		return nil, xerrors.Errorf("error with filePath: %s, err: %w", target.FilePath, err)
 	}
 	return res, nil
 }
 
 func (a gomodAnalyzer) Required(filePath string, _ os.FileInfo) bool {
-	ext := filepath.Ext(filePath)
-	for _, required := range requiredExtensions {
-		if strings.EqualFold(ext, required) {
-			return true
-		}
-	}
-	return false
+	fileName := filepath.Base(filePath)
+	return utils.StringInSlice(fileName, requiredFiles)
 }
 
 func (a gomodAnalyzer) Type() analyzer.Type {

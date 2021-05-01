@@ -48,6 +48,10 @@ func Test_gomodAnalyzer_Analyze(t *testing.T) {
 					},
 				},
 			},
+		}, {
+			name:      "sad",
+			inputFile: "testdata/invalid.txt",
+			want:      nil,
 		},
 	}
 	for _, tt := range tests {
@@ -87,24 +91,14 @@ func Test_gomodAnalyzer_Required(t *testing.T) {
 		want     bool
 	}{
 		{
-			name:     "sums",
-			filePath: "test/test.sums",
-			want:     false,
-		},
-		{
-			name:     "sum",
-			filePath: "test.sum",
+			name:     "happy",
+			filePath: "test/go.sum",
 			want:     true,
 		},
 		{
-			name:     "subtract",
-			filePath: "a/b/c/d/test.subtract",
+			name:     "sad",
+			filePath: "a/b/c/d/test.sum",
 			want:     false,
-		},
-		{
-			name:     "capital sum",
-			filePath: "a/b/c/d/test.SUM",
-			want:     true,
 		},
 	}
 	for _, tt := range tests {
