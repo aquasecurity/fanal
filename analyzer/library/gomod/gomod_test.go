@@ -49,7 +49,7 @@ func Test_gomodAnalyzer_Analyze(t *testing.T) {
 				},
 			},
 		}, {
-			name:      "sad",
+			name:      "sad path",
 			inputFile: "testdata/invalid.txt",
 			want:      nil,
 		},
