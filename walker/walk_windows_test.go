@@ -1,5 +1,3 @@
-// +build aix darwin dragonfly freebsd js,wasm linux netbsd openbsd solaris
-
 package walker
 
 import (
@@ -32,8 +30,13 @@ func Test_isIgnore(t *testing.T) {
 			want: true,
 		},
 		{
-			name: "ignore dir in dirs",
+			name: "ignore dir in dirs slash separator",
 			dirs: []string{"foo/.git", "foo/node_modules"},
+			want: true,
+		},
+		{
+			name: "ignore dir in backslash separator",
+			dirs: []string{`foo\.git`, `foo\node_modules`},
 			want: true,
 		},
 		{

@@ -3,6 +3,7 @@ package walker_test
 import (
 	"errors"
 	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -19,7 +20,7 @@ func TestWalkDir(t *testing.T) {
 		if info.IsDir() {
 			return nil
 		}
-		if filePath == "testdata/fs/bar" {
+		if filepath.ToSlash(filePath) == "testdata/fs/bar" {
 			b, err := opener()
 			require.NoError(t, err)
 			assert.Equal(t, "bar", string(b))
