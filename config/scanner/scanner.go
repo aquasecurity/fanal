@@ -22,6 +22,10 @@ type Scanner struct {
 }
 
 func New(namespaces, policyPaths, dataPaths []string) (Scanner, error) {
+	if len(namespaces) == 0 || len(policyPaths) == 0 {
+		return Scanner{}, nil
+	}
+
 	engine, err := policy.Load(policyPaths, dataPaths)
 	if err != nil {
 		return Scanner{}, xerrors.Errorf("policy load error: %w", err)
@@ -34,6 +38,10 @@ func New(namespaces, policyPaths, dataPaths []string) (Scanner, error) {
 }
 
 func (s Scanner) ScanConfigs(ctx context.Context, files []types.Config) ([]types.Misconfiguration, error) {
+	if len(s.namespaces) == 0 {
+		return nil, nil
+	}
+
 	var configs []types.Config
 	for _, file := range files {
 		// Detect config types such as CloudFormation and Kubernetes.
