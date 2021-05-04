@@ -16,6 +16,8 @@ const (
 	Poetry   = "poetry"
 	Yarn     = "yarn"
 	Jar      = "jar"
+	GoBinary = "gobinary"
+	GoMod    = "gomod"
 
 	// Config files
 	YAML           = "yaml"
