@@ -30,6 +30,8 @@ const (
 	TypePipenv   Type = "pipenv"
 	TypePoetry   Type = "poetry"
 	TypeYarn     Type = "yarn"
+	TypeGoBinary Type = "gobinary"
+	TypeGoMod    Type = "gomod"
 
 	// Image Config
 	TypeApkCommand Type = "apk-command"

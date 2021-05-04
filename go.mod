@@ -7,7 +7,7 @@ require (
 	github.com/Microsoft/go-winio v0.4.16 // indirect
 	github.com/Microsoft/hcsshim v0.8.14 // indirect
 	github.com/alicebob/miniredis/v2 v2.14.1
-	github.com/aquasecurity/go-dep-parser v0.0.0-20210214113128-b97635cfd627
+	github.com/aquasecurity/go-dep-parser v0.0.0-20210427143403-3c97ccc53976
 	github.com/aquasecurity/testdocker v0.0.0-20210106133225-0b17fe083674
 	github.com/aws/aws-sdk-go v1.31.6
 	github.com/containerd/cgroups v0.0.0-20210114181951-8a68de567b68 // indirect
@@ -29,6 +29,7 @@ require (
 	github.com/kylelemons/godebug v1.1.0
 	github.com/magefile/mage v1.11.0 // indirect
 	github.com/mitchellh/mapstructure v1.4.1
+	github.com/moby/buildkit v0.8.1
 	github.com/open-policy-agent/conftest v0.23.0
 	github.com/open-policy-agent/opa v0.25.2
 	github.com/opencontainers/go-digest v1.0.0
@@ -44,10 +45,10 @@ require (
 	go.uber.org/zap v1.16.0
 	golang.org/x/mod v0.3.0
 	golang.org/x/net v0.0.0-20210220033124-5f55cee0dc0d // indirect
-	golang.org/x/oauth2 v0.0.0-20201208152858-08078c50e5b5 // indirect
-	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c // indirect
+	golang.org/x/sync v0.0.0-20201020160332-67f06af15bc9
 	golang.org/x/sys v0.0.0-20210220050731-9a76102bfb43 // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1
 	google.golang.org/genproto v0.0.0-20210219173056-d891e3cb3b5b // indirect
 	google.golang.org/grpc v1.35.0 // indirect
+	gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c
 )

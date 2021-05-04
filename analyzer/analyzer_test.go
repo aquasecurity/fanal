@@ -1,6 +1,7 @@
 package analyzer_test
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -9,6 +10,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"golang.org/x/sync/semaphore"
 	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/fanal/analyzer"
@@ -355,13 +357,16 @@ func TestAnalyzeFile(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var wg sync.WaitGroup
+			limit := semaphore.NewWeighted(3)
+
 			got := new(analyzer.AnalysisResult)
 			a := analyzer.NewAnalyzer(tt.args.disabledAnalyzers)
 
 			info, err := os.Stat(tt.args.testFilePath)
 			require.NoError(t, err)
 
-			err = a.AnalyzeFile(&wg, got, tt.args.filePath, info, func() ([]byte, error) {
+			ctx := context.Background()
+			err = a.AnalyzeFile(ctx, &wg, limit, got, tt.args.filePath, info, func() ([]byte, error) {
 				if tt.args.testFilePath == "testdata/error" {
 					return nil, xerrors.New("error")
 				}
@@ -373,9 +378,9 @@ func TestAnalyzeFile(t *testing.T) {
 				require.NotNil(t, err)
 				assert.Contains(t, err.Error(), tt.wantErr)
 				return
-			} else {
-				require.NoError(t, err)
 			}
+
+			require.NoError(t, err)
 			assert.Equal(t, tt.want, got)
 		})
 	}

@@ -9,6 +9,7 @@ import (
 	"sync"
 
 	v1 "github.com/google/go-containerregistry/pkg/v1"
+	"golang.org/x/sync/semaphore"
 	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/fanal/analyzer"
@@ -20,6 +21,10 @@ import (
 	"github.com/aquasecurity/fanal/log"
 	"github.com/aquasecurity/fanal/types"
 	"github.com/aquasecurity/fanal/walker"
+)
+
+const (
+	parallel = 5
 )
 
 type Artifact struct {
@@ -123,7 +128,7 @@ func (a Artifact) inspect(ctx context.Context, missingImage string, layerKeys []
 
 	var osFound types.OS
 	for _, k := range layerKeys {
-		go func(layerKey string) {
+		go func(ctx context.Context, layerKey string) {
 			diffID := layerKeyMap[layerKey]
 			layerInfo, err := a.inspectLayer(ctx, diffID)
 			if err != nil {
@@ -138,7 +143,7 @@ func (a Artifact) inspect(ctx context.Context, missingImage string, layerKeys []
 				osFound = *layerInfo.OS
 			}
 			done <- struct{}{}
-		}(k)
+		}(ctx, k)
 	}
 
 	for range layerKeys {
@@ -172,9 +177,10 @@ func (a Artifact) inspectLayer(ctx context.Context, diffID string) (types.BlobIn
 
 	var wg sync.WaitGroup
 	result := new(analyzer.AnalysisResult)
+	limit := semaphore.NewWeighted(parallel)
 
 	opqDirs, whFiles, err := walker.WalkLayerTar(r, func(filePath string, info os.FileInfo, opener analyzer.Opener) error {
-		if err = a.analyzer.AnalyzeFile(&wg, result, filePath, info, opener); err != nil {
+		if err = a.analyzer.AnalyzeFile(ctx, &wg, limit, result, filePath, info, opener); err != nil {
 			return xerrors.Errorf("failed to analyze %s: %w", filePath, err)
 		}
 		return nil

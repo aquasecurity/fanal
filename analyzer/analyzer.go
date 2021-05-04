@@ -1,11 +1,13 @@
 package analyzer
 
 import (
+	"context"
 	"os"
 	"sort"
 	"strings"
 	"sync"
 
+	"golang.org/x/sync/semaphore"
 	"golang.org/x/xerrors"
 
 	aos "github.com/aquasecurity/fanal/analyzer/os"
@@ -178,12 +180,8 @@ func (a Analyzer) ImageConfigAnalyzerVersions() map[string]int {
 	return versions
 }
 
-func (a Analyzer) AnalyzeFile(wg *sync.WaitGroup, result *AnalysisResult, filePath string, info os.FileInfo,
-	opener Opener) error {
-	if info.IsDir() {
-		return nil
-	}
-
+func (a Analyzer) AnalyzeFile(ctx context.Context, wg *sync.WaitGroup, limit *semaphore.Weighted, result *AnalysisResult,
+	filePath string, info os.FileInfo, opener Opener) error {
 	for _, d := range a.drivers {
 		// filepath extracted from tar file doesn't have the prefix "/"
 		if !d.Required(strings.TrimLeft(filePath, "/"), info) {
@@ -194,8 +192,13 @@ func (a Analyzer) AnalyzeFile(wg *sync.WaitGroup, result *AnalysisResult, filePa
 			return xerrors.Errorf("unable to open a file (%s): %w", filePath, err)
 		}
 
+		if err = limit.Acquire(ctx, 1); err != nil {
+			return xerrors.Errorf("semaphore acquire: %w", err)
+		}
 		wg.Add(1)
+
 		go func(a analyzer, target AnalysisTarget) {
+			defer limit.Release(1)
 			defer wg.Done()
 
 			ret, err := a.Analyze(target)
