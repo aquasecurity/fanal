@@ -99,7 +99,7 @@ func (a Artifact) Inspect(ctx context.Context) (types.ArtifactReference, error) 
 	// calculate hash of JSON and use it as pseudo artifactID and blobID
 	h := sha256.New()
 	if err = json.NewEncoder(h).Encode(blobInfo); err != nil {
-		return types.ArtifactReference{}, err
+		return types.ArtifactReference{}, xerrors.Errorf("json error: %w", err)
 	}
 
 	d := digest.NewDigest(digest.SHA256, h)
@@ -107,7 +107,7 @@ func (a Artifact) Inspect(ctx context.Context) (types.ArtifactReference, error) 
 	blobInfo.DiffID = diffID
 	cacheKey, err := cache.CalcKey(diffID, a.analyzer.AnalyzerVersions(), &a.configScannerOption)
 	if err != nil {
-		return types.ArtifactReference{}, err
+		return types.ArtifactReference{}, xerrors.Errorf("cache key: %w", err)
 	}
 
 	if err = a.cache.PutBlob(cacheKey, blobInfo); err != nil {
