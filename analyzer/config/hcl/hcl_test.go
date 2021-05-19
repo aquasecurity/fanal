@@ -5,12 +5,11 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/aquasecurity/fanal/analyzer/config/hcl"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/aquasecurity/fanal/analyzer"
+	"github.com/aquasecurity/fanal/analyzer/config/hcl"
 	"github.com/aquasecurity/fanal/types"
 )
 
