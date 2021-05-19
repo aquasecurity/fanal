@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"regexp"
 
-	multierror "github.com/hashicorp/go-multierror"
+	"github.com/hashicorp/go-multierror"
 	"github.com/open-policy-agent/conftest/parser/hcl1"
 	"github.com/open-policy-agent/conftest/parser/hcl2"
 	"golang.org/x/xerrors"
@@ -34,10 +34,10 @@ func NewConfigAnalyzer(filePattern *regexp.Regexp) ConfigAnalyzer {
 
 // Analyze analyzes HCL-based config files, defaulting to HCL2.0 spec
 // it returns error only if content does not comply to both HCL2.0 and HCL1.0 spec
-func (s ConfigAnalyzer) Analyze(target analyzer.AnalysisTarget) (*analyzer.AnalysisResult, error) {
-	parsed, err := s.analyze(target)
+func (a ConfigAnalyzer) Analyze(target analyzer.AnalysisTarget) (*analyzer.AnalysisResult, error) {
+	parsed, err := a.analyze(target)
 	if err != nil {
-		return nil, xerrors.Errorf("unable to parse HCL (%s): %w", target.FilePath, err)
+		return nil, xerrors.Errorf("unable to parse HCL (%a): %w", target.FilePath, err)
 	}
 
 	return &analyzer.AnalysisResult{
@@ -51,18 +51,18 @@ func (s ConfigAnalyzer) Analyze(target analyzer.AnalysisTarget) (*analyzer.Analy
 	}, nil
 }
 
-func (s ConfigAnalyzer) analyze(target analyzer.AnalysisTarget) (interface{}, error) {
+func (a ConfigAnalyzer) analyze(target analyzer.AnalysisTarget) (interface{}, error) {
 	var errs error
 	var parsed interface{}
 
-	if err := s.hcl2Parser.Unmarshal(target.Content, &parsed); err != nil {
-		errs = multierror.Append(errs, xerrors.Errorf("unable to parse HCL2 (%s): %w", target.FilePath, err))
+	if err := a.hcl2Parser.Unmarshal(target.Content, &parsed); err != nil {
+		errs = multierror.Append(errs, xerrors.Errorf("unable to parse HCL2 (%a): %w", target.FilePath, err))
 	} else {
 		return parsed, nil
 	}
 
-	if err := s.hcl1Parser.Unmarshal(target.Content, &parsed); err != nil {
-		errs = multierror.Append(errs, xerrors.Errorf("unable to parse HCL1 (%s): %w", target.FilePath, err))
+	if err := a.hcl1Parser.Unmarshal(target.Content, &parsed); err != nil {
+		errs = multierror.Append(errs, xerrors.Errorf("unable to parse HCL1 (%a): %w", target.FilePath, err))
 	} else {
 		return parsed, nil
 	}
@@ -70,8 +70,8 @@ func (s ConfigAnalyzer) analyze(target analyzer.AnalysisTarget) (interface{}, er
 	return nil, errs
 }
 
-func (s ConfigAnalyzer) Required(filePath string, _ os.FileInfo) bool {
-	if s.filePattern != nil && s.filePattern.MatchString(filePath) {
+func (a ConfigAnalyzer) Required(filePath string, _ os.FileInfo) bool {
+	if a.filePattern != nil && a.filePattern.MatchString(filePath) {
 		return true
 	}
 
@@ -84,10 +84,10 @@ func (s ConfigAnalyzer) Required(filePath string, _ os.FileInfo) bool {
 	return false
 }
 
-func (s ConfigAnalyzer) Type() analyzer.Type {
+func (ConfigAnalyzer) Type() analyzer.Type {
 	return analyzer.TypeHCL
 }
 
-func (s ConfigAnalyzer) Version() int {
+func (ConfigAnalyzer) Version() int {
 	return version
 }
