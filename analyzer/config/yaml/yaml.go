@@ -28,18 +28,18 @@ func NewConfigAnalyzer(filePattern *regexp.Regexp) ConfigAnalyzer {
 	}
 }
 
-func (s ConfigAnalyzer) Analyze(target analyzer.AnalysisTarget) (*analyzer.AnalysisResult, error) {
+func (a ConfigAnalyzer) Analyze(target analyzer.AnalysisTarget) (*analyzer.AnalysisResult, error) {
 	// YAML might have sub documents separated by "---"
 	//
 	// If the current configuration contains multiple configurations, evaluate each policy
 	// independent from one another and aggregate the results under the same file name.
-	docs := s.parser.SeparateSubDocuments(target.Content)
+	docs := a.parser.SeparateSubDocuments(target.Content)
 
 	var configs []types.Config
 	for _, doc := range docs {
-		parsed, err := s.parser.Parse(doc)
+		parsed, err := a.parser.Parse(doc)
 		if err != nil {
-			return nil, xerrors.Errorf("unable to parse YAML (%s): %w", target.FilePath, err)
+			return nil, xerrors.Errorf("unable to parse YAML (%a): %w", target.FilePath, err)
 		}
 
 		configs = append(configs, types.Config{
@@ -54,8 +54,8 @@ func (s ConfigAnalyzer) Analyze(target analyzer.AnalysisTarget) (*analyzer.Analy
 	}, nil
 }
 
-func (s ConfigAnalyzer) Required(filePath string, _ os.FileInfo) bool {
-	if s.filePattern != nil && s.filePattern.MatchString(filePath) {
+func (a ConfigAnalyzer) Required(filePath string, _ os.FileInfo) bool {
+	if a.filePattern != nil && a.filePattern.MatchString(filePath) {
 		return true
 	}
 
@@ -68,10 +68,10 @@ func (s ConfigAnalyzer) Required(filePath string, _ os.FileInfo) bool {
 	return false
 }
 
-func (s ConfigAnalyzer) Type() analyzer.Type {
+func (ConfigAnalyzer) Type() analyzer.Type {
 	return analyzer.TypeYaml
 }
 
-func (s ConfigAnalyzer) Version() int {
+func (ConfigAnalyzer) Version() int {
 	return version
 }
