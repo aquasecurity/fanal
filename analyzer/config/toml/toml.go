@@ -28,9 +28,9 @@ func NewConfigAnalyzer(filePattern *regexp.Regexp) ConfigAnalyzer {
 	}
 }
 
-func (s ConfigAnalyzer) Analyze(target analyzer.AnalysisTarget) (*analyzer.AnalysisResult, error) {
+func (a ConfigAnalyzer) Analyze(target analyzer.AnalysisTarget) (*analyzer.AnalysisResult, error) {
 	var parsed interface{}
-	if err := s.parser.Unmarshal(target.Content, &parsed); err != nil {
+	if err := a.parser.Unmarshal(target.Content, &parsed); err != nil {
 		return nil, xerrors.Errorf("unable to parse TOML (%s): %w", target.FilePath, err)
 	}
 
@@ -45,8 +45,8 @@ func (s ConfigAnalyzer) Analyze(target analyzer.AnalysisTarget) (*analyzer.Analy
 	}, nil
 }
 
-func (s ConfigAnalyzer) Required(filePath string, _ os.FileInfo) bool {
-	if s.filePattern != nil && s.filePattern.MatchString(filePath) {
+func (a ConfigAnalyzer) Required(filePath string, _ os.FileInfo) bool {
+	if a.filePattern != nil && a.filePattern.MatchString(filePath) {
 		return true
 	}
 
@@ -59,10 +59,10 @@ func (s ConfigAnalyzer) Required(filePath string, _ os.FileInfo) bool {
 	return false
 }
 
-func (s ConfigAnalyzer) Type() analyzer.Type {
+func (ConfigAnalyzer) Type() analyzer.Type {
 	return analyzer.TypeTOML
 }
 
-func (s ConfigAnalyzer) Version() int {
+func (ConfigAnalyzer) Version() int {
 	return version
 }
