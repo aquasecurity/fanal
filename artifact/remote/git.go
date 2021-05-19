@@ -5,6 +5,8 @@ import (
 	"net/url"
 	"os"
 
+	"golang.org/x/xerrors"
+
 	git "github.com/go-git/go-git/v5"
 
 	"github.com/aquasecurity/fanal/analyzer"
@@ -34,7 +36,7 @@ func NewArtifact(rawurl string, c cache.ArtifactCache, disabled []analyzer.Type,
 		Depth:    1,
 	})
 	if err != nil {
-		return nil, cleanup, err
+		return nil, cleanup, xerrors.Errorf("git error: %w", err)
 	}
 
 	cleanup = func() {
@@ -46,7 +48,7 @@ func NewArtifact(rawurl string, c cache.ArtifactCache, disabled []analyzer.Type,
 
 	art, err := local.NewArtifact(tmpDir, c, disabled, opt)
 	if err != nil {
-		return nil, cleanup, err
+		return nil, cleanup, xerrors.Errorf("fs artifact: %w", err)
 	}
 	return art, cleanup, nil
 }
