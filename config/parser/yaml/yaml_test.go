@@ -10,7 +10,7 @@ import (
 	"github.com/aquasecurity/fanal/config/parser/yaml"
 )
 
-func Test_yamlParser_Parse(t *testing.T) {
+func TestParser_Parse(t *testing.T) {
 	tests := []struct {
 		name      string
 		inputFile string
@@ -18,16 +18,16 @@ func Test_yamlParser_Parse(t *testing.T) {
 		wantErr   string
 	}{
 		{
-			name: "happy path",
+			name:      "happy path",
 			inputFile: "testdata/deployment.yaml",
 			want: map[string]interface{}{
-				"apiVersion":"apps/v1",
-				"kind":"Deployment",
-				"metadata":map[string]interface{}{
-					"name":"hello-kubernetes",
+				"apiVersion": "apps/v1",
+				"kind":       "Deployment",
+				"metadata": map[string]interface{}{
+					"name": "hello-kubernetes",
 				},
-				"spec":map[string]interface {}{
-					"replicas":4,
+				"spec": map[string]interface{}{
+					"replicas": 4,
 				},
 			},
 		},
@@ -44,6 +44,32 @@ func Test_yamlParser_Parse(t *testing.T) {
 				return
 			}
 			assert.NoError(t, err)
+			assert.Equal(t, tt.want, got)
+		})
+	}
+}
+
+func TestParser_SeparateSubDocuments(t *testing.T) {
+	tests := []struct {
+		name string
+		data []byte
+		want [][]byte
+	}{
+		{
+			name: "happy path",
+			data: []byte(`kind: Pod
+---
+kind: Service`),
+			want: [][]byte{
+				[]byte(`kind: Pod`),
+				[]byte(`kind: Service`),
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			p := &yaml.Parser{}
+			got := p.SeparateSubDocuments(tt.data)
 			assert.Equal(t, tt.want, got)
 		})
 	}
