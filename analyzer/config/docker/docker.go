@@ -6,12 +6,10 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/aquasecurity/fanal/config/parser/dockerfile"
-
 	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/fanal/analyzer"
-	"github.com/aquasecurity/fanal/config/scanner"
+	"github.com/aquasecurity/fanal/config/parser/dockerfile"
 	"github.com/aquasecurity/fanal/types"
 )
 
@@ -20,8 +18,7 @@ const version = 1
 var requiredFile = "Dockerfile"
 
 type ConfigAnalyzer struct {
-	parser *dockerfile.Parser
-	scanner.Scanner
+	parser      *dockerfile.Parser
 	filePattern *regexp.Regexp
 }
 
