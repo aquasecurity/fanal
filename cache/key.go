@@ -5,9 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"golang.org/x/xerrors"
-
 	"golang.org/x/mod/sumdb/dirhash"
+	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/fanal/analyzer/config"
 )
@@ -34,7 +33,7 @@ func CalcKey(id string, versions map[string]int, opt *config.ScannerOption) (str
 			}
 
 			if _, err = h.Write([]byte(s)); err != nil {
-				return "", err
+				return "", xerrors.Errorf("sha256 write error: %w", err)
 			}
 		}
 	}
