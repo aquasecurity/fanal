@@ -1,4 +1,4 @@
-package gcr
+package google
 
 import (
 	"reflect"

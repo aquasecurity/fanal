@@ -1,4 +1,4 @@
-package gcr
+package google
 
 import (
 	"context"
@@ -18,11 +18,14 @@ type GCR struct {
 	domain string
 }
 
+// Google container registry
 const gcrURL = "gcr.io"
+// Google artifact registry
+const garURL = "docker.pkg.dev"
 
 func (g *GCR) CheckOptions(domain string, d types.DockerOption) error {
-	if !strings.HasSuffix(domain, gcrURL) {
-		return xerrors.Errorf("GCR : %w", types.InvalidURLPattern)
+	if !strings.HasSuffix(domain, gcrURL) && !strings.HasSuffix(domain, garURL) {
+		return xerrors.Errorf("Google registry: %w", types.InvalidURLPattern)
 	}
 	g.domain = domain
 	if d.GcpCredPath != "" {
