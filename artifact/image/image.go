@@ -177,12 +177,12 @@ func (a Artifact) inspectLayer(ctx context.Context, diffID string) (types.BlobIn
 	if err != nil {
 		return types.BlobInfo{}, xerrors.Errorf("unable to get uncompressed layer %s: %w", diffID, err)
 	}
-
+	// below line of code gets the size of uncompressed layer. Will sum up these layer sizes to get the size of image.
+	cr := newCountingReader(r)
 	var wg sync.WaitGroup
 	result := new(analyzer.AnalysisResult)
 	limit := semaphore.NewWeighted(parallel)
-
-	opqDirs, whFiles, err := walker.WalkLayerTar(r, func(filePath string, info os.FileInfo, opener analyzer.Opener) error {
+	opqDirs, whFiles, err := walker.WalkLayerTar(cr, func(filePath string, info os.FileInfo, opener analyzer.Opener) error {
 		if err = a.analyzer.AnalyzeFile(ctx, &wg, limit, result, filePath, info, opener); err != nil {
 			return xerrors.Errorf("failed to analyze %s: %w", filePath, err)
 		}
@@ -214,6 +214,7 @@ func (a Artifact) inspectLayer(ctx context.Context, diffID string) (types.BlobIn
 		Misconfigurations: misconfs,
 		OpaqueDirs:        opqDirs,
 		WhiteoutFiles:     whFiles,
+		Size:              cr.Size(),
 	}
 	return layerInfo, nil
 }
@@ -229,7 +230,6 @@ func (a Artifact) uncompressedLayer(diffID string) (string, io.Reader, error) {
 	if err != nil {
 		return "", nil, xerrors.Errorf("failed to get the layer (%s): %w", diffID, err)
 	}
-
 	// digest is a hash of the compressed layer
 	var digest string
 	if a.isCompressed(layer) {
@@ -239,7 +239,9 @@ func (a Artifact) uncompressedLayer(diffID string) (string, io.Reader, error) {
 		}
 		digest = d.String()
 	}
-
+	if err != nil {
+		return "", nil, xerrors.Errorf("failed to get the uncompressed layer size (%s): %w", diffID, err)
+	}
 	r, err := layer.Uncompressed()
 	if err != nil {
 		return "", nil, xerrors.Errorf("failed to get the layer content (%s): %w", diffID, err)
@@ -280,4 +282,23 @@ func (a Artifact) inspectConfig(imageID string, osFound types.OS) error {
 	}
 
 	return nil
+}
+
+type countingReader struct {
+	reader    io.Reader
+	bytesRead int
+}
+
+func newCountingReader(r io.Reader) *countingReader {
+	return &countingReader{reader: r}
+}
+
+func (r *countingReader) Read(p []byte) (n int, err error) {
+	n, err = r.reader.Read(p)
+	r.bytesRead += n
+	return n, err
+}
+
+func (r *countingReader) Size() int {
+	return r.bytesRead
 }
