@@ -99,8 +99,8 @@ type ArtifactDetail struct {
 	Packages          []Package          `json:",omitempty"`
 	Applications      []Application      `json:",omitempty"`
 	Misconfigurations []Misconfiguration `json:",omitempty"`
+	Size              int                `json:",omitempty"`
 
 	// HistoryPackages are packages extracted from RUN instructions
 	HistoryPackages []Package `json:",omitempty"`
-	Size            int       `json:",omitempty"`
 }

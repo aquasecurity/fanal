@@ -177,11 +177,13 @@ func (a Artifact) inspectLayer(ctx context.Context, diffID string) (types.BlobIn
 	if err != nil {
 		return types.BlobInfo{}, xerrors.Errorf("unable to get uncompressed layer %s: %w", diffID, err)
 	}
+
 	// below line of code gets the size of uncompressed layer. Will sum up these layer sizes to get the size of image.
 	cr := newCountingReader(r)
 	var wg sync.WaitGroup
 	result := new(analyzer.AnalysisResult)
 	limit := semaphore.NewWeighted(parallel)
+
 	opqDirs, whFiles, err := walker.WalkLayerTar(cr, func(filePath string, info os.FileInfo, opener analyzer.Opener) error {
 		if err = a.analyzer.AnalyzeFile(ctx, &wg, limit, result, filePath, info, opener); err != nil {
 			return xerrors.Errorf("failed to analyze %s: %w", filePath, err)
@@ -230,6 +232,7 @@ func (a Artifact) uncompressedLayer(diffID string) (string, io.Reader, error) {
 	if err != nil {
 		return "", nil, xerrors.Errorf("failed to get the layer (%s): %w", diffID, err)
 	}
+
 	// digest is a hash of the compressed layer
 	var digest string
 	if a.isCompressed(layer) {
