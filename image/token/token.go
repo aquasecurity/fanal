@@ -15,7 +15,7 @@ var (
 )
 
 func init() {
-	RegisterRegistry(&google.GCR{})
+	RegisterRegistry(&google.Registry{})
 	RegisterRegistry(&ecr.ECR{})
 }
 

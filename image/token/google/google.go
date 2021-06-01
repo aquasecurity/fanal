@@ -13,17 +13,18 @@ import (
 	"github.com/GoogleCloudPlatform/docker-credential-gcr/store"
 )
 
-type GCR struct {
+type Registry struct {
 	Store  store.GCRCredStore
 	domain string
 }
 
 // Google container registry
 const gcrURL = "gcr.io"
+
 // Google artifact registry
 const garURL = "docker.pkg.dev"
 
-func (g *GCR) CheckOptions(domain string, d types.DockerOption) error {
+func (g *Registry) CheckOptions(domain string, d types.DockerOption) error {
 	if !strings.HasSuffix(domain, gcrURL) && !strings.HasSuffix(domain, garURL) {
 		return xerrors.Errorf("Google registry: %w", types.InvalidURLPattern)
 	}
@@ -34,7 +35,7 @@ func (g *GCR) CheckOptions(domain string, d types.DockerOption) error {
 	return nil
 }
 
-func (g *GCR) GetCredential(ctx context.Context) (username, password string, err error) {
+func (g *Registry) GetCredential(ctx context.Context) (username, password string, err error) {
 	var credStore store.GCRCredStore
 	if g.Store == nil {
 		credStore, err = store.DefaultGCRCredStore()
