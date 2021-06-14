@@ -280,3 +280,7 @@ func (a alpineCmdAnalyzer) Type() analyzer.Type {
 func (a alpineCmdAnalyzer) Version() int {
 	return analyzerVersion
 }
+
+func (a alpineCmdAnalyzer) CacheType() types.CacheType {
+	return types.BuiltInCache
+}

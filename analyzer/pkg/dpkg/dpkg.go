@@ -176,3 +176,7 @@ func (a debianPkgAnalyzer) Type() analyzer.Type {
 func (a debianPkgAnalyzer) Version() int {
 	return version
 }
+
+func (a debianPkgAnalyzer) CacheType() types.CacheType {
+	return types.BuiltInCache
+}

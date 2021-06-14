@@ -43,3 +43,7 @@ func (a npmLibraryAnalyzer) Type() analyzer.Type {
 func (a npmLibraryAnalyzer) Version() int {
 	return version
 }
+
+func (a npmLibraryAnalyzer) CacheType() types.CacheType {
+	return types.BuiltInCache
+}

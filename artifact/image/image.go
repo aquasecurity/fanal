@@ -29,7 +29,7 @@ const (
 
 type Artifact struct {
 	image               image.Image
-	cache               cache.ArtifactCache
+	caches              []cache.ArtifactCache
 	analyzer            analyzer.Analyzer
 	scanner             scanner.Scanner
 	configScannerOption config.ScannerOption
@@ -51,7 +51,30 @@ func NewArtifact(img image.Image, c cache.ArtifactCache, disabled []analyzer.Typ
 
 	return Artifact{
 		image:               img,
-		cache:               c,
+		caches:              []cache.ArtifactCache{c},
+		analyzer:            analyzer.NewAnalyzer(disabled),
+		scanner:             s,
+		configScannerOption: opt,
+	}, nil
+}
+
+func NewArtifactMultiCache(img image.Image, c []cache.ArtifactCache, disabled []analyzer.Type, opt config.ScannerOption) (artifact.Artifact, error) {
+	// Register config analyzers
+	if err := config.RegisterConfigAnalyzers(opt.FilePatterns); err != nil {
+		return nil, xerrors.Errorf("config scanner error: %w", err)
+	}
+
+	s, err := scanner.New(opt.Namespaces, opt.PolicyPaths, opt.DataPaths)
+	if err != nil {
+		return nil, xerrors.Errorf("scanner error: %w", err)
+	}
+
+	// Do not scan go.sum in container images, only scan go binaries
+	disabled = append(disabled, analyzer.TypeGoMod)
+
+	return Artifact{
+		image:               img,
+		caches:              c,
 		analyzer:            analyzer.NewAnalyzer(disabled),
 		scanner:             s,
 		configScannerOption: opt,
@@ -79,16 +102,38 @@ func (a Artifact) Inspect(ctx context.Context) (types.ArtifactReference, error) 
 		return types.ArtifactReference{}, err
 	}
 
-	missingImage, missingLayers, err := a.cache.MissingBlobs(imageKey, layerKeys)
-	if err != nil {
-		return types.ArtifactReference{}, xerrors.Errorf("unable to get missing layers: %w", err)
+	var missingImageKey string
+	var missingLayersAll = map[string]bool{}
+	for i := range a.caches {
+		var missingLayers = []string{}
+		if a.caches[i].Type() == types.BuiltInCache {
+			var missingImage bool
+			missingImage, missingLayers, err = a.caches[i].MissingBlobs(imageKey, layerKeys)
+			if err != nil {
+				return types.ArtifactReference{}, xerrors.Errorf("unable to get missing layers: %w", err)
+			}
+			if missingImage {
+				missingImageKey = imageKey
+				log.Logger.Debugf("Missing image ID: %s", imageID)
+			} else {
+				missingImageKey = ""
+			}
+		} else {
+			_, missingLayers, err = a.caches[i].MissingBlobs(imageKey, layerKeys)
+			if err != nil {
+				return types.ArtifactReference{}, xerrors.Errorf("unable to get missing layers: %w", err)
+			}
+		}
+		// Store unique missing layers IDs
+		for _, layer := range missingLayers {
+			missingLayersAll[layer] = true
+		}
 	}
 
-	missingImageKey := imageKey
-	if missingImage {
-		log.Logger.Debugf("Missing image ID: %s", imageID)
-	} else {
-		missingImageKey = ""
+	// Collect union of all missing layers
+	missingLayers := []string{}
+	for layer := range missingLayersAll {
+		missingLayers = append(missingLayers, layer)
 	}
 
 	if err = a.inspect(ctx, missingImageKey, missingLayers, layerKeyMap); err != nil {
@@ -138,13 +183,16 @@ func (a Artifact) inspect(ctx context.Context, missingImage string, layerKeys []
 				errCh <- xerrors.Errorf("failed to analyze layer: %s : %w", diffID, err)
 				return
 			}
-			if err = a.cache.PutBlob(layerKey, layerInfo); err != nil {
-				errCh <- xerrors.Errorf("failed to store layer: %s in cache: %w", layerKey, err)
-				return
+			for _, cache := range a.caches {
+				if err = cache.PutBlob(layerKey, layerInfo[cache.Type()]); err != nil {
+					errCh <- xerrors.Errorf("failed to store layer: %s in cache: %w", layerKey, err)
+					return
+				}
+				if layerInfo[cache.Type()].OS != nil {
+					osFound = *layerInfo[cache.Type()].OS
+				}
 			}
-			if layerInfo.OS != nil {
-				osFound = *layerInfo.OS
-			}
+
 			done <- struct{}{}
 		}(ctx, k)
 	}
@@ -158,11 +206,12 @@ func (a Artifact) inspect(ctx context.Context, missingImage string, layerKeys []
 			return xerrors.Errorf("timeout: %w", ctx.Err())
 		}
 	}
-
-	if missingImage != "" {
-		log.Logger.Debugf("Missing image cache: %s", missingImage)
-		if err := a.inspectConfig(missingImage, osFound); err != nil {
-			return xerrors.Errorf("unable to analyze config: %w", err)
+	for _, cache := range a.caches {
+		if missingImage != "" && cache.Type() == types.BuiltInCache {
+			log.Logger.Debugf("Missing image cache: %s", missingImage)
+			if err := a.inspectConfig(missingImage, osFound, cache); err != nil {
+				return xerrors.Errorf("unable to analyze config: %w", err)
+			}
 		}
 	}
 
@@ -170,54 +219,63 @@ func (a Artifact) inspect(ctx context.Context, missingImage string, layerKeys []
 
 }
 
-func (a Artifact) inspectLayer(ctx context.Context, diffID string) (types.BlobInfo, error) {
+func (a Artifact) inspectLayer(ctx context.Context, diffID string) (layerInfo map[types.CacheType]types.BlobInfo, err error) {
 	log.Logger.Debugf("Missing diff ID: %s", diffID)
-
+	layerInfo = map[types.CacheType]types.BlobInfo{}
 	layerDigest, r, err := a.uncompressedLayer(diffID)
 	if err != nil {
-		return types.BlobInfo{}, xerrors.Errorf("unable to get uncompressed layer %s: %w", diffID, err)
+		return layerInfo, xerrors.Errorf("unable to get uncompressed layer %s: %w", diffID, err)
 	}
 
 	// below line of code gets the size of uncompressed layer. Will sum up these layer sizes to get the size of image.
 	cr := newCountingReader(r)
 	var wg sync.WaitGroup
-	result := new(analyzer.AnalysisResult)
+	var resultMap = map[types.CacheType]*analyzer.AnalysisResult{}
+	for _, cache := range a.caches {
+		resultMap[cache.Type()] = new(analyzer.AnalysisResult)
+	}
 	limit := semaphore.NewWeighted(parallel)
-
 	opqDirs, whFiles, err := walker.WalkLayerTar(cr, func(filePath string, info os.FileInfo, opener analyzer.Opener) error {
-		if err = a.analyzer.AnalyzeFile(ctx, &wg, limit, result, filePath, info, opener); err != nil {
+		if err = a.analyzer.AnalyzeFile(ctx, &wg, limit, resultMap, filePath, info, opener); err != nil {
 			return xerrors.Errorf("failed to analyze %s: %w", filePath, err)
 		}
 		return nil
 	})
 	if err != nil {
-		return types.BlobInfo{}, xerrors.Errorf("walk error: %w", err)
+		return layerInfo, xerrors.Errorf("walk error: %w", err)
 	}
 
 	// Wait for all the goroutine to finish.
 	wg.Wait()
 
-	// Sort the analysis result for consistent results
-	result.Sort()
+	for cache, _ := range resultMap {
+		// Sort the analysis result for consistent results
+		resultMap[cache].Sort()
 
-	// Scan config files
-	misconfs, err := a.scanner.ScanConfigs(ctx, result.Configs)
-	if err != nil {
-		return types.BlobInfo{}, xerrors.Errorf("config scan error: %w", err)
+		// Scan config files
+		misconfs, err := a.scanner.ScanConfigs(ctx, resultMap[cache].Configs)
+		if err != nil {
+			return layerInfo, xerrors.Errorf("config scan error: %w", err)
+		}
+		blobInfo := types.BlobInfo{
+			SchemaVersion: types.BlobJSONSchemaVersion,
+			Digest:        layerDigest,
+			DiffID:        diffID,
+			Size:          cr.Size(),
+		}
+		if cache == types.BuiltInCache {
+			blobInfo.Misconfigurations = misconfs
+			blobInfo.OpaqueDirs = opqDirs
+			blobInfo.WhiteoutFiles = whFiles
+			blobInfo.OS = resultMap[cache].OS
+			blobInfo.PackageInfos = resultMap[cache].PackageInfos
+			blobInfo.Applications = resultMap[cache].Applications
+		} else {
+			blobInfo.CustomResources = resultMap[cache].CustomResources
+		}
+		layerInfo[cache] = blobInfo
 	}
 
-	layerInfo := types.BlobInfo{
-		SchemaVersion:     types.BlobJSONSchemaVersion,
-		Digest:            layerDigest,
-		DiffID:            diffID,
-		OS:                result.OS,
-		PackageInfos:      result.PackageInfos,
-		Applications:      result.Applications,
-		Misconfigurations: misconfs,
-		OpaqueDirs:        opqDirs,
-		WhiteoutFiles:     whFiles,
-		Size:              cr.Size(),
-	}
 	return layerInfo, nil
 }
 
@@ -256,7 +314,7 @@ func (a Artifact) isCompressed(l v1.Layer) bool {
 	return !uncompressed
 }
 
-func (a Artifact) inspectConfig(imageID string, osFound types.OS) error {
+func (a Artifact) inspectConfig(imageID string, osFound types.OS, cache cache.ArtifactCache) error {
 	configBlob, err := a.image.ConfigBlob()
 	if err != nil {
 		return xerrors.Errorf("unable to get config blob: %w", err)
@@ -278,7 +336,7 @@ func (a Artifact) inspectConfig(imageID string, osFound types.OS) error {
 		HistoryPackages: pkgs,
 	}
 
-	if err := a.cache.PutArtifact(imageID, info); err != nil {
+	if err := cache.PutArtifact(imageID, info); err != nil {
 		return xerrors.Errorf("failed to put image info into the cache: %w", err)
 	}
 

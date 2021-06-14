@@ -75,3 +75,7 @@ func (ConfigAnalyzer) Type() analyzer.Type {
 func (ConfigAnalyzer) Version() int {
 	return version
 }
+
+func (a ConfigAnalyzer) CacheType() types.CacheType {
+	return types.BuiltInCache
+}

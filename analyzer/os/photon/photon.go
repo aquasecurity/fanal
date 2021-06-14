@@ -63,3 +63,7 @@ func (a photonOSAnalyzer) Type() analyzer.Type {
 func (a photonOSAnalyzer) Version() int {
 	return version
 }
+
+func (a photonOSAnalyzer) CacheType() types.CacheType {
+	return types.BuiltInCache
+}

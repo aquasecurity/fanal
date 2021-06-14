@@ -42,3 +42,7 @@ func (a gobinaryLibraryAnalyzer) Type() analyzer.Type {
 func (a gobinaryLibraryAnalyzer) Version() int {
 	return version
 }
+
+func (a gobinaryLibraryAnalyzer) CacheType() types.CacheType {
+	return types.BuiltInCache
+}

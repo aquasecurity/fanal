@@ -77,3 +77,7 @@ func (a redhatOSAnalyzer) Type() analyzer.Type {
 func (a redhatOSAnalyzer) Version() int {
 	return redhatAnalyzerVersion
 }
+
+func (a redhatOSAnalyzer) CacheType() types.CacheType {
+	return types.BuiltInCache
+}

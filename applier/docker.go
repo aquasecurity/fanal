@@ -69,7 +69,7 @@ func ApplyLayers(layers []types.BlobInfo) types.ArtifactDetail {
 	sep := "/"
 	nestedMap := nested.Nested{}
 	var mergedLayer types.ArtifactDetail
-
+	analyzerNestedMap := map[string]map[string]nested.Nested{}
 	for _, layer := range layers {
 		mergedLayer.Size += layer.Size
 		for _, opqDir := range layer.OpaqueDirs {
@@ -96,6 +96,26 @@ func ApplyLayers(layers []types.BlobInfo) types.ArtifactDetail {
 			}
 			nestedMap.SetByString(config.FilePath, sep, config)
 		}
+		for cache, analyzerResources := range layer.CustomResources {
+			if _, ok := analyzerNestedMap[cache]; !ok {
+				analyzerNestedMap[cache] = map[string]nested.Nested{}
+			}
+			for analyzer, resources := range analyzerResources {
+				if _, ok := analyzerNestedMap[cache][analyzer]; !ok {
+					// Create 1 nested map for each analyzer of cache
+					analyzerNestedMap[cache][analyzer] = nested.Nested{}
+				}
+				for _, opqDir := range layer.OpaqueDirs {
+					_ = analyzerNestedMap[cache][analyzer].DeleteByString(opqDir, sep)
+				}
+				for _, whFile := range layer.WhiteoutFiles {
+					_ = analyzerNestedMap[cache][analyzer].DeleteByString(whFile, sep)
+				}
+				for _, info := range resources {
+					analyzerNestedMap[cache][analyzer].SetByString(info.FilePath, sep, info)
+				}
+			}
+		}
 	}
 
 	_ = nestedMap.Walk(func(keys []string, value interface{}) error {
@@ -109,6 +129,30 @@ func ApplyLayers(layers []types.BlobInfo) types.ArtifactDetail {
 		}
 		return nil
 	})
+
+	for cache, cacheNestedMap := range analyzerNestedMap {
+		if mergedLayer.CustomResources == nil {
+			mergedLayer.CustomResources = map[string]types.AnalyzerResources{}
+		}
+		mergedLayer.CustomResources[cache] = types.AnalyzerResources{}
+		for analyzer, nestedMap := range cacheNestedMap {
+			if _, ok := mergedLayer.CustomResources[cache][analyzer]; !ok {
+				mergedLayer.CustomResources[cache][analyzer] = []types.CustomResource{}
+			}
+			_ = nestedMap.Walk(func(keys []string, value interface{}) error {
+				switch v := value.(type) {
+				case types.CustomResource:
+					if data, ok := mergedLayer.CustomResources[cache][analyzer]; ok {
+						mergedLayer.CustomResources[cache][analyzer] = append(data, v)
+					} else {
+						mergedLayer.CustomResources[cache][analyzer] = []types.CustomResource{v}
+					}
+				}
+				return nil
+			})
+		}
+
+	}
 
 	for i, pkg := range mergedLayer.Packages {
 		originLayerDigest, originLayerDiffID := lookupOriginLayerForPkg(pkg, layers)
