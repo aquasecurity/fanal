@@ -63,7 +63,7 @@ type AnalysisResult struct {
 	PackageInfos    []types.PackageInfo
 	Applications    []types.Application
 	Configs         []types.Config
-	CustomResources map[string]types.AnalyzerResources
+	CustomResources []types.CustomResource
 }
 
 func (r *AnalysisResult) isEmpty() bool {
@@ -125,19 +125,7 @@ func (r *AnalysisResult) Merge(new *AnalysisResult) {
 		if r.CustomResources == nil {
 			r.CustomResources = new.CustomResources
 		} else {
-			// Single Cache may hold multiple analyzer's resources
-			for cache, analyserResources := range new.CustomResources {
-				if _, ok := r.CustomResources[cache]; !ok {
-					r.CustomResources[cache] = types.AnalyzerResources{}
-				}
-				for analyzer, resources := range analyserResources {
-					if info, ok := r.CustomResources[cache][analyzer]; ok {
-						r.CustomResources[cache][analyzer] = append(info, resources...)
-					} else {
-						r.CustomResources[cache][analyzer] = resources
-					}
-				}
-			}
+			r.CustomResources = append(r.CustomResources, new.CustomResources...)
 		}
 	}
 
@@ -177,9 +165,12 @@ func NewAnalyzer(disabledAnalyzers []Type) Analyzer {
 }
 
 // AnalyzerVersions returns analyzer version identifier used for cache keys.
-func (a Analyzer) AnalyzerVersions() map[string]int {
+func (a Analyzer) AnalyzerVersions(cache types.CacheType) map[string]int {
 	versions := map[string]int{}
 	for _, aa := range analyzers {
+		if aa.CacheType() != cache {
+			continue
+		}
 		if isDisabled(aa.Type(), a.disabledAnalyzers) {
 			versions[string(aa.Type())] = 0
 			continue

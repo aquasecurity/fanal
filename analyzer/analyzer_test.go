@@ -550,7 +550,7 @@ func TestAnalyzer_AnalyzerVersions(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			a := analyzer.NewAnalyzer(tt.disabled)
-			got := a.AnalyzerVersions()
+			got := a.AnalyzerVersions(types.BuiltInCache)
 			fmt.Printf("%v\n", got)
 			assert.Equal(t, tt.want, got)
 		})

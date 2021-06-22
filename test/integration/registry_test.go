@@ -202,7 +202,7 @@ func analyze(ctx context.Context, imageRef string, opt types.DockerOption) (*typ
 	}
 	defer cleanup()
 
-	ar, err := aimage.NewArtifact(img, c, nil, config.ScannerOption{})
+	ar, err := aimage.NewArtifact(img, []cache.ArtifactCache{c}, nil, config.ScannerOption{})
 	if err != nil {
 		return nil, err
 	}
@@ -214,7 +214,7 @@ func analyze(ctx context.Context, imageRef string, opt types.DockerOption) (*typ
 		return nil, err
 	}
 
-	imageDetail, err := ap.ApplyLayers(imageInfo.ID, imageInfo.BlobIDs)
+	imageDetail, err := ap.ApplyLayers(imageInfo.ID, imageInfo.BlobIDs[c.Type()])
 	if err != nil {
 		return nil, err
 	}

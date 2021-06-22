@@ -105,7 +105,7 @@ func (a Artifact) Inspect(ctx context.Context) (types.ArtifactReference, error) 
 	d := digest.NewDigest(digest.SHA256, h)
 	diffID := d.String()
 	blobInfo.DiffID = diffID
-	cacheKey, err := cache.CalcKey(diffID, a.analyzer.AnalyzerVersions(), &a.configScannerOption)
+	cacheKey, err := cache.CalcKey(diffID, a.analyzer.AnalyzerVersions(types.BuiltInCache), &a.configScannerOption)
 	if err != nil {
 		return types.ArtifactReference{}, xerrors.Errorf("cache key: %w", err)
 	}
@@ -126,6 +126,6 @@ func (a Artifact) Inspect(ctx context.Context) (types.ArtifactReference, error) 
 	return types.ArtifactReference{
 		Name:    hostName,
 		ID:      cacheKey, // use a cache key as pseudo artifact ID
-		BlobIDs: []string{cacheKey},
+		BlobIDs: map[types.CacheType][]string{types.BuiltInCache: []string{cacheKey}},
 	}, nil
 }
