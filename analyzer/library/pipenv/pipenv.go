@@ -43,3 +43,7 @@ func (a pipenvLibraryAnalyzer) Type() analyzer.Type {
 func (a pipenvLibraryAnalyzer) Version() int {
 	return version
 }
+
+func (a pipenvLibraryAnalyzer) CacheType() types.CacheType {
+	return types.BuiltInCache
+}

@@ -45,3 +45,7 @@ func (a debianOSAnalyzer) Type() analyzer.Type {
 func (a debianOSAnalyzer) Version() int {
 	return version
 }
+
+func (a debianOSAnalyzer) CacheType() types.CacheType {
+	return types.BuiltInCache
+}

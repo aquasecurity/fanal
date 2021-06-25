@@ -366,7 +366,7 @@ func TestAnalyzeFile(t *testing.T) {
 			require.NoError(t, err)
 
 			ctx := context.Background()
-			err = a.AnalyzeFile(ctx, &wg, limit, got, tt.args.filePath, info, func() ([]byte, error) {
+			err = a.AnalyzeFile(ctx, &wg, limit, map[types.CacheType]*analyzer.AnalysisResult{types.BuiltInCache: got}, tt.args.filePath, info, func() ([]byte, error) {
 				if tt.args.testFilePath == "testdata/error" {
 					return nil, xerrors.New("error")
 				}
@@ -550,7 +550,7 @@ func TestAnalyzer_AnalyzerVersions(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			a := analyzer.NewAnalyzer(tt.disabled)
-			got := a.AnalyzerVersions()
+			got := a.AnalyzerVersions(types.BuiltInCache)
 			fmt.Printf("%v\n", got)
 			assert.Equal(t, tt.want, got)
 		})

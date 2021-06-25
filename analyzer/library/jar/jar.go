@@ -52,3 +52,7 @@ func (a javaLibraryAnalyzer) Type() analyzer.Type {
 func (a javaLibraryAnalyzer) Version() int {
 	return version
 }
+
+func (a javaLibraryAnalyzer) CacheType() types.CacheType {
+	return types.BuiltInCache
+}

@@ -134,3 +134,8 @@ func (c RedisCache) Clear() error {
 	}
 	return nil
 }
+
+// Type returns default type
+func (fs RedisCache) Type() types.CacheType {
+	return types.BuiltInCache
+}

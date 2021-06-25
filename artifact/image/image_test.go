@@ -99,9 +99,11 @@ func TestArtifact_Inspect(t *testing.T) {
 				},
 			},
 			want: types.ArtifactReference{
-				Name:    "../../test/testdata/alpine-311.tar.gz",
-				ID:      "sha256:cdb49675542ff0051aaf7bab6c7a81b6fe275a7dd57d1e0317724a51edb7d6a6",
-				BlobIDs: []string{"sha256:c49e98b78d17b37b5e7e2e1032ebf9fa1b7d0b7f7998e37b2f0918739a6ffd7f"},
+				Name: "../../test/testdata/alpine-311.tar.gz",
+				ID:   "sha256:cdb49675542ff0051aaf7bab6c7a81b6fe275a7dd57d1e0317724a51edb7d6a6",
+				BlobIDs: map[types.CacheType][]string{
+					types.BuiltInCache: []string{"sha256:c49e98b78d17b37b5e7e2e1032ebf9fa1b7d0b7f7998e37b2f0918739a6ffd7f"},
+				},
 			},
 		},
 		{
@@ -299,11 +301,13 @@ func TestArtifact_Inspect(t *testing.T) {
 			want: types.ArtifactReference{
 				Name: "../../test/testdata/vuln-image.tar.gz",
 				ID:   "sha256:1a0f2e0e3a3ca6bf77692726db8b41793f3ac4edb7b64dd21a93d217ad8257e8",
-				BlobIDs: []string{
-					"sha256:9e39642ee1f76879f7a9bec9b89f1bdb94ec160ba7d66be9aa20a9bc7046470f",
-					"sha256:4b1e28f1bccd58cbef5dd8360ff808787e8a0d06a1d05b596a26ddb2cf7c5777",
-					"sha256:ebbbf6276d97ca5ea91f4efb90496650568c1961a6906555aa774594543b7576",
-					"sha256:1d9a1222903af7cad433a122d81cb35084541addd878e7cc11821c93ba435480",
+				BlobIDs: map[types.CacheType][]string{
+					types.BuiltInCache: []string{
+						"sha256:9e39642ee1f76879f7a9bec9b89f1bdb94ec160ba7d66be9aa20a9bc7046470f",
+						"sha256:4b1e28f1bccd58cbef5dd8360ff808787e8a0d06a1d05b596a26ddb2cf7c5777",
+						"sha256:ebbbf6276d97ca5ea91f4efb90496650568c1961a6906555aa774594543b7576",
+						"sha256:1d9a1222903af7cad433a122d81cb35084541addd878e7cc11821c93ba435480",
+					},
 				},
 			},
 		},
@@ -381,11 +385,13 @@ func TestArtifact_Inspect(t *testing.T) {
 			want: types.ArtifactReference{
 				Name: "../../test/testdata/vuln-image.tar.gz",
 				ID:   "sha256:1a0f2e0e3a3ca6bf77692726db8b41793f3ac4edb7b64dd21a93d217ad8257e8",
-				BlobIDs: []string{
-					"sha256:465b29fdf2037fa14e5a48a6c0f9908ad573ef4e4760bbed36aff614231600e5",
-					"sha256:135da42db81f43536be866113da80b5d330c8e3b2217108feb41e0da145af291",
-					"sha256:21dbb93b630abd81afcd42a7bc7f9147da08530566f744237f37474100e9ef4f",
-					"sha256:c47cef89b2d1014811c738f0b783f0ded8bddb5cff5ebf22672e7753f81941fa",
+				BlobIDs: map[types.CacheType][]string{
+					types.BuiltInCache: []string{
+						"sha256:465b29fdf2037fa14e5a48a6c0f9908ad573ef4e4760bbed36aff614231600e5",
+						"sha256:135da42db81f43536be866113da80b5d330c8e3b2217108feb41e0da145af291",
+						"sha256:21dbb93b630abd81afcd42a7bc7f9147da08530566f744237f37474100e9ef4f",
+						"sha256:c47cef89b2d1014811c738f0b783f0ded8bddb5cff5ebf22672e7753f81941fa",
+					},
 				},
 			},
 		},
@@ -542,7 +548,7 @@ func TestArtifact_Inspect(t *testing.T) {
 			img, err := image.NewArchiveImage(tt.imagePath)
 			require.NoError(t, err)
 
-			a, err := image2.NewArtifact(img, mockCache, tt.disableAnalyzers, config.ScannerOption{})
+			a, err := image2.NewArtifact(img, []cache.ArtifactCache{mockCache}, tt.disableAnalyzers, config.ScannerOption{})
 			require.NoError(t, err)
 
 			got, err := a.Inspect(context.Background())

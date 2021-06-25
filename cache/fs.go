@@ -187,3 +187,8 @@ func (fs FSCache) Clear() error {
 	}
 	return nil
 }
+
+// Type returns default type
+func (fs FSCache) Type() types.CacheType {
+	return types.BuiltInCache
+}

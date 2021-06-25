@@ -166,7 +166,7 @@ func inspect(ctx context.Context, art artifact.Artifact, c cache.LocalArtifactCa
 	}
 
 	a := applier.NewApplier(c)
-	mergedLayer, err := a.ApplyLayers(imageInfo.ID, imageInfo.BlobIDs)
+	mergedLayer, err := a.ApplyLayers(imageInfo.ID, imageInfo.BlobIDs[c.Type()])
 	if err != nil {
 		switch err {
 		case analyzer.ErrUnknownOS, analyzer.ErrNoPkgsDetected:
@@ -202,7 +202,7 @@ func imageArtifact(ctx context.Context, imageName string, c cache.ArtifactCache,
 		return nil, func() {}, err
 	}
 
-	art, err := aimage.NewArtifact(img, c, nil, opt)
+	art, err := aimage.NewArtifact(img, []cache.ArtifactCache{c}, nil, opt)
 	if err != nil {
 		return nil, func() {}, err
 	}
@@ -215,7 +215,7 @@ func archiveImageArtifact(imagePath string, c cache.ArtifactCache) (artifact.Art
 		return nil, err
 	}
 
-	art, err := aimage.NewArtifact(img, c, nil, config.ScannerOption{})
+	art, err := aimage.NewArtifact(img, []cache.ArtifactCache{c}, nil, config.ScannerOption{})
 	if err != nil {
 		return nil, err
 	}

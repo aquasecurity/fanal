@@ -81,6 +81,10 @@ func (_m *MockArtifactCache) MissingBlobs(artifactID string, blobIDs []string) (
 	return r0, r1, r2
 }
 
+func (_ *MockArtifactCache) Type() types.CacheType {
+	return types.BuiltInCache
+}
+
 type ArtifactCachePutArtifactArgs struct {
 	ArtifactID           string
 	ArtifactIDAnything   bool

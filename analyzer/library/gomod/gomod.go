@@ -43,3 +43,7 @@ func (a gomodAnalyzer) Type() analyzer.Type {
 func (a gomodAnalyzer) Version() int {
 	return version
 }
+
+func (a gomodAnalyzer) CacheType() types.CacheType {
+	return types.BuiltInCache
+}

@@ -135,3 +135,7 @@ func (a rpmPkgAnalyzer) Type() analyzer.Type {
 func (a rpmPkgAnalyzer) Version() int {
 	return version
 }
+
+func (a rpmPkgAnalyzer) CacheType() types.CacheType {
+	return types.BuiltInCache
+}

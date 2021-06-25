@@ -78,6 +78,11 @@ func (_m *MockLocalArtifactCache) Close() error {
 	return r0
 }
 
+// Type provides a mock function to give builtin cache
+func (_m *MockLocalArtifactCache) Type() types.CacheType {
+	return types.BuiltInCache
+}
+
 type LocalArtifactCacheGetArtifactArgs struct {
 	ArtifactID         string
 	ArtifactIDAnything bool
