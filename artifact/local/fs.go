@@ -43,7 +43,7 @@ func NewArtifact(dir string, c cache.ArtifactCache, disabled []analyzer.Type, op
 		return nil, xerrors.Errorf("config analyzer error: %w", err)
 	}
 
-	s, err := scanner.New(opt.Namespaces, opt.PolicyPaths, opt.DataPaths)
+	s, err := scanner.New(dir, opt.Namespaces, opt.PolicyPaths, opt.DataPaths)
 	if err != nil {
 		return nil, xerrors.Errorf("scanner error: %w", err)
 	}
@@ -67,7 +67,7 @@ func (a Artifact) Inspect(ctx context.Context) (types.ArtifactReference, error) 
 		if err != nil {
 			return xerrors.Errorf("filepath rel (%s): %w", filePath, err)
 		}
-		if err = a.analyzer.AnalyzeFile(ctx, &wg, limit, result, filePath, info, opener); err != nil {
+		if err = a.analyzer.AnalyzeFile(ctx, &wg, limit, result, a.dir, filePath, info, opener); err != nil {
 			return xerrors.Errorf("analyze file (%s): %w", filePath, err)
 		}
 		return nil
