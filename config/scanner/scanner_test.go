@@ -67,16 +67,67 @@ func TestScanner_ScanConfig(t *testing.T) {
 				},
 			},
 			want: types.Misconfiguration{
-				FileType: "kubernetes",
-				FilePath: "deployment.yaml",
+				FileType: types.Terraform,
+				FilePath: "main.tf",
+				Successes: []types.MisconfResult{
+					{
+						Message: "Resource 'aws_security_group_rule.my-rule' passed check: An egress security group rule allows traffic to /0.",
+						PolicyMetadata: types.PolicyMetadata{
+							Type:     "Terraform Security Check powered by tfsec",
+							ID:       "AWS007",
+							Severity: "UNKNOWN",
+						},
+					},
+					{
+						Message: `Resource 'variable.enableEncryption' passed check: Potentially sensitive data stored in "default" value of variable.`,
+						PolicyMetadata: types.PolicyMetadata{
+							Type:     "Terraform Security Check powered by tfsec",
+							ID:       "GEN001",
+							Severity: "CRITICAL",
+						},
+					},
+					{
+						Message: `Resource 'aws_security_group_rule.my-rule' passed check: Potentially sensitive data stored in block attribute.`,
+						PolicyMetadata: types.PolicyMetadata{
+							Type:     "Terraform Security Check powered by tfsec",
+							ID:       "GEN003",
+							Severity: "CRITICAL",
+						},
+					},
+					{
+						Message: `Resource 'azurerm_managed_disk.source' passed check: Potentially sensitive data stored in block attribute.`,
+						PolicyMetadata: types.PolicyMetadata{
+							Type:     "Terraform Security Check powered by tfsec",
+							ID:       "GEN003",
+							Severity: "CRITICAL",
+						},
+					},
+				},
 				Failures: []types.MisconfResult{
 					{
-						Namespace: "testdata.kubernetes.id_100",
-						Message:   "deny",
+						Message: "Resource 'aws_security_group_rule.my-rule' defines a fully open ingress security group rule.",
 						PolicyMetadata: types.PolicyMetadata{
-							Type:     "Kubernetes Security Check",
-							Title:    "Bad Deployment",
-							ID:       "ID-100",
+							Type:     "Terraform Security Check powered by tfsec",
+							Title:    "An ingress security group rule allows traffic from /0.",
+							ID:       "AWS006",
+							Severity: "MEDIUM",
+						},
+					},
+					{
+						Message: "Resource 'aws_security_group_rule.my-rule' should include a description for auditing purposes.",
+						PolicyMetadata: types.PolicyMetadata{
+							Type:     "Terraform Security Check powered by tfsec",
+							Title:    "Missing description for security group/security group rule.",
+							ID:       "AWS018",
+							Severity: "HIGH",
+						},
+					},
+					{
+						Message: "Resource 'azurerm_managed_disk.source' defines an unencrypted managed disk.",
+						PolicyMetadata: types.PolicyMetadata{
+							Type:     "Terraform Security Check powered by tfsec",
+							Title:    "Unencrypted managed disk.",
+							ID:       "AZU003",
 							Severity: "HIGH",
 						},
 					},

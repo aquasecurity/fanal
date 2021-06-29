@@ -21,9 +21,9 @@ require (
 	github.com/go-redis/redis/v8 v8.4.0
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/google/go-containerregistry v0.1.2
+	github.com/hashicorp/errwrap v1.1.0 // indirect
+	github.com/hashicorp/go-hclog v0.15.0 // indirect
 	github.com/hashicorp/go-multierror v1.1.1
-	github.com/k0kubun/colorstring v0.0.0-20150214042306-9440f1994b88 // indirect
-	github.com/k0kubun/pp v3.0.1+incompatible
 	github.com/knqyf263/go-apk-version v0.0.0-20200609155635-041fdbb8563f
 	github.com/knqyf263/go-deb-version v0.0.0-20190517075300-09fca494f03d
 	github.com/knqyf263/go-rpmdb v0.0.0-20201215100354-a9e3110d8ee1
@@ -41,14 +41,14 @@ require (
 	github.com/sosedoff/gitkit v0.2.0
 	github.com/stretchr/testify v1.7.0
 	github.com/testcontainers/testcontainers-go v0.9.1-0.20210218153226-c8e070a2f18d
-	github.com/tfsec/tfsec v0.40.5
+	github.com/tfsec/tfsec v0.40.7-0.20210629072544-d8b8d646671d
 	github.com/urfave/cli/v2 v2.3.0
 	go.etcd.io/bbolt v1.3.5
 	go.opencensus.io v0.22.6 // indirect
 	go.uber.org/zap v1.16.0
 	golang.org/x/mod v0.3.0
+	golang.org/x/oauth2 v0.0.0-20200902213428-5d25da1a8d43 // indirect
 	golang.org/x/sync v0.0.0-20201020160332-67f06af15bc9
-	golang.org/x/sys v0.0.0-20210220050731-9a76102bfb43 // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1
 	google.golang.org/genproto v0.0.0-20210219173056-d891e3cb3b5b // indirect
 	google.golang.org/grpc v1.35.0 // indirect
