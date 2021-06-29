@@ -31,12 +31,12 @@ type PolicyMetadata struct {
 }
 
 type PolicyInputOption struct {
-	Combine  bool
-	Selector PolicyInputSelector
+	Combine   bool                  `mapstructure:"combine"`
+	Selectors []PolicyInputSelector `mapstructure:"selector"`
 }
 
 type PolicyInputSelector struct {
-	Types []string
+	Type string `mapstructure:"type"`
 }
 
 func (r MisconfResults) Len() int {
