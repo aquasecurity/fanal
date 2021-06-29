@@ -63,6 +63,7 @@ func (a Artifact) Inspect(ctx context.Context) (types.ArtifactReference, error) 
 	limit := semaphore.NewWeighted(parallel)
 
 	err := walker.WalkDir(a.dir, func(filePath string, info os.FileInfo, opener analyzer.Opener) error {
+		// For exported rootfs (e.g. images/alpine/etc/alpine-release)
 		filePath, err := filepath.Rel(a.dir, filePath)
 		if err != nil {
 			return xerrors.Errorf("filepath rel (%s): %w", filePath, err)
