@@ -16,9 +16,10 @@ const (
 	TypeUbuntu     Type = "ubuntu"
 
 	// OS Package
-	TypeApk  Type = "apk"
-	TypeDpkg Type = "dpkg"
-	TypeRpm  Type = "rpm"
+	TypeApk            Type = "apk"
+	TypeDpkg           Type = "dpkg"
+	TypeDpkgPkgLicense Type = "dpkgPkgLicense"
+	TypeRpm            Type = "rpm"
 
 	// Programming Language Package
 	TypeBundler  Type = "bundler"

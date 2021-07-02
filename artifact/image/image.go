@@ -14,6 +14,7 @@ import (
 
 	"github.com/aquasecurity/fanal/analyzer"
 	"github.com/aquasecurity/fanal/analyzer/config"
+	dpkgPkgLicense "github.com/aquasecurity/fanal/analyzer/pkg/dpkgpkglicenses"
 	"github.com/aquasecurity/fanal/artifact"
 	"github.com/aquasecurity/fanal/cache"
 	"github.com/aquasecurity/fanal/config/scanner"
@@ -207,6 +208,8 @@ func (a Artifact) inspectLayer(ctx context.Context, diffID string) (types.BlobIn
 		return types.BlobInfo{}, xerrors.Errorf("config scan error: %w", err)
 	}
 
+	result.PackageInfos = MergeDpkgLicenseData(result.PackageInfos)
+
 	layerInfo := types.BlobInfo{
 		SchemaVersion:     types.BlobJSONSchemaVersion,
 		Digest:            layerDigest,
@@ -303,4 +306,30 @@ func (r *countingReader) Read(p []byte) (n int, err error) {
 
 func (r *countingReader) Size() int {
 	return r.bytesRead
+}
+
+func MergeDpkgLicenseData(pkgInfos []types.PackageInfo) []types.PackageInfo {
+
+	pkgWithLicense := make(map[string]string)
+	var pkgWithVersion []types.PackageInfo
+
+	for _, pkgInfo := range pkgInfos {
+		if dpkgPkgLicense.DpkgPkgLicensePath.MatchString(pkgInfo.FilePath) {
+			pkgWithLicense[pkgInfo.Packages[0].Name] = pkgInfo.Packages[0].License
+		} else {
+			pkgWithVersion = append(pkgWithVersion, pkgInfo)
+		}
+	}
+
+	if len(pkgWithLicense) > 0 {
+		for _, pkgInfo := range pkgWithVersion {
+			for i, pkg := range pkgInfo.Packages {
+				if license, ok := pkgWithLicense[pkg.Name]; ok {
+					pkgInfo.Packages[i].License = license
+				}
+			}
+		}
+		return pkgWithVersion
+	}
+	return pkgInfos
 }
