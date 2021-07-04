@@ -14,7 +14,10 @@ import (
 
 const version = 1
 
-var requiredExts = []string{".json"}
+var (
+	requiredExts  = []string{".json"}
+	excludedFiles = []string{"package-lock.json", "packages.lock.json"}
+)
 
 type ConfigAnalyzer struct {
 	parser      *json.Parser
@@ -48,6 +51,13 @@ func (a ConfigAnalyzer) Analyze(target analyzer.AnalysisTarget) (*analyzer.Analy
 func (a ConfigAnalyzer) Required(filePath string, _ os.FileInfo) bool {
 	if a.filePattern != nil && a.filePattern.MatchString(filePath) {
 		return true
+	}
+
+	filename := filepath.Base(filePath)
+	for _, excludedFile := range excludedFiles {
+		if filename == excludedFile {
+			return false
+		}
 	}
 
 	ext := filepath.Ext(filePath)
