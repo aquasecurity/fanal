@@ -11,6 +11,7 @@ import (
 	"github.com/aquasecurity/fanal/analyzer/config/docker"
 	"github.com/aquasecurity/fanal/analyzer/config/hcl"
 	"github.com/aquasecurity/fanal/analyzer/config/json"
+	"github.com/aquasecurity/fanal/analyzer/config/terraform"
 	"github.com/aquasecurity/fanal/analyzer/config/toml"
 	"github.com/aquasecurity/fanal/analyzer/config/yaml"
 	"github.com/aquasecurity/fanal/types"
@@ -26,6 +27,9 @@ type ScannerOption struct {
 }
 
 func (o *ScannerOption) Sort() {
+	sort.Slice(o.Namespaces, func(i, j int) bool {
+		return o.Namespaces[i] < o.Namespaces[j]
+	})
 	sort.Slice(o.FilePatterns, func(i, j int) bool {
 		return o.FilePatterns[i] < o.FilePatterns[j]
 	})
@@ -70,6 +74,7 @@ func RegisterConfigAnalyzers(filePatterns []string) error {
 	analyzer.RegisterAnalyzer(docker.NewConfigAnalyzer(dockerRegexp))
 	analyzer.RegisterAnalyzer(hcl.NewConfigAnalyzer(hclRegexp))
 	analyzer.RegisterAnalyzer(json.NewConfigAnalyzer(jsonRegexp))
+	analyzer.RegisterAnalyzer(terraform.NewConfigAnalyzer())
 	analyzer.RegisterAnalyzer(toml.NewConfigAnalyzer(tomlRegexp))
 	analyzer.RegisterAnalyzer(yaml.NewConfigAnalyzer(yamlRegexp))
 

@@ -8,7 +8,6 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
-	"sort"
 	"strings"
 
 	"github.com/mitchellh/mapstructure"
@@ -22,6 +21,11 @@ import (
 
 	"github.com/aquasecurity/fanal/types"
 	"github.com/aquasecurity/fanal/utils"
+)
+
+var (
+	warningRegex = regexp.MustCompile("^warn(_[a-zA-Z0-9]+)*$")
+	failureRegex = regexp.MustCompile("^(deny|violation)(_[a-zA-Z0-9]+)*$")
 )
 
 // Engine represents the policy engine.
@@ -187,24 +191,19 @@ func (e *Engine) Check(ctx context.Context, configs []types.Config, namespaces [
 			return nil, xerrors.Errorf("failed to query input option: %w", err)
 		}
 
-		var rules []string
-		for r := range module.Rules {
-			currentRule := module.Rules[r].Head.Name.String()
-			if isFailure(currentRule) || isWarning(currentRule) {
-				rules = append(rules, currentRule)
-			}
-		}
-
 		var selectedConfigs []types.Config
-		if len(inputOption.Selector.Types) > 0 {
+		if len(inputOption.Selectors) > 0 {
 			// Pass only the config files that match the selector types
-			for _, t := range inputOption.Selector.Types {
+			for _, t := range uniqueSelectorTypes(inputOption.Selectors) {
 				selectedConfigs = append(selectedConfigs, typedConfigs[t]...)
 			}
 		} else {
-			// When the 'types' is not specified, it means '*'.
+			// When the 'selector' is not specified, it means '*'.
 			selectedConfigs = configs
 		}
+
+		// Extract deny and warn rules
+		rules := entrypoints(module)
 
 		var result map[string]types.Misconfiguration
 		if inputOption.Combine {
@@ -221,7 +220,7 @@ func (e *Engine) Check(ctx context.Context, configs []types.Config, namespaces [
 		}
 	}
 
-	return toMisconfigurations(uniqMisconfs), nil
+	return types.ToMisconfigurations(uniqMisconfs), nil
 }
 
 func (e Engine) check(ctx context.Context, currentNamespace string, rules []string, configs []types.Config,
@@ -594,6 +593,9 @@ func (e *Engine) queryMetadata(ctx context.Context, namespace string) (types.Pol
 		return types.PolicyMetadata{}, xerrors.Errorf("decode error: %w", err)
 	}
 
+	// e.g. Low -> LOW
+	metadata.Severity = strings.ToUpper(metadata.Severity)
+
 	return metadata, nil
 }
 
@@ -618,13 +620,23 @@ func (e *Engine) queryInputOption(ctx context.Context, namespace string) (types.
 		return types.PolicyInputOption{}, xerrors.New("'__rego_input__' must be map")
 	}
 
-	// Set default values
 	var inputOption types.PolicyInputOption
 	if err = mapstructure.Decode(result, &inputOption); err != nil {
 		return types.PolicyInputOption{}, xerrors.Errorf("decode error: %w", err)
 	}
 
 	return inputOption, nil
+}
+
+func entrypoints(module *ast.Module) []string {
+	uniqRules := map[string]struct{}{}
+	for r := range module.Rules {
+		currentRule := module.Rules[r].Head.Name.String()
+		if isFailure(currentRule) || isWarning(currentRule) {
+			uniqRules[currentRule] = struct{}{}
+		}
+	}
+	return utils.Keys(uniqRules)
 }
 
 func parseResult(r map[string]interface{}) (string, string, error) {
@@ -647,18 +659,20 @@ func parseResult(r map[string]interface{}) (string, string, error) {
 }
 
 func isWarning(rule string) bool {
-	warningRegex := regexp.MustCompile("^warn(_[a-zA-Z0-9]+)*$")
 	return warningRegex.MatchString(rule)
 }
 
 func isFailure(rule string) bool {
-	failureRegex := regexp.MustCompile("^(deny|violation)(_[a-zA-Z0-9]+)*$")
 	return failureRegex.MatchString(rule)
 }
 
 // When matching rules for exceptions, only the name of the rule
 // is queried, so the severity prefix must be removed.
 func removeRulePrefix(rule string) string {
+	if rule == "violation" || rule == "deny" || rule == "warn" {
+		return ""
+	}
+
 	rule = strings.TrimPrefix(rule, "violation_")
 	rule = strings.TrimPrefix(rule, "deny_")
 	rule = strings.TrimPrefix(rule, "warn_")
@@ -666,18 +680,12 @@ func removeRulePrefix(rule string) string {
 	return rule
 }
 
-func uniqueResults(results []types.MisconfResult) []types.MisconfResult {
-	uniq := map[string]types.MisconfResult{}
-	for _, result := range results {
-		key := fmt.Sprintf("%s::%s::%s", result.ID, result.Namespace, result.Message)
-		uniq[key] = result
+func uniqueSelectorTypes(selectors []types.PolicyInputSelector) []string {
+	selectorTypes := map[string]struct{}{}
+	for _, s := range selectors {
+		selectorTypes[s.Type] = struct{}{}
 	}
-
-	var uniqResults []types.MisconfResult
-	for _, s := range uniq {
-		uniqResults = append(uniqResults, s)
-	}
-	return uniqResults
+	return utils.Keys(selectorTypes)
 }
 
 func underNamespaces(current string, namespaces []string) bool {
@@ -691,32 +699,6 @@ func underNamespaces(current string, namespaces []string) bool {
 		}
 	}
 	return false
-}
-
-func toMisconfigurations(misconfs map[string]types.Misconfiguration) []types.Misconfiguration {
-	var results []types.Misconfiguration
-	for _, misconf := range misconfs {
-		// Remove duplicates
-		misconf.Successes = uniqueResults(misconf.Successes)
-
-		// Sort results
-		sort.Sort(misconf.Successes)
-		sort.Sort(misconf.Warnings)
-		sort.Sort(misconf.Failures)
-		sort.Sort(misconf.Exceptions)
-
-		results = append(results, misconf)
-	}
-
-	// Sort misconfigurations
-	sort.Slice(results, func(i, j int) bool {
-		if results[i].FileType != results[j].FileType {
-			return results[i].FileType < results[j].FileType
-		}
-		return results[i].FilePath < results[j].FilePath
-	})
-
-	return results
 }
 
 func mergeMisconfs(a, b types.Misconfiguration) types.Misconfiguration {
