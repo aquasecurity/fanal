@@ -24,10 +24,13 @@ type MisconfResult struct {
 type MisconfResults []MisconfResult
 
 type PolicyMetadata struct {
-	ID       string `json:",omitempty"`
-	Type     string `json:",omitempty"`
-	Title    string `json:",omitempty"`
-	Severity string `json:",omitempty"`
+	ID                 string `json:",omitempty"`
+	Type               string `json:",omitempty"`
+	Title              string `json:",omitempty"`
+	Description        string `json:",omitempty"`
+	Severity           string `json:",omitempty"`
+	RecommendedActions string `json:",omitempty" mapstructure:"recommended_actions"`
+	Reference          string `json:",omitempty" mapstructure:"url"`
 }
 
 type PolicyInputOption struct {
