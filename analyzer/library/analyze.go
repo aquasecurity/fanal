@@ -11,9 +11,9 @@ import (
 	godeptypes "github.com/aquasecurity/go-dep-parser/pkg/types"
 )
 
-type parser func(r io.Reader) ([]godeptypes.Library, error)
+type Parser func(r io.Reader) ([]godeptypes.Library, error)
 
-func Analyze(analyzerType, filePath string, content []byte, parse parser) (*analyzer.AnalysisResult, error) {
+func Analyze(analyzerType, filePath string, content []byte, parse Parser) (*analyzer.AnalysisResult, error) {
 	r := bytes.NewReader(content)
 	parsedLibs, err := parse(r)
 	if err != nil {
