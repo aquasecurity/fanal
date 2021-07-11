@@ -30,30 +30,36 @@ const (
 )
 
 type Artifact struct {
-	dir                 string
-	cache               cache.ArtifactCache
-	analyzer            analyzer.Analyzer
-	scanner             scanner.Scanner
+	dir      string
+	cache    cache.ArtifactCache
+	walker   walker.Dir
+	analyzer analyzer.Analyzer
+	scanner  scanner.Scanner
+
+	artifactOption      artifact.Option
 	configScannerOption config.ScannerOption
 }
 
-func NewArtifact(dir string, c cache.ArtifactCache, disabled []analyzer.Type, opt config.ScannerOption) (artifact.Artifact, error) {
+func NewArtifact(dir string, c cache.ArtifactCache, artifactOpt artifact.Option, scannerOpt config.ScannerOption) (artifact.Artifact, error) {
 	// Register config analyzers
-	if err := config.RegisterConfigAnalyzers(opt.FilePatterns); err != nil {
+	if err := config.RegisterConfigAnalyzers(scannerOpt.FilePatterns); err != nil {
 		return nil, xerrors.Errorf("config analyzer error: %w", err)
 	}
 
-	s, err := scanner.New(opt.Namespaces, opt.PolicyPaths, opt.DataPaths)
+	s, err := scanner.New(scannerOpt.Namespaces, scannerOpt.PolicyPaths, scannerOpt.DataPaths)
 	if err != nil {
 		return nil, xerrors.Errorf("scanner error: %w", err)
 	}
 
 	return Artifact{
-		dir:                 dir,
-		cache:               c,
-		analyzer:            analyzer.NewAnalyzer(disabled),
-		scanner:             s,
-		configScannerOption: opt,
+		dir:      dir,
+		cache:    c,
+		walker:   walker.NewDir(artifactOpt.SkipFiles, artifactOpt.SkipDirs),
+		analyzer: analyzer.NewAnalyzer(artifactOpt.DisabledAnalyzers),
+		scanner:  s,
+
+		artifactOption:      artifactOpt,
+		configScannerOption: scannerOpt,
 	}, nil
 }
 
@@ -62,7 +68,7 @@ func (a Artifact) Inspect(ctx context.Context) (types.ArtifactReference, error) 
 	result := new(analyzer.AnalysisResult)
 	limit := semaphore.NewWeighted(parallel)
 
-	err := walker.WalkDir(a.dir, func(filePath string, info os.FileInfo, opener analyzer.Opener) error {
+	err := a.walker.Walk(a.dir, func(filePath string, info os.FileInfo, opener analyzer.Opener) error {
 		filePath, err := filepath.Rel(a.dir, filePath)
 		if err != nil {
 			return xerrors.Errorf("filepath rel (%s): %w", filePath, err)
@@ -105,7 +111,7 @@ func (a Artifact) Inspect(ctx context.Context) (types.ArtifactReference, error) 
 	d := digest.NewDigest(digest.SHA256, h)
 	diffID := d.String()
 	blobInfo.DiffID = diffID
-	cacheKey, err := cache.CalcKey(diffID, a.analyzer.AnalyzerVersions(), &a.configScannerOption)
+	cacheKey, err := cache.CalcKey(diffID, a.analyzer.AnalyzerVersions(), a.artifactOption, a.configScannerOption)
 	if err != nil {
 		return types.ArtifactReference{}, xerrors.Errorf("cache key: %w", err)
 	}

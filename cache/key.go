@@ -5,27 +5,39 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/aquasecurity/fanal/artifact"
+
 	"golang.org/x/mod/sumdb/dirhash"
 	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/fanal/analyzer/config"
 )
 
-func CalcKey(id string, versions map[string]int, opt *config.ScannerOption) (string, error) {
+func CalcKey(id string, versions map[string]int, artifactOpt artifact.Option, scannerOpt config.ScannerOption) (string, error) {
 	// Sort options for consistent results
-	opt.Sort()
+	artifactOpt.Sort()
+	scannerOpt.Sort()
 
 	h := sha256.New()
 
+	// Write id
 	if _, err := h.Write([]byte(id)); err != nil {
 		return "", xerrors.Errorf("sha256 error: %w", err)
 	}
 
+	// Write analyzer versions
 	if err := json.NewEncoder(h).Encode(versions); err != nil {
 		return "", xerrors.Errorf("json encode error: %w", err)
 	}
 
-	for _, paths := range [][]string{opt.PolicyPaths, opt.DataPaths} {
+	// Write skipped files and dirs
+	skipped := append(artifactOpt.SkipDirs, artifactOpt.SkipFiles...)
+	if err := json.NewEncoder(h).Encode(skipped); err != nil {
+		return "", xerrors.Errorf("json encode error: %w", err)
+	}
+
+	// Write policy and data contents
+	for _, paths := range [][]string{scannerOpt.PolicyPaths, scannerOpt.DataPaths} {
 		for _, p := range paths {
 			s, err := dirhash.HashDir(p, "", dirhash.DefaultHash)
 			if err != nil {

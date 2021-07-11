@@ -3,10 +3,8 @@ package walker
 import (
 	"archive/tar"
 	"io"
-	"io/ioutil"
 	"path/filepath"
 	"strings"
-	"sync"
 
 	"golang.org/x/xerrors"
 )
@@ -16,7 +14,17 @@ const (
 	wh  string = ".wh."
 )
 
-func WalkLayerTar(layer io.Reader, analyzeFn WalkFunc) ([]string, []string, error) {
+type LayerTar struct {
+	walker
+}
+
+func NewLayerTar(skipFiles, skipDirs []string) LayerTar {
+	return LayerTar{
+		walker: newWalker(skipFiles, skipDirs),
+	}
+}
+
+func (w LayerTar) Walk(layer io.Reader, analyzeFn WalkFunc) ([]string, []string, error) {
 	var opqDirs, whFiles []string
 
 	tr := tar.NewReader(layer)
@@ -46,12 +54,12 @@ func WalkLayerTar(layer io.Reader, analyzeFn WalkFunc) ([]string, []string, erro
 			continue
 		}
 
-		if isIgnored(filePath) {
+		if w.shouldSkip(filePath) {
 			continue
 		}
 
 		if hdr.Typeflag == tar.TypeSymlink || hdr.Typeflag == tar.TypeLink || hdr.Typeflag == tar.TypeReg {
-			err = analyzeFn(filePath, hdr.FileInfo(), tarOnceOpener(tr))
+			err = analyzeFn(filePath, hdr.FileInfo(), w.fileOnceOpener(tr))
 			if err != nil {
 				return nil, nil, xerrors.Errorf("failed to analyze file: %w", err)
 			}
@@ -59,21 +67,4 @@ func WalkLayerTar(layer io.Reader, analyzeFn WalkFunc) ([]string, []string, erro
 	}
 
 	return opqDirs, whFiles, nil
-}
-
-// tarOnceOpener reads a file once and the content is shared so that some analyzers can use the same data
-func tarOnceOpener(r io.Reader) func() ([]byte, error) {
-	var once sync.Once
-	var b []byte
-	var err error
-
-	return func() ([]byte, error) {
-		once.Do(func() {
-			b, err = ioutil.ReadAll(r)
-		})
-		if err != nil {
-			return nil, xerrors.Errorf("unable to read tar file: %w", err)
-		}
-		return b, nil
-	}
 }

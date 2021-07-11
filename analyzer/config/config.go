@@ -25,16 +25,11 @@ type ScannerOption struct {
 	DataPaths    []string
 }
 
-func (o *ScannerOption) Sort() {
-	sort.Slice(o.FilePatterns, func(i, j int) bool {
-		return o.FilePatterns[i] < o.FilePatterns[j]
-	})
-	sort.Slice(o.PolicyPaths, func(i, j int) bool {
-		return o.PolicyPaths[i] < o.PolicyPaths[j]
-	})
-	sort.Slice(o.DataPaths, func(i, j int) bool {
-		return o.DataPaths[i] < o.DataPaths[j]
-	})
+func (o ScannerOption) Sort() {
+	sort.Strings(o.Namespaces)
+	sort.Strings(o.FilePatterns)
+	sort.Strings(o.PolicyPaths)
+	sort.Strings(o.DataPaths)
 }
 
 func RegisterConfigAnalyzers(filePatterns []string) error {
