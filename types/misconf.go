@@ -17,17 +17,24 @@ type Misconfiguration struct {
 
 type MisconfResult struct {
 	Namespace      string `json:",omitempty"`
+	Query          string `json:",omitempty"`
 	Message        string `json:",omitempty"`
 	PolicyMetadata `json:",omitempty"`
+
+	// For debugging
+	Traces []string `json:",omitempty"`
 }
 
 type MisconfResults []MisconfResult
 
 type PolicyMetadata struct {
-	ID       string `json:",omitempty"`
-	Type     string `json:",omitempty"`
-	Title    string `json:",omitempty"`
-	Severity string `json:",omitempty"`
+	ID                 string   `json:",omitempty"`
+	Type               string   `json:",omitempty"`
+	Title              string   `json:",omitempty"`
+	Description        string   `json:",omitempty"`
+	Severity           string   `json:",omitempty"`
+	RecommendedActions string   `json:",omitempty" mapstructure:"recommended_actions"`
+	References         []string `json:",omitempty"`
 }
 
 type PolicyInputOption struct {

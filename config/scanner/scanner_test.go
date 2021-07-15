@@ -46,6 +46,7 @@ func TestScanner_ScanConfig(t *testing.T) {
 				Failures: []types.MisconfResult{
 					{
 						Namespace: "testdata.kubernetes.id_100",
+						Query:     "data.testdata.kubernetes.id_100.deny",
 						Message:   "deny",
 						PolicyMetadata: types.PolicyMetadata{
 							Type:     "Kubernetes Security Check",
@@ -75,7 +76,7 @@ func TestScanner_ScanConfig(t *testing.T) {
 						PolicyMetadata: types.PolicyMetadata{
 							Type:     "Terraform Security Check powered by tfsec",
 							ID:       "AWS007",
-							Severity: "UNKNOWN",
+							Severity: "MEDIUM",
 						},
 					},
 					{
@@ -107,28 +108,49 @@ func TestScanner_ScanConfig(t *testing.T) {
 					{
 						Message: "Resource 'aws_security_group_rule.my-rule' defines a fully open ingress security group rule.",
 						PolicyMetadata: types.PolicyMetadata{
-							Type:     "Terraform Security Check powered by tfsec",
-							Title:    "An ingress security group rule allows traffic from /0.",
-							ID:       "AWS006",
-							Severity: "MEDIUM",
+							ID:                 "AWS006",
+							Type:               "Terraform Security Check powered by tfsec",
+							Title:              "An ingress security group rule allows traffic from /0.",
+							Description:        "Your port exposed to the internet",
+							RecommendedActions: "Set a more restrictive cidr range",
+							Severity:           "MEDIUM",
+							References: []string{
+								"https://tfsec.dev/docs/aws/AWS006/",
+								"https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/security-group-rules-reference.html",
+							},
 						},
 					},
 					{
 						Message: "Resource 'aws_security_group_rule.my-rule' should include a description for auditing purposes.",
 						PolicyMetadata: types.PolicyMetadata{
-							Type:     "Terraform Security Check powered by tfsec",
-							Title:    "Missing description for security group/security group rule.",
-							ID:       "AWS018",
-							Severity: "HIGH",
+							ID:                 "AWS018",
+							Type:               "Terraform Security Check powered by tfsec",
+							Title:              "Missing description for security group/security group rule.",
+							Description:        "Descriptions provide hclcontext for the firewall rule reasons",
+							RecommendedActions: "Add descriptions for all security groups anf rules",
+							Severity:           "HIGH",
+							References: []string{
+								"https://tfsec.dev/docs/aws/AWS018/",
+								"https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group",
+								"https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group_rule",
+								"https://www.cloudconformity.com/knowledge-base/aws/EC2/security-group-rules-description.html",
+							},
 						},
 					},
 					{
 						Message: "Resource 'azurerm_managed_disk.source' defines an unencrypted managed disk.",
 						PolicyMetadata: types.PolicyMetadata{
-							Type:     "Terraform Security Check powered by tfsec",
-							Title:    "Unencrypted managed disk.",
-							ID:       "AZU003",
-							Severity: "HIGH",
+							ID:                 "AZU003",
+							Type:               "Terraform Security Check powered by tfsec",
+							Title:              "Unencrypted managed disk.",
+							Description:        "Data could be read if compromised",
+							RecommendedActions: "Enable encryption on managed disks",
+							Severity:           "HIGH",
+							References: []string{
+								"https://tfsec.dev/docs/azure/AZU003/",
+								"https://docs.microsoft.com/en-us/azure/virtual-machines/linux/disk-encryption",
+								"https://www.terraform.io/docs/providers/azurerm/r/managed_disk.html",
+							},
 						},
 					},
 				},
@@ -156,16 +178,19 @@ func TestScanner_ScanConfig(t *testing.T) {
 				Failures: types.MisconfResults{
 					types.MisconfResult{
 						Namespace:      "testdata.docker.id_300",
+						Query:          "data.testdata.docker.id_300.deny",
 						Message:        "deny",
 						PolicyMetadata: types.PolicyMetadata{ID: "N/A", Type: "N/A", Title: "N/A", Severity: "UNKNOWN"},
 					},
 					types.MisconfResult{
 						Namespace:      "testdata.kubernetes.id_100",
+						Query:          "data.testdata.kubernetes.id_100.deny",
 						Message:        "deny",
 						PolicyMetadata: types.PolicyMetadata{ID: "ID-100", Type: "Kubernetes Security Check", Title: "Bad Deployment", Severity: "HIGH"},
 					},
 					types.MisconfResult{
 						Namespace:      "testdata.kubernetes.id_200",
+						Query:          "data.testdata.kubernetes.id_200.deny",
 						Message:        "deny",
 						PolicyMetadata: types.PolicyMetadata{ID: "ID-200", Type: "Kubernetes Security Check", Title: "Bad Deployment", Severity: "CRITICAL"},
 					},
@@ -176,7 +201,7 @@ func TestScanner_ScanConfig(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s, err := scanner.New(tt.rootDir, tt.namespaces, tt.policyPaths, tt.dataPaths)
+			s, err := scanner.New(tt.rootDir, tt.namespaces, tt.policyPaths, tt.dataPaths, false)
 			require.NoError(t, err)
 
 			got, err := s.ScanConfigs(context.Background(), tt.configs)

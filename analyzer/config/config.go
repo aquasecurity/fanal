@@ -20,6 +20,7 @@ import (
 const separator = ":"
 
 type ScannerOption struct {
+	Trace        bool
 	Namespaces   []string
 	FilePatterns []string
 	PolicyPaths  []string
@@ -27,6 +28,9 @@ type ScannerOption struct {
 }
 
 func (o *ScannerOption) Sort() {
+	sort.Slice(o.Namespaces, func(i, j int) bool {
+		return o.Namespaces[i] < o.Namespaces[j]
+	})
 	sort.Slice(o.FilePatterns, func(i, j int) bool {
 		return o.FilePatterns[i] < o.FilePatterns[j]
 	})

@@ -6,11 +6,11 @@ import (
 	"regexp"
 
 	multierror "github.com/hashicorp/go-multierror"
-	"github.com/open-policy-agent/conftest/parser/hcl1"
-	"github.com/open-policy-agent/conftest/parser/hcl2"
+	"github.com/hashicorp/hcl"
 	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/fanal/analyzer"
+	"github.com/aquasecurity/fanal/config/parser/hcl2"
 	"github.com/aquasecurity/fanal/types"
 )
 
@@ -19,15 +19,11 @@ const version = 1
 var requiredExts = []string{".hcl", ".hcl1", ".hcl2"}
 
 type ConfigAnalyzer struct {
-	hcl1Parser  *hcl1.Parser
-	hcl2Parser  *hcl2.Parser
 	filePattern *regexp.Regexp
 }
 
 func NewConfigAnalyzer(filePattern *regexp.Regexp) ConfigAnalyzer {
 	return ConfigAnalyzer{
-		hcl1Parser:  &hcl1.Parser{},
-		hcl2Parser:  &hcl2.Parser{},
 		filePattern: filePattern,
 	}
 }
@@ -55,14 +51,14 @@ func (a ConfigAnalyzer) analyze(target analyzer.AnalysisTarget) (interface{}, er
 	var errs error
 	var parsed interface{}
 
-	if err := a.hcl2Parser.Unmarshal(target.Content, &parsed); err != nil {
-		errs = multierror.Append(errs, xerrors.Errorf("unable to parse HCL2 (%a): %w", target.FilePath, err))
+	if err := hcl2.Unmarshal(target.Content, &parsed); err != nil {
+		errs = multierror.Append(errs, xerrors.Errorf("unable to parse HCL2 (%s): %w", target.FilePath, err))
 	} else {
 		return parsed, nil
 	}
 
-	if err := a.hcl1Parser.Unmarshal(target.Content, &parsed); err != nil {
-		errs = multierror.Append(errs, xerrors.Errorf("unable to parse HCL1 (%a): %w", target.FilePath, err))
+	if err := hcl.Unmarshal(target.Content, &parsed); err != nil {
+		errs = multierror.Append(errs, xerrors.Errorf("unable to parse HCL1 (%s): %w", target.FilePath, err))
 	} else {
 		return parsed, nil
 	}
