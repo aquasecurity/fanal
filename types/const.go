@@ -8,6 +8,7 @@ const (
 const (
 	// Programming language dependencies
 	Bundler   = "bundler"
+	GemSpec   = "gemspec"
 	Cargo     = "cargo"
 	Composer  = "composer"
 	Npm       = "npm"
