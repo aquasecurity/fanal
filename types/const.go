@@ -7,17 +7,18 @@ const (
 
 const (
 	// Programming language dependencies
-	Bundler  = "bundler"
-	Cargo    = "cargo"
-	Composer = "composer"
-	Npm      = "npm"
-	NuGet    = "nuget"
-	Pipenv   = "pipenv"
-	Poetry   = "poetry"
-	Yarn     = "yarn"
-	Jar      = "jar"
-	GoBinary = "gobinary"
-	GoMod    = "gomod"
+	Bundler     = "bundler"
+	Cargo       = "cargo"
+	Composer    = "composer"
+	Npm         = "npm"
+	NuGetLock   = "nugetlock"
+	NuGetConfig = "nugetconfig"
+	Pipenv      = "pipenv"
+	Poetry      = "poetry"
+	Yarn        = "yarn"
+	Jar         = "jar"
+	GoBinary    = "gobinary"
+	GoMod       = "gomod"
 
 	// Config files
 	YAML           = "yaml"
