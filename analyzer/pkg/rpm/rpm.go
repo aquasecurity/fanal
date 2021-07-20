@@ -95,6 +95,7 @@ func (a rpmPkgAnalyzer) parsePkgInfo(packageBytes []byte) (pkgs []types.Package,
 			SrcVersion:      srcVer,
 			SrcRelease:      srcRel,
 			Modularitylabel: pkg.Modularitylabel,
+			License: strings.Replace(strings.Replace(pkg.License, " and ", ",", -1), " or ", ",", -1),
 		}
 		pkgs = append(pkgs, p)
 	}

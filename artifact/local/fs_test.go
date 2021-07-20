@@ -35,10 +35,10 @@ func TestArtifact_Inspect(t *testing.T) {
 			},
 			putBlobExpectation: cache.ArtifactCachePutBlobExpectation{
 				Args: cache.ArtifactCachePutBlobArgs{
-					BlobID: "sha256:f224cc824d1bbd60f999cdd65c6a02032a5e33aba928186cbe1957fae06cab0d",
+					BlobID: "sha256:e473be58c866055f564ac2d747d76acb4b29a60ba14dc4bfc5e31f1fd20640f0",
 					BlobInfo: types.BlobInfo{
 						SchemaVersion: types.BlobJSONSchemaVersion,
-						DiffID:        "sha256:94a4586441ddd6599fb64cb407d8c43ffb273a8bd01cd933e525b08527f6296e",
+						DiffID:        "sha256:284e52e09d3c5e93e5b5a5a5bc60dac74522f2e27cbfc161c6730f6eb9bfd473",
 						OS: &types.OS{
 							Family: "alpine",
 							Name:   "3.11.6",
@@ -47,7 +47,7 @@ func TestArtifact_Inspect(t *testing.T) {
 							{
 								FilePath: "lib/apk/db/installed",
 								Packages: []types.Package{
-									{Name: "musl", Version: "1.1.24-r2", SrcName: "musl", SrcVersion: "1.1.24-r2"},
+									{Name: "musl", Version: "1.1.24-r2", SrcName: "musl", SrcVersion: "1.1.24-r2", License: "MIT"},
 								},
 							},
 						},
@@ -58,9 +58,9 @@ func TestArtifact_Inspect(t *testing.T) {
 			want: types.ArtifactReference{
 				Name: "host",
 				Type: types.ArtifactFilesystem,
-				ID:   "sha256:f224cc824d1bbd60f999cdd65c6a02032a5e33aba928186cbe1957fae06cab0d",
+				ID:   "sha256:e473be58c866055f564ac2d747d76acb4b29a60ba14dc4bfc5e31f1fd20640f0",
 				BlobIDs: []string{
-					"sha256:f224cc824d1bbd60f999cdd65c6a02032a5e33aba928186cbe1957fae06cab0d",
+					"sha256:e473be58c866055f564ac2d747d76acb4b29a60ba14dc4bfc5e31f1fd20640f0",
 				},
 			},
 		},
@@ -72,7 +72,7 @@ func TestArtifact_Inspect(t *testing.T) {
 			disabledAnalyzers: []analyzer.Type{analyzer.TypeAlpine, analyzer.TypeApk},
 			putBlobExpectation: cache.ArtifactCachePutBlobExpectation{
 				Args: cache.ArtifactCachePutBlobArgs{
-					BlobID: "sha256:5e26d64cc89bd0acb261088ef3cf54f8ba3c16ed3f4e1dff549e5cfa216b154c",
+					BlobID: "sha256:6573def202395c72ba12251968102d735fcab780fe727b1d7cff0feca27946bb",
 					BlobInfo: types.BlobInfo{
 						SchemaVersion: types.BlobJSONSchemaVersion,
 						DiffID:        "sha256:3404e98968ad338dc60ef74c0dd5bdd893478415cd2296b0c265a5650b3ae4d6",
@@ -83,9 +83,9 @@ func TestArtifact_Inspect(t *testing.T) {
 			want: types.ArtifactReference{
 				Name: "host",
 				Type: types.ArtifactFilesystem,
-				ID:   "sha256:5e26d64cc89bd0acb261088ef3cf54f8ba3c16ed3f4e1dff549e5cfa216b154c",
+				ID:   "sha256:6573def202395c72ba12251968102d735fcab780fe727b1d7cff0feca27946bb",
 				BlobIDs: []string{
-					"sha256:5e26d64cc89bd0acb261088ef3cf54f8ba3c16ed3f4e1dff549e5cfa216b154c",
+					"sha256:6573def202395c72ba12251968102d735fcab780fe727b1d7cff0feca27946bb",
 				},
 			},
 		},
@@ -96,10 +96,10 @@ func TestArtifact_Inspect(t *testing.T) {
 			},
 			putBlobExpectation: cache.ArtifactCachePutBlobExpectation{
 				Args: cache.ArtifactCachePutBlobArgs{
-					BlobID: "sha256:f224cc824d1bbd60f999cdd65c6a02032a5e33aba928186cbe1957fae06cab0d",
+					BlobID: "sha256:e473be58c866055f564ac2d747d76acb4b29a60ba14dc4bfc5e31f1fd20640f0",
 					BlobInfo: types.BlobInfo{
 						SchemaVersion: types.BlobJSONSchemaVersion,
-						DiffID:        "sha256:94a4586441ddd6599fb64cb407d8c43ffb273a8bd01cd933e525b08527f6296e",
+						DiffID:        "sha256:284e52e09d3c5e93e5b5a5a5bc60dac74522f2e27cbfc161c6730f6eb9bfd473",
 						OS: &types.OS{
 							Family: "alpine",
 							Name:   "3.11.6",
@@ -108,7 +108,7 @@ func TestArtifact_Inspect(t *testing.T) {
 							{
 								FilePath: "lib/apk/db/installed",
 								Packages: []types.Package{
-									{Name: "musl", Version: "1.1.24-r2", SrcName: "musl", SrcVersion: "1.1.24-r2"},
+									{Name: "musl", Version: "1.1.24-r2", SrcName: "musl", SrcVersion: "1.1.24-r2", License: "MIT"},
 								},
 							},
 						},
