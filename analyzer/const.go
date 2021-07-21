@@ -26,6 +26,7 @@ const (
 	TypeComposer  Type = "composer"
 	TypeJar       Type = "jar"
 	TypeNpm       Type = "npm"
+	TypePkgjson   Type = "packagejson"
 	TypeNuget     Type = "nuget"
 	TypePythonPkg Type = "python-pkg"
 	TypePip       Type = "pip"

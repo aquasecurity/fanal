@@ -23,8 +23,8 @@ var requiredFiles = []string{"package-lock.json"}
 
 type npmLibraryAnalyzer struct{}
 
-func (a npmLibraryAnalyzer) Analyze(target analyzer.AnalysisTarget) (*analyzer.AnalysisResult, error) {
-	res, err := language.Analyze(types.Npm, target.FilePath, target.Content, npm.Parse)
+func (a npmLibraryAnalyzer) Analyze(target analyzer.AnalysisTarget) (res *analyzer.AnalysisResult, err error) {
+	res, err = language.Analyze(types.Npm, target.FilePath, target.Content, npm.Parse)
 	if err != nil {
 		return nil, xerrors.Errorf("unable to parse package-lock.json: %w", err)
 	}

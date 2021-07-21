@@ -16,6 +16,7 @@ const (
 	Pipenv    = "pipenv"
 	Poetry    = "poetry"
 	PythonPkg = "python-pkg"
+	PkgJson   = "packagejson"
 	Yarn      = "yarn"
 	Jar       = "jar"
 	GoBinary  = "gobinary"
