@@ -5,7 +5,10 @@ import (
 	"encoding/json"
 	"io"
 	"os"
+	"path"
+	"path/filepath"
 	"reflect"
+	"strings"
 	"sync"
 
 	v1 "github.com/google/go-containerregistry/pkg/v1"
@@ -20,6 +23,7 @@ import (
 	"github.com/aquasecurity/fanal/image"
 	"github.com/aquasecurity/fanal/log"
 	"github.com/aquasecurity/fanal/types"
+	"github.com/aquasecurity/fanal/utils"
 	"github.com/aquasecurity/fanal/walker"
 )
 
@@ -179,13 +183,11 @@ func (a Artifact) inspectLayer(ctx context.Context, diffID string) (types.BlobIn
 		return types.BlobInfo{}, xerrors.Errorf("unable to get uncompressed layer %s: %w", diffID, err)
 	}
 
-	// below line of code gets the size of uncompressed layer. Will sum up these layer sizes to get the size of image.
-	cr := newCountingReader(r)
 	var wg sync.WaitGroup
 	result := new(analyzer.AnalysisResult)
 	limit := semaphore.NewWeighted(parallel)
 
-	opqDirs, whFiles, err := walker.WalkLayerTar(cr, func(filePath string, info os.FileInfo, opener analyzer.Opener) error {
+	opqDirs, whFiles, layerSize, err := walker.WalkLayerTar(r, func(filePath string, info os.FileInfo, opener analyzer.Opener) error {
 		if err = a.analyzer.AnalyzeFile(ctx, &wg, limit, result, "", filePath, info, opener); err != nil {
 			return xerrors.Errorf("failed to analyze %s: %w", filePath, err)
 		}
@@ -200,9 +202,7 @@ func (a Artifact) inspectLayer(ctx context.Context, diffID string) (types.BlobIn
 
 	// Sort the analysis result for consistent results
 	result.Sort()
-
-	// TODO Scan config files
-
+	result.Applications = PostProcessorJs(result.Applications)
 	layerInfo := types.BlobInfo{
 		SchemaVersion: types.BlobJSONSchemaVersion,
 		Digest:        layerDigest,
@@ -212,7 +212,7 @@ func (a Artifact) inspectLayer(ctx context.Context, diffID string) (types.BlobIn
 		Applications:  result.Applications,
 		OpaqueDirs:    opqDirs,
 		WhiteoutFiles: whFiles,
-		Size:          cr.Size(),
+		Size:          layerSize,
 	}
 	return layerInfo, nil
 }
@@ -281,21 +281,33 @@ func (a Artifact) inspectConfig(imageID string, osFound types.OS) error {
 	return nil
 }
 
-type countingReader struct {
-	reader    io.Reader
-	bytesRead int
-}
+func PostProcessorJs(librariesInfo []types.Application) []types.Application {
+	var npmPaths []string
+	for _, libraryDetails := range librariesInfo {
+		if libraryDetails.Type == types.Npm {
+			npmPaths = append(npmPaths, libraryDetails.FilePath)
 
-func newCountingReader(r io.Reader) *countingReader {
-	return &countingReader{reader: r}
-}
+		}
+	}
+	if len(npmPaths) > 0 {
+		var processedLibraryInfo []types.Application
+		for _, libraryDetails := range librariesInfo {
+			if libraryDetails.Type == types.JavaScript {
+				dirPath, _ := filepath.Split(libraryDetails.FilePath)
+				if utils.StringInSlice(path.Join(dirPath, "package-lock.json"), npmPaths) {
+					continue
+				}
+				if strings.HasSuffix(dirPath, "/src/") || strings.HasSuffix(dirPath, "/dist/") || strings.HasSuffix(dirPath, "/js/") {
+					dirPath, _ = filepath.Split(strings.TrimSuffix(dirPath, "/"))
+					if utils.StringInSlice(path.Join(dirPath, "package-lock.json"), npmPaths) {
+						continue
+					}
+				}
+			}
+			processedLibraryInfo = append(processedLibraryInfo, libraryDetails)
+		}
+		return processedLibraryInfo
+	}
 
-func (r *countingReader) Read(p []byte) (n int, err error) {
-	n, err = r.reader.Read(p)
-	r.bytesRead += n
-	return n, err
-}
-
-func (r *countingReader) Size() int {
-	return r.bytesRead
+	return librariesInfo
 }
