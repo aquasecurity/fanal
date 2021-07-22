@@ -8,7 +8,7 @@ import (
 	"reflect"
 	"sync"
 
-	v1 "github.com/google/go-containerregistry/pkg/v1"
+	"github.com/google/go-containerregistry/pkg/v1"
 	"golang.org/x/sync/semaphore"
 	"golang.org/x/xerrors"
 
@@ -199,23 +199,16 @@ func (a Artifact) inspectLayer(ctx context.Context, diffID string) (types.BlobIn
 	// Sort the analysis result for consistent results
 	result.Sort()
 
-	// Scan config files
-	misconfs, err := a.scanner.ScanConfigs(ctx, result.Configs)
-	if err != nil {
-		return types.BlobInfo{}, xerrors.Errorf("config scan error: %w", err)
-	}
-
 	layerInfo := types.BlobInfo{
-		SchemaVersion:     types.BlobJSONSchemaVersion,
-		Digest:            layerDigest,
-		DiffID:            diffID,
-		OS:                result.OS,
-		PackageInfos:      result.PackageInfos,
-		Applications:      result.Applications,
-		Misconfigurations: misconfs,
-		OpaqueDirs:        opqDirs,
-		WhiteoutFiles:     whFiles,
-		Size:              layerSize,
+		SchemaVersion: types.BlobJSONSchemaVersion,
+		Digest:        layerDigest,
+		DiffID:        diffID,
+		OS:            result.OS,
+		PackageInfos:  result.PackageInfos,
+		Applications:  result.Applications,
+		OpaqueDirs:    opqDirs,
+		WhiteoutFiles: whFiles,
+		Size:          layerSize,
 	}
 	return layerInfo, nil
 }
