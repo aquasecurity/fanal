@@ -8,7 +8,7 @@ import (
 	"reflect"
 	"sync"
 
-	"github.com/google/go-containerregistry/pkg/v1"
+	v1 "github.com/google/go-containerregistry/pkg/v1"
 	"golang.org/x/sync/semaphore"
 	"golang.org/x/xerrors"
 
@@ -63,10 +63,14 @@ func (a Artifact) Inspect(ctx context.Context) (types.ArtifactReference, error) 
 	if err != nil {
 		return types.ArtifactReference{}, xerrors.Errorf("unable to get the image ID: %w", err)
 	}
-
-	diffIDs, err := a.image.LayerIDs()
+	configFile, err := a.image.GetConfigFile()
 	if err != nil {
-		return types.ArtifactReference{}, xerrors.Errorf("unable to get layer IDs: %w", err)
+		return types.ArtifactReference{}, xerrors.Errorf("unable to get config file information: %w", err)
+	}
+
+	var diffIDs []string
+	for _, d := range configFile.RootFS.DiffIDs {
+		diffIDs = append(diffIDs, d.String())
 	}
 
 	// Debug
@@ -97,13 +101,14 @@ func (a Artifact) Inspect(ctx context.Context) (types.ArtifactReference, error) 
 
 	return types.ArtifactReference{
 		Name:        a.image.Name(),
+		ImageId:     imageID,
 		Type:        types.ArtifactContainerImage,
 		ID:          imageKey,
 		BlobIDs:     layerKeys,
 		RepoTags:    a.image.RepoTags(),
 		RepoDigests: a.image.RepoDigests(),
+		ConfigFile:  *configFile,
 	}, nil
-
 }
 
 func (a Artifact) calcCacheKeys(imageID string, diffIDs []string) (string, []string, map[string]string, error) {
@@ -183,7 +188,7 @@ func (a Artifact) inspectLayer(ctx context.Context, diffID string) (types.BlobIn
 	result := new(analyzer.AnalysisResult)
 	limit := semaphore.NewWeighted(parallel)
 
-	opqDirs, whFiles, layerSize, err := walker.WalkLayerTar(r, func(filePath string, info os.FileInfo, opener analyzer.Opener) error {
+	opqDirs, whFiles, unCompLayerSize, err := walker.WalkLayerTar(r, func(filePath string, info os.FileInfo, opener analyzer.Opener) error {
 		if err = a.analyzer.AnalyzeFile(ctx, &wg, limit, result, "", filePath, info, opener); err != nil {
 			return xerrors.Errorf("failed to analyze %s: %w", filePath, err)
 		}
@@ -200,15 +205,15 @@ func (a Artifact) inspectLayer(ctx context.Context, diffID string) (types.BlobIn
 	result.Sort()
 
 	layerInfo := types.BlobInfo{
-		SchemaVersion: types.BlobJSONSchemaVersion,
-		Digest:        layerDigest,
-		DiffID:        diffID,
-		OS:            result.OS,
-		PackageInfos:  result.PackageInfos,
-		Applications:  result.Applications,
-		OpaqueDirs:    opqDirs,
-		WhiteoutFiles: whFiles,
-		Size:          layerSize,
+		SchemaVersion:    types.BlobJSONSchemaVersion,
+		Digest:           layerDigest,
+		DiffID:           diffID,
+		OS:               result.OS,
+		PackageInfos:     result.PackageInfos,
+		Applications:     result.Applications,
+		OpaqueDirs:       opqDirs,
+		WhiteoutFiles:    whFiles,
+		UncompressedSize: unCompLayerSize,
 	}
 	return layerInfo, nil
 }
