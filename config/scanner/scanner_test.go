@@ -144,21 +144,6 @@ func TestScanner_ScanConfig(t *testing.T) {
 				},
 				Failures: []types.MisconfResult{
 					{
-						Message: "Resource 'aws_security_group_rule.my-rule' defines a fully open ingress security group rule.",
-						PolicyMetadata: types.PolicyMetadata{
-							ID:                 "AWS006",
-							Type:               "Terraform Security Check powered by tfsec",
-							Title:              "An ingress security group rule allows traffic from /0.",
-							Description:        "Your port exposed to the internet",
-							RecommendedActions: "Set a more restrictive cidr range",
-							Severity:           "CRITICAL",
-							References: []string{
-								"https://tfsec.dev/docs/aws/AWS006/",
-								"https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/security-group-rules-reference.html",
-							},
-						},
-					},
-					{
 						Message: "Resource 'aws_security_group_rule.my-rule' should include a description for auditing purposes.",
 						PolicyMetadata: types.PolicyMetadata{
 							ID:                 "aws-vpc-add-decription-to-security-group",
