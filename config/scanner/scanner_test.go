@@ -82,16 +82,6 @@ func TestScanner_ScanConfig(t *testing.T) {
 						},
 					},
 					{
-						Message: `Resource 'variable.enableEncryption' passed check: Potentially sensitive data stored in "default" value of variable.`,
-						PolicyMetadata: types.PolicyMetadata{
-							Type:               "Terraform Security Check powered by tfsec",
-							ID:                 "GEN001",
-							Description:        "Default values could be exposing sensitive data",
-							RecommendedActions: "Don't include sensitive data in variable defaults",
-							Severity:           "CRITICAL",
-						},
-					},
-					{
 						Message: `Resource 'aws_security_group_rule.my-rule' passed check: Potentially sensitive data stored in block attribute.`,
 						PolicyMetadata: types.PolicyMetadata{
 							Type:               "Terraform Security Check powered by tfsec",
@@ -114,7 +104,7 @@ func TestScanner_ScanConfig(t *testing.T) {
 					{
 						Message: "Resource 'aws_security_group_rule.my-rule' passed check: The attribute has potentially sensitive data, passwords, tokens or keys in it",
 						PolicyMetadata: types.PolicyMetadata{
-							ID:                 "GEN005",
+							ID:                 "general-secrets-sensitive-in-attribute-value",
 							Type:               "Terraform Security Check powered by tfsec",
 							Description:        "Sensitive credentials may be compromised",
 							Severity:           "CRITICAL",
@@ -139,6 +129,16 @@ func TestScanner_ScanConfig(t *testing.T) {
 							Description:        "Sensitive credentials may be compromised",
 							Severity:           "CRITICAL",
 							RecommendedActions: "Check the code for vulnerabilities and move to variables",
+						},
+					},
+					{
+						Message: "Resource 'variable.enableEncryption' passed check: Potentially sensitive data stored in \"default\" value of variable.",
+						PolicyMetadata: types.PolicyMetadata{
+							ID:                 "general-secrets-sensitive-in-variable",
+							Type:               "Terraform Security Check powered by tfsec",
+							Description:        "Default values could be exposing sensitive data",
+							Severity:           "CRITICAL",
+							RecommendedActions: "Don't include sensitive data in variable defaults",
 						},
 					},
 				},
@@ -172,6 +172,23 @@ func TestScanner_ScanConfig(t *testing.T) {
 								"https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group",
 								"https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group_rule",
 								"https://www.cloudconformity.com/knowledge-base/aws/EC2/security-group-rules-description.html",
+							},
+						},
+					},
+					{
+						Message: "Resource 'aws_security_group_rule.my-rule' defines a fully open ingress security group rule.",
+						PolicyMetadata: types.PolicyMetadata{
+							ID:                 "aws-vpc-no-public-ingress-sgr",
+							Type:               "Terraform Security Check powered by tfsec",
+							Title:              "An ingress security group rule allows traffic from /0.",
+							Description:        "Your port exposed to the internet",
+							RecommendedActions: "Add descriptions for all security groups and rules",
+							Severity:           "CRITICAL",
+							RecommendedActions: "Set a more restrictive cidr range",
+							References: []string{
+								"https://tfsec.dev/docs/aws/vpc/no-public-ingress-sgr#aws/vpc",
+								"https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group_rule#cidr_blocks",
+								"https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/security-group-rules-reference.html",
 							},
 						},
 					},
