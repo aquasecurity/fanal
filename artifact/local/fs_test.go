@@ -35,10 +35,10 @@ func TestArtifact_Inspect(t *testing.T) {
 			},
 			putBlobExpectation: cache.ArtifactCachePutBlobExpectation{
 				Args: cache.ArtifactCachePutBlobArgs{
-					BlobID: "sha256:f224cc824d1bbd60f999cdd65c6a02032a5e33aba928186cbe1957fae06cab0d",
+					BlobID: "sha256:ba24af9a4ec2d39b9106db9823c328597381099dc3f0363cd2df04f987012581",
 					BlobInfo: types.BlobInfo{
 						SchemaVersion: types.BlobJSONSchemaVersion,
-						DiffID:        "sha256:94a4586441ddd6599fb64cb407d8c43ffb273a8bd01cd933e525b08527f6296e",
+						DiffID:        "sha256:284e52e09d3c5e93e5b5a5a5bc60dac74522f2e27cbfc161c6730f6eb9bfd473",
 						OS: &types.OS{
 							Family: "alpine",
 							Name:   "3.11.6",
@@ -47,7 +47,7 @@ func TestArtifact_Inspect(t *testing.T) {
 							{
 								FilePath: "lib/apk/db/installed",
 								Packages: []types.Package{
-									{Name: "musl", Version: "1.1.24-r2", SrcName: "musl", SrcVersion: "1.1.24-r2"},
+									{Name: "musl", Version: "1.1.24-r2", SrcName: "musl", SrcVersion: "1.1.24-r2", License: "MIT"},
 								},
 							},
 						},
@@ -58,9 +58,9 @@ func TestArtifact_Inspect(t *testing.T) {
 			want: types.ArtifactReference{
 				Name: "host",
 				Type: types.ArtifactFilesystem,
-				ID:   "sha256:f224cc824d1bbd60f999cdd65c6a02032a5e33aba928186cbe1957fae06cab0d",
+				ID:   "sha256:ba24af9a4ec2d39b9106db9823c328597381099dc3f0363cd2df04f987012581",
 				BlobIDs: []string{
-					"sha256:f224cc824d1bbd60f999cdd65c6a02032a5e33aba928186cbe1957fae06cab0d",
+					"sha256:ba24af9a4ec2d39b9106db9823c328597381099dc3f0363cd2df04f987012581",
 				},
 			},
 		},
@@ -96,10 +96,10 @@ func TestArtifact_Inspect(t *testing.T) {
 			},
 			putBlobExpectation: cache.ArtifactCachePutBlobExpectation{
 				Args: cache.ArtifactCachePutBlobArgs{
-					BlobID: "sha256:f224cc824d1bbd60f999cdd65c6a02032a5e33aba928186cbe1957fae06cab0d",
+					BlobID: "sha256:ba24af9a4ec2d39b9106db9823c328597381099dc3f0363cd2df04f987012581",
 					BlobInfo: types.BlobInfo{
 						SchemaVersion: types.BlobJSONSchemaVersion,
-						DiffID:        "sha256:94a4586441ddd6599fb64cb407d8c43ffb273a8bd01cd933e525b08527f6296e",
+						DiffID:        "sha256:284e52e09d3c5e93e5b5a5a5bc60dac74522f2e27cbfc161c6730f6eb9bfd473",
 						OS: &types.OS{
 							Family: "alpine",
 							Name:   "3.11.6",
@@ -108,7 +108,7 @@ func TestArtifact_Inspect(t *testing.T) {
 							{
 								FilePath: "lib/apk/db/installed",
 								Packages: []types.Package{
-									{Name: "musl", Version: "1.1.24-r2", SrcName: "musl", SrcVersion: "1.1.24-r2"},
+									{Name: "musl", Version: "1.1.24-r2", SrcName: "musl", SrcVersion: "1.1.24-r2", License: "MIT"},
 								},
 							},
 						},
