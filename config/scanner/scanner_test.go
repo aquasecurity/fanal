@@ -182,9 +182,8 @@ func TestScanner_ScanConfig(t *testing.T) {
 							Type:               "Terraform Security Check powered by tfsec",
 							Title:              "An ingress security group rule allows traffic from /0.",
 							Description:        "Your port exposed to the internet",
-							RecommendedActions: "Add descriptions for all security groups and rules",
-							Severity:           "CRITICAL",
 							RecommendedActions: "Set a more restrictive cidr range",
+							Severity:           "CRITICAL",
 							References: []string{
 								"https://tfsec.dev/docs/aws/vpc/no-public-ingress-sgr#aws/vpc",
 								"https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group_rule#cidr_blocks",
