@@ -32,7 +32,7 @@ require (
 	github.com/kylelemons/godebug v1.1.0
 	github.com/mitchellh/mapstructure v1.4.1
 	github.com/moby/buildkit v0.8.3
-	github.com/open-policy-agent/opa v0.30.2
+	github.com/open-policy-agent/opa v0.31.0
 	github.com/opencontainers/go-digest v1.0.0
 	github.com/opencontainers/image-spec v1.0.2-0.20190823105129-775207bd45b6
 	github.com/saracen/walker v0.0.0-20191201085201-324a081bae7e
