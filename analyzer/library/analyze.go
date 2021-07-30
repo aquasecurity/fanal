@@ -86,7 +86,7 @@ func mergePath(rootPath string, items []string) string {
 			s = strings.Join(items, dependencyDelimiter)
 		}
 	} else {
-		s = fmt.Sprintf("%s%s%s", rootPath, dependencyDelimiter, strings.Join(items, "-->"))
+		s = fmt.Sprintf("%s%s%s", rootPath, dependencyDelimiter, strings.Join(items, dependencyDelimiter))
 	}
 	return s
 }
