@@ -2,7 +2,9 @@ package library
 
 import (
 	"bytes"
+	"fmt"
 	"io"
+	"strings"
 
 	"golang.org/x/xerrors"
 
@@ -41,4 +43,50 @@ func ToAnalysisResult(analyzerType, filePath string, libs []godeptypes.Library) 
 	}}
 
 	return &analyzer.AnalysisResult{Applications: apps}
+}
+
+func ToAnalysisResultExtended(analyzerType, filePath string, libs []godeptypes.EmbeddedLibrary) *analyzer.AnalysisResult {
+	filesIdx := make(map[string][]types.LibraryInfo)
+
+	for _, lib := range libs {
+		key := strings.Join(lib.ParentDependencies, ",")
+		libInfo := types.LibraryInfo{
+			Library: godeptypes.Library{Name: lib.Name, Version: lib.Version},
+		}
+		libInfos, ok := filesIdx[key]
+		if !ok {
+			libInfos = []types.LibraryInfo{libInfo}
+		} else {
+			libInfos = append(libInfos, libInfo)
+		}
+		filesIdx[key] = libInfos
+	}
+
+	apps := make([]types.Application, len(filesIdx))
+
+	for key, libs := range filesIdx {
+		items := strings.Split(key, ",")
+		apps = append(apps, types.Application{
+			Type:      analyzerType,
+			FilePath:  mergePath(filePath, items),
+			Libraries: libs,
+		})
+	}
+
+	return &analyzer.AnalysisResult{Applications: apps}
+}
+
+func mergePath(rootPath string, items []string) string {
+	dependencyDelimiter := "-->"
+	var s string
+	if rootPath == items[0] || strings.HasSuffix(rootPath, items[0]) {
+		if len(items) == 1 {
+			s = rootPath
+		} else {
+			s = strings.Join(items, dependencyDelimiter)
+		}
+	} else {
+		s = fmt.Sprintf("%s%s%s", rootPath, dependencyDelimiter, strings.Join(items, "-->"))
+	}
+	return s
 }
