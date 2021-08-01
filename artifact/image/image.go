@@ -8,7 +8,8 @@ import (
 	"reflect"
 	"sync"
 
-	"github.com/google/go-containerregistry/pkg/v1"
+	dpkgPkgLicense "github.com/aquasecurity/fanal/analyzer/pkg/dpkgpkglicenses"
+	v1 "github.com/google/go-containerregistry/pkg/v1"
 	"golang.org/x/sync/semaphore"
 	"golang.org/x/xerrors"
 
@@ -199,6 +200,8 @@ func (a Artifact) inspectLayer(ctx context.Context, diffID string) (types.BlobIn
 	// Sort the analysis result for consistent results
 	result.Sort()
 
+	result.PackageInfos = PostProcessorDpkg(result.PackageInfos)
+
 	layerInfo := types.BlobInfo{
 		SchemaVersion: types.BlobJSONSchemaVersion,
 		Digest:        layerDigest,
@@ -275,4 +278,30 @@ func (a Artifact) inspectConfig(imageID string, osFound types.OS) error {
 	}
 
 	return nil
+}
+
+func PostProcessorDpkg(pkgInfos []types.PackageInfo) []types.PackageInfo {
+
+	pkgWithLicense := make(map[string]string)
+	var pkgWithVersion []types.PackageInfo
+
+	for _, pkgInfo := range pkgInfos {
+		if dpkgPkgLicense.DpkgPkgLicensePath.MatchString(pkgInfo.FilePath) {
+			pkgWithLicense[pkgInfo.Packages[0].Name] = pkgInfo.Packages[0].License
+		} else {
+			pkgWithVersion = append(pkgWithVersion, pkgInfo)
+		}
+	}
+
+	if len(pkgWithLicense) > 0 {
+		for _, pkgInfo := range pkgWithVersion {
+			for i, pkg := range pkgInfo.Packages {
+				if license, ok := pkgWithLicense[pkg.Name]; ok {
+					pkgInfo.Packages[i].License = license
+				}
+			}
+		}
+		return pkgWithVersion
+	}
+	return pkgInfos
 }
