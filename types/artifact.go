@@ -28,8 +28,8 @@ type Package struct {
 	SrcRelease      string `json:",omitempty"`
 	SrcEpoch        int    `json:",omitempty"`
 	Modularitylabel string `json:",omitempty"`
-	Layer           Layer  `json:",omitempty"`
 	License         string `json:",omitempty"`
+	Layer           Layer  `json:",omitempty"`
 }
 
 type SrcPackage struct {
