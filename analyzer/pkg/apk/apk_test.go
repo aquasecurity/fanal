@@ -27,7 +27,7 @@ func TestParseApkInfo(t *testing.T) {
 				{Name: "libssl1.0", Version: "1.0.2h-r1", SrcName: "openssl", SrcVersion: "1.0.2h-r1", License: "openssl"},
 				{Name: "apk-tools", Version: "2.6.7-r0", SrcName: "apk-tools", SrcVersion: "2.6.7-r0", License: "GPL2"},
 				{Name: "scanelf", Version: "1.1.6-r0", SrcName: "pax-utils", SrcVersion: "1.1.6-r0", License: "GPL2"},
-				{Name: "musl-utils", Version: "1.1.14-r10", SrcName: "musl", SrcVersion: "1.1.14-r10", License: "MIT,BSD,GPL2+"},
+				{Name: "musl-utils", Version: "1.1.14-r10", SrcName: "musl", SrcVersion: "1.1.14-r10", License: "MIT BSD GPL2+"},
 				{Name: "libc-utils", Version: "0.7-r0", SrcName: "libc-dev", SrcVersion: "0.7-r0", License: "GPL"},
 				{Name: "pkgconf", Version: "1.6.0-r0", SrcName: "pkgconf", SrcVersion: "1.6.0-r0", License: "ISC"},
 				{Name: "sqlite-libs", Version: "3.26.0-r3", SrcName: "sqlite", SrcVersion: "3.26.0-r3", License: "Public-Domain"},

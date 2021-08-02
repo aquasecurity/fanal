@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"log"
 	"os"
-	"strings"
 
 	apkVersion "github.com/knqyf263/go-apk-version"
 
@@ -68,10 +67,7 @@ func (a alpinePkgAnalyzer) parseApkInfo(scanner *bufio.Scanner) (pkgs []types.Pa
 			pkg.SrcName = origin
 			pkg.SrcVersion = version
 		case "L:":
-			pkg.License = strings.Join(
-				strings.Split(line[2:], " "),
-				",",
-			)
+			pkg.License = line[2:]
 		}
 	}
 	// in case of last paragraph
