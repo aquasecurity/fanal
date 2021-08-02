@@ -10,7 +10,7 @@ require (
 	github.com/aquasecurity/go-dep-parser v0.0.0-20210520015931-0dd56983cc62
 	github.com/aquasecurity/testdocker v0.0.0-20210106133225-0b17fe083674
 	github.com/aquasecurity/tfsec v0.55.0
-	github.com/aws/aws-sdk-go v1.40.11
+	github.com/aws/aws-sdk-go v1.40.12
 	github.com/containerd/cgroups v0.0.0-20210114181951-8a68de567b68 // indirect
 	github.com/containerd/containerd v1.4.3 // indirect
 	github.com/containerd/continuity v0.0.0-20210208174643-50096c924a4e // indirect
