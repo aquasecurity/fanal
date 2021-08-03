@@ -2,7 +2,6 @@ package pip
 
 import (
 	"os"
-	"sort"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -13,7 +12,7 @@ import (
 	godeptypes "github.com/aquasecurity/go-dep-parser/pkg/types"
 )
 
-func Test_gomodAnalyzer_Analyze(t *testing.T) {
+func Test_pipAnalyzer_Analyze(t *testing.T) {
 	tests := []struct {
 		name      string
 		inputFile string
@@ -40,8 +39,8 @@ func Test_gomodAnalyzer_Analyze(t *testing.T) {
 				},
 			},
 		}, {
-			name:      "sad path",
-			inputFile: "testdata/invalid.txt",
+			name:      "happy path with not related filename",
+			inputFile: "testdata/not-related.txt",
 			want:      nil,
 		},
 	}
@@ -61,21 +60,13 @@ func Test_gomodAnalyzer_Analyze(t *testing.T) {
 				assert.Contains(t, err.Error(), tt.wantErr)
 				return
 			}
-			if got != nil {
-				sort.Slice(got.Applications[0].Libraries, func(i, j int) bool {
-					return got.Applications[0].Libraries[i].Library.Name < got.Applications[0].Libraries[j].Library.Name
-				})
-				sort.Slice(tt.want.Applications[0].Libraries, func(i, j int) bool {
-					return tt.want.Applications[0].Libraries[i].Library.Name < tt.want.Applications[0].Libraries[j].Library.Name
-				})
-			}
 			assert.NoError(t, err)
 			assert.Equal(t, tt.want, got)
 		})
 	}
 }
 
-func Test_gomodAnalyzer_Required(t *testing.T) {
+func Test_pipAnalyzer_Required(t *testing.T) {
 	tests := []struct {
 		name     string
 		filePath string
