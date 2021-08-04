@@ -15,6 +15,8 @@ const (
 	Pip      = "pip"
 	Pipenv   = "pipenv"
 	Poetry   = "poetry"
+	Egg      = "egg"
+	Wheel    = "wheel"
 	Yarn     = "yarn"
 	Jar      = "jar"
 	GoBinary = "gobinary"

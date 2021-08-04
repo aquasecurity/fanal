@@ -30,6 +30,9 @@ const (
 	TypePipenv   Type = "pipenv"
 	TypePip      Type = "pip"
 	TypePoetry   Type = "poetry"
+	TypeEgg      Type = "egg"
+	TypeWheel    Type = "wheel"
+
 	TypeYarn     Type = "yarn"
 	TypeGoBinary Type = "gobinary"
 	TypeGoMod    Type = "gomod"
