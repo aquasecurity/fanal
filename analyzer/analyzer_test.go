@@ -291,7 +291,7 @@ func TestAnalyzeFile(t *testing.T) {
 					{
 						FilePath: "/lib/apk/db/installed",
 						Packages: []types.Package{
-							{Name: "musl", Version: "1.1.24-r2", SrcName: "musl", SrcVersion: "1.1.24-r2"},
+							{Name: "musl", Version: "1.1.24-r2", SrcName: "musl", SrcVersion: "1.1.24-r2", License: "MIT"},
 						},
 					},
 				},
@@ -507,6 +507,7 @@ func TestAnalyzer_AnalyzerVersions(t *testing.T) {
 				"nuget":    1,
 				"oracle":   1,
 				"photon":   1,
+				"pip":      1,
 				"pipenv":   1,
 				"poetry":   1,
 				"redhat":   1,
@@ -537,6 +538,7 @@ func TestAnalyzer_AnalyzerVersions(t *testing.T) {
 				"nuget":    1,
 				"oracle":   1,
 				"photon":   1,
+				"pip":      1,
 				"pipenv":   1,
 				"poetry":   1,
 				"redhat":   1,
