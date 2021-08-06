@@ -3,7 +3,7 @@ module github.com/aquasecurity/fanal
 go 1.16
 
 require (
-	github.com/BurntSushi/toml v0.3.1
+	github.com/BurntSushi/toml v0.4.1
 	github.com/GoogleCloudPlatform/docker-credential-gcr v1.5.0
 	github.com/Microsoft/hcsshim v0.8.14 // indirect
 	github.com/alicebob/miniredis/v2 v2.15.1
