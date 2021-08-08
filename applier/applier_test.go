@@ -4,10 +4,12 @@ import (
 	"sort"
 	"testing"
 
+	depTypes "github.com/aquasecurity/go-dep-parser/pkg/types"
+	v1 "github.com/google/go-containerregistry/pkg/v1"
+
 	"github.com/aquasecurity/fanal/applier"
 	"github.com/aquasecurity/fanal/cache"
 	"github.com/aquasecurity/fanal/types"
-	depTypes "github.com/aquasecurity/go-dep-parser/pkg/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -49,6 +51,7 @@ func TestApplier_ApplyLayers(t *testing.T) {
 								Family: "debian",
 								Name:   "9.9",
 							},
+							UncompressedSize: 5435698,
 							PackageInfos: []types.PackageInfo{
 								{
 									FilePath: "var/lib/dpkg/status.d/tzdata",
@@ -87,9 +90,10 @@ func TestApplier_ApplyLayers(t *testing.T) {
 									},
 								},
 							},
-							Applications:  nil,
-							OpaqueDirs:    nil,
-							WhiteoutFiles: nil,
+							UncompressedSize: 5435698,
+							Applications:     nil,
+							OpaqueDirs:       nil,
+							WhiteoutFiles:    nil,
 						},
 					},
 				},
@@ -122,6 +126,7 @@ func TestApplier_ApplyLayers(t *testing.T) {
 									},
 								},
 							},
+							UncompressedSize: 5435698,
 						},
 					},
 				},
@@ -186,6 +191,23 @@ func TestApplier_ApplyLayers(t *testing.T) {
 						},
 					},
 				},
+				LayerMetadata: []types.LayerMetadata{
+					{
+						Digest:           "sha256:932da51564135c98a49a34a193d6cd363d8fa4184d957fde16c9d8527b3f3b02",
+						LayerHistory:     v1.History{Author: "", Created: v1.Time{}, CreatedBy: "", Comment: "", EmptyLayer: false},
+						UncompressedSize: 5435698,
+					},
+					{
+						Digest:           "sha256:dffd9992ca398466a663c87c92cfea2a2db0ae0cf33fcb99da60eec52addbfc5",
+						LayerHistory:     v1.History{Author: "", Created: v1.Time{}, CreatedBy: "", Comment: "", EmptyLayer: false},
+						UncompressedSize: 5435698,
+					},
+					{
+						Digest:           "sha256:beee9f30bc1f711043e78d4a2be0668955d4b761d587d6f60c2c8dc081efb203",
+						LayerHistory:     v1.History{Author: "", Created: v1.Time{}, CreatedBy: "", Comment: "", EmptyLayer: false},
+						UncompressedSize: 5435698,
+					},
+				},
 			},
 		},
 		{
@@ -222,6 +244,7 @@ func TestApplier_ApplyLayers(t *testing.T) {
 									},
 								},
 							},
+							UncompressedSize: 5435698,
 						},
 					},
 				},
@@ -304,6 +327,13 @@ func TestApplier_ApplyLayers(t *testing.T) {
 					{Name: "ncurses-terminfo", Version: "6.1_p20190518-r0"},
 					{Name: "bash", Version: "5.0.0-r0"},
 					{Name: "readline", Version: "8.0.0-r0"},
+				},
+				LayerMetadata: []types.LayerMetadata{
+					{
+						Digest:           "sha256:a187dde48cd289ac374ad8539930628314bc581a481cdb41409c9289419ddb72",
+						LayerHistory:     v1.History{Author: "", Created: v1.Time{}, CreatedBy: "", Comment: "", EmptyLayer: false},
+						UncompressedSize: 5435698,
+					},
 				},
 			},
 		},
@@ -541,7 +571,7 @@ func TestApplier_ApplyLayers(t *testing.T) {
 					return app.Libraries[i].Library.Name < app.Libraries[j].Library.Name
 				})
 			}
-			assert.Equal(t, tt.want, got)
+			assert.EqualValues(t, tt.want, got)
 			c.AssertExpectations(t)
 		})
 	}

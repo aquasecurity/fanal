@@ -2,10 +2,15 @@ package daemon
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"os"
 	"sync"
+	"time"
 
+	dimage "github.com/docker/docker/api/types/image"
+
+	"github.com/araddon/dateparse"
 	"github.com/docker/docker/api/types"
 	v1 "github.com/google/go-containerregistry/pkg/v1"
 	"github.com/google/go-containerregistry/pkg/v1/tarball"
@@ -49,6 +54,7 @@ type image struct {
 	v1.Image
 	opener  opener
 	inspect types.ImageInspect
+	history []dimage.HistoryResponseItem
 }
 
 // populateImage initializes an "image" struct.
@@ -92,8 +98,45 @@ func (img *image) ConfigFile() (*v1.ConfigFile, error) {
 		diffIDs = append(diffIDs, h)
 	}
 
-	// fill only RootFS in v1.ConfigFile
+	// fill only required metadata
+	var layersHistory []v1.History
+	var layerCreatedDate time.Time
+	var isEmptyLayer bool
+	for _, history := range img.history {
+		layerCreatedDate = time.Unix(history.Created, 0).UTC()
+		isEmptyLayer = false
+		if history.Size == 0 {
+			isEmptyLayer = true
+		}
+		configHistory := v1.History{
+			Author:     history.CreatedBy,
+			Created:    v1.Time{Time: layerCreatedDate},
+			CreatedBy:  history.CreatedBy,
+			Comment:    history.Comment,
+			EmptyLayer: isEmptyLayer,
+		}
+		layersHistory = append(layersHistory, configHistory)
+	}
+
+	// NOTE:  This is very, very important to understand time-parsing in go
+	loc, err := time.LoadLocation("")
+	if err != nil {
+		return nil, xerrors.Errorf("failed setting location %s: %w", img.inspect.Created, err)
+	}
+	time.Local = loc
+	imgCreatedDate, err := dateparse.ParseLocal(img.inspect.Created)
+	fmt.Println(imgCreatedDate)
+	if err != nil {
+		return nil, xerrors.Errorf("failed parsing created Date %s: %w", img.inspect.Created, err)
+	}
+
 	return &v1.ConfigFile{
+		Architecture:  img.inspect.Architecture,
+		Author:        img.inspect.Author,
+		Created:       v1.Time{Time: imgCreatedDate},
+		DockerVersion: img.inspect.DockerVersion,
+		Config:        v1.Config{Labels: img.inspect.Config.Labels, Env: img.inspect.Config.Env},
+		History:       layersHistory,
 		RootFS: v1.RootFS{
 			Type:    img.inspect.RootFS.Type,
 			DiffIDs: diffIDs,
