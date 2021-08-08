@@ -8,7 +8,7 @@ import (
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
 	"github.com/google/go-containerregistry/pkg/name"
-	"github.com/google/go-containerregistry/pkg/v1"
+	v1 "github.com/google/go-containerregistry/pkg/v1"
 	"golang.org/x/xerrors"
 )
 
@@ -32,6 +32,11 @@ func DockerImage(ref name.Reference) (v1.Image, *types.ImageInspect, func(), err
 		return nil, nil, cleanup, xerrors.Errorf("unable to inspect the image (%s): %w", ref.Name(), err)
 	}
 
+	History, err := c.ImageHistory(context.Background(), ref.Name())
+	if err != nil {
+		return nil, nil, cleanup, xerrors.Errorf("unable to get history (%s): %w", ref.Name(), err)
+	}
+
 	f, err := ioutil.TempFile("", "fanal-*")
 	if err != nil {
 		return nil, nil, cleanup, xerrors.Errorf("failed to create a temporary file")
@@ -46,5 +51,6 @@ func DockerImage(ref name.Reference) (v1.Image, *types.ImageInspect, func(), err
 	return &image{
 		opener:  imageOpener(ref.Name(), f, c.ImageSave),
 		inspect: inspect,
+		history: History,
 	}, &inspect, cleanup, nil
 }

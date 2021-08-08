@@ -2,6 +2,10 @@ module github.com/aquasecurity/fanal
 
 go 1.16
 
+replace (
+	github.com/aquasecurity/testdocker v0.0.0-20210106133225-0b17fe083674 => ../testdocker
+)
+
 require (
 	github.com/BurntSushi/toml v0.3.1
 	github.com/GoogleCloudPlatform/docker-credential-gcr v1.5.0
@@ -10,6 +14,7 @@ require (
 	github.com/aquasecurity/go-dep-parser v0.0.0-20210725132212-29708b56ea7f
 	github.com/aquasecurity/testdocker v0.0.0-20210106133225-0b17fe083674
 	github.com/aquasecurity/tfsec v0.46.0
+	github.com/araddon/dateparse v0.0.0-20210429162001-6b43995a97de // indirect
 	github.com/aws/aws-sdk-go v1.37.0
 	github.com/containerd/cgroups v0.0.0-20210114181951-8a68de567b68 // indirect
 	github.com/containerd/containerd v1.4.3 // indirect

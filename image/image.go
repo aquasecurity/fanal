@@ -51,6 +51,14 @@ func (img Image) LayerIDs() ([]string, error) {
 	return layerIDs, nil
 }
 
+func (img Image) GetConfigFile() (configFile *v1.ConfigFile, err error) {
+	configFile, err = img.client.ConfigFile()
+	if err != nil {
+		return configFile, xerrors.Errorf("unable to get the config file: %w", err)
+	}
+	return configFile, nil
+}
+
 func (img Image) LayerByDiffID(h v1.Hash) (v1.Layer, error) {
 	return img.client.LayerByDiffID(h)
 }
