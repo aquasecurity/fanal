@@ -68,9 +68,9 @@ func (a Artifact) Inspect(ctx context.Context) (types.ArtifactReference, error) 
 		return types.ArtifactReference{}, xerrors.Errorf("unable to get config file information: %w", err)
 	}
 
-	var diffIDs []string
-	for _, d := range configFile.RootFS.DiffIDs {
-		diffIDs = append(diffIDs, d.String())
+	diffIDs, err := a.image.LayerIDs()
+	if err != nil {
+		return types.ArtifactReference{}, xerrors.Errorf("unable to get layer IDs: %w", err)
 	}
 
 	// Debug

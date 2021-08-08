@@ -38,6 +38,19 @@ func (img Image) ConfigBlob() ([]byte, error) {
 	return img.client.RawConfigFile()
 }
 
+func (img Image) LayerIDs() ([]string, error) {
+	conf, err := img.client.ConfigFile()
+	if err != nil {
+		return nil, xerrors.Errorf("unable to get the config file: %w", err)
+	}
+
+	var layerIDs []string
+	for _, d := range conf.RootFS.DiffIDs {
+		layerIDs = append(layerIDs, d.String())
+	}
+	return layerIDs, nil
+}
+
 func (img Image) GetConfigFile() (configFile *v1.ConfigFile, err error) {
 	configFile, err = img.client.ConfigFile()
 	if err != nil {
