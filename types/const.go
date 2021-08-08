@@ -13,6 +13,7 @@ const (
 	Npm         = "npm"
 	NuGetLock   = "nugetlock"
 	NuGetConfig = "nugetconfig"
+	Pip         = "pip"
 	Pipenv      = "pipenv"
 	Poetry      = "poetry"
 	Yarn        = "yarn"
