@@ -212,6 +212,10 @@ func TestNewDockerImage(t *testing.T) {
 			require.NoError(t, err)
 			assert.Equal(t, tt.wantID, gotID)
 
+			gotLayerIDs, err := img.LayerIDs()
+			require.NoError(t, err)
+			assert.Equal(t, tt.wantLayerIDs, gotLayerIDs)
+
 			gotConfigFile, err := img.GetConfigFile()
 			require.NoError(t, err)
 			assert.Equal(t, tt.wantConfigFile, gotConfigFile)
