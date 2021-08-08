@@ -19,7 +19,7 @@ func init() {
 }
 
 const (
-	version    = 1
+	version    = 2
 	lockFile   = "packages.lock.json"
 	configFile = "packages.config"
 )
