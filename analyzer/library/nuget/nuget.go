@@ -4,13 +4,14 @@ import (
 	"os"
 	"path/filepath"
 
+	"golang.org/x/xerrors"
+
 	"github.com/aquasecurity/fanal/analyzer"
 	"github.com/aquasecurity/fanal/analyzer/library"
 	"github.com/aquasecurity/fanal/types"
 	"github.com/aquasecurity/fanal/utils"
 	"github.com/aquasecurity/go-dep-parser/pkg/nugetconfig"
 	"github.com/aquasecurity/go-dep-parser/pkg/nugetlock"
-	"golang.org/x/xerrors"
 )
 
 func init() {
@@ -18,30 +19,29 @@ func init() {
 }
 
 const (
-	version         = 1
-	nugetlockfile   = "packages.lock.json"
-	nugetconfigfile = "packages.config"
+	version    = 1
+	lockFile   = "packages.lock.json"
+	configFile = "packages.config"
 )
 
-var requiredFiles = []string{nugetlockfile, nugetconfigfile}
+var requiredFiles = []string{lockFile, configFile}
 
 type nugetLibraryAnalyzer struct{}
 
 func (a nugetLibraryAnalyzer) Analyze(target analyzer.AnalysisTarget) (*analyzer.AnalysisResult, error) {
+	// Default values
+	analyzerType := types.NuGetLock
+	parser := nugetlock.Parse
+
 	targetFile := filepath.Base(target.FilePath)
-	var analyzerType string
-	var parser library.Parser
-	switch targetFile {
-	case nugetconfigfile:
+	if targetFile == configFile {
 		analyzerType = types.NuGetConfig
 		parser = nugetconfig.Parse
-	default:
-		analyzerType = types.NuGetLock
-		parser = nugetlock.Parse
 	}
+
 	res, err := library.Analyze(analyzerType, target.FilePath, target.Content, parser)
 	if err != nil {
-		return nil, xerrors.Errorf("unable to parse NuGet file: %w", err)
+		return nil, xerrors.Errorf("NuGet analysis error: %w", err)
 	}
 	return res, nil
 }

@@ -1,7 +1,7 @@
 package nuget
 
 import (
-	"io/ioutil"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -28,8 +28,18 @@ func Test_nugetibraryAnalyzer_Analyze(t *testing.T) {
 						Type:     types.NuGetConfig,
 						FilePath: "testdata/packages.config",
 						Libraries: []types.LibraryInfo{
-							{Library: godeptypes.Library{Name: "Microsoft.AspNet.WebApi", Version: "5.2.2", License: ""}},
-							{Library: godeptypes.Library{Name: "Newtonsoft.Json", Version: "6.0.4", License: ""}},
+							{
+								Library: godeptypes.Library{
+									Name:    "Microsoft.AspNet.WebApi",
+									Version: "5.2.2",
+								},
+							},
+							{
+								Library: godeptypes.Library{
+									Name:    "Newtonsoft.Json",
+									Version: "6.0.4",
+								},
+							},
 						},
 					},
 				},
@@ -44,8 +54,16 @@ func Test_nugetibraryAnalyzer_Analyze(t *testing.T) {
 						Type:     types.NuGetLock,
 						FilePath: "testdata/packages.lock.json",
 						Libraries: []types.LibraryInfo{
-							{Library: godeptypes.Library{Name: "Newtonsoft.Json", Version: "12.0.3", License: ""}},
-							{Library: godeptypes.Library{Name: "NuGet.Frameworks", Version: "5.7.0", License: ""}},
+							{
+								Library: godeptypes.Library{
+									Name:    "Newtonsoft.Json",
+									Version: "12.0.3",
+								}},
+							{
+								Library: godeptypes.Library{
+									Name:    "NuGet.Frameworks",
+									Version: "5.7.0",
+								}},
 						},
 					},
 				},
@@ -54,12 +72,12 @@ func Test_nugetibraryAnalyzer_Analyze(t *testing.T) {
 		{
 			name:      "sad path",
 			inputFile: "testdata/invalid.txt",
-			wantErr:   "unable to parse NuGet file",
+			wantErr:   "NuGet analysis error",
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			b, err := ioutil.ReadFile(tt.inputFile)
+			b, err := os.ReadFile(tt.inputFile)
 			require.NoError(t, err)
 
 			a := nugetLibraryAnalyzer{}
