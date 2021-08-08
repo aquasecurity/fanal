@@ -25,7 +25,7 @@ func Test_nugetibraryAnalyzer_Analyze(t *testing.T) {
 			want: &analyzer.AnalysisResult{
 				Applications: []types.Application{
 					{
-						Type:     types.NuGetConfig,
+						Type:     types.NuGet,
 						FilePath: "testdata/packages.config",
 						Libraries: []types.LibraryInfo{
 							{
@@ -51,7 +51,7 @@ func Test_nugetibraryAnalyzer_Analyze(t *testing.T) {
 			want: &analyzer.AnalysisResult{
 				Applications: []types.Application{
 					{
-						Type:     types.NuGetLock,
+						Type:     types.NuGet,
 						FilePath: "testdata/packages.lock.json",
 						Libraries: []types.LibraryInfo{
 							{
