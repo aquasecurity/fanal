@@ -104,7 +104,7 @@ func TestArtifact_Inspect(t *testing.T) {
 				ImageId: "sha256:a187dde48cd289ac374ad8539930628314bc581a481cdb41409c9289419ddb72",
 				Type:    types.ArtifactContainerImage,
 				ID:      "sha256:cdb49675542ff0051aaf7bab6c7a81b6fe275a7dd57d1e0317724a51edb7d6a6",
-				BlobIDs: []string{"sha256:8d109166d42473b7a4b23514d50f9ba01b867845b74d26853747deb8be219e94"},
+				BlobIDs: []string{"sha256:58202859f99e2deb6f47d1d4053886e2737cfd90fba41d7fbfcb50b9e62f3565"},
 				ConfigFile: v1.ConfigFile{
 					Architecture:  "amd64",
 					Author:        "",
