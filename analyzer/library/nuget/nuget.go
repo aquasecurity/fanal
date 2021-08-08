@@ -10,7 +10,7 @@ import (
 	"github.com/aquasecurity/fanal/analyzer/library"
 	"github.com/aquasecurity/fanal/types"
 	"github.com/aquasecurity/fanal/utils"
-	"github.com/aquasecurity/go-dep-parser/pkg/nuget"
+	nuget "github.com/aquasecurity/go-dep-parser/pkg/nugetconfig"
 )
 
 func init() {
