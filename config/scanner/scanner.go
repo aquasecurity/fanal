@@ -13,10 +13,8 @@ import (
 	"github.com/aquasecurity/fanal/types"
 )
 
-var (
-	//go:embed detection.rego
-	defaultDetectionModule string
-)
+//go:embed detection.rego
+var defaultDetectionModule string
 
 type Scanner struct {
 	rootDir    string
@@ -137,7 +135,7 @@ func (s Scanner) scanTerraformByTFSec(files []types.Config) ([]types.Misconfigur
 			},
 		}
 
-		filePath, err := filepath.Rel(rootDir, result.Range.Filename)
+		filePath, err := filepath.Rel(rootDir, result.Range().Filename)
 		if err != nil {
 			return nil, xerrors.Errorf("filepath rel: %w", err)
 		}
@@ -167,7 +165,6 @@ func detectType(ctx context.Context, input interface{}) (string, error) {
 		rego.Query("x = data.config.type.detect"),
 		rego.Module("detection.rego", defaultDetectionModule),
 	).Eval(ctx)
-
 	if err != nil {
 		return "", xerrors.Errorf("rego eval error: %w", err)
 	}
