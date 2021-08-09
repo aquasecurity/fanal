@@ -16,7 +16,13 @@ jobs:
       id: go
 
     - name: Check out code into the Go module directory
-      uses: actions/checkout@v1 
+      uses: actions/checkout@v1
+    - uses: actions/cache@v2
+      with:
+        path: ~/go/pkg/mod
+        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go- 
 
     - name: Install dependencies
       run: sudo apt-get update && sudo apt-get install libdb-dev
@@ -36,6 +42,12 @@ jobs:
 
     - name: Check out code into the Go module directory
       uses: actions/checkout@v1
+    - uses: actions/cache@v2
+      with:
+        path: ~/go/pkg/mod
+        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go- 
 
     - name: Install dependencies
       run: sudo apt-get update && sudo apt-get install libdb-dev
