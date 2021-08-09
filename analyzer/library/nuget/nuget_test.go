@@ -56,14 +56,14 @@ func Test_nugetibraryAnalyzer_Analyze(t *testing.T) {
 						Libraries: []types.LibraryInfo{
 							{
 								Library: godeptypes.Library{
-									Name:    "NuGet.Frameworks",
-									Version: "5.7.0",
+									Name:    "Newtonsoft.Json",
+									Version: "12.0.3",
 								},
 							},
 							{
 								Library: godeptypes.Library{
-									Name:    "Newtonsoft.Json",
-									Version: "12.0.3",
+									Name:    "NuGet.Frameworks",
+									Version: "5.7.0",
 								},
 							},
 						},
