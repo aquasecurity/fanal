@@ -74,8 +74,8 @@ func TestScanner_ScanConfig(t *testing.T) {
 					{
 						Message: "Resource 'aws_security_group_rule.my-rule' passed check: An egress security group rule allows traffic to /0.",
 						PolicyMetadata: types.PolicyMetadata{
-							Type:               "Terraform Security Check powered by tfsec",
 							ID:                 "aws-vpc-no-public-egress-sgr",
+							Type:               "Terraform Security Check powered by tfsec",
 							Description:        "Your port is egressing data to the internet",
 							RecommendedActions: "Set a more restrictive cidr range",
 							Severity:           "CRITICAL",
@@ -84,8 +84,8 @@ func TestScanner_ScanConfig(t *testing.T) {
 					{
 						Message: `Resource 'aws_security_group_rule.my-rule' passed check: Potentially sensitive data stored in block attribute.`,
 						PolicyMetadata: types.PolicyMetadata{
-							Type:               "Terraform Security Check powered by tfsec",
 							ID:                 "general-secrets-sensitive-in-attribute",
+							Type:               "Terraform Security Check powered by tfsec",
 							Description:        "Block attribute could be leaking secrets",
 							RecommendedActions: "Don't include sensitive data in blocks",
 							Severity:           "CRITICAL",
@@ -94,8 +94,8 @@ func TestScanner_ScanConfig(t *testing.T) {
 					{
 						Message: `Resource 'azurerm_managed_disk.source' passed check: Potentially sensitive data stored in block attribute.`,
 						PolicyMetadata: types.PolicyMetadata{
-							Type:               "Terraform Security Check powered by tfsec",
 							ID:                 "general-secrets-sensitive-in-attribute",
+							Type:               "Terraform Security Check powered by tfsec",
 							Description:        "Block attribute could be leaking secrets",
 							RecommendedActions: "Don't include sensitive data in blocks",
 							Severity:           "CRITICAL",
@@ -134,8 +134,8 @@ func TestScanner_ScanConfig(t *testing.T) {
 					{
 						Message: `Resource 'variable.enableEncryption' passed check: Potentially sensitive data stored in "default" value of variable.`,
 						PolicyMetadata: types.PolicyMetadata{
-							Type:               "Terraform Security Check powered by tfsec",
 							ID:                 "general-secrets-sensitive-in-variable",
+							Type:               "Terraform Security Check powered by tfsec",
 							Description:        "Default values could be exposing sensitive data",
 							RecommendedActions: "Don't include sensitive data in variable defaults",
 							Severity:           "CRITICAL",
