@@ -18,21 +18,21 @@ type Layer struct {
 }
 
 type Package struct {
-	Name            string `json:",omitempty"`
-	Version         string `json:",omitempty"`
-	Release         string `json:",omitempty"`
-	Epoch           int    `json:",omitempty"`
-	Arch            string `json:",omitempty"`
-	SrcName         string `json:",omitempty"`
-	SrcVersion      string `json:",omitempty"`
-	SrcRelease      string `json:",omitempty"`
-	SrcEpoch        int    `json:",omitempty"`
-	Modularitylabel string `json:",omitempty"` // only for Red Hat based distributions
-	License         string `json:",omitempty"`
-	Layer           Layer  `json:",omitempty"`
+	Name            string `json:",omitempty" url:"-"`
+	Version         string `json:",omitempty" url:"-"`
+	Release         string `json:",omitempty" url:"release,omitempty"`
+	Epoch           int    `json:",omitempty" url:"epoch,omitempty"`
+	Arch            string `json:",omitempty" url:"arch,omitempty"`
+	SrcName         string `json:",omitempty" url:"src_name,omitempty"`
+	SrcVersion      string `json:",omitempty" url:"src_version,omitempty"`
+	SrcRelease      string `json:",omitempty" url:"src_release,omitempty"`
+	SrcEpoch        int    `json:",omitempty" url:"src_epoch,omitempty"`
+	Modularitylabel string `json:",omitempty" url:"modularity_label,omitempty"` // only for Red Hat based distributions
+	License         string `json:",omitempty" url:"license,omitempty"`
+	Layer           Layer  `json:",omitempty" url:"-"`
 
 	// Each package metadata have the file path, while the package from lock files does not have.
-	FilePath string `json:",omitempty"`
+	FilePath string `json:",omitempty" url:"file_path,omitempty"`
 }
 
 func (pkg *Package) Empty() bool {
