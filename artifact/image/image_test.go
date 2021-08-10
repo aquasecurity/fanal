@@ -2,10 +2,14 @@ package image_test
 
 import (
 	"context"
+	"errors"
 	"testing"
 	"time"
 
+	depTypes "github.com/aquasecurity/go-dep-parser/pkg/types"
+
 	v1 "github.com/google/go-containerregistry/pkg/v1"
+	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/fanal/analyzer"
 	_ "github.com/aquasecurity/fanal/analyzer/all"
@@ -73,10 +77,9 @@ func TestArtifact_Inspect(t *testing.T) {
 									{Name: "zlib", Version: "1.2.11-r3", SrcName: "zlib", SrcVersion: "1.2.11-r3", License: "Zlib"},
 								},
 							}},
-							Applications:     []types.Application(nil),
-							OpaqueDirs:       []string(nil),
-							WhiteoutFiles:    []string(nil),
-							UncompressedSize: 5591284,
+							Applications:  []types.Application(nil),
+							OpaqueDirs:    []string(nil),
+							WhiteoutFiles: []string(nil),
 						},
 					},
 					Returns: cache.ArtifactCachePutBlobReturns{},
@@ -135,7 +138,7 @@ func TestArtifact_Inspect(t *testing.T) {
 				},
 			},
 		},
-		/*{
+		{
 			name:      "happy path: include lock files",
 			imagePath: "../../test/testdata/vuln-image.tar.gz",
 			missingBlobsExpectation: cache.ArtifactCacheMissingBlobsExpectation{
@@ -169,7 +172,6 @@ func TestArtifact_Inspect(t *testing.T) {
 								Family: "debian",
 								Name:   "9.9",
 							},
-							UncompressedSize: 1805109,
 							PackageInfos: []types.PackageInfo{
 								{
 									FilePath: "var/lib/dpkg/status.d/base",
@@ -220,7 +222,6 @@ func TestArtifact_Inspect(t *testing.T) {
 									},
 								},
 							},
-							UncompressedSize: 15065777,
 						},
 					},
 				},
@@ -228,10 +229,9 @@ func TestArtifact_Inspect(t *testing.T) {
 					Args: cache.ArtifactCachePutBlobArgs{
 						BlobID: "sha256:a972fc4d6945b9f2d57ab3f90c613ebd9846d56af7cadaabb5a49248674666da",
 						BlobInfo: types.BlobInfo{
-							SchemaVersion:    1,
-							Digest:           "",
-							DiffID:           "sha256:24df0d4e20c0f42d3703bf1f1db2bdd77346c7956f74f423603d651e8e5ae8a7",
-							UncompressedSize: 27103,
+							SchemaVersion: 1,
+							Digest:        "",
+							DiffID:        "sha256:24df0d4e20c0f42d3703bf1f1db2bdd77346c7956f74f423603d651e8e5ae8a7",
 							Applications: []types.Application{{Type: "composer", FilePath: "php-app/composer.lock",
 								Libraries: []types.LibraryInfo{
 									{Library: depTypes.Library{Name: "guzzlehttp/guzzle", Version: "6.2.0"}},
@@ -322,7 +322,6 @@ func TestArtifact_Inspect(t *testing.T) {
 							OpaqueDirs: []string{
 								"ruby-app/",
 							},
-							UncompressedSize: 3619,
 						},
 					},
 				},
@@ -426,10 +425,9 @@ func TestArtifact_Inspect(t *testing.T) {
 					Args: cache.ArtifactCachePutBlobArgs{
 						BlobID: "sha256:7fd5b413886638133081a50dffeb5ff92bc1ade314ac13518549ef576a8466bc",
 						BlobInfo: types.BlobInfo{
-							SchemaVersion:    1,
-							Digest:           "",
-							DiffID:           "sha256:932da51564135c98a49a34a193d6cd363d8fa4184d957fde16c9d8527b3f3b02",
-							UncompressedSize: 1805109,
+							SchemaVersion: 1,
+							Digest:        "",
+							DiffID:        "sha256:932da51564135c98a49a34a193d6cd363d8fa4184d957fde16c9d8527b3f3b02",
 						},
 					},
 				},
@@ -437,10 +435,9 @@ func TestArtifact_Inspect(t *testing.T) {
 					Args: cache.ArtifactCachePutBlobArgs{
 						BlobID: "sha256:545b3dfb782ca038a6b3356a0a6d2fc3d14e967fe8124510c5a311f3ae8c04fa",
 						BlobInfo: types.BlobInfo{
-							SchemaVersion:    1,
-							Digest:           "",
-							DiffID:           "sha256:dffd9992ca398466a663c87c92cfea2a2db0ae0cf33fcb99da60eec52addbfc5",
-							UncompressedSize: 15065777,
+							SchemaVersion: 1,
+							Digest:        "",
+							DiffID:        "sha256:dffd9992ca398466a663c87c92cfea2a2db0ae0cf33fcb99da60eec52addbfc5",
 						},
 					},
 				},
@@ -448,11 +445,10 @@ func TestArtifact_Inspect(t *testing.T) {
 					Args: cache.ArtifactCachePutBlobArgs{
 						BlobID: "sha256:2c952a0a8859bf4ca4d03c5bbf75ec2bd923f0daa4553e09431ea830386fec80",
 						BlobInfo: types.BlobInfo{
-							SchemaVersion:    1,
-							Digest:           "",
-							DiffID:           "sha256:24df0d4e20c0f42d3703bf1f1db2bdd77346c7956f74f423603d651e8e5ae8a7",
-							OpaqueDirs:       []string{"php-app/"},
-							UncompressedSize: 27103,
+							SchemaVersion: 1,
+							Digest:        "",
+							DiffID:        "sha256:24df0d4e20c0f42d3703bf1f1db2bdd77346c7956f74f423603d651e8e5ae8a7",
+							OpaqueDirs:    []string{"php-app/"},
 						},
 					},
 				},
@@ -460,11 +456,10 @@ func TestArtifact_Inspect(t *testing.T) {
 					Args: cache.ArtifactCachePutBlobArgs{
 						BlobID: "sha256:41cded144fc9495c47698940387a517bd5bcafe898a1f99930bd536f4846f54c",
 						BlobInfo: types.BlobInfo{
-							SchemaVersion:    1,
-							Digest:           "",
-							DiffID:           "sha256:a4595c43a874856bf95f3bfc4fbf78bbaa04c92c726276d4f64193a47ced0566",
-							OpaqueDirs:       []string{"ruby-app/"},
-							UncompressedSize: 3619,
+							SchemaVersion: 1,
+							Digest:        "",
+							DiffID:        "sha256:a4595c43a874856bf95f3bfc4fbf78bbaa04c92c726276d4f64193a47ced0566",
+							OpaqueDirs:    []string{"ruby-app/"},
 						},
 					},
 				},
@@ -596,10 +591,9 @@ func TestArtifact_Inspect(t *testing.T) {
 									{Name: "zlib", Version: "1.2.11-r3", SrcName: "zlib", SrcVersion: "1.2.11-r3", License: "Zlib"},
 								},
 							}},
-							Applications:     []types.Application(nil),
-							OpaqueDirs:       []string(nil),
-							WhiteoutFiles:    []string(nil),
-							UncompressedSize: 5591284,
+							Applications:  []types.Application(nil),
+							OpaqueDirs:    []string(nil),
+							WhiteoutFiles: []string(nil),
 						},
 					},
 					Returns: cache.ArtifactCachePutBlobReturns{
@@ -653,10 +647,9 @@ func TestArtifact_Inspect(t *testing.T) {
 									{Name: "zlib", Version: "1.2.11-r3", SrcName: "zlib", SrcVersion: "1.2.11-r3", License: "Zlib"},
 								},
 							}},
-							Applications:     []types.Application(nil),
-							OpaqueDirs:       []string(nil),
-							WhiteoutFiles:    []string(nil),
-							UncompressedSize: 5591284,
+							Applications:  []types.Application(nil),
+							OpaqueDirs:    []string(nil),
+							WhiteoutFiles: []string(nil),
 						},
 					},
 					Returns: cache.ArtifactCachePutBlobReturns{},
@@ -680,7 +673,7 @@ func TestArtifact_Inspect(t *testing.T) {
 				},
 			},
 			wantErr: "put artifact failed",
-		},*/
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

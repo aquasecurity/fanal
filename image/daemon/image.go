@@ -105,6 +105,7 @@ func (img *image) ConfigFile() (*v1.ConfigFile, error) {
 	for _, history := range img.history {
 		layerCreatedDate = time.Unix(history.Created, 0).UTC()
 		isEmptyLayer = false
+		// If layer size is zero it is empty layer.
 		if history.Size == 0 {
 			isEmptyLayer = true
 		}

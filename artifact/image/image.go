@@ -189,7 +189,7 @@ func (a Artifact) inspectLayer(ctx context.Context, diffID string) (types.BlobIn
 	result := new(analyzer.AnalysisResult)
 	limit := semaphore.NewWeighted(parallel)
 
-	opqDirs, whFiles, unCompLayerSize, err := walker.WalkLayerTar(r, func(filePath string, info os.FileInfo, opener analyzer.Opener) error {
+	opqDirs, whFiles, err := walker.WalkLayerTar(r, func(filePath string, info os.FileInfo, opener analyzer.Opener) error {
 		if err = a.analyzer.AnalyzeFile(ctx, &wg, limit, result, "", filePath, info, opener); err != nil {
 			return xerrors.Errorf("failed to analyze %s: %w", filePath, err)
 		}
@@ -206,15 +206,14 @@ func (a Artifact) inspectLayer(ctx context.Context, diffID string) (types.BlobIn
 	result.Sort()
 
 	layerInfo := types.BlobInfo{
-		SchemaVersion:    types.BlobJSONSchemaVersion,
-		Digest:           layerDigest,
-		DiffID:           diffID,
-		OS:               result.OS,
-		PackageInfos:     result.PackageInfos,
-		Applications:     result.Applications,
-		OpaqueDirs:       opqDirs,
-		WhiteoutFiles:    whFiles,
-		UncompressedSize: unCompLayerSize,
+		SchemaVersion: types.BlobJSONSchemaVersion,
+		Digest:        layerDigest,
+		DiffID:        diffID,
+		OS:            result.OS,
+		PackageInfos:  result.PackageInfos,
+		Applications:  result.Applications,
+		OpaqueDirs:    opqDirs,
+		WhiteoutFiles: whFiles,
 	}
 	return layerInfo, nil
 }

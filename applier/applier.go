@@ -25,8 +25,7 @@ func (a Applier) ApplyLayers(imageID string, diffIDs []string) (types.ArtifactDe
 		}
 		layers = append(layers, layer)
 		LayerMetadata = append(LayerMetadata, types.LayerMetadata{
-			Digest:           layer.Digest,
-			UncompressedSize: layer.UncompressedSize,
+			Digest: layer.Digest,
 		})
 	}
 
