@@ -79,13 +79,11 @@ func TestNewDockerImage(t *testing.T) {
 				DockerVersion: "18.09.7",
 				History: []v1.History{
 					{
-						Author:     "/bin/sh -c #(nop) ADD file:0c4555f363c2672e350001f1293e689875a3760afe7b3f9146886afe67121cba in / ",
 						Created:    v1.Time{Time: time.Date(2020, 3, 23, 21, 19, 34, 0, time.UTC)},
 						CreatedBy:  "/bin/sh -c #(nop) ADD file:0c4555f363c2672e350001f1293e689875a3760afe7b3f9146886afe67121cba in / ",
 						EmptyLayer: false,
 					},
 					{
-						Author:     "/bin/sh -c #(nop)  CMD [\"/bin/sh\"]",
 						Created:    v1.Time{Time: time.Date(2020, 3, 23, 21, 19, 34, 0, time.UTC)},
 						CreatedBy:  "/bin/sh -c #(nop)  CMD [\"/bin/sh\"]",
 						Comment:    "",
