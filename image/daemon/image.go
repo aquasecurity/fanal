@@ -110,7 +110,6 @@ func (img *image) ConfigFile() (*v1.ConfigFile, error) {
 			isEmptyLayer = true
 		}
 		configHistory := v1.History{
-			Author:     history.CreatedBy,
 			Created:    v1.Time{Time: layerCreatedDate},
 			CreatedBy:  history.CreatedBy,
 			Comment:    history.Comment,
