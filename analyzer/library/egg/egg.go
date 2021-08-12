@@ -2,6 +2,7 @@ package egg
 
 import (
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/aquasecurity/go-dep-parser/pkg/egg"
@@ -19,7 +20,7 @@ func init() {
 
 const version = 1
 
-var requiredFiles = []string{".egg-info", ".egg-info/PKG-INFO"}
+var requiredFile = filepath.Join(".egg-info", "PKG-INFO")
 
 type eggLibraryAnalyzer struct{}
 
@@ -32,12 +33,7 @@ func (a eggLibraryAnalyzer) Analyze(target analyzer.AnalysisTarget) (*analyzer.A
 }
 
 func (a eggLibraryAnalyzer) Required(filePath string, _ os.FileInfo) bool {
-	for _, req := range requiredFiles {
-		if strings.HasSuffix(filePath, req) {
-			return true
-		}
-	}
-	return false
+	return strings.HasSuffix(filePath, requiredFile)
 }
 
 func (a eggLibraryAnalyzer) Type() analyzer.Type {

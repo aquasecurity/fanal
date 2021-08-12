@@ -515,6 +515,8 @@ func TestAnalyzer_AnalyzerVersions(t *testing.T) {
 				"suse":     1,
 				"ubuntu":   1,
 				"yarn":     1,
+				"egg":      1,
+				"wheel":    1,
 			},
 		},
 		{
@@ -546,6 +548,8 @@ func TestAnalyzer_AnalyzerVersions(t *testing.T) {
 				"suse":     1,
 				"ubuntu":   0,
 				"yarn":     1,
+				"egg":      1,
+				"wheel":    1,
 			},
 		},
 	}

@@ -2,6 +2,7 @@ package wheel
 
 import (
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/aquasecurity/go-dep-parser/pkg/wheel"
@@ -19,7 +20,7 @@ func init() {
 
 const version = 1
 
-const requiredFile = ".dist-info/METADATA"
+var requiredFile = filepath.Join(".dist-info", "METADATA")
 
 type wheelLibraryAnalyzer struct{}
 
