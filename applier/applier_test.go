@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	depTypes "github.com/aquasecurity/go-dep-parser/pkg/types"
-	v1 "github.com/google/go-containerregistry/pkg/v1"
 
 	"github.com/aquasecurity/fanal/applier"
 	"github.com/aquasecurity/fanal/cache"
@@ -190,16 +189,16 @@ func TestApplier_ApplyLayers(t *testing.T) {
 				},
 				LayerMetadata: []types.LayerMetadata{
 					{
-						Digest:       "sha256:932da51564135c98a49a34a193d6cd363d8fa4184d957fde16c9d8527b3f3b02",
-						LayerHistory: v1.History{Author: "", Created: v1.Time{}, CreatedBy: "", Comment: "", EmptyLayer: false},
+						Digest: "sha256:932da51564135c98a49a34a193d6cd363d8fa4184d957fde16c9d8527b3f3b02",
+						DiffId: "sha256:a187dde48cd289ac374ad8539930628314bc581a481cdb41409c9289419ddb72",
 					},
 					{
-						Digest:       "sha256:dffd9992ca398466a663c87c92cfea2a2db0ae0cf33fcb99da60eec52addbfc5",
-						LayerHistory: v1.History{Author: "", Created: v1.Time{}, CreatedBy: "", Comment: "", EmptyLayer: false},
+						Digest: "sha256:dffd9992ca398466a663c87c92cfea2a2db0ae0cf33fcb99da60eec52addbfc5",
+						DiffId: "sha256:aad63a9339440e7c3e1fff2b988991b9bfb81280042fa7f39a5e327023056819",
 					},
 					{
-						Digest:       "sha256:beee9f30bc1f711043e78d4a2be0668955d4b761d587d6f60c2c8dc081efb203",
-						LayerHistory: v1.History{Author: "", Created: v1.Time{}, CreatedBy: "", Comment: "", EmptyLayer: false},
+						Digest: "sha256:beee9f30bc1f711043e78d4a2be0668955d4b761d587d6f60c2c8dc081efb203",
+						DiffId: "sha256:24df0d4e20c0f42d3703bf1f1db2bdd77346c7956f74f423603d651e8e5ae8a7",
 					},
 				},
 			},
@@ -323,8 +322,8 @@ func TestApplier_ApplyLayers(t *testing.T) {
 				},
 				LayerMetadata: []types.LayerMetadata{
 					{
-						Digest:       "sha256:a187dde48cd289ac374ad8539930628314bc581a481cdb41409c9289419ddb72",
-						LayerHistory: v1.History{Author: "", Created: v1.Time{}, CreatedBy: "", Comment: "", EmptyLayer: false},
+						Digest: "sha256:a187dde48cd289ac374ad8539930628314bc581a481cdb41409c9289419ddb72",
+						DiffId: "sha256:531743b7098cb2aaf615641007a129173f63ed86ca32fe7b5a246a1c47286028",
 					},
 				},
 			},

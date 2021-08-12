@@ -122,8 +122,7 @@ type ArtifactDetail struct {
 }
 
 type LayerMetadata struct {
-	Digest           string     `json:",omitempty"`
-	LayerDiffId      string     `json:",omitempty"`
-	UncompressedSize int64      `json:",omitempty"`
-	LayerHistory     v1.History `json:",omitempty"`
+	Digest           string `json:",omitempty"`
+	DiffId           string `json:",omitempty"`
+	UncompressedSize int64  `json:",omitempty"`
 }

@@ -2,7 +2,6 @@ package daemon
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"os"
 	"sync"
@@ -125,7 +124,6 @@ func (img *image) ConfigFile() (*v1.ConfigFile, error) {
 	}
 	time.Local = loc
 	imgCreatedDate, err := dateparse.ParseLocal(img.inspect.Created)
-	fmt.Println(imgCreatedDate)
 	if err != nil {
 		return nil, xerrors.Errorf("failed parsing created Date %s: %w", img.inspect.Created, err)
 	}
