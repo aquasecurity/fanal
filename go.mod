@@ -3,20 +3,20 @@ module github.com/aquasecurity/fanal
 go 1.16
 
 require (
-	github.com/BurntSushi/toml v0.3.1
+	github.com/BurntSushi/toml v0.4.1
 	github.com/GoogleCloudPlatform/docker-credential-gcr v1.5.0
-	github.com/alicebob/miniredis/v2 v2.14.1
-	github.com/aquasecurity/go-dep-parser v0.0.0-20210802141821-9c3e354a42b8
-	github.com/aquasecurity/testdocker v0.0.0-20210106133225-0b17fe083674
+	github.com/alicebob/miniredis/v2 v2.15.1
+	github.com/aquasecurity/go-dep-parser v0.0.0-20210815084204-d04b52052c28
+	github.com/aquasecurity/testdocker v0.0.0-20210815094158-097d418f8cdb
 	github.com/aquasecurity/tfsec v0.46.0
-	github.com/aws/aws-sdk-go v1.37.0
+	github.com/aws/aws-sdk-go v1.40.22
 	github.com/deckarep/golang-set v1.7.1
-	github.com/docker/docker v20.10.7+incompatible
+	github.com/docker/docker v20.10.8+incompatible
 	github.com/docker/go-connections v0.4.0
 	github.com/go-git/go-git/v5 v5.4.2
-	github.com/go-redis/redis/v8 v8.4.0
+	github.com/go-redis/redis/v8 v8.11.3
 	github.com/golang-jwt/jwt v3.2.2+incompatible
-	github.com/google/go-containerregistry v0.1.2
+	github.com/google/go-containerregistry v0.6.0
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-hclog v0.15.0 // indirect
@@ -40,9 +40,9 @@ require (
 	github.com/testcontainers/testcontainers-go v0.11.1
 	github.com/tmccombs/hcl2json v0.3.1
 	github.com/urfave/cli/v2 v2.3.0
-	go.etcd.io/bbolt v1.3.5
-	go.uber.org/zap v1.17.0
-	golang.org/x/mod v0.4.2
+	go.etcd.io/bbolt v1.3.6
+	go.uber.org/zap v1.19.0
+	golang.org/x/mod v0.5.0
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
