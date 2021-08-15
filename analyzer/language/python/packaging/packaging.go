@@ -1,6 +1,7 @@
-package egg
+package packaging
 
 import (
+	"bytes"
 	"os"
 	"path/filepath"
 	"strings"
@@ -8,37 +9,66 @@ import (
 	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/fanal/analyzer"
-	"github.com/aquasecurity/fanal/analyzer/language"
 	"github.com/aquasecurity/fanal/types"
 	"github.com/aquasecurity/go-dep-parser/pkg/python/packaging"
 )
 
 func init() {
-	analyzer.RegisterAnalyzer(&eggLibraryAnalyzer{})
+	analyzer.RegisterAnalyzer(&packagingAnalyzer{})
 }
 
 const version = 1
 
-var requiredFile = filepath.Join(".egg-info", "PKG-INFO")
+var (
+	requiredFiles = []string{
+		// egg
+		".egg-info",
+		".egg-info/PKG-INFO",
 
-type eggLibraryAnalyzer struct{}
-
-func (a eggLibraryAnalyzer) Analyze(target analyzer.AnalysisTarget) (*analyzer.AnalysisResult, error) {
-	res, err := language.Analyze(types.Egg, target.FilePath, target.Content, packaging.Parse)
-	if err != nil {
-		return nil, xerrors.Errorf("unable to parse METADATA: %w", err)
+		// wheel
+		".dist-info/METADATA",
 	}
-	return res, nil
+)
+
+type packagingAnalyzer struct{}
+
+// Analyze analyzes egg and wheel files.
+func (a packagingAnalyzer) Analyze(target analyzer.AnalysisTarget) (*analyzer.AnalysisResult, error) {
+	r := bytes.NewReader(target.Content)
+	lib, err := packaging.Parse(r)
+	if err != nil {
+		return nil, xerrors.Errorf("unable to parse %s: %w", target.FilePath, err)
+	}
+
+	return &analyzer.AnalysisResult{Applications: []types.Application{
+		{
+			Type:     types.PythonPkg,
+			FilePath: target.FilePath,
+			Libraries: []types.LibraryInfo{
+				{
+					Library: lib,
+				},
+			},
+		},
+	}}, nil
 }
 
-func (a eggLibraryAnalyzer) Required(filePath string, _ os.FileInfo) bool {
-	return strings.HasSuffix(filePath, requiredFile)
+func (a packagingAnalyzer) Required(filePath string, _ os.FileInfo) bool {
+	// For Windows
+	filePath = filepath.ToSlash(filePath)
+
+	for _, r := range requiredFiles {
+		if strings.HasSuffix(filePath, r) {
+			return true
+		}
+	}
+	return false
 }
 
-func (a eggLibraryAnalyzer) Type() analyzer.Type {
-	return analyzer.TypeEgg
+func (a packagingAnalyzer) Type() analyzer.Type {
+	return analyzer.TypePythonPkg
 }
 
-func (a eggLibraryAnalyzer) Version() int {
+func (a packagingAnalyzer) Version() int {
 	return version
 }
