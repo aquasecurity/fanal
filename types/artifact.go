@@ -32,6 +32,10 @@ type Package struct {
 	Layer           Layer  `json:",omitempty"`
 }
 
+func (pkg *Package) Empty() bool {
+	return pkg.Name == "" || pkg.Version == ""
+}
+
 type SrcPackage struct {
 	Name        string   `json:"name"`
 	Version     string   `json:"version"`
