@@ -21,6 +21,7 @@ const (
 	Jar       = "jar"
 	GoBinary  = "gobinary"
 	GoMod     = "gomod"
+	PkgJson   = "packagejson"
 
 	// Config files
 	YAML           = "yaml"
