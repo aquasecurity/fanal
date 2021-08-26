@@ -9,10 +9,8 @@ import (
 	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/fanal/analyzer"
-	"github.com/aquasecurity/fanal/analyzer/language"
 	"github.com/aquasecurity/fanal/types"
 	"github.com/aquasecurity/go-dep-parser/pkg/ruby/gemspec"
-	godeptypes "github.com/aquasecurity/go-dep-parser/pkg/types"
 )
 
 func init() {
@@ -32,10 +30,20 @@ func (a gemspecLibraryAnalyzer) Analyze(target analyzer.AnalysisTarget) (*analyz
 		return nil, xerrors.Errorf("failed to parse %s: %w", target.FilePath, err)
 	}
 
-	if parsedLib.Name == "" {
-		return nil, nil
-	}
-	return language.ToAnalysisResult(types.GemSpec, target.FilePath, []godeptypes.Library{parsedLib}), nil
+	return &analyzer.AnalysisResult{
+		Applications: []types.Application{
+			{
+				Type:     types.GemSpec,
+				FilePath: target.FilePath,
+				Libraries: []types.LibraryInfo{
+					{
+						Library: parsedLib,
+					},
+				},
+			},
+		},
+	}, nil
+
 }
 
 func (a gemspecLibraryAnalyzer) Required(filePath string, info os.FileInfo) bool {
