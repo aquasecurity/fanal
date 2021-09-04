@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func Test_gemspecAnalyzer_Analyse(t *testing.T) {
+func Test_gemspecLibraryAnalyzer_Analyze(t *testing.T) {
 	tests := []struct {
 		name      string
 		inputFile string
@@ -68,7 +68,7 @@ func Test_gemspecAnalyzer_Analyse(t *testing.T) {
 	}
 }
 
-func Test_gemspecAnalyzer_Required(t *testing.T) {
+func Test_gemspecLibraryAnalyzer_Required(t *testing.T) {
 	tests := []struct {
 		name     string
 		filePath string
