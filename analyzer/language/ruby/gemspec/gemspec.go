@@ -19,7 +19,7 @@ func init() {
 
 const version = 1
 
-var fileregex = regexp.MustCompile(`.*/specifications/.+.gemspec`)
+var fileRegex = regexp.MustCompile(`.*/specifications/.+\.gemspec`)
 
 type gemspecLibraryAnalyzer struct{}
 
@@ -47,7 +47,7 @@ func (a gemspecLibraryAnalyzer) Analyze(target analyzer.AnalysisTarget) (*analyz
 }
 
 func (a gemspecLibraryAnalyzer) Required(filePath string, info os.FileInfo) bool {
-	return fileregex.MatchString(filepath.ToSlash(filePath))
+	return fileRegex.MatchString(filepath.ToSlash(filePath))
 }
 
 func (a gemspecLibraryAnalyzer) Type() analyzer.Type {

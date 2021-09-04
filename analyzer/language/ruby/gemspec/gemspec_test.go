@@ -85,6 +85,11 @@ func Test_gemspecAnalyzer_Required(t *testing.T) {
 			want:     true,
 		},
 		{
+			name:     "without dot",
+			filePath: "usr/ank/specifications/ankgemspec",
+			want:     false,
+		},
+		{
 			name:     "source gemspec",
 			filePath: "/localtRepo/default/ank.gemspec",
 			want:     false,
