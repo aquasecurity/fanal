@@ -17,10 +17,10 @@ type nodejsHook struct{}
 func (h nodejsHook) Hook(blob *types.BlobInfo) error {
 	var apps []types.Application
 	nodeApp := types.Application{
-		Type: types.PkgJson,
+		Type: types.NodePkg,
 	}
 	for _, app := range blob.Applications {
-		if app.Type != types.PkgJson {
+		if app.Type != types.NodePkg {
 			apps = append(apps, app)
 			continue
 		}
