@@ -8,7 +8,7 @@ require (
 	github.com/alicebob/miniredis/v2 v2.15.1
 	github.com/aquasecurity/go-dep-parser v0.0.0-20210905090655-b95c2c079bbb
 	github.com/aquasecurity/testdocker v0.0.0-20210815094158-097d418f8cdb
-	github.com/aquasecurity/tfsec v0.46.0
+	github.com/aquasecurity/tfsec v0.58.6
 	github.com/aws/aws-sdk-go v1.40.37
 	github.com/deckarep/golang-set v1.7.1
 	github.com/docker/docker v20.10.8+incompatible
@@ -17,12 +17,10 @@ require (
 	github.com/go-redis/redis/v8 v8.11.3
 	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/google/go-containerregistry v0.6.0
-	github.com/google/uuid v1.3.0 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-hclog v0.15.0 // indirect
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/hashicorp/hcl v1.0.0
-	github.com/hashicorp/hcl/v2 v2.10.1 // indirect
 	github.com/knqyf263/go-apk-version v0.0.0-20200609155635-041fdbb8563f
 	github.com/knqyf263/go-deb-version v0.0.0-20190517075300-09fca494f03d
 	github.com/knqyf263/go-rpmdb v0.0.0-20201215100354-a9e3110d8ee1
@@ -33,7 +31,6 @@ require (
 	github.com/open-policy-agent/opa v0.31.0
 	github.com/opencontainers/go-digest v1.0.0
 	github.com/opencontainers/image-spec v1.0.2-0.20190823105129-775207bd45b6
-	github.com/owenrumney/squealer v0.2.28 // indirect
 	github.com/saracen/walker v0.0.0-20191201085201-324a081bae7e
 	github.com/sosedoff/gitkit v0.3.0
 	github.com/stretchr/testify v1.7.0
