@@ -30,8 +30,8 @@ func TestParseRpmInfo(t *testing.T) {
 			// cp ./testdata/valid_rocky /path/to/testdir/Packages
 			// rpm --dbpath /path/to/testdir -qa --qf "{Name: \"%{NAME}\", Epoch: %{EPOCHNUM}, Version: \"%{VERSION}\", Release: \"%{RELEASE}\", Arch: \"%{ARCH}\"\},\n"
 			pkgs: []types.Package{
-				{Name: "python3-libs", Epoch: 0, Version: "3.6.8", Release: "37.el8.rocky", Arch: "x86_64", SrcName: "python3", SrcEpoch: 0, SrcVersion: "3.6.8", SrcRelease: "37.el8.rocky"},
-				{Name: "rocky-release", Epoch: 0, Version: "8.4", Release: "26.el8", Arch: "noarch", SrcName: "rocky-release", SrcEpoch: 0, SrcVersion: "8.4", SrcRelease: "26.el8"},
+				{Name: "python3-libs", Epoch: 0, Version: "3.6.8", Release: "37.el8.rocky", Arch: "x86_64", SrcName: "python3", SrcEpoch: 0, SrcVersion: "3.6.8", SrcRelease: "37.el8.rocky", Modularitylabel: "", License: "Python"},
+				{Name: "rocky-release", Epoch: 0, Version: "8.4", Release: "26.el8", Arch: "noarch", SrcName: "rocky-release", SrcEpoch: 0, SrcVersion: "8.4", SrcRelease: "26.el8", Modularitylabel: "", License: "BSD-3-Clause"},
 			},
 		},
 		"Valid Almainux": {
@@ -39,9 +39,9 @@ func TestParseRpmInfo(t *testing.T) {
 			// cp ./testdata/valid_alma /path/to/testdir/Packages
 			// rpm --dbpath /path/to/testdir -qa --qf "{Name: \"%{NAME}\", Epoch: %{EPOCHNUM}, Version: \"%{VERSION}\", Release: \"%{RELEASE}\", Arch: \"%{ARCH}\"\},\n"
 			pkgs: []types.Package{
-				{Name: "libdnf", Epoch: 0, Version: "0.55.0", Release: "7.el8.alma", Arch: "x86_64", SrcName: "libdnf", SrcEpoch: 0, SrcVersion: "0.55.0", SrcRelease: "7.el8.alma"},
-				{Name: "python3-libdnf", Epoch: 0, Version: "0.55.0", Release: "7.el8.alma", Arch: "x86_64", SrcName: "libdnf", SrcEpoch: 0, SrcVersion: "0.55.0", SrcRelease: "7.el8.alma"},
-				{Name: "almalinux-release", Epoch: 0, Version: "8.4", Release: "2.el8", Arch: "x86_64", SrcName: "almalinux-release", SrcEpoch: 0, SrcVersion: "8.4", SrcRelease: "2.el8"},
+				{Name: "libdnf", Epoch: 0, Version: "0.55.0", Release: "7.el8.alma", Arch: "x86_64", SrcName: "libdnf", SrcEpoch: 0, SrcVersion: "0.55.0", SrcRelease: "7.el8.alma", Modularitylabel: "", License: "LGPLv2+"},
+				{Name: "python3-libdnf", Epoch: 0, Version: "0.55.0", Release: "7.el8.alma", Arch: "x86_64", SrcName: "libdnf", SrcEpoch: 0, SrcVersion: "0.55.0", SrcRelease: "7.el8.alma", Modularitylabel: "", License: "LGPLv2+"},
+				{Name: "almalinux-release", Epoch: 0, Version: "8.4", Release: "2.el8", Arch: "x86_64", SrcName: "almalinux-release", SrcEpoch: 0, SrcVersion: "8.4", SrcRelease: "2.el8", Modularitylabel: "", License: "GPLv2"},
 			},
 		},
 		"ValidBig": {
