@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	jwt "github.com/dgrijalva/jwt-go"
+	"github.com/golang-jwt/jwt"
 	v1 "github.com/google/go-containerregistry/pkg/v1"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -293,7 +293,7 @@ func TestNewDockerImageWithPrivateRegistry(t *testing.T) {
 			args: args{
 				imageName: fmt.Sprintf("%s/library/alpine:3.11", serverAddr),
 			},
-			wantErr: "unsupported status code 401",
+			wantErr: "unexpected status code 401",
 		},
 		{
 			name: "sad path with invalid registry token",

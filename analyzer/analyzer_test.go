@@ -441,45 +441,6 @@ func TestAnalyzeConfig(t *testing.T) {
 	}
 }
 
-func TestCheckPackage(t *testing.T) {
-	tests := []struct {
-		name string
-		pkg  *types.Package
-		want bool
-	}{
-		{
-			name: "valid package",
-			pkg: &types.Package{
-				Name:    "musl",
-				Version: "1.2.3",
-			},
-			want: true,
-		},
-		{
-			name: "empty name",
-			pkg: &types.Package{
-				Name:    "",
-				Version: "1.2.3",
-			},
-			want: false,
-		},
-		{
-			name: "empty version",
-			pkg: &types.Package{
-				Name:    "musl",
-				Version: "",
-			},
-			want: false,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got := analyzer.CheckPackage(tt.pkg)
-			assert.Equal(t, tt.want, got)
-		})
-	}
-}
-
 func TestAnalyzer_AnalyzerVersions(t *testing.T) {
 	tests := []struct {
 		name     string
@@ -490,62 +451,68 @@ func TestAnalyzer_AnalyzerVersions(t *testing.T) {
 			name:     "happy path",
 			disabled: []analyzer.Type{},
 			want: map[string]int{
-				"alpine":   1,
-				"amazon":   1,
-				"apk":      1,
-				"bundler":  1,
-				"cargo":    1,
-				"centos":   1,
-				"composer": 1,
-				"debian":   1,
-				"dpkg":     1,
-				"fedora":   1,
-				"gobinary": 1,
-				"gomod":    1,
-				"jar":      1,
-				"npm":      1,
-				"nuget":    2,
-				"oracle":   1,
-				"photon":   1,
-				"pip":      1,
-				"pipenv":   1,
-				"poetry":   1,
-				"redhat":   1,
-				"rpm":      1,
-				"suse":     1,
-				"ubuntu":   1,
-				"yarn":     1,
+				"alpine":     1,
+				"amazon":     1,
+				"apk":        1,
+				"bundler":    1,
+				"cargo":      1,
+				"centos":     1,
+				"composer":   1,
+				"debian":     1,
+				"dpkg":       1,
+				"fedora":     1,
+				"gobinary":   1,
+				"gomod":      1,
+				"jar":        1,
+				"node-pkg":   1,
+				"npm":        1,
+				"nuget":      2,
+				"oracle":     1,
+				"photon":     1,
+				"pip":        1,
+				"pipenv":     1,
+				"poetry":     1,
+				"redhat":     1,
+				"rpm":        1,
+				"suse":       1,
+				"ubuntu":     1,
+				"yarn":       1,
+				"python-pkg": 1,
+				"gemspec":    1,
 			},
 		},
 		{
 			name:     "disable analyzers",
 			disabled: []analyzer.Type{analyzer.TypeAlpine, analyzer.TypeUbuntu},
 			want: map[string]int{
-				"alpine":   0,
-				"amazon":   1,
-				"apk":      1,
-				"bundler":  1,
-				"cargo":    1,
-				"centos":   1,
-				"composer": 1,
-				"debian":   1,
-				"dpkg":     1,
-				"fedora":   1,
-				"gobinary": 1,
-				"gomod":    1,
-				"jar":      1,
-				"npm":      1,
-				"nuget":    2,
-				"oracle":   1,
-				"photon":   1,
-				"pip":      1,
-				"pipenv":   1,
-				"poetry":   1,
-				"redhat":   1,
-				"rpm":      1,
-				"suse":     1,
-				"ubuntu":   0,
-				"yarn":     1,
+				"alpine":     0,
+				"amazon":     1,
+				"apk":        1,
+				"bundler":    1,
+				"cargo":      1,
+				"centos":     1,
+				"composer":   1,
+				"debian":     1,
+				"dpkg":       1,
+				"fedora":     1,
+				"gobinary":   1,
+				"gomod":      1,
+				"jar":        1,
+				"node-pkg":   1,
+				"npm":        1,
+				"nuget":      2,
+				"oracle":     1,
+				"photon":     1,
+				"pip":        1,
+				"pipenv":     1,
+				"poetry":     1,
+				"redhat":     1,
+				"rpm":        1,
+				"suse":       1,
+				"ubuntu":     0,
+				"yarn":       1,
+				"python-pkg": 1,
+				"gemspec":    1,
 			},
 		},
 	}

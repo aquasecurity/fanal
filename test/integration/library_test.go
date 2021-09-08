@@ -51,11 +51,12 @@ var testCases = []testCase{
 		expectedOS:      types.OS{Name: "3.10.2", Family: "alpine"},
 	},
 	{
-		name:            "happy path, amazonlinux:2",
-		imageName:       "amazonlinux:2",
-		remoteImageName: "knqyf263/amazonlinux:2",
-		imageFile:       "testdata/fixtures/amazon-2.tar.gz",
-		expectedOS:      types.OS{Name: "2 (Karoo)", Family: "amazon"},
+		name:              "happy path, amazonlinux:2",
+		imageName:         "amazonlinux:2",
+		remoteImageName:   "knqyf263/amazonlinux:2",
+		imageFile:         "testdata/fixtures/amazon-2.tar.gz",
+		expectedOS:        types.OS{Name: "2 (Karoo)", Family: "amazon"},
+		expectedLibraries: "testdata/goldens/amazonlinux-2.expectedlibs.golden",
 	},
 	{
 		name:            "happy path, debian:buster",
@@ -72,11 +73,12 @@ var testCases = []testCase{
 		expectedOS:      types.OS{Name: "1.0", Family: "photon"},
 	},
 	{
-		name:            "happy path, registry.redhat.io/ubi7",
-		imageName:       "registry.redhat.io/ubi7",
-		remoteImageName: "knqyf263/registry.redhat.io-ubi7:latest",
-		imageFile:       "testdata/fixtures/ubi-7.tar.gz",
-		expectedOS:      types.OS{Name: "7.7", Family: "redhat"},
+		name:              "happy path, registry.redhat.io/ubi7",
+		imageName:         "registry.redhat.io/ubi7",
+		remoteImageName:   "knqyf263/registry.redhat.io-ubi7:latest",
+		imageFile:         "testdata/fixtures/ubi-7.tar.gz",
+		expectedOS:        types.OS{Name: "7.7", Family: "redhat"},
+		expectedLibraries: "testdata/goldens/registry.redhat.io-ubi7.expectedlibs.golden",
 	},
 	{
 		name:            "happy path, opensuse leap 15.1",
@@ -126,7 +128,7 @@ func TestFanal_Library_DockerLessMode(t *testing.T) {
 			require.NoError(t, err, tc.name)
 			defer cleanup()
 
-			ar, err := aimage.NewArtifact(img, c, nil, config.ScannerOption{})
+			ar, err := aimage.NewArtifact(img, c, nil, nil, config.ScannerOption{})
 			require.NoError(t, err)
 
 			applier := applier.NewApplier(c)
@@ -176,7 +178,7 @@ func TestFanal_Library_DockerMode(t *testing.T) {
 			require.NoError(t, err, tc.name)
 			defer cleanup()
 
-			ar, err := aimage.NewArtifact(img, c, nil, config.ScannerOption{})
+			ar, err := aimage.NewArtifact(img, c, nil, nil, config.ScannerOption{})
 			require.NoError(t, err)
 
 			applier := applier.NewApplier(c)
@@ -222,7 +224,7 @@ func TestFanal_Library_TarMode(t *testing.T) {
 			img, err := image.NewArchiveImage(tc.imageFile)
 			require.NoError(t, err, tc.name)
 
-			ar, err := aimage.NewArtifact(img, c, nil, config.ScannerOption{})
+			ar, err := aimage.NewArtifact(img, c, nil, nil, config.ScannerOption{})
 			require.NoError(t, err)
 
 			applier := applier.NewApplier(c)
