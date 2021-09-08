@@ -16,9 +16,9 @@ func TestParseRpmInfo(t *testing.T) {
 		path string
 		pkgs []types.Package
 	}{
-		"Valid CentOS": {
-			path: "./testdata/valid_centos",
-			// cp ./testdata/valid_centos /path/to/testdir/Packages
+		"Valid": {
+			path: "./testdata/valid",
+			// cp ./testdata/valid /path/to/testdir/Packages
 			// rpm --dbpath /path/to/testdir -qa --qf "{Name: \"%{NAME}\", Epoch: %{EPOCHNUM}, Version: \"%{VERSION}\", Release: \"%{RELEASE}\", Arch: \"%{ARCH}\"\},\n"
 			pkgs: []types.Package{
 				{Name: "centos-release", Epoch: 0, Version: "7", Release: "1.1503.el7.centos.2.8", Arch: "x86_64", SrcName: "centos-release", SrcEpoch: 0, SrcVersion: "7", SrcRelease: "1.1503.el7.centos.2.8", License: "GPLv2"},
