@@ -103,10 +103,13 @@ func TestArtifact_Inspect(t *testing.T) {
 			want: types.ArtifactReference{
 				Name:    "../../test/testdata/alpine-311.tar.gz",
 				Type:    types.ArtifactContainerImage,
-				ID:      "sha256:cdb49675542ff0051aaf7bab6c7a81b6fe275a7dd57d1e0317724a51edb7d6a6",
-				BlobIDs: []string{"sha256:b827247465138b3595cf0fa539fd50e69793a1992061defe0cf2d2e748e5c7f1"},
+				ID:      "sha256:d2b38afccf21751162a2c5d632f095290c96ab726642c1586d90f94cd8eb30bb",
+				BlobIDs: []string{"sha256:b59e5f5eaa7fe002f88447801080d73c6c6a46b5464c603432ceced713939fde"},
 				ImageMetadata: &types.ImageMetadata{
 					ID: "sha256:a187dde48cd289ac374ad8539930628314bc581a481cdb41409c9289419ddb72",
+					DiffIDs: []string{
+						"sha256:beee9f30bc1f711043e78d4a2be0668955d4b761d587d6f60c2c8dc081efb203",
+					},
 					ConfigFile: v1.ConfigFile{
 						Architecture:  "amd64",
 						Author:        "",
@@ -273,7 +276,7 @@ func TestArtifact_Inspect(t *testing.T) {
 			want: types.ArtifactReference{
 				Name: "../../test/testdata/vuln-image.tar.gz",
 				Type: types.ArtifactContainerImage,
-				ID:   "sha256:1a0f2e0e3a3ca6bf77692726db8b41793f3ac4edb7b64dd21a93d217ad8257e8",
+				ID:   "sha256:dd096dc1f5f4a50a3a257f3ae62e912d3dca448767104315eb01ad2ac019ec5e",
 				BlobIDs: []string{
 					"sha256:bc65122bab94a3659c95de45513220673c339ff5c5c1ee391080e6b701a9d68e",
 					"sha256:83b990f219dcd48d2d4bf7a801db9c2307c82561cfd8367e9b484520a5222a5d",
@@ -282,10 +285,15 @@ func TestArtifact_Inspect(t *testing.T) {
 				},
 				ImageMetadata: &types.ImageMetadata{
 					ID: "sha256:58701fd185bda36cab0557bb6438661831267aa4a9e0b54211c4d5317a48aff4",
+					DiffIDs: []string{
+						"sha256:932da51564135c98a49a34a193d6cd363d8fa4184d957fde16c9d8527b3f3b02",
+						"sha256:dffd9992ca398466a663c87c92cfea2a2db0ae0cf33fcb99da60eec52addbfc5",
+						"sha256:24df0d4e20c0f42d3703bf1f1db2bdd77346c7956f74f423603d651e8e5ae8a7",
+						"sha256:a4595c43a874856bf95f3bfc4fbf78bbaa04c92c726276d4f64193a47ced0566",
+					},
 					ConfigFile: v1.ConfigFile{
-						Architecture: "amd64",
-						Author:       "",
-						//Container:     "fb71ddde5f6411a82eb056a9190f0cc1c80d7f77a8509ee90a2054428edb0024",
+						Architecture:  "amd64",
+						Author:        "",
 						Created:       v1.Time{Time: time.Date(2020, 2, 16, 10, 38, 41, 114114788, time.UTC)},
 						DockerVersion: "19.03.5",
 						History: []v1.History{
@@ -422,6 +430,12 @@ func TestArtifact_Inspect(t *testing.T) {
 				},
 				ImageMetadata: &types.ImageMetadata{
 					ID: "sha256:58701fd185bda36cab0557bb6438661831267aa4a9e0b54211c4d5317a48aff4",
+					DiffIDs: []string{
+						"sha256:932da51564135c98a49a34a193d6cd363d8fa4184d957fde16c9d8527b3f3b02",
+						"sha256:dffd9992ca398466a663c87c92cfea2a2db0ae0cf33fcb99da60eec52addbfc5",
+						"sha256:24df0d4e20c0f42d3703bf1f1db2bdd77346c7956f74f423603d651e8e5ae8a7",
+						"sha256:a4595c43a874856bf95f3bfc4fbf78bbaa04c92c726276d4f64193a47ced0566",
+					},
 					ConfigFile: v1.ConfigFile{
 						Architecture:  "amd64",
 						Author:        "",

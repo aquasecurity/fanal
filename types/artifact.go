@@ -96,7 +96,8 @@ type ArtifactReference struct {
 }
 
 type ImageMetadata struct {
-	ID          string // image ID
+	ID          string   // image ID
+	DiffIDs     []string // uncompressed layer IDs
 	RepoTags    []string
 	RepoDigests []string
 	ConfigFile  v1.ConfigFile

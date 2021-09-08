@@ -127,6 +127,7 @@ func (a Artifact) Inspect(ctx context.Context) (types.ArtifactReference, error) 
 		BlobIDs: layerKeys,
 		ImageMetadata: &types.ImageMetadata{
 			ID:          imageID,
+			DiffIDs:     diffIDs,
 			RepoTags:    a.image.RepoTags(),
 			RepoDigests: a.image.RepoDigests(),
 			ConfigFile:  *configFile,
