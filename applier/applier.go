@@ -39,6 +39,5 @@ func (a Applier) ApplyLayers(imageID string, diffIDs []string) (types.ArtifactDe
 
 	imageInfo, _ := a.cache.GetArtifact(imageID)
 	mergedLayer.HistoryPackages = imageInfo.HistoryPackages
-	mergedLayer.LayerMetadata = LayerMetadata
 	return mergedLayer, nil
 }
