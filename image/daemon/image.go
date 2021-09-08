@@ -16,6 +16,12 @@ import (
 	"golang.org/x/xerrors"
 )
 
+type Image interface {
+	v1.Image
+	RepoTags() []string
+	RepoDigests() []string
+}
+
 var mu sync.Mutex
 
 type opener func() (v1.Image, error)
@@ -36,12 +42,12 @@ func imageOpener(ref string, f *os.File, imageSave imageSave) opener {
 		}
 		defer f.Close()
 
-		image, err := tarball.ImageFromPath(f.Name(), nil)
+		img, err := tarball.ImageFromPath(f.Name(), nil)
 		if err != nil {
 			return nil, xerrors.Errorf("failed to initialize the struct from the temporary file: %w", err)
 		}
 
-		return image, nil
+		return img, nil
 	}
 }
 
@@ -88,33 +94,10 @@ func (img *image) ConfigFile() (*v1.ConfigFile, error) {
 		}
 		return img.Image.ConfigFile()
 	}
-	var diffIDs []v1.Hash
-	for _, l := range img.inspect.RootFS.Layers {
-		h, err := v1.NewHash(l)
-		if err != nil {
-			return nil, xerrors.Errorf("invalid hash %s: %w", l, err)
-		}
-		diffIDs = append(diffIDs, h)
-	}
 
-	// fill only required metadata
-	var layersHistory []v1.History
-	var layerCreatedDate time.Time
-	var isEmptyLayer bool
-	for _, history := range img.history {
-		layerCreatedDate = time.Unix(history.Created, 0).UTC()
-		isEmptyLayer = false
-		// If layer size is zero it is empty layer.
-		if history.Size == 0 {
-			isEmptyLayer = true
-		}
-		configHistory := v1.History{
-			Created:    v1.Time{Time: layerCreatedDate},
-			CreatedBy:  history.CreatedBy,
-			Comment:    history.Comment,
-			EmptyLayer: isEmptyLayer,
-		}
-		layersHistory = append(layersHistory, configHistory)
+	diffIDs, err := img.diffIDs()
+	if err != nil {
+		return nil, xerrors.Errorf("unable to get diff IDs: %w", err)
 	}
 
 	// NOTE:  This is very, very important to understand time-parsing in go
@@ -134,7 +117,7 @@ func (img *image) ConfigFile() (*v1.ConfigFile, error) {
 		Created:       v1.Time{Time: imgCreatedDate},
 		DockerVersion: img.inspect.DockerVersion,
 		Config:        v1.Config{Labels: img.inspect.Config.Labels, Env: img.inspect.Config.Env},
-		History:       layersHistory,
+		History:       img.configHistory(),
 		RootFS: v1.RootFS{
 			Type:    img.inspect.RootFS.Type,
 			DiffIDs: diffIDs,
@@ -154,4 +137,40 @@ func (img *image) RawConfigFile() ([]byte, error) {
 		return nil, xerrors.Errorf("unable to populate: %w", err)
 	}
 	return img.Image.RawConfigFile()
+}
+
+func (img *image) RepoTags() []string {
+	return img.inspect.RepoTags
+}
+
+func (img *image) RepoDigests() []string {
+	return img.inspect.RepoDigests
+}
+
+func (img *image) configHistory() []v1.History {
+	// Fill only required metadata
+	var history []v1.History
+	for _, h := range img.history {
+		history = append(history, v1.History{
+			Created: v1.Time{
+				Time: time.Unix(h.Created, 0).UTC(),
+			},
+			CreatedBy:  h.CreatedBy,
+			Comment:    h.Comment,
+			EmptyLayer: h.Size == 0,
+		})
+	}
+	return history
+}
+
+func (img *image) diffIDs() ([]v1.Hash, error) {
+	var diffIDs []v1.Hash
+	for _, l := range img.inspect.RootFS.Layers {
+		h, err := v1.NewHash(l)
+		if err != nil {
+			return nil, xerrors.Errorf("invalid hash %s: %w", l, err)
+		}
+		diffIDs = append(diffIDs, h)
+	}
+	return diffIDs, nil
 }

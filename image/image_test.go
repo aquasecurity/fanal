@@ -210,7 +210,7 @@ func TestNewDockerImage(t *testing.T) {
 			require.NoError(t, err)
 			assert.Equal(t, tt.wantID, gotID)
 
-			gotConfigFile, err := img.GetConfigFile()
+			gotConfigFile, err := img.ConfigFile()
 			require.NoError(t, err)
 			assert.Equal(t, tt.wantConfigFile, gotConfigFile)
 

@@ -58,7 +58,7 @@ func Test_image_ConfigName(t *testing.T) {
 			ref, err := name.ParseReference(tt.imageName)
 			require.NoError(t, err)
 
-			img, _, cleanup, err := DockerImage(ref)
+			img, cleanup, err := DockerImage(ref)
 			require.NoError(t, err)
 			defer cleanup()
 
@@ -139,7 +139,7 @@ func Test_image_ConfigFile(t *testing.T) {
 			ref, err := name.ParseReference(tt.imageName)
 			require.NoError(t, err)
 
-			img, _, cleanup, err := DockerImage(ref)
+			img, cleanup, err := DockerImage(ref)
 			require.NoError(t, err)
 			defer cleanup()
 
@@ -184,7 +184,7 @@ func Test_image_LayerByDiffID(t *testing.T) {
 			ref, err := name.ParseReference(tt.imageName)
 			require.NoError(t, err)
 
-			img, _, cleanup, err := DockerImage(ref)
+			img, cleanup, err := DockerImage(ref)
 			require.NoError(t, err)
 			defer cleanup()
 
@@ -213,7 +213,7 @@ func Test_image_RawConfigFile(t *testing.T) {
 			ref, err := name.ParseReference(tt.imageName)
 			require.NoError(t, err)
 
-			img, _, cleanup, err := DockerImage(ref)
+			img, cleanup, err := DockerImage(ref)
 			require.NoError(t, err)
 			defer cleanup()
 
