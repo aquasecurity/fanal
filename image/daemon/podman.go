@@ -12,7 +12,7 @@ import (
 	"path/filepath"
 
 	"github.com/docker/docker/api/types"
-	"github.com/google/go-containerregistry/pkg/v1"
+	v1 "github.com/google/go-containerregistry/pkg/v1"
 	"golang.org/x/xerrors"
 )
 
@@ -84,7 +84,7 @@ func (p podmanClient) imageSave(_ context.Context, imageNames []string) (io.Read
 	return resp.Body, nil
 }
 
-// Image implements v1.Image by extending daemon.Image.
+// PodmanImage implements v1.Image by extending daemon.Image.
 // The caller must call cleanup() to remove a temporary file.
 func PodmanImage(ref string) (v1.Image, *types.ImageInspect, func(), error) {
 	cleanup := func() {}
