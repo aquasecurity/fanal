@@ -48,29 +48,23 @@ func tryOCI(fileName string) (v1.Image, error) {
 
 func getOCIImage(m *v1.IndexManifest, index v1.ImageIndex, inputTag string) (v1.Image, error) {
 	for _, manifest := range m.Manifests {
-		h := manifest.Digest
-		if manifest.MediaType.IsIndex() {
-			childIndex, err := index.ImageIndex(h)
-			if err != nil {
-				return nil, xerrors.Errorf("unable to retrieve a child image %q: %w", h.String(), err)
-			}
-			childManifest, err := childIndex.IndexManifest()
-			if err != nil {
-				return nil, xerrors.Errorf("invalid a child manifest for %q: %w", h.String(), err)
-			}
-			return getOCIImage(childManifest, childIndex, inputTag)
-		}
-
 		annotation := manifest.Annotations
 		tag := annotation[ispec.AnnotationRefName]
-
-		arch := ""
-		if manifest.Platform != nil {
-			arch = manifest.Platform.Architecture
-		}
-
 		if inputTag == "" || // always select the first digest
-			tag == inputTag || inputTag == arch {
+			tag == inputTag {
+			h := manifest.Digest
+			if manifest.MediaType.IsIndex() {
+				childIndex, err := index.ImageIndex(h)
+				if err != nil {
+					return nil, xerrors.Errorf("unable to retrieve a child image %q: %w", h.String(), err)
+				}
+				childManifest, err := childIndex.IndexManifest()
+				if err != nil {
+					return nil, xerrors.Errorf("invalid a child manifest for %q: %w", h.String(), err)
+				}
+				return getOCIImage(childManifest, childIndex, inputTag)
+			}
+
 			img, err := index.Image(h)
 			if err != nil {
 				return nil, xerrors.Errorf("invalid OCI image: %w", err)
