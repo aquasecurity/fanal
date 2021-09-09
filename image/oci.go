@@ -63,8 +63,14 @@ func getOCIImage(m *v1.IndexManifest, index v1.ImageIndex, inputTag string) (v1.
 
 		annotation := manifest.Annotations
 		tag := annotation[ispec.AnnotationRefName]
+
+		arch := ""
+		if manifest.Platform != nil {
+			arch = manifest.Platform.Architecture
+		}
+
 		if inputTag == "" || // always select the first digest
-			tag == inputTag {
+			tag == inputTag || inputTag == arch {
 			img, err := index.Image(h)
 			if err != nil {
 				return nil, xerrors.Errorf("invalid OCI image: %w", err)
