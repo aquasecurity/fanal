@@ -62,7 +62,7 @@ func getOCIImage(m *v1.IndexManifest, index v1.ImageIndex, inputTag string) (v1.
 				if err != nil {
 					return nil, xerrors.Errorf("invalid a child manifest for %q: %w", h.String(), err)
 				}
-				return getOCIImage(childManifest, childIndex, inputTag)
+				return getOCIImage(childManifest, childIndex, "")
 			}
 
 			img, err := index.Image(h)
