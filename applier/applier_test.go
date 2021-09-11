@@ -542,7 +542,7 @@ func TestApplier_ApplyLayers(t *testing.T) {
 					return app.Libraries[i].Library.Name < app.Libraries[j].Library.Name
 				})
 			}
-			assert.EqualValues(t, tt.want, got)
+			assert.Equal(t, tt.want, got)
 			c.AssertExpectations(t)
 		})
 	}

@@ -29,7 +29,7 @@ func DockerImage(ref name.Reference) (Image, func(), error) {
 		return nil, cleanup, xerrors.Errorf("unable to inspect the image (%s): %w", ref.Name(), err)
 	}
 
-	History, err := c.ImageHistory(context.Background(), ref.Name())
+	history, err := c.ImageHistory(context.Background(), ref.Name())
 	if err != nil {
 		return nil, cleanup, xerrors.Errorf("unable to get history (%s): %w", ref.Name(), err)
 	}
@@ -48,6 +48,6 @@ func DockerImage(ref name.Reference) (Image, func(), error) {
 	return &image{
 		opener:  imageOpener(ref.Name(), f, c.ImageSave),
 		inspect: inspect,
-		history: History,
+		history: history,
 	}, cleanup, nil
 }

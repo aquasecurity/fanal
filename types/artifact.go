@@ -138,9 +138,3 @@ type ArtifactDetail struct {
 	// HistoryPackages are packages extracted from RUN instructions
 	HistoryPackages []Package `json:",omitempty"`
 }
-
-type LayerMetadata struct {
-	Digest           string `json:",omitempty"`
-	DiffId           string `json:",omitempty"`
-	UncompressedSize int64  `json:",omitempty"`
-}
