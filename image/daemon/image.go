@@ -9,7 +9,6 @@ import (
 
 	dimage "github.com/docker/docker/api/types/image"
 
-	"github.com/araddon/dateparse"
 	"github.com/docker/docker/api/types"
 	v1 "github.com/google/go-containerregistry/pkg/v1"
 	"github.com/google/go-containerregistry/pkg/v1/tarball"
@@ -100,24 +99,20 @@ func (img *image) ConfigFile() (*v1.ConfigFile, error) {
 		return nil, xerrors.Errorf("unable to get diff IDs: %w", err)
 	}
 
-	// NOTE:  This is very, very important to understand time-parsing in go
-	loc, err := time.LoadLocation("")
+	created, err := time.Parse(time.RFC3339Nano, img.inspect.Created)
 	if err != nil {
-		return nil, xerrors.Errorf("failed setting location %s: %w", img.inspect.Created, err)
-	}
-	time.Local = loc
-	imgCreatedDate, err := dateparse.ParseLocal(img.inspect.Created)
-	if err != nil {
-		return nil, xerrors.Errorf("failed parsing created Date %s: %w", img.inspect.Created, err)
+		return nil, xerrors.Errorf("failed parsing created %s: %w", img.inspect.Created, err)
 	}
 
 	return &v1.ConfigFile{
 		Architecture:  img.inspect.Architecture,
 		Author:        img.inspect.Author,
-		Created:       v1.Time{Time: imgCreatedDate},
+		Created:       v1.Time{Time: created},
 		DockerVersion: img.inspect.DockerVersion,
-		Config:        v1.Config{Labels: img.inspect.Config.Labels, Env: img.inspect.Config.Env},
-		History:       img.configHistory(),
+		Config: v1.Config{
+			Labels: img.inspect.Config.Labels,
+			Env:    img.inspect.Config.Env},
+		History: img.configHistory(),
 		RootFS: v1.RootFS{
 			Type:    img.inspect.RootFS.Type,
 			DiffIDs: diffIDs,

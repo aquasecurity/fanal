@@ -144,8 +144,8 @@ func Test_image_ConfigFile(t *testing.T) {
 			defer cleanup()
 
 			conf, err := img.ConfigFile()
+			require.Equal(t, tt.wantErr, err != nil, err)
 			assert.Equal(t, tt.want, conf)
-			assert.Equal(t, tt.wantErr, err != nil)
 		})
 	}
 }
