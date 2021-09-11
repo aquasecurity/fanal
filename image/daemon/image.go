@@ -7,9 +7,8 @@ import (
 	"sync"
 	"time"
 
-	dimage "github.com/docker/docker/api/types/image"
-
 	"github.com/docker/docker/api/types"
+	dimage "github.com/docker/docker/api/types/image"
 	v1 "github.com/google/go-containerregistry/pkg/v1"
 	"github.com/google/go-containerregistry/pkg/v1/tarball"
 	"golang.org/x/xerrors"
