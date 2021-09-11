@@ -84,6 +84,11 @@ func (a rpmPkgAnalyzer) parsePkgInfo(packageBytes []byte) (pkgs []types.Package,
 			srcName, srcVer, srcRel = splitFileName(pkg.SourceRpm)
 		}
 
+		installedFiles, err := pkg.InstalledFiles()
+		if err != nil {
+			return nil, xerrors.Errorf("unable to get installed files: %w", err)
+		}
+
 		p := types.Package{
 			Name:            pkg.Name,
 			Epoch:           pkg.Epoch,
@@ -95,6 +100,7 @@ func (a rpmPkgAnalyzer) parsePkgInfo(packageBytes []byte) (pkgs []types.Package,
 			SrcVersion:      srcVer,
 			SrcRelease:      srcRel,
 			Modularitylabel: pkg.Modularitylabel,
+			InstalledFiles:  installedFiles, // It will be used and removed later.
 			License:         pkg.License,
 		}
 		pkgs = append(pkgs, p)

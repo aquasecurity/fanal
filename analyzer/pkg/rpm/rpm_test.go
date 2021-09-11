@@ -594,6 +594,11 @@ func TestParseRpmInfo(t *testing.T) {
 				return pkgs[i].Name < pkgs[j].Name
 			})
 
+			// We don't test installed files here.
+			for _, pkg := range pkgs {
+				pkg.InstalledFiles = nil
+			}
+
 			assert.Equal(t, tc.pkgs, pkgs)
 		})
 	}
