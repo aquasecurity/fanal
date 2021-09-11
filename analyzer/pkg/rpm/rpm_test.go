@@ -595,8 +595,8 @@ func TestParseRpmInfo(t *testing.T) {
 			})
 
 			// We don't test installed files here.
-			for _, pkg := range pkgs {
-				pkg.InstalledFiles = nil
+			for i := range pkgs {
+				pkgs[i].InstalledFiles = nil
 			}
 
 			assert.Equal(t, tc.pkgs, pkgs)
