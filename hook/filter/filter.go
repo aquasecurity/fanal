@@ -1,8 +1,6 @@
 package nodejs
 
 import (
-	"strings"
-
 	"github.com/aquasecurity/fanal/hook"
 	"github.com/aquasecurity/fanal/types"
 	"github.com/aquasecurity/fanal/utils"
@@ -18,21 +16,11 @@ type systemFileFilterHook struct{}
 
 // Hook removes files installed by OS package manager such as yum.
 func (h systemFileFilterHook) Hook(blob *types.BlobInfo) error {
-	// Collect files installed by OS package manager
-	var installedFiles []string
-	for _, pkgInfo := range blob.PackageInfos {
-		for _, pkg := range pkgInfo.Packages {
-			for _, installedFile := range pkg.InstalledFiles {
-				installedFiles = append(installedFiles, strings.TrimPrefix(installedFile, "/"))
-			}
-		}
-	}
-
 	var apps []types.Application
 	for _, app := range blob.Applications {
 		// If the lang-specific package was installed by OS package manager, it should not be taken.
 		// Otherwise, the package version will be wrong, then it will lead to false positive.
-		if utils.StringInSlice(app.FilePath, installedFiles) {
+		if utils.StringInSlice("/"+app.FilePath, blob.SystemFiles) {
 			continue
 		}
 
@@ -40,7 +28,7 @@ func (h systemFileFilterHook) Hook(blob *types.BlobInfo) error {
 		for _, lib := range app.Libraries {
 			// If the lang-specific package was installed by OS package manager, it should not be taken.
 			// Otherwise, the package version will be wrong, then it will lead to false positive.
-			if utils.StringInSlice(lib.FilePath, installedFiles) {
+			if utils.StringInSlice("/"+lib.FilePath, blob.SystemFiles) {
 				continue
 			}
 			libs = append(libs, lib)
@@ -53,6 +41,9 @@ func (h systemFileFilterHook) Hook(blob *types.BlobInfo) error {
 
 	// Overwrite Applications
 	blob.Applications = apps
+
+	// Remove system files since this field is necessary only in this hook.
+	blob.SystemFiles = nil
 
 	return nil
 }

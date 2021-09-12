@@ -584,7 +584,7 @@ func TestParseRpmInfo(t *testing.T) {
 			bytes, err := ioutil.ReadFile(tc.path)
 			require.NoError(t, err)
 
-			pkgs, err := a.parsePkgInfo(bytes)
+			pkgs, _, err := a.parsePkgInfo(bytes)
 			require.NoError(t, err)
 
 			sort.Slice(tc.pkgs, func(i, j int) bool {
@@ -593,11 +593,6 @@ func TestParseRpmInfo(t *testing.T) {
 			sort.Slice(pkgs, func(i, j int) bool {
 				return pkgs[i].Name < pkgs[j].Name
 			})
-
-			// We don't test installed files here.
-			for i := range pkgs {
-				pkgs[i].InstalledFiles = nil
-			}
 
 			assert.Equal(t, tc.pkgs, pkgs)
 		})
