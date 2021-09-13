@@ -10,7 +10,6 @@ require (
 	github.com/aquasecurity/testdocker v0.0.0-20210911155206-e1e85f5a1516
 	github.com/aquasecurity/tfsec v0.46.0
 	github.com/aws/aws-sdk-go v1.40.37
-	github.com/deckarep/golang-set v1.7.1
 	github.com/docker/docker v20.10.8+incompatible
 	github.com/docker/go-connections v0.4.0
 	github.com/go-git/go-git/v5 v5.4.2
