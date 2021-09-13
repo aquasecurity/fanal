@@ -104,8 +104,8 @@ func TestArtifact_Inspect(t *testing.T) {
 			want: types.ArtifactReference{
 				Name:    "../../test/testdata/alpine-311.tar.gz",
 				Type:    types.ArtifactContainerImage,
-				ID:      "sha256:d2b38afccf21751162a2c5d632f095290c96ab726642c1586d90f94cd8eb30bb",
-				BlobIDs: []string{"sha256:b59e5f5eaa7fe002f88447801080d73c6c6a46b5464c603432ceced713939fde"},
+				ID:      "sha256:59c4082ceb491faefd44cf9a006dd24c8f57b44b438f081251c90ea1367ca043",
+				BlobIDs: []string{"sha256:868fafa15d51961bffd953db0369326b78b8fbff5c856283f642941645cfe630"},
 				ImageMetadata: &types.ImageMetadata{
 					ID: "sha256:a187dde48cd289ac374ad8539930628314bc581a481cdb41409c9289419ddb72",
 					DiffIDs: []string{
