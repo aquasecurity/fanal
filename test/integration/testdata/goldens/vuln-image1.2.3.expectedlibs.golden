@@ -723,28 +723,5 @@
         "Layer": {}
       }
     ]
-  },
-  {
-    "Type": "python-pkg",
-    "Libraries": [
-      {
-        "FilePath": "usr/lib/python2.7/lib-dynload/Python-2.7.15-py2.7.egg-info",
-        "Library": {
-          "Name": "Python",
-          "Version": "2.7.15",
-          "License": "PSF license"
-        },
-        "Layer": {}
-      },
-      {
-        "FilePath": "usr/lib/python2.7/site-packages/mercurial-4.5.2-py2.7.egg-info",
-        "Library": {
-          "Name": "mercurial",
-          "Version": "4.5.2",
-          "License": "GNU GPLv2 or any later version"
-        },
-        "Layer": {}
-      }
-    ]
   }
 ]
