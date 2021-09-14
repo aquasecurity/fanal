@@ -1,260 +1,5 @@
 [
   {
-    "Type": "composer",
-    "FilePath": "php-app/composer.lock",
-    "Libraries": [
-      {
-        "Library": {
-          "Name": "guzzlehttp/guzzle",
-          "Version": "6.2.0"
-        },
-        "Layer": {
-          "DiffID": "sha256:4d116f47cb2cc77a88d609b9805f2b011a5d42339b67300166654b3922685ac9"
-        }
-      },
-      {
-        "Library": {
-          "Name": "guzzlehttp/promises",
-          "Version": "v1.3.1"
-        },
-        "Layer": {
-          "DiffID": "sha256:4d116f47cb2cc77a88d609b9805f2b011a5d42339b67300166654b3922685ac9"
-        }
-      },
-      {
-        "Library": {
-          "Name": "guzzlehttp/psr7",
-          "Version": "1.5.2"
-        },
-        "Layer": {
-          "DiffID": "sha256:4d116f47cb2cc77a88d609b9805f2b011a5d42339b67300166654b3922685ac9"
-        }
-      },
-      {
-        "Library": {
-          "Name": "laravel/installer",
-          "Version": "v2.0.1"
-        },
-        "Layer": {
-          "DiffID": "sha256:4d116f47cb2cc77a88d609b9805f2b011a5d42339b67300166654b3922685ac9"
-        }
-      },
-      {
-        "Library": {
-          "Name": "pear/log",
-          "Version": "1.13.1"
-        },
-        "Layer": {
-          "DiffID": "sha256:4d116f47cb2cc77a88d609b9805f2b011a5d42339b67300166654b3922685ac9"
-        }
-      },
-      {
-        "Library": {
-          "Name": "pear/pear_exception",
-          "Version": "v1.0.0"
-        },
-        "Layer": {
-          "DiffID": "sha256:4d116f47cb2cc77a88d609b9805f2b011a5d42339b67300166654b3922685ac9"
-        }
-      },
-      {
-        "Library": {
-          "Name": "psr/http-message",
-          "Version": "1.0.1"
-        },
-        "Layer": {
-          "DiffID": "sha256:4d116f47cb2cc77a88d609b9805f2b011a5d42339b67300166654b3922685ac9"
-        }
-      },
-      {
-        "Library": {
-          "Name": "ralouphie/getallheaders",
-          "Version": "2.0.5"
-        },
-        "Layer": {
-          "DiffID": "sha256:4d116f47cb2cc77a88d609b9805f2b011a5d42339b67300166654b3922685ac9"
-        }
-      },
-      {
-        "Library": {
-          "Name": "symfony/console",
-          "Version": "v4.2.7"
-        },
-        "Layer": {
-          "DiffID": "sha256:4d116f47cb2cc77a88d609b9805f2b011a5d42339b67300166654b3922685ac9"
-        }
-      },
-      {
-        "Library": {
-          "Name": "symfony/contracts",
-          "Version": "v1.0.2"
-        },
-        "Layer": {
-          "DiffID": "sha256:4d116f47cb2cc77a88d609b9805f2b011a5d42339b67300166654b3922685ac9"
-        }
-      },
-      {
-        "Library": {
-          "Name": "symfony/filesystem",
-          "Version": "v4.2.7"
-        },
-        "Layer": {
-          "DiffID": "sha256:4d116f47cb2cc77a88d609b9805f2b011a5d42339b67300166654b3922685ac9"
-        }
-      },
-      {
-        "Library": {
-          "Name": "symfony/polyfill-ctype",
-          "Version": "v1.11.0"
-        },
-        "Layer": {
-          "DiffID": "sha256:4d116f47cb2cc77a88d609b9805f2b011a5d42339b67300166654b3922685ac9"
-        }
-      },
-      {
-        "Library": {
-          "Name": "symfony/polyfill-mbstring",
-          "Version": "v1.11.0"
-        },
-        "Layer": {
-          "DiffID": "sha256:4d116f47cb2cc77a88d609b9805f2b011a5d42339b67300166654b3922685ac9"
-        }
-      },
-      {
-        "Library": {
-          "Name": "symfony/process",
-          "Version": "v4.2.7"
-        },
-        "Layer": {
-          "DiffID": "sha256:4d116f47cb2cc77a88d609b9805f2b011a5d42339b67300166654b3922685ac9"
-        }
-      }
-    ]
-  },
-  {
-    "Type": "npm",
-    "FilePath": "node-app/package-lock.json",
-    "Libraries": [
-      {
-        "Library": {
-          "Name": "asap",
-          "Version": "2.0.6"
-        },
-        "Layer": {
-          "DiffID": "sha256:a66245f885f2a210071e415f0f8ac4f21f5e4eab6c0435b4082e5c3637c411cb"
-        }
-      },
-      {
-        "Library": {
-          "Name": "jquery",
-          "Version": "3.3.9"
-        },
-        "Layer": {
-          "DiffID": "sha256:a66245f885f2a210071e415f0f8ac4f21f5e4eab6c0435b4082e5c3637c411cb"
-        }
-      },
-      {
-        "Library": {
-          "Name": "js-tokens",
-          "Version": "4.0.0"
-        },
-        "Layer": {
-          "DiffID": "sha256:a66245f885f2a210071e415f0f8ac4f21f5e4eab6c0435b4082e5c3637c411cb"
-        }
-      },
-      {
-        "Library": {
-          "Name": "lodash",
-          "Version": "4.17.4"
-        },
-        "Layer": {
-          "DiffID": "sha256:a66245f885f2a210071e415f0f8ac4f21f5e4eab6c0435b4082e5c3637c411cb"
-        }
-      },
-      {
-        "Library": {
-          "Name": "loose-envify",
-          "Version": "1.4.0"
-        },
-        "Layer": {
-          "DiffID": "sha256:a66245f885f2a210071e415f0f8ac4f21f5e4eab6c0435b4082e5c3637c411cb"
-        }
-      },
-      {
-        "Library": {
-          "Name": "object-assign",
-          "Version": "4.1.1"
-        },
-        "Layer": {
-          "DiffID": "sha256:a66245f885f2a210071e415f0f8ac4f21f5e4eab6c0435b4082e5c3637c411cb"
-        }
-      },
-      {
-        "Library": {
-          "Name": "promise",
-          "Version": "8.0.3"
-        },
-        "Layer": {
-          "DiffID": "sha256:a66245f885f2a210071e415f0f8ac4f21f5e4eab6c0435b4082e5c3637c411cb"
-        }
-      },
-      {
-        "Library": {
-          "Name": "prop-types",
-          "Version": "15.7.2"
-        },
-        "Layer": {
-          "DiffID": "sha256:a66245f885f2a210071e415f0f8ac4f21f5e4eab6c0435b4082e5c3637c411cb"
-        }
-      },
-      {
-        "Library": {
-          "Name": "react",
-          "Version": "16.8.6"
-        },
-        "Layer": {
-          "DiffID": "sha256:a66245f885f2a210071e415f0f8ac4f21f5e4eab6c0435b4082e5c3637c411cb"
-        }
-      },
-      {
-        "Library": {
-          "Name": "react-is",
-          "Version": "16.8.6"
-        },
-        "Layer": {
-          "DiffID": "sha256:a66245f885f2a210071e415f0f8ac4f21f5e4eab6c0435b4082e5c3637c411cb"
-        }
-      },
-      {
-        "Library": {
-          "Name": "redux",
-          "Version": "4.0.1"
-        },
-        "Layer": {
-          "DiffID": "sha256:a66245f885f2a210071e415f0f8ac4f21f5e4eab6c0435b4082e5c3637c411cb"
-        }
-      },
-      {
-        "Library": {
-          "Name": "scheduler",
-          "Version": "0.13.6"
-        },
-        "Layer": {
-          "DiffID": "sha256:a66245f885f2a210071e415f0f8ac4f21f5e4eab6c0435b4082e5c3637c411cb"
-        }
-      },
-      {
-        "Library": {
-          "Name": "symbol-observable",
-          "Version": "1.2.0"
-        },
-        "Layer": {
-          "DiffID": "sha256:a66245f885f2a210071e415f0f8ac4f21f5e4eab6c0435b4082e5c3637c411cb"
-        }
-      }
-    ]
-  },
-  {
     "Type": "cargo",
     "FilePath": "rust-app/Cargo.lock",
     "Libraries": [
@@ -922,6 +667,261 @@
         },
         "Layer": {
           "DiffID": "sha256:6ef42db7800507577383edf1937cb203b9b85f619feed6046594208748ceb52c"
+        }
+      }
+    ]
+  },
+  {
+    "Type": "composer",
+    "FilePath": "php-app/composer.lock",
+    "Libraries": [
+      {
+        "Library": {
+          "Name": "guzzlehttp/guzzle",
+          "Version": "6.2.0"
+        },
+        "Layer": {
+          "DiffID": "sha256:4d116f47cb2cc77a88d609b9805f2b011a5d42339b67300166654b3922685ac9"
+        }
+      },
+      {
+        "Library": {
+          "Name": "guzzlehttp/promises",
+          "Version": "v1.3.1"
+        },
+        "Layer": {
+          "DiffID": "sha256:4d116f47cb2cc77a88d609b9805f2b011a5d42339b67300166654b3922685ac9"
+        }
+      },
+      {
+        "Library": {
+          "Name": "guzzlehttp/psr7",
+          "Version": "1.5.2"
+        },
+        "Layer": {
+          "DiffID": "sha256:4d116f47cb2cc77a88d609b9805f2b011a5d42339b67300166654b3922685ac9"
+        }
+      },
+      {
+        "Library": {
+          "Name": "laravel/installer",
+          "Version": "v2.0.1"
+        },
+        "Layer": {
+          "DiffID": "sha256:4d116f47cb2cc77a88d609b9805f2b011a5d42339b67300166654b3922685ac9"
+        }
+      },
+      {
+        "Library": {
+          "Name": "pear/log",
+          "Version": "1.13.1"
+        },
+        "Layer": {
+          "DiffID": "sha256:4d116f47cb2cc77a88d609b9805f2b011a5d42339b67300166654b3922685ac9"
+        }
+      },
+      {
+        "Library": {
+          "Name": "pear/pear_exception",
+          "Version": "v1.0.0"
+        },
+        "Layer": {
+          "DiffID": "sha256:4d116f47cb2cc77a88d609b9805f2b011a5d42339b67300166654b3922685ac9"
+        }
+      },
+      {
+        "Library": {
+          "Name": "psr/http-message",
+          "Version": "1.0.1"
+        },
+        "Layer": {
+          "DiffID": "sha256:4d116f47cb2cc77a88d609b9805f2b011a5d42339b67300166654b3922685ac9"
+        }
+      },
+      {
+        "Library": {
+          "Name": "ralouphie/getallheaders",
+          "Version": "2.0.5"
+        },
+        "Layer": {
+          "DiffID": "sha256:4d116f47cb2cc77a88d609b9805f2b011a5d42339b67300166654b3922685ac9"
+        }
+      },
+      {
+        "Library": {
+          "Name": "symfony/console",
+          "Version": "v4.2.7"
+        },
+        "Layer": {
+          "DiffID": "sha256:4d116f47cb2cc77a88d609b9805f2b011a5d42339b67300166654b3922685ac9"
+        }
+      },
+      {
+        "Library": {
+          "Name": "symfony/contracts",
+          "Version": "v1.0.2"
+        },
+        "Layer": {
+          "DiffID": "sha256:4d116f47cb2cc77a88d609b9805f2b011a5d42339b67300166654b3922685ac9"
+        }
+      },
+      {
+        "Library": {
+          "Name": "symfony/filesystem",
+          "Version": "v4.2.7"
+        },
+        "Layer": {
+          "DiffID": "sha256:4d116f47cb2cc77a88d609b9805f2b011a5d42339b67300166654b3922685ac9"
+        }
+      },
+      {
+        "Library": {
+          "Name": "symfony/polyfill-ctype",
+          "Version": "v1.11.0"
+        },
+        "Layer": {
+          "DiffID": "sha256:4d116f47cb2cc77a88d609b9805f2b011a5d42339b67300166654b3922685ac9"
+        }
+      },
+      {
+        "Library": {
+          "Name": "symfony/polyfill-mbstring",
+          "Version": "v1.11.0"
+        },
+        "Layer": {
+          "DiffID": "sha256:4d116f47cb2cc77a88d609b9805f2b011a5d42339b67300166654b3922685ac9"
+        }
+      },
+      {
+        "Library": {
+          "Name": "symfony/process",
+          "Version": "v4.2.7"
+        },
+        "Layer": {
+          "DiffID": "sha256:4d116f47cb2cc77a88d609b9805f2b011a5d42339b67300166654b3922685ac9"
+        }
+      }
+    ]
+  },
+  {
+    "Type": "npm",
+    "FilePath": "node-app/package-lock.json",
+    "Libraries": [
+      {
+        "Library": {
+          "Name": "asap",
+          "Version": "2.0.6"
+        },
+        "Layer": {
+          "DiffID": "sha256:a66245f885f2a210071e415f0f8ac4f21f5e4eab6c0435b4082e5c3637c411cb"
+        }
+      },
+      {
+        "Library": {
+          "Name": "jquery",
+          "Version": "3.3.9"
+        },
+        "Layer": {
+          "DiffID": "sha256:a66245f885f2a210071e415f0f8ac4f21f5e4eab6c0435b4082e5c3637c411cb"
+        }
+      },
+      {
+        "Library": {
+          "Name": "js-tokens",
+          "Version": "4.0.0"
+        },
+        "Layer": {
+          "DiffID": "sha256:a66245f885f2a210071e415f0f8ac4f21f5e4eab6c0435b4082e5c3637c411cb"
+        }
+      },
+      {
+        "Library": {
+          "Name": "lodash",
+          "Version": "4.17.4"
+        },
+        "Layer": {
+          "DiffID": "sha256:a66245f885f2a210071e415f0f8ac4f21f5e4eab6c0435b4082e5c3637c411cb"
+        }
+      },
+      {
+        "Library": {
+          "Name": "loose-envify",
+          "Version": "1.4.0"
+        },
+        "Layer": {
+          "DiffID": "sha256:a66245f885f2a210071e415f0f8ac4f21f5e4eab6c0435b4082e5c3637c411cb"
+        }
+      },
+      {
+        "Library": {
+          "Name": "object-assign",
+          "Version": "4.1.1"
+        },
+        "Layer": {
+          "DiffID": "sha256:a66245f885f2a210071e415f0f8ac4f21f5e4eab6c0435b4082e5c3637c411cb"
+        }
+      },
+      {
+        "Library": {
+          "Name": "promise",
+          "Version": "8.0.3"
+        },
+        "Layer": {
+          "DiffID": "sha256:a66245f885f2a210071e415f0f8ac4f21f5e4eab6c0435b4082e5c3637c411cb"
+        }
+      },
+      {
+        "Library": {
+          "Name": "prop-types",
+          "Version": "15.7.2"
+        },
+        "Layer": {
+          "DiffID": "sha256:a66245f885f2a210071e415f0f8ac4f21f5e4eab6c0435b4082e5c3637c411cb"
+        }
+      },
+      {
+        "Library": {
+          "Name": "react",
+          "Version": "16.8.6"
+        },
+        "Layer": {
+          "DiffID": "sha256:a66245f885f2a210071e415f0f8ac4f21f5e4eab6c0435b4082e5c3637c411cb"
+        }
+      },
+      {
+        "Library": {
+          "Name": "react-is",
+          "Version": "16.8.6"
+        },
+        "Layer": {
+          "DiffID": "sha256:a66245f885f2a210071e415f0f8ac4f21f5e4eab6c0435b4082e5c3637c411cb"
+        }
+      },
+      {
+        "Library": {
+          "Name": "redux",
+          "Version": "4.0.1"
+        },
+        "Layer": {
+          "DiffID": "sha256:a66245f885f2a210071e415f0f8ac4f21f5e4eab6c0435b4082e5c3637c411cb"
+        }
+      },
+      {
+        "Library": {
+          "Name": "scheduler",
+          "Version": "0.13.6"
+        },
+        "Layer": {
+          "DiffID": "sha256:a66245f885f2a210071e415f0f8ac4f21f5e4eab6c0435b4082e5c3637c411cb"
+        }
+      },
+      {
+        "Library": {
+          "Name": "symbol-observable",
+          "Version": "1.2.0"
+        },
+        "Layer": {
+          "DiffID": "sha256:a66245f885f2a210071e415f0f8ac4f21f5e4eab6c0435b4082e5c3637c411cb"
         }
       }
     ]

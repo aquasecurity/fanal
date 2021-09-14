@@ -280,6 +280,13 @@ func checkOSPackages(t *testing.T, detail types.ArtifactDetail, tc testCase) {
 
 func checkLangPkgs(detail types.ArtifactDetail, t *testing.T, tc testCase) {
 	if tc.wantApplicationFile != "" {
+		// Sort applications for consistency
+		sort.Slice(detail.Applications, func(i, j int) bool {
+			if detail.Applications[i].Type != detail.Applications[j].Type {
+				return detail.Applications[i].Type < detail.Applications[j].Type
+			}
+			return detail.Applications[i].FilePath < detail.Applications[j].FilePath
+		})
 
 		if *update {
 			b, err := json.MarshalIndent(detail.Applications, "", "  ")
