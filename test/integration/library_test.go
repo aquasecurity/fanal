@@ -103,8 +103,7 @@ func TestFanal_Library_DockerLessMode(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 			ctx := context.Background()
-			d, _ := ioutil.TempDir("", "TestFanal_Library_DockerLessMode_*")
-			defer os.RemoveAll(d)
+			d := t.TempDir()
 
 			c, err := cache.NewFSCache(d)
 			require.NoError(t, err, tc.name)
@@ -149,8 +148,8 @@ func TestFanal_Library_DockerMode(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 			ctx := context.Background()
-			d, _ := ioutil.TempDir("", "TestFanal_Library_DockerMode_*")
-			defer os.RemoveAll(d)
+			d := t.TempDir()
+
 			c, err := cache.NewFSCache(d)
 			require.NoError(t, err)
 			opt := types.DockerOption{
@@ -214,8 +213,7 @@ func TestFanal_Library_TarMode(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 			ctx := context.Background()
-			d, _ := ioutil.TempDir("", "TestFanal_Library_TarMode_*")
-			defer os.RemoveAll(d)
+			d := t.TempDir()
 
 			c, err := cache.NewFSCache(d)
 			require.NoError(t, err)
@@ -288,6 +286,19 @@ func checkLangPkgs(detail types.ArtifactDetail, t *testing.T, tc testCase) {
 			return detail.Applications[i].FilePath < detail.Applications[j].FilePath
 		})
 
+		for _, app := range detail.Applications {
+			sort.Slice(app.Libraries, func(i, j int) bool {
+				return app.Libraries[i].FilePath < app.Libraries[j].FilePath
+			})
+		}
+
+		// Do not compare layers
+		for _, app := range detail.Applications {
+			for i := range app.Libraries {
+				app.Libraries[i].Layer = types.Layer{}
+			}
+		}
+
 		if *update {
 			b, err := json.MarshalIndent(detail.Applications, "", "  ")
 			require.NoError(t, err)
@@ -301,6 +312,7 @@ func checkLangPkgs(detail types.ArtifactDetail, t *testing.T, tc testCase) {
 		require.NoError(t, err)
 		err = json.Unmarshal(data, &wantApps)
 		require.NoError(t, err)
+
 		require.Equal(t, wantApps, detail.Applications, tc.name)
 	} else {
 		assert.Nil(t, detail.Applications, tc.name)
