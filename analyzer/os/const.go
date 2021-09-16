@@ -57,6 +57,9 @@ const (
 
 	// Alpine is done
 	Alpine = "alpine"
+
+	// Arch is done
+	Arch = "arch"
 )
 
 var AnalyzeOSError = xerrors.New("unable to analyze OS information")

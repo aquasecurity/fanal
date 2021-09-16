@@ -8,6 +8,7 @@ const (
 	// ======
 	TypeAlpine     Type = "alpine"
 	TypeAmazon     Type = "amazon"
+	TypeArch       Type = "arch"
 	TypeCBLMariner Type = "cbl-mariner"
 	TypeDebian     Type = "debian"
 	TypePhoton     Type = "photon"
