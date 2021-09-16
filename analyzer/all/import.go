@@ -30,5 +30,6 @@ import (
 	_ "github.com/aquasecurity/fanal/analyzer/os/ubuntu"
 	_ "github.com/aquasecurity/fanal/analyzer/pkg/apk"
 	_ "github.com/aquasecurity/fanal/analyzer/pkg/dpkg"
+	_ "github.com/aquasecurity/fanal/analyzer/pkg/pacman"
 	_ "github.com/aquasecurity/fanal/analyzer/pkg/rpm"
 )
