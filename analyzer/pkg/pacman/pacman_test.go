@@ -26,7 +26,7 @@ func Test_pacmanAnalyzer_Analyze(t *testing.T) {
 					{
 						FilePath: "var/lib/pacman/local/bash-5.1.008-1/desc",
 						Packages: []types.Package{
-							{Name: "bash", Version: "5.1.008-1", SrcName: "bash", SrcVersion: "5.1.008-1", Arch: "x86_64", License: "GPL"},
+							{Name: "bash", Version: "5.1.008", Release: "1", SrcName: "bash", SrcVersion: "5.1.008", SrcRelease: "1", Arch: "x86_64", License: "GPL"},
 						},
 					},
 				},

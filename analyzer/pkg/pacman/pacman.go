@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/aquasecurity/fanal/analyzer"
@@ -60,8 +61,31 @@ func (a pacmanAnalyzer) parsePacmanPkgDesc(scanner *bufio.Scanner) (types.Packag
 		} else if strings.HasPrefix(line, "%VERSION%") {
 			if scanner.Scan() {
 				version := scanner.Text()
-				pkg.Version = version
-				pkg.SrcVersion = version
+				if strings.Contains(version, ":") {
+					ss := strings.Split(version, ":")
+					epoch, err := strconv.Atoi(ss[0])
+					if err != nil {
+						return types.Package{}, xerrors.Errorf("failed to convert epoch: %w", err)
+					}
+					ss = strings.Split(ss[1], "-")
+					version := ss[0]
+					release := ss[1]
+
+					pkg.Epoch = epoch
+					pkg.Version = version
+					pkg.Release = release
+					pkg.SrcEpoch = epoch
+					pkg.SrcVersion = version
+					pkg.SrcRelease = release
+				} else {
+					ss := strings.Split(version, "-")
+					version := ss[0]
+					release := ss[1]
+					pkg.Version = version
+					pkg.Release = release
+					pkg.SrcVersion = version
+					pkg.SrcRelease = release
+				}
 			}
 		} else if strings.HasPrefix(line, "%BASE%") {
 			if scanner.Scan() {
