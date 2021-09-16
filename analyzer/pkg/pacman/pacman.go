@@ -60,32 +60,36 @@ func (a pacmanAnalyzer) parsePacmanPkgDesc(scanner *bufio.Scanner) (types.Packag
 			}
 		} else if strings.HasPrefix(line, "%VERSION%") {
 			if scanner.Scan() {
-				var (
-					epoch   int
-					version string
-					release string
-				)
-
-				ss := strings.Split(scanner.Text(), "-")
-				release = ss[1]
-				if strings.Contains(ss[0], ":") {
-					ss := strings.Split(ss[0], ":")
+				var version string
+				splitted := strings.SplitN(scanner.Text(), ":", 2)
+				if len(splitted) == 1 {
+					pkg.Epoch = 0
+					version = splitted[0]
+				} else {
 					var err error
-					epoch, err = strconv.Atoi(ss[0])
+					pkg.Epoch, err = strconv.Atoi(splitted[0])
 					if err != nil {
 						return types.Package{}, xerrors.Errorf("failed to convert epoch: %w", err)
 					}
-					version = ss[1]
-				} else {
-					version = ss[0]
+
+					if pkg.Epoch < 0 {
+						return types.Package{}, xerrors.Errorf("epoch is negative")
+					}
+					version = splitted[1]
 				}
 
-				pkg.Epoch = epoch
-				pkg.Version = version
-				pkg.Release = release
-				pkg.SrcEpoch = epoch
-				pkg.SrcVersion = version
-				pkg.SrcRelease = release
+				index := strings.Index(version, "-")
+				if index >= 0 {
+					ver := version[:index]
+					rel := version[index+1:]
+					pkg.Version = ver
+					pkg.Release = rel
+					pkg.SrcVersion = ver
+					pkg.SrcRelease = rel
+				} else {
+					pkg.Version = version
+					pkg.SrcVersion = version
+				}
 			}
 		} else if strings.HasPrefix(line, "%BASE%") {
 			if scanner.Scan() {
