@@ -143,6 +143,8 @@ github.com/GoogleCloudPlatform/cloudsql-proxy v0.0.0-20191009163259-e802c2cb94ae
 github.com/GoogleCloudPlatform/docker-credential-gcr v1.5.0 h1:wykTgKwhVr2t2qs+xI020s6W5dt614QqCHV+7W9dg64=
 github.com/GoogleCloudPlatform/docker-credential-gcr v1.5.0/go.mod h1:BB1eHdMLYEFuFdBlRMb0N7YGVdM5s6Pt0njxgvfbGGs=
 github.com/GoogleCloudPlatform/k8s-cloud-provider v0.0.0-20190822182118-27a4ced34534/go.mod h1:iroGtC8B3tQiqtds1l+mgk/BBOrxbqjH+eUfFQYRc14=
+github.com/MaineK00n/go-pacman-version v0.0.0-20210916231937-19e87b7d7184 h1:enu2psM1AcUsNx36T+X13lcy2kmFFV4kwCMmL7i4yiQ=
+github.com/MaineK00n/go-pacman-version v0.0.0-20210916231937-19e87b7d7184/go.mod h1:iMNOZ59Aouwx++SN7zGEi8yB9JTd+ZwYufdnC02mjd4=
 github.com/Masterminds/semver v1.5.0/go.mod h1:MB6lktGJrhw8PrUyiEoblNEGEQ+RzHPF078ddwwvV3Y=
 github.com/Masterminds/semver/v3 v3.0.3/go.mod h1:VPu/7SZ7ePZ3QOrcuXROw5FAcLl4a0cBrbBpGY/8hQs=
 github.com/Masterminds/semver/v3 v3.1.0/go.mod h1:VPu/7SZ7ePZ3QOrcuXROw5FAcLl4a0cBrbBpGY/8hQs=

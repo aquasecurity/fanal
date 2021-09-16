@@ -3,10 +3,13 @@ package pacman
 import (
 	"bufio"
 	"bytes"
+	"log"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
+
+	pacmanVersion "github.com/MaineK00n/go-pacman-version"
 
 	"github.com/aquasecurity/fanal/analyzer"
 	"github.com/aquasecurity/fanal/types"
@@ -60,8 +63,12 @@ func (a pacmanAnalyzer) parsePacmanPkgDesc(scanner *bufio.Scanner) (types.Packag
 			}
 		} else if strings.HasPrefix(line, "%VERSION%") {
 			if scanner.Scan() {
-				var version string
-				splitted := strings.SplitN(scanner.Text(), ":", 2)
+				version := scanner.Text()
+				if !pacmanVersion.Valid(version) {
+					log.Printf("Invalid Version Found : OS %s, Package %s, Version %s", "arch", pkg.Name, version)
+					continue
+				}
+				splitted := strings.SplitN(version, ":", 2)
 				if len(splitted) == 1 {
 					pkg.Epoch = 0
 					version = splitted[0]
