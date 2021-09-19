@@ -16,8 +16,6 @@ import (
 
 	"github.com/aquasecurity/fanal/analyzer"
 	"github.com/aquasecurity/fanal/analyzer/config"
-	_ "github.com/aquasecurity/fanal/analyzer/os/alpine"
-	_ "github.com/aquasecurity/fanal/analyzer/pkg/apk"
 	"github.com/aquasecurity/fanal/artifact"
 	"github.com/aquasecurity/fanal/cache"
 	"github.com/aquasecurity/fanal/config/scanner"
@@ -99,6 +97,7 @@ func (a Artifact) Inspect(ctx context.Context) (types.ArtifactReference, error) 
 		PackageInfos:      result.PackageInfos,
 		Applications:      result.Applications,
 		Misconfigurations: misconfs,
+		SystemFiles:       result.SystemInstalledFiles,
 	}
 
 	if err = a.hookManager.CallHooks(&blobInfo); err != nil {

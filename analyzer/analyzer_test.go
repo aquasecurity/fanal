@@ -16,6 +16,7 @@ import (
 	"github.com/aquasecurity/fanal/analyzer"
 	_ "github.com/aquasecurity/fanal/analyzer/all"
 	aos "github.com/aquasecurity/fanal/analyzer/os"
+	_ "github.com/aquasecurity/fanal/hook/all"
 	"github.com/aquasecurity/fanal/types"
 	godeptypes "github.com/aquasecurity/go-dep-parser/pkg/types"
 )
@@ -295,6 +296,10 @@ func TestAnalyzeFile(t *testing.T) {
 						},
 					},
 				},
+				SystemInstalledFiles: []string{
+					"lib/libc.musl-x86_64.so.1",
+					"lib/ld-musl-x86_64.so.1",
+				},
 			},
 		},
 		{
@@ -461,7 +466,7 @@ func TestAnalyzer_AnalyzerVersions(t *testing.T) {
 				"alma":       1,
 				"composer":   1,
 				"debian":     1,
-				"dpkg":       1,
+				"dpkg":       2,
 				"fedora":     1,
 				"gobinary":   1,
 				"gomod":      1,
@@ -497,7 +502,7 @@ func TestAnalyzer_AnalyzerVersions(t *testing.T) {
 				"alma":       1,
 				"composer":   1,
 				"debian":     1,
-				"dpkg":       1,
+				"dpkg":       2,
 				"fedora":     1,
 				"gobinary":   1,
 				"gomod":      1,
