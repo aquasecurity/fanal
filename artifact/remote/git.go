@@ -1,20 +1,40 @@
 package remote
 
 import (
+	"context"
 	"io/ioutil"
 	"net/url"
 	"os"
 
-	"golang.org/x/xerrors"
-
 	git "github.com/go-git/go-git/v5"
+	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/fanal/analyzer"
 	"github.com/aquasecurity/fanal/analyzer/config"
 	"github.com/aquasecurity/fanal/artifact"
 	"github.com/aquasecurity/fanal/artifact/local"
 	"github.com/aquasecurity/fanal/cache"
+	"github.com/aquasecurity/fanal/types"
 )
+
+var defaultDisabledAnalyzers = []analyzer.Type{
+	// Do not scan JAR/WAR/EAR in git repositories
+	analyzer.TypeJar,
+
+	// Do not scan egg and wheel in git repositories
+	analyzer.TypePythonPkg,
+
+	// Do not scan .gemspec in git repositories
+	analyzer.TypeGemSpec,
+
+	// Do not scan package.json in git repositories
+	analyzer.TypeNodePkg,
+}
+
+type Artifact struct {
+	url   string
+	local artifact.Artifact
+}
 
 func NewArtifact(rawurl string, c cache.ArtifactCache, artifactOpt artifact.Option, scannerOpt config.ScannerOption) (
 	artifact.Artifact, func(), error) {
@@ -43,14 +63,29 @@ func NewArtifact(rawurl string, c cache.ArtifactCache, artifactOpt artifact.Opti
 		_ = os.RemoveAll(tmpDir)
 	}
 
-	// JAR/WAR/EAR doesn't need to be analyzed in git repositories.
-	artifactOpt.DisabledAnalyzers = append(artifactOpt.DisabledAnalyzers, analyzer.TypeJar)
+	artifactOpt.DisabledAnalyzers = append(artifactOpt.DisabledAnalyzers, defaultDisabledAnalyzers...)
 
 	art, err := local.NewArtifact(tmpDir, c, artifactOpt, scannerOpt)
 	if err != nil {
 		return nil, cleanup, xerrors.Errorf("fs artifact: %w", err)
 	}
-	return art, cleanup, nil
+
+	return Artifact{
+		url:   rawurl,
+		local: art,
+	}, cleanup, nil
+}
+
+func (a Artifact) Inspect(ctx context.Context) (types.ArtifactReference, error) {
+	ref, err := a.local.Inspect(ctx)
+	if err != nil {
+		return types.ArtifactReference{}, xerrors.Errorf("remote repository error: %w", err)
+	}
+
+	ref.Name = a.url
+	ref.Type = types.ArtifactRemoteRepository
+
+	return ref, nil
 }
 
 func newURL(rawurl string) (*url.URL, error) {

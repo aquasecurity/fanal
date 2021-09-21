@@ -13,7 +13,7 @@ import (
 	"github.com/aquasecurity/fanal/analyzer/config"
 )
 
-func CalcKey(id string, versions map[string]int, artifactOpt artifact.Option, scannerOpt config.ScannerOption) (string, error) {
+func CalcKey(id string, analyzerVersions, hookVersions map[string]int, artifactOpt artifact.Option, scannerOpt config.ScannerOption) (string, error) {
 	// Sort options for consistent results
 	artifactOpt.Sort()
 	scannerOpt.Sort()
@@ -26,7 +26,12 @@ func CalcKey(id string, versions map[string]int, artifactOpt artifact.Option, sc
 	}
 
 	// Write analyzer versions
-	if err := json.NewEncoder(h).Encode(versions); err != nil {
+	if err := json.NewEncoder(h).Encode(analyzerVersions); err != nil {
+		return "", xerrors.Errorf("json encode error: %w", err)
+	}
+
+	// Write hook versions
+	if err := json.NewEncoder(h).Encode(hookVersions); err != nil {
 		return "", xerrors.Errorf("json encode error: %w", err)
 	}
 

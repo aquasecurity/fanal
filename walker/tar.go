@@ -26,7 +26,6 @@ func NewLayerTar(skipFiles, skipDirs []string) LayerTar {
 
 func (w LayerTar) Walk(layer io.Reader, analyzeFn WalkFunc) ([]string, []string, error) {
 	var opqDirs, whFiles []string
-
 	tr := tar.NewReader(layer)
 	for {
 		hdr, err := tr.Next()
@@ -65,6 +64,5 @@ func (w LayerTar) Walk(layer io.Reader, analyzeFn WalkFunc) ([]string, []string,
 			}
 		}
 	}
-
 	return opqDirs, whFiles, nil
 }

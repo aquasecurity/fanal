@@ -121,7 +121,7 @@ func Test_jsonConfigAnalyzer_Analyze(t *testing.T) {
 				policyPaths: []string{"../testdata/kubernetes.rego"},
 			},
 			inputFile: "testdata/broken.json",
-			wantErr:   "unmarshal json",
+			wantErr:   "unable to parse JSON",
 		},
 	}
 
@@ -163,6 +163,11 @@ func Test_jsonConfigAnalyzer_Required(t *testing.T) {
 		{
 			name:     "yaml",
 			filePath: "deployment.yaml",
+			want:     false,
+		},
+		{
+			name:     "npm json",
+			filePath: "package-lock.json",
 			want:     false,
 		},
 		{

@@ -61,7 +61,7 @@ func TestLoad(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_, err := policy.Load(tt.args.policyPaths, tt.args.dataPaths)
+			_, err := policy.Load(tt.args.policyPaths, tt.args.dataPaths, false)
 			if tt.wantErr != "" {
 				require.NotNil(t, err)
 				assert.Contains(t, err.Error(), tt.wantErr)
@@ -112,6 +112,7 @@ func TestEngine_Check(t *testing.T) {
 					Successes: []types.MisconfResult{
 						{
 							Namespace: "testdata.xyz_300",
+							Query:     "data.testdata.xyz_300.deny",
 							PolicyMetadata: types.PolicyMetadata{
 								ID:       "XYZ-300",
 								Type:     "Kubernetes Security Check",
@@ -123,12 +124,55 @@ func TestEngine_Check(t *testing.T) {
 					Failures: []types.MisconfResult{
 						{
 							Namespace: "testdata.xyz_100",
+							Query:     "data.testdata.xyz_100.deny",
+							Message:   "deny test",
+							PolicyMetadata: types.PolicyMetadata{
+								ID:                 "XYZ-100",
+								Type:               "Kubernetes Security Check",
+								Title:              "Bad Deployment",
+								Severity:           "HIGH",
+								Description:        "Something bad",
+								RecommendedActions: "Do something great",
+								References:         []string{"http://example.com"},
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name:        "multiple deny",
+			policyPaths: []string{"testdata/multiple_deny"},
+			args: args{
+				configs: []types.Config{
+					{
+						Type:     types.Kubernetes,
+						FilePath: "deployment.yaml",
+						Content: map[string]interface{}{
+							"apiVersion": "apps/v1",
+							"kind":       "Deployment",
+							"metadata": map[string]interface{}{
+								"name": "test",
+							},
+						},
+					},
+				},
+				namespaces: []string{"testdata", "dummy"},
+			},
+			want: []types.Misconfiguration{
+				{
+					FileType: types.Kubernetes,
+					FilePath: "deployment.yaml",
+					Failures: []types.MisconfResult{
+						{
+							Namespace: "testdata.xyz_100",
+							Query:     "data.testdata.xyz_100.deny",
 							Message:   "deny test",
 							PolicyMetadata: types.PolicyMetadata{
 								ID:       "XYZ-100",
 								Type:     "Kubernetes Security Check",
-								Title:    "Bad Deployment",
-								Severity: "HIGH",
+								Title:    "Something Bad",
+								Severity: "LOW",
 							},
 						},
 					},
@@ -173,6 +217,7 @@ func TestEngine_Check(t *testing.T) {
 					Successes: []types.MisconfResult{
 						{
 							Namespace: "testdata.xyz_400",
+							Query:     "data.testdata.xyz_400.deny",
 							PolicyMetadata: types.PolicyMetadata{
 								ID:       "XYZ-400",
 								Type:     "Kubernetes Security Check",
@@ -184,6 +229,7 @@ func TestEngine_Check(t *testing.T) {
 					Failures: []types.MisconfResult{
 						{
 							Namespace: "testdata.xyz_100",
+							Query:     "data.testdata.xyz_100.deny",
 							Message:   "deny combined test1",
 							PolicyMetadata: types.PolicyMetadata{
 								ID:       "XYZ-100",
@@ -196,6 +242,7 @@ func TestEngine_Check(t *testing.T) {
 					Warnings: []types.MisconfResult{
 						{
 							Namespace: "testdata.xyz_200",
+							Query:     "data.testdata.xyz_200.warn",
 							Message:   "deny test1",
 							PolicyMetadata: types.PolicyMetadata{
 								ID:       "XYZ-200",
@@ -212,6 +259,7 @@ func TestEngine_Check(t *testing.T) {
 					Successes: []types.MisconfResult{
 						{
 							Namespace: "testdata.xyz_400",
+							Query:     "data.testdata.xyz_400.deny",
 							PolicyMetadata: types.PolicyMetadata{
 								ID:       "XYZ-400",
 								Type:     "Kubernetes Security Check",
@@ -223,6 +271,7 @@ func TestEngine_Check(t *testing.T) {
 					Failures: []types.MisconfResult{
 						{
 							Namespace: "testdata.xyz_100",
+							Query:     "data.testdata.xyz_100.deny",
 							Message:   "deny combined test2",
 							PolicyMetadata: types.PolicyMetadata{
 								ID:       "XYZ-100",
@@ -235,6 +284,7 @@ func TestEngine_Check(t *testing.T) {
 					Warnings: []types.MisconfResult{
 						{
 							Namespace: "testdata.xyz_200",
+							Query:     "data.testdata.xyz_200.warn",
 							Message:   "deny test2",
 							PolicyMetadata: types.PolicyMetadata{
 								ID:       "XYZ-200",
@@ -285,6 +335,7 @@ func TestEngine_Check(t *testing.T) {
 					Successes: []types.MisconfResult{
 						{
 							Namespace: "testdata.xyz_300",
+							Query:     "data.testdata.xyz_300.deny",
 							PolicyMetadata: types.PolicyMetadata{
 								ID:       "XYZ-300",
 								Type:     "Kubernetes Security Check",
@@ -296,22 +347,30 @@ func TestEngine_Check(t *testing.T) {
 					Failures: []types.MisconfResult{
 						{
 							Namespace: "testdata.xyz_100",
+							Query:     "data.testdata.xyz_100.deny",
 							Message:   "deny test1",
 							PolicyMetadata: types.PolicyMetadata{
-								ID:       "XYZ-100",
-								Type:     "Kubernetes Security Check",
-								Title:    "Bad Deployment",
-								Severity: "HIGH",
+								ID:                 "XYZ-100",
+								Type:               "Kubernetes Security Check",
+								Title:              "Bad Deployment",
+								Severity:           "HIGH",
+								Description:        "Something bad",
+								RecommendedActions: "Do something great",
+								References:         []string{"http://example.com"},
 							},
 						},
 						{
 							Namespace: "testdata.xyz_100",
+							Query:     "data.testdata.xyz_100.deny",
 							Message:   "deny test2",
 							PolicyMetadata: types.PolicyMetadata{
-								ID:       "XYZ-100",
-								Type:     "Kubernetes Security Check",
-								Title:    "Bad Deployment",
-								Severity: "HIGH",
+								ID:                 "XYZ-100",
+								Type:               "Kubernetes Security Check",
+								Title:              "Bad Deployment",
+								Severity:           "HIGH",
+								Description:        "Something bad",
+								RecommendedActions: "Do something great",
+								References:         []string{"http://example.com"},
 							},
 						},
 					},
@@ -344,6 +403,7 @@ func TestEngine_Check(t *testing.T) {
 					Failures: []types.MisconfResult{
 						{
 							Namespace: "testdata.kubernetes.xyz_200",
+							Query:     "data.testdata.kubernetes.xyz_200.deny",
 							Message:   "deny 200 test",
 							PolicyMetadata: types.PolicyMetadata{
 								ID:       "XYZ-200",
@@ -356,6 +416,7 @@ func TestEngine_Check(t *testing.T) {
 					Exceptions: []types.MisconfResult{
 						{
 							Namespace: "testdata.kubernetes.xyz_100",
+							Query:     `data.namespace.exceptions.exception[_] == "testdata.kubernetes.xyz_100"`,
 							Message:   `data.namespace.exceptions.exception[_] == "testdata.kubernetes.xyz_100"`,
 							PolicyMetadata: types.PolicyMetadata{
 								ID:       "XYZ-100",
@@ -406,6 +467,7 @@ func TestEngine_Check(t *testing.T) {
 					Warnings: []types.MisconfResult{
 						{
 							Namespace: "testdata.xyz_100",
+							Query:     "data.testdata.xyz_100.warn",
 							Message:   "deny combined test1",
 							PolicyMetadata: types.PolicyMetadata{
 								ID:       "XYZ-100",
@@ -416,6 +478,7 @@ func TestEngine_Check(t *testing.T) {
 						},
 						{
 							Namespace: "testdata.xyz_200",
+							Query:     "data.testdata.xyz_200.warn",
 							Message:   "deny test1",
 							PolicyMetadata: types.PolicyMetadata{
 								ID:       "XYZ-200",
@@ -428,6 +491,7 @@ func TestEngine_Check(t *testing.T) {
 					Exceptions: []types.MisconfResult{
 						{
 							Namespace: "testdata.xyz_300",
+							Query:     `data.namespace.exceptions.exception[_] == "testdata.xyz_300"`,
 							Message:   `data.namespace.exceptions.exception[_] == "testdata.xyz_300"`,
 							PolicyMetadata: types.PolicyMetadata{
 								ID:       "XYZ-300",
@@ -444,6 +508,7 @@ func TestEngine_Check(t *testing.T) {
 					Warnings: []types.MisconfResult{
 						{
 							Namespace: "testdata.xyz_100",
+							Query:     "data.testdata.xyz_100.warn",
 							Message:   "deny combined test2",
 							PolicyMetadata: types.PolicyMetadata{
 								ID:       "XYZ-100",
@@ -454,6 +519,7 @@ func TestEngine_Check(t *testing.T) {
 						},
 						{
 							Namespace: "testdata.xyz_200",
+							Query:     "data.testdata.xyz_200.warn",
 							Message:   "deny test2",
 							PolicyMetadata: types.PolicyMetadata{
 								ID:       "XYZ-200",
@@ -466,6 +532,7 @@ func TestEngine_Check(t *testing.T) {
 					Exceptions: []types.MisconfResult{
 						{
 							Namespace: "testdata.xyz_300",
+							Query:     `data.namespace.exceptions.exception[_] == "testdata.xyz_300"`,
 							Message:   `data.namespace.exceptions.exception[_] == "testdata.xyz_300"`,
 							PolicyMetadata: types.PolicyMetadata{
 								ID:       "XYZ-300",
@@ -504,6 +571,7 @@ func TestEngine_Check(t *testing.T) {
 					Failures: []types.MisconfResult{
 						{
 							Namespace: "testdata.kubernetes.xyz_100",
+							Query:     "data.testdata.kubernetes.xyz_100.deny_bar",
 							Message:   "deny bar test",
 							PolicyMetadata: types.PolicyMetadata{
 								ID:       "XYZ-100",
@@ -516,6 +584,7 @@ func TestEngine_Check(t *testing.T) {
 					Exceptions: []types.MisconfResult{
 						{
 							Namespace: "testdata.kubernetes.xyz_100",
+							Query:     `data.testdata.kubernetes.xyz_100.exception[_][_] == "foo"`,
 							Message:   `data.testdata.kubernetes.xyz_100.exception[_][_] == "foo"`,
 							PolicyMetadata: types.PolicyMetadata{
 								ID:       "XYZ-100",
@@ -554,6 +623,7 @@ func TestEngine_Check(t *testing.T) {
 					Failures: []types.MisconfResult{
 						{
 							Namespace: "testdata.kubernetes.xyz_100",
+							Query:     "data.testdata.kubernetes.xyz_100.deny",
 							Message:   "deny test",
 							PolicyMetadata: types.PolicyMetadata{
 								ID:       "N/A",
@@ -592,6 +662,7 @@ func TestEngine_Check(t *testing.T) {
 					Failures: []types.MisconfResult{
 						{
 							Namespace: "testdata.kubernetes.xyz_100",
+							Query:     "data.testdata.kubernetes.xyz_100.deny",
 							Message:   "deny test",
 							PolicyMetadata: types.PolicyMetadata{
 								ID:       "N/A",
@@ -665,7 +736,7 @@ func TestEngine_Check(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			engine, err := policy.Load(tt.policyPaths, tt.dataPaths)
+			engine, err := policy.Load(tt.policyPaths, tt.dataPaths, false)
 			require.NoError(t, err)
 
 			got, err := engine.Check(context.Background(), tt.args.configs, tt.args.namespaces)

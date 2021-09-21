@@ -15,7 +15,7 @@ import (
 )
 
 var (
-	skipDirs   = []string{".git", "node_modules", "vendor"}
+	skipDirs   = []string{".git", "vendor"}
 	systemDirs = []string{"proc", "sys"}
 )
 

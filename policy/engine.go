@@ -8,7 +8,6 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
-	"sort"
 	"strings"
 
 	"github.com/mitchellh/mapstructure"
@@ -16,7 +15,6 @@ import (
 	"github.com/open-policy-agent/opa/loader"
 	"github.com/open-policy-agent/opa/rego"
 	"github.com/open-policy-agent/opa/storage"
-	"github.com/open-policy-agent/opa/topdown"
 	"github.com/open-policy-agent/opa/version"
 	"golang.org/x/xerrors"
 
@@ -24,8 +22,14 @@ import (
 	"github.com/aquasecurity/fanal/utils"
 )
 
+var (
+	warningRegex = regexp.MustCompile("^warn(_[a-zA-Z0-9]+)*$")
+	failureRegex = regexp.MustCompile("^(deny|violation)(_[a-zA-Z0-9]+)*$")
+)
+
 // Engine represents the policy engine.
 type Engine struct {
+	trace    bool
 	modules  map[string]*ast.Module
 	compiler *ast.Compiler
 	store    storage.Store
@@ -34,7 +38,7 @@ type Engine struct {
 }
 
 // Load returns an Engine after loading all of the specified policies and data paths.
-func Load(policyPaths []string, dataPaths []string) (*Engine, error) {
+func Load(policyPaths []string, dataPaths []string, trace bool) (*Engine, error) {
 	policies, err := loader.AllRegos(policyPaths)
 	if err != nil {
 		return nil, xerrors.Errorf("load: %w", err)
@@ -63,6 +67,7 @@ func Load(policyPaths []string, dataPaths []string) (*Engine, error) {
 	}
 
 	return &Engine{
+		trace:    trace,
 		modules:  modules,
 		compiler: compiler,
 		policies: policyContents,
@@ -187,24 +192,19 @@ func (e *Engine) Check(ctx context.Context, configs []types.Config, namespaces [
 			return nil, xerrors.Errorf("failed to query input option: %w", err)
 		}
 
-		var rules []string
-		for r := range module.Rules {
-			currentRule := module.Rules[r].Head.Name.String()
-			if isFailure(currentRule) || isWarning(currentRule) {
-				rules = append(rules, currentRule)
-			}
-		}
-
 		var selectedConfigs []types.Config
-		if len(inputOption.Selector.Types) > 0 {
+		if len(inputOption.Selectors) > 0 {
 			// Pass only the config files that match the selector types
-			for _, t := range inputOption.Selector.Types {
+			for _, t := range uniqueSelectorTypes(inputOption.Selectors) {
 				selectedConfigs = append(selectedConfigs, typedConfigs[t]...)
 			}
 		} else {
-			// When the 'types' is not specified, it means '*'.
+			// When the 'selector' is not specified, it means '*'.
 			selectedConfigs = configs
 		}
+
+		// Extract deny and warn rules
+		rules := entrypoints(module)
 
 		var result map[string]types.Misconfiguration
 		if inputOption.Combine {
@@ -221,7 +221,7 @@ func (e *Engine) Check(ctx context.Context, configs []types.Config, namespaces [
 		}
 	}
 
-	return toMisconfigurations(uniqMisconfs), nil
+	return types.ToMisconfigurations(uniqMisconfs), nil
 }
 
 func (e Engine) check(ctx context.Context, currentNamespace string, rules []string, configs []types.Config,
@@ -305,8 +305,13 @@ func (e *Engine) checkRule(ctx context.Context, namespace, rule string, input in
 	for _, ruleResult := range ruleQueryResult.results {
 		result := types.MisconfResult{
 			Namespace:      namespace,
+			Query:          ruleQuery,
 			Message:        ruleResult.Message,
 			PolicyMetadata: metadata,
+		}
+
+		if e.trace {
+			result.Traces = ruleQueryResult.traces
 		}
 
 		if ruleResult.Message == "" {
@@ -321,6 +326,7 @@ func (e *Engine) checkRule(ctx context.Context, namespace, rule string, input in
 	if len(failures) == 0 && len(warnings) == 0 {
 		successes = append(successes, types.MisconfResult{
 			Namespace:      namespace,
+			Query:          ruleQuery,
 			PolicyMetadata: metadata,
 		})
 	}
@@ -368,8 +374,13 @@ func (e *Engine) checkRuleCombined(ctx context.Context, namespace, rule string, 
 		misconf := misconfs[ruleResult.FilePath]
 		result := types.MisconfResult{
 			Namespace:      namespace,
+			Query:          ruleQuery,
 			Message:        ruleResult.Message,
 			PolicyMetadata: metadata,
+		}
+
+		if e.trace {
+			result.Traces = ruleQueryResult.traces
 		}
 
 		if isFailure(rule) {
@@ -383,8 +394,10 @@ func (e *Engine) checkRuleCombined(ctx context.Context, namespace, rule string, 
 	// Fill successes
 	success := types.MisconfResult{
 		Namespace:      namespace,
+		Query:          ruleQuery,
 		PolicyMetadata: metadata,
 	}
+
 	for _, input := range inputs {
 		misconf, ok := misconfs[input.Path]
 		if ok {
@@ -430,11 +443,16 @@ func (e *Engine) namespaceExceptions(ctx context.Context, namespace string, conf
 		// to the query that triggered the exception so that it is known
 		// which exception was triggered.
 		if exceptionResult.Message == "" {
-			exceptions = append(exceptions, types.MisconfResult{
+			exception := types.MisconfResult{
 				Namespace:      namespace,
+				Query:          exceptionQuery,
 				Message:        exceptionQuery,
 				PolicyMetadata: metadata,
-			})
+			}
+			if e.trace {
+				exception.Traces = exceptionQueryResult.traces
+			}
+			exceptions = append(exceptions, exception)
 		}
 	}
 	return exceptions, nil
@@ -454,11 +472,16 @@ func (e *Engine) ruleExceptions(ctx context.Context, namespace, rule string, con
 		// to the query that triggered the exception so that it is known
 		// which exception was triggered.
 		if exceptionResult.Message == "" {
-			exceptions = append(exceptions, types.MisconfResult{
+			exception := types.MisconfResult{
 				Namespace:      namespace,
+				Query:          exceptionQuery,
 				Message:        exceptionQuery,
 				PolicyMetadata: metadata,
-			})
+			}
+			if e.trace {
+				exception.Traces = exceptionQueryResult.traces
+			}
+			exceptions = append(exceptions, exception)
 		}
 	}
 	return exceptions, nil
@@ -492,16 +515,16 @@ type queryValue struct {
 // data.main.deny to query the deny rule in the main namespace
 // data.main.warn to query the warn rule in the main namespace
 func (e *Engine) query(ctx context.Context, input interface{}, query string) (queryResult, error) {
-	stdout := topdown.NewBufferTracer()
 	options := []func(r *rego.Rego){
 		rego.Input(input),
 		rego.Query(query),
 		rego.Compiler(e.Compiler()),
 		rego.Store(e.Store()),
 		rego.Runtime(e.Runtime()),
-		rego.QueryTracer(stdout),
+		rego.Trace(e.trace),
 	}
-	resultSet, err := rego.New(options...).Eval(ctx)
+	regoInstance := rego.New(options...)
+	resultSet, err := regoInstance.Eval(ctx)
 	if err != nil {
 		return queryResult{}, xerrors.Errorf("evaluating policy: %w", err)
 	}
@@ -509,7 +532,8 @@ func (e *Engine) query(ctx context.Context, input interface{}, query string) (qu
 	// After the evaluation of the policy, the results of the trace (stdout) will be populated
 	// for the query. Once populated, format the trace results into a human readable format.
 	buf := new(bytes.Buffer)
-	topdown.PrettyTrace(buf, *stdout)
+	rego.PrintTrace(buf, regoInstance)
+
 	var traces []string
 	for _, line := range strings.Split(buf.String(), "\n") {
 		if len(line) > 0 {
@@ -590,9 +614,19 @@ func (e *Engine) queryMetadata(ctx context.Context, namespace string) (types.Pol
 		return types.PolicyMetadata{}, xerrors.New("'__rego_metadata__' must be map")
 	}
 
+	// TODO: we need to convert string to slice until AVD supports an array of urls
+	if v, ok := result["url"]; ok {
+		if reference, ok := v.(string); ok {
+			result["references"] = []string{reference}
+		}
+	}
+
 	if err = mapstructure.Decode(result, &metadata); err != nil {
 		return types.PolicyMetadata{}, xerrors.Errorf("decode error: %w", err)
 	}
+
+	// e.g. Low -> LOW
+	metadata.Severity = strings.ToUpper(metadata.Severity)
 
 	return metadata, nil
 }
@@ -618,13 +652,23 @@ func (e *Engine) queryInputOption(ctx context.Context, namespace string) (types.
 		return types.PolicyInputOption{}, xerrors.New("'__rego_input__' must be map")
 	}
 
-	// Set default values
 	var inputOption types.PolicyInputOption
 	if err = mapstructure.Decode(result, &inputOption); err != nil {
 		return types.PolicyInputOption{}, xerrors.Errorf("decode error: %w", err)
 	}
 
 	return inputOption, nil
+}
+
+func entrypoints(module *ast.Module) []string {
+	uniqRules := map[string]struct{}{}
+	for r := range module.Rules {
+		currentRule := module.Rules[r].Head.Name.String()
+		if isFailure(currentRule) || isWarning(currentRule) {
+			uniqRules[currentRule] = struct{}{}
+		}
+	}
+	return utils.Keys(uniqRules)
 }
 
 func parseResult(r map[string]interface{}) (string, string, error) {
@@ -647,18 +691,20 @@ func parseResult(r map[string]interface{}) (string, string, error) {
 }
 
 func isWarning(rule string) bool {
-	warningRegex := regexp.MustCompile("^warn(_[a-zA-Z0-9]+)*$")
 	return warningRegex.MatchString(rule)
 }
 
 func isFailure(rule string) bool {
-	failureRegex := regexp.MustCompile("^(deny|violation)(_[a-zA-Z0-9]+)*$")
 	return failureRegex.MatchString(rule)
 }
 
 // When matching rules for exceptions, only the name of the rule
 // is queried, so the severity prefix must be removed.
 func removeRulePrefix(rule string) string {
+	if rule == "violation" || rule == "deny" || rule == "warn" {
+		return ""
+	}
+
 	rule = strings.TrimPrefix(rule, "violation_")
 	rule = strings.TrimPrefix(rule, "deny_")
 	rule = strings.TrimPrefix(rule, "warn_")
@@ -666,18 +712,12 @@ func removeRulePrefix(rule string) string {
 	return rule
 }
 
-func uniqueResults(results []types.MisconfResult) []types.MisconfResult {
-	uniq := map[string]types.MisconfResult{}
-	for _, result := range results {
-		key := fmt.Sprintf("%s::%s::%s", result.ID, result.Namespace, result.Message)
-		uniq[key] = result
+func uniqueSelectorTypes(selectors []types.PolicyInputSelector) []string {
+	selectorTypes := map[string]struct{}{}
+	for _, s := range selectors {
+		selectorTypes[s.Type] = struct{}{}
 	}
-
-	var uniqResults []types.MisconfResult
-	for _, s := range uniq {
-		uniqResults = append(uniqResults, s)
-	}
-	return uniqResults
+	return utils.Keys(selectorTypes)
 }
 
 func underNamespaces(current string, namespaces []string) bool {
@@ -691,32 +731,6 @@ func underNamespaces(current string, namespaces []string) bool {
 		}
 	}
 	return false
-}
-
-func toMisconfigurations(misconfs map[string]types.Misconfiguration) []types.Misconfiguration {
-	var results []types.Misconfiguration
-	for _, misconf := range misconfs {
-		// Remove duplicates
-		misconf.Successes = uniqueResults(misconf.Successes)
-
-		// Sort results
-		sort.Sort(misconf.Successes)
-		sort.Sort(misconf.Warnings)
-		sort.Sort(misconf.Failures)
-		sort.Sort(misconf.Exceptions)
-
-		results = append(results, misconf)
-	}
-
-	// Sort misconfigurations
-	sort.Slice(results, func(i, j int) bool {
-		if results[i].FileType != results[j].FileType {
-			return results[i].FileType < results[j].FileType
-		}
-		return results[i].FilePath < results[j].FilePath
-	})
-
-	return results
 }
 
 func mergeMisconfs(a, b types.Misconfiguration) types.Misconfiguration {

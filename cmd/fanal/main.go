@@ -21,6 +21,7 @@ import (
 	"github.com/aquasecurity/fanal/artifact/local"
 	"github.com/aquasecurity/fanal/artifact/remote"
 	"github.com/aquasecurity/fanal/cache"
+	_ "github.com/aquasecurity/fanal/hook/all"
 	"github.com/aquasecurity/fanal/image"
 	"github.com/aquasecurity/fanal/types"
 	"github.com/aquasecurity/fanal/utils"
@@ -60,6 +61,11 @@ func run() (err error) {
 				Aliases: []string{"fs"},
 				Usage:   "inspect a local directory",
 				Flags: []cli.Flag{
+					&cli.StringSliceFlag{
+						Name:  "namespace",
+						Usage: "namespaces",
+						Value: cli.NewStringSlice("appshield"),
+					},
 					&cli.StringSliceFlag{
 						Name:  "policy",
 						Usage: "policy paths",
@@ -141,6 +147,7 @@ func archiveAction(c *cli.Context, fsCache cache.Cache) error {
 
 func fsAction(c *cli.Context, fsCache cache.Cache) error {
 	art, err := local.NewArtifact(c.Args().First(), fsCache, artifact.Option{}, config.ScannerOption{
+		Namespaces:  []string{"appshield"},
 		PolicyPaths: c.StringSlice("policy"),
 	})
 	if err != nil {
@@ -176,8 +183,8 @@ func inspect(ctx context.Context, art artifact.Artifact, c cache.LocalArtifactCa
 		}
 	}
 	fmt.Println(imageInfo.Name)
-	fmt.Printf("RepoTags: %v\n", imageInfo.RepoTags)
-	fmt.Printf("RepoDigests: %v\n", imageInfo.RepoDigests)
+	fmt.Printf("RepoTags: %v\n", imageInfo.ImageMetadata.RepoTags)
+	fmt.Printf("RepoDigests: %v\n", imageInfo.ImageMetadata.RepoDigests)
 	fmt.Printf("%+v\n", mergedLayer.OS)
 	fmt.Printf("via image Packages: %d\n", len(mergedLayer.Packages))
 	for _, app := range mergedLayer.Applications {
@@ -189,6 +196,9 @@ func inspect(ctx context.Context, art artifact.Artifact, c cache.LocalArtifactCa
 	}
 	for _, misconf := range mergedLayer.Misconfigurations {
 		fmt.Printf("  %s: failures %d, warnings %d\n", misconf.FilePath, len(misconf.Failures), len(misconf.Warnings))
+		for _, failure := range misconf.Failures {
+			fmt.Printf("    %s: %s\n", failure.ID, failure.Message)
+		}
 	}
 	return nil
 }

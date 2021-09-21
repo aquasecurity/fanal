@@ -11,6 +11,7 @@ import (
 	"github.com/aquasecurity/fanal/analyzer/config/docker"
 	"github.com/aquasecurity/fanal/analyzer/config/hcl"
 	"github.com/aquasecurity/fanal/analyzer/config/json"
+	"github.com/aquasecurity/fanal/analyzer/config/terraform"
 	"github.com/aquasecurity/fanal/analyzer/config/toml"
 	"github.com/aquasecurity/fanal/analyzer/config/yaml"
 	"github.com/aquasecurity/fanal/types"
@@ -19,6 +20,7 @@ import (
 const separator = ":"
 
 type ScannerOption struct {
+	Trace        bool
 	Namespaces   []string
 	FilePatterns []string
 	PolicyPaths  []string
@@ -65,6 +67,7 @@ func RegisterConfigAnalyzers(filePatterns []string) error {
 	analyzer.RegisterAnalyzer(docker.NewConfigAnalyzer(dockerRegexp))
 	analyzer.RegisterAnalyzer(hcl.NewConfigAnalyzer(hclRegexp))
 	analyzer.RegisterAnalyzer(json.NewConfigAnalyzer(jsonRegexp))
+	analyzer.RegisterAnalyzer(terraform.NewConfigAnalyzer())
 	analyzer.RegisterAnalyzer(toml.NewConfigAnalyzer(tomlRegexp))
 	analyzer.RegisterAnalyzer(yaml.NewConfigAnalyzer(yamlRegexp))
 

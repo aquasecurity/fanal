@@ -3,12 +3,16 @@ package analyzer
 type Type string
 
 const (
-	// OS
+	// ======
+	//   OS
+	// ======
 	TypeAlpine     Type = "alpine"
 	TypeAmazon     Type = "amazon"
 	TypeDebian     Type = "debian"
 	TypePhoton     Type = "photon"
 	TypeCentOS     Type = "centos"
+	TypeRocky      Type = "rocky"
+	TypeAlma       Type = "alma"
 	TypeFedora     Type = "fedora"
 	TypeOracle     Type = "oracle"
 	TypeRedHatBase Type = "redhat"
@@ -20,26 +24,54 @@ const (
 	TypeDpkg Type = "dpkg"
 	TypeRpm  Type = "rpm"
 
+	// ============================
 	// Programming Language Package
-	TypeBundler  Type = "bundler"
-	TypeCargo    Type = "cargo"
+	// ============================
+
+	// Ruby
+	TypeBundler Type = "bundler"
+	TypeGemSpec Type = "gemspec"
+
+	// Rust
+	TypeCargo Type = "cargo"
+
+	// PHP
 	TypeComposer Type = "composer"
-	TypeJar      Type = "jar"
-	TypeNpm      Type = "npm"
-	TypeNuget    Type = "nuget"
-	TypePipenv   Type = "pipenv"
-	TypePoetry   Type = "poetry"
-	TypeYarn     Type = "yarn"
+
+	// Java
+	TypeJar Type = "jar"
+
+	// Node.js
+	TypeNpmPkgLock Type = "npm"
+	TypeNodePkg    Type = "node-pkg"
+	TypeYarn       Type = "yarn"
+
+	// .NET
+	TypeNuget Type = "nuget"
+
+	// Python
+	TypePythonPkg Type = "python-pkg"
+	TypePip       Type = "pip"
+	TypePipenv    Type = "pipenv"
+	TypePoetry    Type = "poetry"
+	TypeWheel     Type = "wheel"
+
+	// Go
 	TypeGoBinary Type = "gobinary"
 	TypeGoMod    Type = "gomod"
 
+	// ============
 	// Image Config
+	// ============
 	TypeApkCommand Type = "apk-command"
 
+	// =================
 	// Structured Config
+	// =================
 	TypeYaml       Type = "yaml"
 	TypeTOML       Type = "toml"
 	TypeJSON       Type = "json"
 	TypeDockerfile Type = "dockerfile"
 	TypeHCL        Type = "hcl"
+	TypeTerraform  Type = "terraform"
 )

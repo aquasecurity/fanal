@@ -16,11 +16,10 @@ import (
 
 	"github.com/aquasecurity/fanal/analyzer"
 	"github.com/aquasecurity/fanal/analyzer/config"
-	_ "github.com/aquasecurity/fanal/analyzer/os/alpine"
-	_ "github.com/aquasecurity/fanal/analyzer/pkg/apk"
 	"github.com/aquasecurity/fanal/artifact"
 	"github.com/aquasecurity/fanal/cache"
 	"github.com/aquasecurity/fanal/config/scanner"
+	"github.com/aquasecurity/fanal/hook"
 	"github.com/aquasecurity/fanal/types"
 	"github.com/aquasecurity/fanal/walker"
 )
@@ -30,11 +29,12 @@ const (
 )
 
 type Artifact struct {
-	dir      string
-	cache    cache.ArtifactCache
-	walker   walker.Dir
-	analyzer analyzer.Analyzer
-	scanner  scanner.Scanner
+	dir         string
+	cache       cache.ArtifactCache
+	walker      walker.Dir
+	analyzer    analyzer.Analyzer
+	hookManager hook.Manager
+	scanner     scanner.Scanner
 
 	artifactOption      artifact.Option
 	configScannerOption config.ScannerOption
@@ -46,17 +46,18 @@ func NewArtifact(dir string, c cache.ArtifactCache, artifactOpt artifact.Option,
 		return nil, xerrors.Errorf("config analyzer error: %w", err)
 	}
 
-	s, err := scanner.New(scannerOpt.Namespaces, scannerOpt.PolicyPaths, scannerOpt.DataPaths)
+	s, err := scanner.New(dir, scannerOpt.Namespaces, scannerOpt.PolicyPaths, scannerOpt.DataPaths, scannerOpt.Trace)
 	if err != nil {
 		return nil, xerrors.Errorf("scanner error: %w", err)
 	}
 
 	return Artifact{
-		dir:      dir,
-		cache:    c,
-		walker:   walker.NewDir(artifactOpt.SkipFiles, artifactOpt.SkipDirs),
-		analyzer: analyzer.NewAnalyzer(artifactOpt.DisabledAnalyzers),
-		scanner:  s,
+		dir:         dir,
+		cache:       c,
+		walker:      walker.NewDir(artifactOpt.SkipFiles, artifactOpt.SkipDirs),
+		analyzer:    analyzer.NewAnalyzer(artifactOpt.DisabledAnalyzers),
+		hookManager: hook.NewManager(artifactOpt.DisabledHooks),
+		scanner:     s,
 
 		artifactOption:      artifactOpt,
 		configScannerOption: scannerOpt,
@@ -69,11 +70,12 @@ func (a Artifact) Inspect(ctx context.Context) (types.ArtifactReference, error) 
 	limit := semaphore.NewWeighted(parallel)
 
 	err := a.walker.Walk(a.dir, func(filePath string, info os.FileInfo, opener analyzer.Opener) error {
+		// For exported rootfs (e.g. images/alpine/etc/alpine-release)
 		filePath, err := filepath.Rel(a.dir, filePath)
 		if err != nil {
 			return xerrors.Errorf("filepath rel (%s): %w", filePath, err)
 		}
-		if err = a.analyzer.AnalyzeFile(ctx, &wg, limit, result, filePath, info, opener); err != nil {
+		if err = a.analyzer.AnalyzeFile(ctx, &wg, limit, result, a.dir, filePath, info, opener); err != nil {
 			return xerrors.Errorf("analyze file (%s): %w", filePath, err)
 		}
 		return nil
@@ -100,6 +102,11 @@ func (a Artifact) Inspect(ctx context.Context) (types.ArtifactReference, error) 
 		PackageInfos:      result.PackageInfos,
 		Applications:      result.Applications,
 		Misconfigurations: misconfs,
+		SystemFiles:       result.SystemInstalledFiles,
+	}
+
+	if err = a.hookManager.CallHooks(&blobInfo); err != nil {
+		return types.ArtifactReference{}, xerrors.Errorf("failed to call hooks: %w", err)
 	}
 
 	// calculate hash of JSON and use it as pseudo artifactID and blobID
@@ -111,7 +118,8 @@ func (a Artifact) Inspect(ctx context.Context) (types.ArtifactReference, error) 
 	d := digest.NewDigest(digest.SHA256, h)
 	diffID := d.String()
 	blobInfo.DiffID = diffID
-	cacheKey, err := cache.CalcKey(diffID, a.analyzer.AnalyzerVersions(), a.artifactOption, a.configScannerOption)
+	cacheKey, err := cache.CalcKey(diffID, a.analyzer.AnalyzerVersions(), a.hookManager.Versions(),
+		a.artifactOption, a.configScannerOption)
 	if err != nil {
 		return types.ArtifactReference{}, xerrors.Errorf("cache key: %w", err)
 	}
@@ -131,6 +139,7 @@ func (a Artifact) Inspect(ctx context.Context) (types.ArtifactReference, error) 
 
 	return types.ArtifactReference{
 		Name:    hostName,
+		Type:    types.ArtifactFilesystem,
 		ID:      cacheKey, // use a cache key as pseudo artifact ID
 		BlobIDs: []string{cacheKey},
 	}, nil

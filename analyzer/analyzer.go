@@ -16,8 +16,8 @@ import (
 )
 
 var (
-	analyzers       []analyzer
-	configAnalyzers []configAnalyzer
+	analyzers       = map[Type]analyzer{}
+	configAnalyzers = map[Type]configAnalyzer{}
 
 	// ErrUnknownOS occurs when unknown OS is analyzed.
 	ErrUnknownOS = xerrors.New("unknown OS")
@@ -28,6 +28,7 @@ var (
 )
 
 type AnalysisTarget struct {
+	Dir      string
 	FilePath string
 	Content  []byte
 }
@@ -47,25 +48,27 @@ type configAnalyzer interface {
 }
 
 func RegisterAnalyzer(analyzer analyzer) {
-	analyzers = append(analyzers, analyzer)
+	analyzers[analyzer.Type()] = analyzer
 }
 
 func RegisterConfigAnalyzer(analyzer configAnalyzer) {
-	configAnalyzers = append(configAnalyzers, analyzer)
+	configAnalyzers[analyzer.Type()] = analyzer
 }
 
 type Opener func() ([]byte, error)
 
 type AnalysisResult struct {
-	m            sync.Mutex
-	OS           *types.OS
-	PackageInfos []types.PackageInfo
-	Applications []types.Application
-	Configs      []types.Config
+	m                    sync.Mutex
+	OS                   *types.OS
+	PackageInfos         []types.PackageInfo
+	Applications         []types.Application
+	Configs              []types.Config
+	SystemInstalledFiles []string // A list of files installed by OS package manager
 }
 
 func (r *AnalysisResult) isEmpty() bool {
-	return r.OS == nil && len(r.PackageInfos) == 0 && len(r.Applications) == 0 && len(r.Configs) == 0
+	return r.OS == nil && len(r.PackageInfos) == 0 && len(r.Applications) == 0 &&
+		len(r.Configs) == 0 && len(r.SystemInstalledFiles) == 0
 }
 
 func (r *AnalysisResult) Sort() {
@@ -122,6 +125,8 @@ func (r *AnalysisResult) Merge(new *AnalysisResult) {
 	for _, m := range new.Configs {
 		r.Configs = append(r.Configs, m)
 	}
+
+	r.SystemInstalledFiles = append(r.SystemInstalledFiles, new.SystemInstalledFiles...)
 }
 
 type Analyzer struct {
@@ -132,16 +137,16 @@ type Analyzer struct {
 
 func NewAnalyzer(disabledAnalyzers []Type) Analyzer {
 	var drivers []analyzer
-	for _, a := range analyzers {
-		if isDisabled(a.Type(), disabledAnalyzers) {
+	for analyzerType, a := range analyzers {
+		if isDisabled(analyzerType, disabledAnalyzers) {
 			continue
 		}
 		drivers = append(drivers, a)
 	}
 
 	var configDrivers []configAnalyzer
-	for _, a := range configAnalyzers {
-		if isDisabled(a.Type(), disabledAnalyzers) {
+	for analyzerType, a := range configAnalyzers {
+		if isDisabled(analyzerType, disabledAnalyzers) {
 			continue
 		}
 		configDrivers = append(configDrivers, a)
@@ -157,12 +162,12 @@ func NewAnalyzer(disabledAnalyzers []Type) Analyzer {
 // AnalyzerVersions returns analyzer version identifier used for cache keys.
 func (a Analyzer) AnalyzerVersions() map[string]int {
 	versions := map[string]int{}
-	for _, aa := range analyzers {
-		if isDisabled(aa.Type(), a.disabledAnalyzers) {
-			versions[string(aa.Type())] = 0
+	for analyzerType, aa := range analyzers {
+		if isDisabled(analyzerType, a.disabledAnalyzers) {
+			versions[string(analyzerType)] = 0
 			continue
 		}
-		versions[string(aa.Type())] = aa.Version()
+		versions[string(analyzerType)] = aa.Version()
 	}
 	return versions
 }
@@ -181,7 +186,7 @@ func (a Analyzer) ImageConfigAnalyzerVersions() map[string]int {
 }
 
 func (a Analyzer) AnalyzeFile(ctx context.Context, wg *sync.WaitGroup, limit *semaphore.Weighted, result *AnalysisResult,
-	filePath string, info os.FileInfo, opener Opener) error {
+	dir, filePath string, info os.FileInfo, opener Opener) error {
 	if info.IsDir() {
 		return nil
 	}
@@ -210,7 +215,7 @@ func (a Analyzer) AnalyzeFile(ctx context.Context, wg *sync.WaitGroup, limit *se
 				return
 			}
 			result.Merge(ret)
-		}(d, AnalysisTarget{FilePath: filePath, Content: b})
+		}(d, AnalysisTarget{Dir: dir, FilePath: filePath, Content: b})
 	}
 	return nil
 }
@@ -237,8 +242,4 @@ func isDisabled(t Type, disabled []Type) bool {
 		}
 	}
 	return false
-}
-
-func CheckPackage(pkg *types.Package) bool {
-	return pkg.Name != "" && pkg.Version != ""
 }

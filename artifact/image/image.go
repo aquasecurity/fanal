@@ -17,7 +17,7 @@ import (
 	"github.com/aquasecurity/fanal/artifact"
 	"github.com/aquasecurity/fanal/cache"
 	"github.com/aquasecurity/fanal/config/scanner"
-	"github.com/aquasecurity/fanal/image"
+	"github.com/aquasecurity/fanal/hook"
 	"github.com/aquasecurity/fanal/log"
 	"github.com/aquasecurity/fanal/types"
 	"github.com/aquasecurity/fanal/walker"
@@ -27,34 +27,60 @@ const (
 	parallel = 5
 )
 
+var (
+	defaultDisabledAnalyzers = []analyzer.Type{
+		// Do not scan go.sum in container images, only scan go binaries
+		analyzer.TypeGoMod,
+
+		// Do not scan requirements.txt, Pipfile.lock and poetry.lock in container images, only scan egg and wheel
+		analyzer.TypePip,
+		analyzer.TypePipenv,
+		analyzer.TypePoetry,
+
+		// Do not scan Gemfile.lock in container images, only scan .gemspec
+		analyzer.TypeBundler,
+
+		// Do not scan package-lock.json and yarn.lock in container images, only scan package.json
+		analyzer.TypeNpmPkgLock,
+		analyzer.TypeYarn,
+	}
+
+	defaultDisabledHooks []hook.Type
+)
+
 type Artifact struct {
-	image    image.Image
-	cache    cache.ArtifactCache
-	walker   walker.LayerTar
-	analyzer analyzer.Analyzer
-	scanner  scanner.Scanner
+	image       types.Image
+	cache       cache.ArtifactCache
+	walker      walker.LayerTar
+	analyzer    analyzer.Analyzer
+	hookManager hook.Manager
+	scanner     scanner.Scanner
 
 	artifactOption      artifact.Option
 	configScannerOption config.ScannerOption
 }
 
-func NewArtifact(img image.Image, c cache.ArtifactCache, artifactOpt artifact.Option, scannerOpt config.ScannerOption) (artifact.Artifact, error) {
+func NewArtifact(img types.Image, c cache.ArtifactCache, artifactOpt artifact.Option, scannerOpt config.ScannerOption) (artifact.Artifact, error) {
 	// Register config analyzers
 	if err := config.RegisterConfigAnalyzers(scannerOpt.FilePatterns); err != nil {
 		return nil, xerrors.Errorf("config scanner error: %w", err)
 	}
 
-	s, err := scanner.New(scannerOpt.Namespaces, scannerOpt.PolicyPaths, scannerOpt.DataPaths)
+	s, err := scanner.New("", scannerOpt.Namespaces, scannerOpt.PolicyPaths, scannerOpt.DataPaths, scannerOpt.Trace)
 	if err != nil {
 		return nil, xerrors.Errorf("scanner error: %w", err)
 	}
 
+	disabledAnalyzers := append(artifactOpt.DisabledAnalyzers, defaultDisabledAnalyzers...)
+	disabledHooks := append(artifactOpt.DisabledHooks, defaultDisabledHooks...)
+
 	return Artifact{
-		image:    img,
-		cache:    c,
-		walker:   walker.NewLayerTar(artifactOpt.SkipFiles, artifactOpt.SkipDirs),
-		analyzer: analyzer.NewAnalyzer(artifactOpt.DisabledAnalyzers),
-		scanner:  s,
+		image:       img,
+		cache:       c,
+		walker:      walker.NewLayerTar(artifactOpt.SkipFiles, artifactOpt.SkipDirs),
+		analyzer:    analyzer.NewAnalyzer(disabledAnalyzers),
+		hookManager: hook.NewManager(disabledHooks),
+		scanner:     s,
 
 		artifactOption:      artifactOpt,
 		configScannerOption: scannerOpt,
@@ -70,6 +96,11 @@ func (a Artifact) Inspect(ctx context.Context) (types.ArtifactReference, error) 
 	diffIDs, err := a.image.LayerIDs()
 	if err != nil {
 		return types.ArtifactReference{}, xerrors.Errorf("unable to get layer IDs: %w", err)
+	}
+
+	configFile, err := a.image.ConfigFile()
+	if err != nil {
+		return types.ArtifactReference{}, xerrors.Errorf("unable to get the image's config file: %w", err)
 	}
 
 	// Debug
@@ -99,26 +130,33 @@ func (a Artifact) Inspect(ctx context.Context) (types.ArtifactReference, error) 
 	}
 
 	return types.ArtifactReference{
-		Name:        a.image.Name(),
-		ID:          imageKey,
-		BlobIDs:     layerKeys,
-		RepoTags:    a.image.RepoTags(),
-		RepoDigests: a.image.RepoDigests(),
+		Name:    a.image.Name(),
+		Type:    types.ArtifactContainerImage,
+		ID:      imageKey,
+		BlobIDs: layerKeys,
+		ImageMetadata: types.ImageMetadata{
+			ID:          imageID,
+			DiffIDs:     diffIDs,
+			RepoTags:    a.image.RepoTags(),
+			RepoDigests: a.image.RepoDigests(),
+			ConfigFile:  *configFile,
+		},
 	}, nil
-
 }
 
 func (a Artifact) calcCacheKeys(imageID string, diffIDs []string) (string, []string, map[string]string, error) {
+
 	// Pass an empty config scanner option so that the cache key can be the same, even when policies are updated.
-	imageKey, err := cache.CalcKey(imageID, a.analyzer.ImageConfigAnalyzerVersions(), artifact.Option{}, config.ScannerOption{})
+	imageKey, err := cache.CalcKey(imageID, a.analyzer.ImageConfigAnalyzerVersions(), nil, artifact.Option{}, config.ScannerOption{})
 	if err != nil {
 		return "", nil, nil, err
 	}
 
 	layerKeyMap := map[string]string{}
+	hookVersions := a.hookManager.Versions()
 	var layerKeys []string
 	for _, diffID := range diffIDs {
-		blobKey, err := cache.CalcKey(diffID, a.analyzer.AnalyzerVersions(), a.artifactOption, a.configScannerOption)
+		blobKey, err := cache.CalcKey(diffID, a.analyzer.AnalyzerVersions(), hookVersions, a.artifactOption, a.configScannerOption)
 		if err != nil {
 			return "", nil, nil, err
 		}
@@ -186,7 +224,7 @@ func (a Artifact) inspectLayer(ctx context.Context, diffID string) (types.BlobIn
 	limit := semaphore.NewWeighted(parallel)
 
 	opqDirs, whFiles, err := a.walker.Walk(r, func(filePath string, info os.FileInfo, opener analyzer.Opener) error {
-		if err = a.analyzer.AnalyzeFile(ctx, &wg, limit, result, filePath, info, opener); err != nil {
+		if err = a.analyzer.AnalyzeFile(ctx, &wg, limit, result, "", filePath, info, opener); err != nil {
 			return xerrors.Errorf("failed to analyze %s: %w", filePath, err)
 		}
 		return nil
@@ -201,24 +239,24 @@ func (a Artifact) inspectLayer(ctx context.Context, diffID string) (types.BlobIn
 	// Sort the analysis result for consistent results
 	result.Sort()
 
-	// Scan config files
-	misconfs, err := a.scanner.ScanConfigs(ctx, result.Configs)
-	if err != nil {
-		return types.BlobInfo{}, xerrors.Errorf("config scan error: %w", err)
+	blobInfo := types.BlobInfo{
+		SchemaVersion: types.BlobJSONSchemaVersion,
+		Digest:        layerDigest,
+		DiffID:        diffID,
+		OS:            result.OS,
+		PackageInfos:  result.PackageInfos,
+		Applications:  result.Applications,
+		SystemFiles:   result.SystemInstalledFiles,
+		OpaqueDirs:    opqDirs,
+		WhiteoutFiles: whFiles,
 	}
 
-	layerInfo := types.BlobInfo{
-		SchemaVersion:     types.BlobJSONSchemaVersion,
-		Digest:            layerDigest,
-		DiffID:            diffID,
-		OS:                result.OS,
-		PackageInfos:      result.PackageInfos,
-		Applications:      result.Applications,
-		Misconfigurations: misconfs,
-		OpaqueDirs:        opqDirs,
-		WhiteoutFiles:     whFiles,
+	// Call hooks to modify blob info
+	if err = a.hookManager.CallHooks(&blobInfo); err != nil {
+		return types.BlobInfo{}, xerrors.Errorf("failed to call hooks: %w", err)
 	}
-	return layerInfo, nil
+
+	return blobInfo, nil
 }
 
 func (a Artifact) uncompressedLayer(diffID string) (string, io.Reader, error) {
@@ -257,7 +295,7 @@ func (a Artifact) isCompressed(l v1.Layer) bool {
 }
 
 func (a Artifact) inspectConfig(imageID string, osFound types.OS) error {
-	configBlob, err := a.image.ConfigBlob()
+	configBlob, err := a.image.RawConfigFile()
 	if err != nil {
 		return xerrors.Errorf("unable to get config blob: %w", err)
 	}
@@ -265,7 +303,7 @@ func (a Artifact) inspectConfig(imageID string, osFound types.OS) error {
 	pkgs := a.analyzer.AnalyzeImageConfig(osFound, configBlob)
 
 	var s1 v1.ConfigFile
-	if err := json.Unmarshal(configBlob, &s1); err != nil {
+	if err = json.Unmarshal(configBlob, &s1); err != nil {
 		return xerrors.Errorf("json marshal error: %w", err)
 	}
 
@@ -278,7 +316,7 @@ func (a Artifact) inspectConfig(imageID string, osFound types.OS) error {
 		HistoryPackages: pkgs,
 	}
 
-	if err := a.cache.PutArtifact(imageID, info); err != nil {
+	if err = a.cache.PutArtifact(imageID, info); err != nil {
 		return xerrors.Errorf("failed to put image info into the cache: %w", err)
 	}
 
