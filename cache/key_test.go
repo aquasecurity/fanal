@@ -39,7 +39,7 @@ func TestCalcKey(t *testing.T) {
 					"python-pkg": 1,
 				},
 			},
-			want: "sha256:ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356",
+			want: "sha256:8060f9cc9ba29039785a7116ae874673ad7a6eab37170ee1375b4064a72343ae",
 		},
 		{
 			name: "with disabled analyzer",
@@ -54,7 +54,7 @@ func TestCalcKey(t *testing.T) {
 					"python-pkg": 1,
 				},
 			},
-			want: "sha256:ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356",
+			want: "sha256:e6a28d20a3a901377dcb836959c8ac268ec573735a5ba9c29112a1f6c5b1edd2",
 		},
 		{
 			name: "with empty slice file patterns",
@@ -66,7 +66,7 @@ func TestCalcKey(t *testing.T) {
 				},
 				patterns: []string{},
 			},
-			want: "sha256:ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356",
+			want: "sha256:d69f13df33f4c159b4ea54c1967384782fcefb5e2a19af35f4cd6d2896e9285e",
 		},
 		{
 			name: "with single empty string in file patterns",
@@ -78,7 +78,7 @@ func TestCalcKey(t *testing.T) {
 				},
 				patterns: []string{""},
 			},
-			want: "sha256:ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356",
+			want: "sha256:d69f13df33f4c159b4ea54c1967384782fcefb5e2a19af35f4cd6d2896e9285e",
 		},
 		{
 			name: "with single non empty string in file patterns",
@@ -90,7 +90,7 @@ func TestCalcKey(t *testing.T) {
 				},
 				patterns: []string{"test"},
 			},
-			want: "sha256:ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356",
+			want: "sha256:d69f13df33f4c159b4ea54c1967384782fcefb5e2a19af35f4cd6d2896e9285e",
 		},
 		{
 			name: "with non empty followed by empty string in file patterns",
@@ -102,7 +102,7 @@ func TestCalcKey(t *testing.T) {
 				},
 				patterns: []string{"test", ""},
 			},
-			want: "sha256:ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356",
+			want: "sha256:d69f13df33f4c159b4ea54c1967384782fcefb5e2a19af35f4cd6d2896e9285e",
 		},
 		{
 			name: "with non empty preceded by empty string in file patterns",
@@ -114,7 +114,7 @@ func TestCalcKey(t *testing.T) {
 				},
 				patterns: []string{"", "test"},
 			},
-			want: "sha256:ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356",
+			want: "sha256:d69f13df33f4c159b4ea54c1967384782fcefb5e2a19af35f4cd6d2896e9285e",
 		},
 		{
 			name: "with policy",
@@ -126,7 +126,7 @@ func TestCalcKey(t *testing.T) {
 				},
 				policy: []string{"testdata"},
 			},
-			want: "sha256:aaae6656430d0926ac3cb825c4e044cfa6163372409f2463824d900423895179",
+			want: "sha256:6865fae846fbe28290701e6828f51bf704dab746f06f3f7c0ec4d55c8d73da23",
 		},
 		{
 			name: "skip files and dirs",
@@ -140,7 +140,7 @@ func TestCalcKey(t *testing.T) {
 				skipDirs:  []string{"usr/java"},
 				policy:    []string{"testdata"},
 			},
-			want: "sha256:aaae6656430d0926ac3cb825c4e044cfa6163372409f2463824d900423895179",
+			want: "sha256:7ddb3a93c2aa70c4a0b5d793110fa0f380318f9d7f795c4e28dfa59749c27416",
 		},
 		{
 			name: "with policy/non-existent dir",
