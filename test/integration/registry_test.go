@@ -1,3 +1,4 @@
+//go:build integration
 // +build integration
 
 package integration
@@ -11,6 +12,8 @@ import (
 	"path/filepath"
 	"testing"
 	"time"
+
+	"github.com/aquasecurity/fanal/artifact"
 
 	"github.com/docker/docker/client"
 	"github.com/docker/go-connections/nat"
@@ -202,7 +205,7 @@ func analyze(ctx context.Context, imageRef string, opt types.DockerOption) (*typ
 	}
 	defer cleanup()
 
-	ar, err := aimage.NewArtifact(img, c, nil, nil, config.ScannerOption{})
+	ar, err := aimage.NewArtifact(img, c, artifact.Option{}, config.ScannerOption{})
 	if err != nil {
 		return nil, err
 	}
