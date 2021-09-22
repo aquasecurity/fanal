@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"encoding/json"
 	"fmt"
+	"path/filepath"
 
 	"github.com/aquasecurity/fanal/artifact"
 
@@ -36,7 +37,10 @@ func CalcKey(id string, analyzerVersions, hookVersions map[string]int, artifactO
 	}
 
 	// Write skipped files and dirs
-	skipped := append(artifactOpt.SkipDirs, artifactOpt.SkipFiles...)
+	var skipped []string
+	for _, s := range append(artifactOpt.SkipDirs, artifactOpt.SkipFiles...) {
+		skipped = append(skipped, filepath.Clean(s))
+	}
 	if err := json.NewEncoder(h).Encode(skipped); err != nil {
 		return "", xerrors.Errorf("json encode error: %w", err)
 	}
