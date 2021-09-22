@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/aquasecurity/fanal/analyzer/config"
+	"github.com/aquasecurity/fanal/artifact"
 )
 
 func TestCalcKey(t *testing.T) {
@@ -14,6 +15,8 @@ func TestCalcKey(t *testing.T) {
 		key              string
 		analyzerVersions map[string]int
 		hookVersions     map[string]int
+		skipFiles        []string
+		skipDirs         []string
 		patterns         []string
 		policy           []string
 		data             []string
@@ -36,7 +39,7 @@ func TestCalcKey(t *testing.T) {
 					"python-pkg": 1,
 				},
 			},
-			want: "sha256:dcdf828ab855918fc61688c8a9e27d011579601faef57122655d9e10128b2898",
+			want: "sha256:ca3763e29fc7eb882e88288a19a945f9c8755bf091d2afa7b13e7364d8a450be",
 		},
 		{
 			name: "with disabled analyzer",
@@ -51,7 +54,7 @@ func TestCalcKey(t *testing.T) {
 					"python-pkg": 1,
 				},
 			},
-			want: "sha256:796a061d4942fe2eb1a3559cf4a4cff2500eb2dc67d6cd4a1e5914250b6db994",
+			want: "sha256:7b70f2f498b7e61a283b6467dd5158b677fac3892549f34ea5ddac861c602b74",
 		},
 		{
 			name: "with empty slice file patterns",
@@ -63,7 +66,7 @@ func TestCalcKey(t *testing.T) {
 				},
 				patterns: []string{},
 			},
-			want: "sha256:0ecded9645d88f15c2372741abb3e52b4c4fc83ccad1df57a67e4b92b2da7200",
+			want: "sha256:17d6090b9a567b40432b74d8aed0a2344444dde05dd2de5e3a9a0d40dcfc2cfc",
 		},
 		{
 			name: "with single empty string in file patterns",
@@ -75,7 +78,7 @@ func TestCalcKey(t *testing.T) {
 				},
 				patterns: []string{""},
 			},
-			want: "sha256:0ecded9645d88f15c2372741abb3e52b4c4fc83ccad1df57a67e4b92b2da7200",
+			want: "sha256:17d6090b9a567b40432b74d8aed0a2344444dde05dd2de5e3a9a0d40dcfc2cfc",
 		},
 		{
 			name: "with single non empty string in file patterns",
@@ -87,7 +90,7 @@ func TestCalcKey(t *testing.T) {
 				},
 				patterns: []string{"test"},
 			},
-			want: "sha256:0ecded9645d88f15c2372741abb3e52b4c4fc83ccad1df57a67e4b92b2da7200",
+			want: "sha256:17d6090b9a567b40432b74d8aed0a2344444dde05dd2de5e3a9a0d40dcfc2cfc",
 		},
 		{
 			name: "with non empty followed by empty string in file patterns",
@@ -99,7 +102,7 @@ func TestCalcKey(t *testing.T) {
 				},
 				patterns: []string{"test", ""},
 			},
-			want: "sha256:0ecded9645d88f15c2372741abb3e52b4c4fc83ccad1df57a67e4b92b2da7200",
+			want: "sha256:17d6090b9a567b40432b74d8aed0a2344444dde05dd2de5e3a9a0d40dcfc2cfc",
 		},
 		{
 			name: "with non empty preceded by empty string in file patterns",
@@ -111,7 +114,7 @@ func TestCalcKey(t *testing.T) {
 				},
 				patterns: []string{"", "test"},
 			},
-			want: "sha256:0ecded9645d88f15c2372741abb3e52b4c4fc83ccad1df57a67e4b92b2da7200",
+			want: "sha256:17d6090b9a567b40432b74d8aed0a2344444dde05dd2de5e3a9a0d40dcfc2cfc",
 		},
 		{
 			name: "with policy",
@@ -123,7 +126,21 @@ func TestCalcKey(t *testing.T) {
 				},
 				policy: []string{"testdata"},
 			},
-			want: "sha256:dd247485b0c153e3a438c70b06b1e711b78b8a5c08da3f0a8c76efdf3a4d3194",
+			want: "sha256:4d2a6e6a86277040a5ccac3cac7f76878bb6636e646a41d8049d621d02410b96",
+		},
+		{
+			name: "skip files and dirs",
+			args: args{
+				key: "sha256:5c534be56eca62e756ef2ef51523feda0f19cd7c15bb0c015e3d6e3ae090bf6e",
+				analyzerVersions: map[string]int{
+					"alpine": 1,
+					"debian": 1,
+				},
+				skipFiles: []string{"app/deployment.yaml"},
+				skipDirs:  []string{"usr/java"},
+				policy:    []string{"testdata"},
+			},
+			want: "sha256:f60f4e88a501e4599a71c962521a3914981b016b9073ade6b00cb2c34e9229a6",
 		},
 		{
 			name: "with policy/non-existent dir",
@@ -140,12 +157,16 @@ func TestCalcKey(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			opt := &config.ScannerOption{
+			artifactOpt := artifact.Option{
+				SkipFiles: tt.args.skipFiles,
+				SkipDirs:  tt.args.skipDirs,
+			}
+			scannerOpt := config.ScannerOption{
 				FilePatterns: tt.args.patterns,
 				PolicyPaths:  tt.args.policy,
 				DataPaths:    tt.args.data,
 			}
-			got, err := CalcKey(tt.args.key, tt.args.analyzerVersions, tt.args.hookVersions, opt)
+			got, err := CalcKey(tt.args.key, tt.args.analyzerVersions, tt.args.hookVersions, artifactOpt, scannerOpt)
 			if tt.wantErr != "" {
 				require.Error(t, err)
 				assert.Contains(t, err.Error(), tt.wantErr)
