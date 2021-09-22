@@ -25,14 +25,13 @@ func NewLayerTar(skipFiles, skipDirs []string) LayerTar {
 }
 
 func (w LayerTar) Walk(layer io.Reader, analyzeFn WalkFunc) ([]string, []string, error) {
-	var opqDirs, whFiles []string
+	var opqDirs, whFiles, skipDirs []string
 	tr := tar.NewReader(layer)
 	for {
 		hdr, err := tr.Next()
 		if err == io.EOF {
 			break
-		}
-		if err != nil {
+		} else if err != nil {
 			return nil, nil, xerrors.Errorf("failed to extract the archive: %w", err)
 		}
 
@@ -53,16 +52,42 @@ func (w LayerTar) Walk(layer io.Reader, analyzeFn WalkFunc) ([]string, []string,
 			continue
 		}
 
-		if w.shouldSkip(filePath) {
+		switch hdr.Typeflag {
+		case tar.TypeDir:
+			if w.shouldSkipDir(filePath) {
+				skipDirs = append(skipDirs, filePath)
+				continue
+			}
+		case tar.TypeSymlink, tar.TypeLink, tar.TypeReg:
+			if w.shouldSkipFile(filePath) {
+				continue
+			}
+		default:
 			continue
 		}
 
-		if hdr.Typeflag == tar.TypeSymlink || hdr.Typeflag == tar.TypeLink || hdr.Typeflag == tar.TypeReg {
-			err = analyzeFn(filePath, hdr.FileInfo(), w.fileOnceOpener(tr))
-			if err != nil {
-				return nil, nil, xerrors.Errorf("failed to analyze file: %w", err)
-			}
+		if underSkippedDir(filePath, skipDirs) {
+			continue
+		}
+
+		// A symbolic/hard link or regular file will reach here.
+		err = analyzeFn(filePath, hdr.FileInfo(), w.fileOnceOpener(tr))
+		if err != nil {
+			return nil, nil, xerrors.Errorf("failed to analyze file: %w", err)
 		}
 	}
 	return opqDirs, whFiles, nil
+}
+
+func underSkippedDir(filePath string, skipDirs []string) bool {
+	for _, skipDir := range skipDirs {
+		rel, err := filepath.Rel(skipDir, filePath)
+		if err != nil {
+			return false
+		}
+		if !strings.HasPrefix(rel, "../") {
+			return true
+		}
+	}
+	return false
 }
