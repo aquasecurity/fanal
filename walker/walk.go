@@ -10,13 +10,12 @@ import (
 	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/fanal/analyzer"
-	"github.com/aquasecurity/fanal/log"
 	"github.com/aquasecurity/fanal/utils"
 )
 
 var (
-	skipDirs   = []string{".git", "vendor"}
-	systemDirs = []string{"proc", "sys"}
+	appDirs    = []string{".git", "vendor"}
+	systemDirs = []string{"proc", "sys", "dev"}
 )
 
 type WalkFunc func(filePath string, info os.FileInfo, opener analyzer.Opener) error
@@ -29,12 +28,14 @@ type walker struct {
 func newWalker(skipFiles, skipDirs []string) walker {
 	var cleanSkipFiles, cleanSkipDirs []string
 	for _, skipFile := range skipFiles {
-		skipFile = strings.TrimLeft(filepath.Clean(skipFile), utils.PathSeparator)
+		skipFile = filepath.Clean(filepath.ToSlash(skipFile))
+		skipFile = strings.TrimLeft(skipFile, "/")
 		cleanSkipFiles = append(cleanSkipFiles, skipFile)
 	}
 
-	for _, skipDir := range skipDirs {
-		skipDir = strings.TrimLeft(filepath.Clean(skipDir), utils.PathSeparator)
+	for _, skipDir := range append(skipDirs, systemDirs...) {
+		skipDir = filepath.Clean(filepath.ToSlash(skipDir))
+		skipDir = strings.TrimLeft(skipDir, "/")
 		cleanSkipDirs = append(cleanSkipDirs, skipDir)
 	}
 
@@ -44,7 +45,8 @@ func newWalker(skipFiles, skipDirs []string) walker {
 	}
 }
 
-func (w walker) shouldSkip(filePath string) bool {
+func (w *walker) shouldSkipFile(filePath string) bool {
+	filePath = filepath.ToSlash(filePath)
 	filePath = strings.TrimLeft(filePath, "/")
 
 	// skip files
@@ -52,30 +54,29 @@ func (w walker) shouldSkip(filePath string) bool {
 		return true
 	}
 
+	return false
+}
+
+func (w *walker) shouldSkipDir(dir string) bool {
+	dir = filepath.ToSlash(dir)
+	dir = strings.TrimLeft(dir, "/")
+
 	// skip application dirs
-	for _, path := range strings.Split(filePath, utils.PathSeparator) {
-		if utils.StringInSlice(path, skipDirs) {
-			return true
-		}
+	base := filepath.Base(dir)
+	if utils.StringInSlice(base, appDirs) {
+		return true
 	}
 
 	// skip system dirs and specified dirs
-	for _, skipDir := range append(w.skipDirs, systemDirs...) {
-		rel, err := filepath.Rel(skipDir, filePath)
-		if err != nil {
-			log.Logger.Warnf("Unexpected error while skipping directories: %s", err)
-			return false
-		}
-		if !strings.HasPrefix(rel, "..") {
-			return true
-		}
+	if utils.StringInSlice(dir, w.skipDirs) {
+		return true
 	}
 
 	return false
 }
 
 // fileOnceOpener opens a file once and the content is shared so that some analyzers can use the same data
-func (w walker) fileOnceOpener(r io.Reader) func() ([]byte, error) {
+func (w *walker) fileOnceOpener(r io.Reader) func() ([]byte, error) {
 	var once sync.Once
 	var b []byte
 	var err error
@@ -85,7 +86,7 @@ func (w walker) fileOnceOpener(r io.Reader) func() ([]byte, error) {
 			b, err = io.ReadAll(r)
 		})
 		if err != nil {
-			return nil, xerrors.Errorf("unable to read tar file: %w", err)
+			return nil, xerrors.Errorf("unable to read the file: %w", err)
 		}
 		return b, nil
 	}
