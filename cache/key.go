@@ -4,7 +4,6 @@ import (
 	"crypto/sha256"
 	"encoding/json"
 	"fmt"
-	"path/filepath"
 
 	"github.com/aquasecurity/fanal/artifact"
 
@@ -21,27 +20,16 @@ func CalcKey(id string, analyzerVersions, hookVersions map[string]int, artifactO
 
 	h := sha256.New()
 
-	// Write id
-	if _, err := h.Write([]byte(id)); err != nil {
-		return "", xerrors.Errorf("sha256 error: %w", err)
-	}
+	// Write ID, analyzer/hook versions, and skipped files/dirs
+	keyBase := struct {
+		ID               string
+		AnalyzerVersions map[string]int
+		HookVersions     map[string]int
+		SkipFiles        []string
+		SkipDirs         []string
+	}{id, analyzerVersions, hookVersions, artifactOpt.SkipFiles, artifactOpt.SkipDirs}
 
-	// Write analyzer versions
-	if err := json.NewEncoder(h).Encode(analyzerVersions); err != nil {
-		return "", xerrors.Errorf("json encode error: %w", err)
-	}
-
-	// Write hook versions
-	if err := json.NewEncoder(h).Encode(hookVersions); err != nil {
-		return "", xerrors.Errorf("json encode error: %w", err)
-	}
-
-	// Write skipped files and dirs
-	var skipped []string
-	for _, s := range append(artifactOpt.SkipDirs, artifactOpt.SkipFiles...) {
-		skipped = append(skipped, filepath.Clean(s))
-	}
-	if err := json.NewEncoder(h).Encode(skipped); err != nil {
+	if err := json.NewEncoder(h).Encode(keyBase); err != nil {
 		return "", xerrors.Errorf("json encode error: %w", err)
 	}
 

@@ -13,8 +13,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/aquasecurity/fanal/artifact"
-
 	"github.com/docker/docker/client"
 	"github.com/docker/go-connections/nat"
 	"github.com/stretchr/testify/assert"
@@ -25,6 +23,7 @@ import (
 	_ "github.com/aquasecurity/fanal/analyzer/all"
 	"github.com/aquasecurity/fanal/analyzer/config"
 	"github.com/aquasecurity/fanal/applier"
+	"github.com/aquasecurity/fanal/artifact"
 	aimage "github.com/aquasecurity/fanal/artifact/image"
 	"github.com/aquasecurity/fanal/cache"
 	"github.com/aquasecurity/fanal/image"
