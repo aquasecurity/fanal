@@ -23,13 +23,19 @@ func NewDir(skipFiles, skipDirs []string) Dir {
 func (w Dir) Walk(root string, fn WalkFunc) error {
 	// walk function called for every path found
 	walkFn := func(pathname string, fi os.FileInfo) error {
-		if !fi.Mode().IsRegular() {
+		pathname = filepath.Clean(pathname)
+
+		if fi.IsDir() {
+			if w.shouldSkipDir(pathname) {
+				return filepath.SkipDir
+			}
 			return nil
-		} else if w.shouldSkip(pathname) {
-			return filepath.SkipDir
+		} else if !fi.Mode().IsRegular() {
+			return nil
+		} else if w.shouldSkipFile(pathname) {
+			return nil
 		}
 
-		pathname = filepath.Clean(pathname)
 		f, err := os.Open(pathname)
 		if err != nil {
 			return xerrors.Errorf("file open error (%s): %w", pathname, err)
