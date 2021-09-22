@@ -16,7 +16,7 @@ type Option struct {
 	SkipDirs          []string
 }
 
-func (o Option) Sort() {
+func (o *Option) Sort() {
 	sort.Slice(o.DisabledAnalyzers, func(i, j int) bool {
 		return o.DisabledAnalyzers[i] < o.DisabledAnalyzers[j]
 	})

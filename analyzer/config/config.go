@@ -27,7 +27,7 @@ type ScannerOption struct {
 	DataPaths    []string
 }
 
-func (o ScannerOption) Sort() {
+func (o *ScannerOption) Sort() {
 	sort.Strings(o.Namespaces)
 	sort.Strings(o.FilePatterns)
 	sort.Strings(o.PolicyPaths)
