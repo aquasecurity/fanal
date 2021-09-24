@@ -2,9 +2,12 @@ package walker
 
 import (
 	"archive/tar"
+	"debug/elf"
 	"io"
 	"io/ioutil"
+	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"sync"
 
@@ -48,8 +51,10 @@ func WalkLayerTar(layer io.Reader, analyzeFn WalkFunc) ([]string, []string, erro
 		if isIgnored(filePath) {
 			continue
 		}
-
 		if hdr.Typeflag == tar.TypeSymlink || hdr.Typeflag == tar.TypeLink || hdr.Typeflag == tar.TypeReg {
+			if hdr.FileInfo().Size() > getLargeFileSize() && !isCorrectGoBinary(tr, hdr.Name) {
+				continue
+			}
 			err = analyzeFn(filePath, hdr.FileInfo(), tarOnceOpener(tr))
 			if err != nil {
 				return nil, nil, xerrors.Errorf("failed to analyze file: %w", err)
@@ -59,6 +64,37 @@ func WalkLayerTar(layer io.Reader, analyzeFn WalkFunc) ([]string, []string, erro
 	return opqDirs, whFiles, nil
 }
 
+func getLargeFileSize() int64 {
+	const DEFAULT_LARGE_SIZE = 100000000
+	v, err := strconv.ParseInt(os.Getenv("TRIVY_LARGE_FILE_SIZE"), 10, 64)
+	if err != nil {
+		return DEFAULT_LARGE_SIZE
+	}
+	return v
+}
+
+func isCorrectGoBinary(r io.Reader, fn string) bool {
+	outputFilename := filepath.Join(os.TempDir(), fn)
+	output, err := os.Create(outputFilename)
+	if err != nil {
+		return false
+	}
+	defer func() {
+		output.Close()
+		os.Remove(outputFilename)
+	}()
+	if _, err := io.Copy(output, r); err != nil {
+		return false
+	}
+	f, err := elf.NewFile(output)
+	if err != nil {
+		return false
+	}
+	if sect := f.Section(".go.buildinfo"); sect != nil {
+		return true
+	}
+	return false
+}
 // tarOnceOpener reads a file once and the content is shared so that some analyzers can use the same data
 func tarOnceOpener(r io.Reader) func() ([]byte, error) {
 	var once sync.Once
