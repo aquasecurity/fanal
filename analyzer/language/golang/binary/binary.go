@@ -36,6 +36,11 @@ func (a gobinaryLibraryAnalyzer) Required(_ string, fileInfo os.FileInfo) bool {
 		return false
 	}
 
+	const MaxFileSize = 200000000
+	if fileInfo.Size() > MaxFileSize {
+		return false
+	}
+
 	// Check executable file
 	if mode.Perm()&0111 != 0 {
 		return true
