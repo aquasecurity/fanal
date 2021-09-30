@@ -61,13 +61,13 @@ func (w *walker) shouldSkipDir(dir string) bool {
 	dir = filepath.ToSlash(dir)
 	dir = strings.TrimLeft(dir, "/")
 
-	// skip application dirs
+	// Skip application dirs (relative path)
 	base := filepath.Base(dir)
 	if utils.StringInSlice(base, appDirs) {
 		return true
 	}
 
-	// skip system dirs and specified dirs
+	// Skip system dirs and specified dirs (absolute path)
 	if utils.StringInSlice(dir, w.skipDirs) {
 		return true
 	}
