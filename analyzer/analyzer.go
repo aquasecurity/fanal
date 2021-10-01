@@ -31,6 +31,7 @@ type AnalysisTarget struct {
 	Dir      string
 	FilePath string
 	Content  []byte
+	Ctx      context.Context
 }
 
 type analyzer interface {
@@ -215,7 +216,7 @@ func (a Analyzer) AnalyzeFile(ctx context.Context, wg *sync.WaitGroup, limit *se
 				return
 			}
 			result.Merge(ret)
-		}(d, AnalysisTarget{Dir: dir, FilePath: filePath, Content: b})
+		}(d, AnalysisTarget{Dir: dir, FilePath: filePath, Content: b, Ctx: ctx})
 	}
 	return nil
 }
