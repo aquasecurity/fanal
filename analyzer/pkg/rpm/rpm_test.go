@@ -598,3 +598,46 @@ func TestParseRpmInfo(t *testing.T) {
 		})
 	}
 }
+
+func Test_splitFileName(t *testing.T) {
+	type args struct {
+		filename string
+	}
+	tests := []struct {
+		name     string
+		args     args
+		wantName string
+		wantVer  string
+		wantRel  string
+		wantErr  bool
+	}{
+		{
+			name: "invalid name",
+			args: args{
+				filename: "elasticsearch-5.6.16-1-src.rpm",
+			},
+			wantName: "",
+			wantVer:  "",
+			wantRel:  "",
+			wantErr:  true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotName, gotVer, gotRel, err := splitFileName(tt.args.filename)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("splitFileName() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if gotName != tt.wantName {
+				t.Errorf("splitFileName() gotName = %v, want %v", gotName, tt.wantName)
+			}
+			if gotVer != tt.wantVer {
+				t.Errorf("splitFileName() gotVer = %v, want %v", gotVer, tt.wantVer)
+			}
+			if gotRel != tt.wantRel {
+				t.Errorf("splitFileName() gotRel = %v, want %v", gotRel, tt.wantRel)
+			}
+		})
+	}
+}
