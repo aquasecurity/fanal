@@ -1,13 +1,12 @@
 package rpm
 
 import (
-	"errors"
 	"io/ioutil"
-	"log"
 	"os"
 	"path/filepath"
 	"strings"
 
+	"github.com/aquasecurity/fanal/log"
 	rpmdb "github.com/knqyf263/go-rpmdb/pkg"
 	"golang.org/x/xerrors"
 
@@ -26,7 +25,7 @@ var requiredFiles = []string{
 	"usr/lib/sysimage/rpm/Packages",
 	"var/lib/rpm/Packages",
 }
-var errUnexpectedNameFormat = errors.New("unexpected name format")
+var errUnexpectedNameFormat = xerrors.New("unexpected name format")
 
 type rpmPkgAnalyzer struct{}
 
@@ -89,7 +88,7 @@ func (a rpmPkgAnalyzer) parsePkgInfo(packageBytes []byte) ([]types.Package, []st
 			// source epoch is not included in SOURCERPM
 			srcName, srcVer, srcRel, err = splitFileName(pkg.SourceRpm)
 			if err != nil {
-				log.Printf("Invalid Source RPM Found: %s", pkg.SourceRpm)
+				log.Logger.Debugf("Invalid Source RPM Found: %s", pkg.SourceRpm)
 			}
 		}
 

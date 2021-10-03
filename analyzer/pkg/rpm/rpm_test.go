@@ -600,22 +600,25 @@ func TestParseRpmInfo(t *testing.T) {
 }
 
 func Test_splitFileName(t *testing.T) {
-	type args struct {
-		filename string
-	}
 	tests := []struct {
 		name     string
-		args     args
+		filename string
 		wantName string
 		wantVer  string
 		wantRel  string
 		wantErr  bool
 	}{
 		{
-			name: "invalid name",
-			args: args{
-				filename: "elasticsearch-5.6.16-1-src.rpm",
-			},
+			name:     "valid name",
+			filename: "glibc-2.17-307.el7.1.src.rpm",
+			wantName: "glibc",
+			wantVer:  "2.17",
+			wantRel:  "307.el7.1",
+			wantErr:  false,
+		},
+		{
+			name:     "invalid name",
+			filename: "elasticsearch-5.6.16-1-src.rpm",
 			wantName: "",
 			wantVer:  "",
 			wantRel:  "",
@@ -624,20 +627,15 @@ func Test_splitFileName(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotName, gotVer, gotRel, err := splitFileName(tt.args.filename)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("splitFileName() error = %v, wantErr %v", err, tt.wantErr)
-				return
+			gotName, gotVer, gotRel, err := splitFileName(tt.filename)
+			if tt.wantErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
 			}
-			if gotName != tt.wantName {
-				t.Errorf("splitFileName() gotName = %v, want %v", gotName, tt.wantName)
-			}
-			if gotVer != tt.wantVer {
-				t.Errorf("splitFileName() gotVer = %v, want %v", gotVer, tt.wantVer)
-			}
-			if gotRel != tt.wantRel {
-				t.Errorf("splitFileName() gotRel = %v, want %v", gotRel, tt.wantRel)
-			}
+			assert.Equal(t, tt.wantName, gotName)
+			assert.Equal(t, tt.wantVer, gotVer)
+			assert.Equal(t, tt.wantRel, gotRel)
 		})
 	}
 }
