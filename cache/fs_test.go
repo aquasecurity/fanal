@@ -14,7 +14,6 @@ import (
 	bolt "go.etcd.io/bbolt"
 
 	"github.com/aquasecurity/fanal/types"
-	depTypes "github.com/aquasecurity/go-dep-parser/pkg/types"
 )
 
 func newTempDB(t *testing.T, dbPath string) (string, error) {
@@ -175,18 +174,14 @@ func TestFSCache_PutBlob(t *testing.T) {
 						{
 							Type:     "composer",
 							FilePath: "php-app/composer.lock",
-							Libraries: []types.LibraryInfo{
+							Libraries: []types.Package{
 								{
-									Library: depTypes.Library{
-										Name:    "guzzlehttp/guzzle",
-										Version: "6.2.0",
-									},
+									Name:    "guzzlehttp/guzzle",
+									Version: "6.2.0",
 								},
 								{
-									Library: depTypes.Library{
-										Name:    "guzzlehttp/promises",
-										Version: "v1.3.1",
-									},
+									Name:    "guzzlehttp/promises",
+									Version: "v1.3.1",
 								},
 							},
 						},
@@ -222,17 +217,13 @@ func TestFSCache_PutBlob(t *testing.T) {
 				      "FilePath": "php-app/composer.lock",
 				      "Libraries": [
                         {
-                           "Library":{
-                              "Name":"guzzlehttp/guzzle",
-                              "Version":"6.2.0"
-                           },
+                           "Name":"guzzlehttp/guzzle",
+                           "Version":"6.2.0",
 						   "Layer": {}
                         },
                         {
-                           "Library":{
-                              "Name":"guzzlehttp/promises",
-                              "Version":"v1.3.1"
-                           },
+                           "Name":"guzzlehttp/promises",
+                           "Version":"v1.3.1",
 						   "Layer": {}
                         }
 				      ]
