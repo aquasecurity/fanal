@@ -1,6 +1,7 @@
 package binary
 
 import (
+	"context"
 	"io/ioutil"
 	"os"
 	"testing"
@@ -53,7 +54,8 @@ func Test_gobinaryLibraryAnalyzer_Analyze(t *testing.T) {
 			require.NoError(t, err)
 
 			a := gobinaryLibraryAnalyzer{}
-			got, err := a.Analyze(analyzer.AnalysisTarget{
+			ctx := context.Background()
+			got, err := a.Analyze(ctx, analyzer.AnalysisTarget{
 				FilePath: tt.inputFile,
 				Content:  b,
 			})

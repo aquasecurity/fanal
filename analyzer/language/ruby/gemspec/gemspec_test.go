@@ -1,6 +1,7 @@
 package gemspec
 
 import (
+	"context"
 	"io/ioutil"
 	"testing"
 
@@ -53,7 +54,8 @@ func Test_gemspecLibraryAnalyzer_Analyze(t *testing.T) {
 			require.NoError(t, err)
 
 			a := gemspecLibraryAnalyzer{}
-			got, err := a.Analyze(analyzer.AnalysisTarget{
+			ctx := context.Background()
+			got, err := a.Analyze(ctx, analyzer.AnalysisTarget{
 				FilePath: tt.inputFile,
 				Content:  b,
 			})

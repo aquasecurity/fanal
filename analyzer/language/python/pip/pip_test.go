@@ -1,6 +1,7 @@
 package pip
 
 import (
+	"context"
 	"os"
 	"testing"
 
@@ -47,7 +48,8 @@ func Test_pipAnalyzer_Analyze(t *testing.T) {
 			require.NoError(t, err)
 
 			a := pipLibraryAnalyzer{}
-			got, err := a.Analyze(analyzer.AnalysisTarget{
+			ctx := context.Background()
+			got, err := a.Analyze(ctx, analyzer.AnalysisTarget{
 				FilePath: tt.inputFile,
 				Content:  b,
 			})
