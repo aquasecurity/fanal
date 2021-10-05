@@ -341,10 +341,9 @@ func TestRedisCache_GetBlob(t *testing.T) {
 				require.NotNil(t, err)
 				assert.Contains(t, err.Error(), tt.wantErr)
 				return
-			} else {
-				assert.NoError(t, err)
 			}
 
+			assert.NoError(t, err)
 			assert.Equal(t, tt.want, got)
 		})
 	}
