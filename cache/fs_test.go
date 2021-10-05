@@ -76,7 +76,7 @@ func TestFSCache_GetBlob(t *testing.T) {
 				layerID: "sha256:24df0d4e20c0f42d3703bf1f1db2bdd77346c7956f74f423603d651e8e5ae8a7/11101",
 			},
 			want: types.BlobInfo{
-				SchemaVersion: 1,
+				SchemaVersion: 2,
 				OS: &types.OS{
 					Family: "alpine",
 					Name:   "3.10",
