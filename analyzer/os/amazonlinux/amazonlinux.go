@@ -2,9 +2,9 @@ package amazonlinux
 
 import (
 	"bufio"
-	"bytes"
 	"context"
 	"fmt"
+	"io"
 	"os"
 	"strings"
 
@@ -30,7 +30,7 @@ var requiredFiles = []string{"etc/system-release"}
 type amazonlinuxOSAnalyzer struct{}
 
 func (a amazonlinuxOSAnalyzer) Analyze(_ context.Context, target analyzer.AnalysisTarget) (*analyzer.AnalysisResult, error) {
-	foundOS, err := a.parseRelease(target.Content)
+	foundOS, err := a.parseRelease(target.ContentReader)
 	if err != nil {
 		return nil, err
 	}
@@ -39,8 +39,8 @@ func (a amazonlinuxOSAnalyzer) Analyze(_ context.Context, target analyzer.Analys
 	}, nil
 }
 
-func (a amazonlinuxOSAnalyzer) parseRelease(content []byte) (types.OS, error) {
-	scanner := bufio.NewScanner(bytes.NewBuffer(content))
+func (a amazonlinuxOSAnalyzer) parseRelease(r io.Reader) (types.OS, error) {
+	scanner := bufio.NewScanner(r)
 	for scanner.Scan() {
 		line := scanner.Text()
 		fields := strings.Fields(line)

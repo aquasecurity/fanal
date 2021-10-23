@@ -1,6 +1,7 @@
 package amazonlinux
 
 import (
+	"bytes"
 	"context"
 	"testing"
 
@@ -23,8 +24,8 @@ func Test_amazonlinuxOSAnalyzer_Analyze(t *testing.T) {
 		{
 			name: "happy path amazon linux 1",
 			target: analyzer.AnalysisTarget{
-				FilePath: "etc/system-release",
-				Content:  []byte(`Amazon Linux AMI release 2018.03`),
+				FilePath:      "etc/system-release",
+				ContentReader: bytes.NewReader([]byte(`Amazon Linux AMI release 2018.03`)),
 			},
 			want: &analyzer.AnalysisResult{
 				OS: &types.OS{
@@ -36,8 +37,8 @@ func Test_amazonlinuxOSAnalyzer_Analyze(t *testing.T) {
 		{
 			name: "happy path amazon linux 2",
 			target: analyzer.AnalysisTarget{
-				FilePath: "etc/system-release",
-				Content:  []byte(`Amazon Linux release 2 (Karoo)`),
+				FilePath:      "etc/system-release",
+				ContentReader: bytes.NewReader([]byte(`Amazon Linux release 2 (Karoo)`)),
 			},
 			want: &analyzer.AnalysisResult{
 				OS: &types.OS{
@@ -49,16 +50,16 @@ func Test_amazonlinuxOSAnalyzer_Analyze(t *testing.T) {
 		{
 			name: "sad path amazon linux 2 without code name",
 			target: analyzer.AnalysisTarget{
-				FilePath: "etc/system-release",
-				Content:  []byte(`Amazon Linux release 2`),
+				FilePath:      "etc/system-release",
+				ContentReader: bytes.NewReader([]byte(`Amazon Linux release 2`)),
 			},
 			wantErr: aos.AnalyzeOSError.Error(),
 		},
 		{
 			name: "sad path",
 			target: analyzer.AnalysisTarget{
-				FilePath: "etc/system-release",
-				Content:  []byte(`foo bar`),
+				FilePath:      "etc/system-release",
+				ContentReader: bytes.NewReader([]byte(`foo bar`)),
 			},
 			wantErr: aos.AnalyzeOSError.Error(),
 		},

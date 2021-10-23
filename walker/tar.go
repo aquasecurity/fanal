@@ -2,9 +2,13 @@ package walker
 
 import (
 	"archive/tar"
+	"bytes"
 	"io"
+	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 
 	"golang.org/x/xerrors"
 )
@@ -71,7 +75,7 @@ func (w LayerTar) Walk(layer io.Reader, analyzeFn WalkFunc) ([]string, []string,
 		}
 
 		// A symbolic/hard link or regular file will reach here.
-		err = analyzeFn(filePath, hdr.FileInfo(), w.fileOnceOpener(tr))
+		err = analyzeFn(filePath, hdr.FileInfo(), w.fileWithTarOpener(hdr.FileInfo(), tr))
 		if err != nil {
 			return nil, nil, xerrors.Errorf("failed to analyze file: %w", err)
 		}
@@ -90,4 +94,48 @@ func underSkippedDir(filePath string, skipDirs []string) bool {
 		}
 	}
 	return false
+}
+
+func (w *walker) fileWithTarOpener(fi os.FileInfo, r io.Reader) func() (io.ReadCloser, func() error, error) {
+
+	var once sync.Once
+	var b []byte
+	var tempFilePath string
+	var tempDirPath string
+	var err error
+
+	return func() (io.ReadCloser, func() error, error) {
+		once.Do(func() {
+			if fi.Size() > N {
+				var f *os.File
+				tempDirPath, err = ioutil.TempDir("", "trivy-*")
+				f, err = os.CreateTemp(tempDirPath, "trivy-*")
+				_, err = io.Copy(f, r)
+
+				tempFilePath = filepath.Join(tempDirPath, f.Name())
+			} else {
+				b, err = io.ReadAll(r)
+			}
+		})
+		if err != nil {
+			return nil, nil, xerrors.Errorf("unable to read the file: %w", err)
+		}
+
+		if fi.Size() > N {
+			f, err := os.Open(tempFilePath)
+			if err != nil {
+				return nil, nil, xerrors.Errorf("failed to open the tmp file: %w", err)
+			}
+			return f, func() error {
+				return os.RemoveAll(tempDirPath)
+			}, nil
+		} else {
+			return io.NopCloser(bytes.NewReader(b)),
+				func() error {
+					b = []byte{}
+					return nil
+				},
+				nil
+		}
+	}
 }

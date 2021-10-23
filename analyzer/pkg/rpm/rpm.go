@@ -2,6 +2,7 @@ package rpm
 
 import (
 	"context"
+	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -31,7 +32,7 @@ var errUnexpectedNameFormat = xerrors.New("unexpected name format")
 type rpmPkgAnalyzer struct{}
 
 func (a rpmPkgAnalyzer) Analyze(_ context.Context, target analyzer.AnalysisTarget) (*analyzer.AnalysisResult, error) {
-	parsedPkgs, installedFiles, err := a.parsePkgInfo(target.Content)
+	parsedPkgs, installedFiles, err := a.parsePkgInfo(target.ContentReader)
 	if err != nil {
 		return nil, xerrors.Errorf("failed to parse rpmdb: %w", err)
 	}
@@ -47,7 +48,7 @@ func (a rpmPkgAnalyzer) Analyze(_ context.Context, target analyzer.AnalysisTarge
 	}, nil
 }
 
-func (a rpmPkgAnalyzer) parsePkgInfo(packageBytes []byte) ([]types.Package, []string, error) {
+func (a rpmPkgAnalyzer) parsePkgInfo(rc io.Reader) ([]types.Package, []string, error) {
 	tmpDir, err := ioutil.TempDir("", "rpm")
 	defer os.RemoveAll(tmpDir)
 	if err != nil {
@@ -55,9 +56,13 @@ func (a rpmPkgAnalyzer) parsePkgInfo(packageBytes []byte) ([]types.Package, []st
 	}
 
 	filename := filepath.Join(tmpDir, "Packages")
-	err = ioutil.WriteFile(filename, packageBytes, 0700)
+	f, err := os.Create(filename)
 	if err != nil {
-		return nil, nil, xerrors.Errorf("failed to write a package file: %w", err)
+		return nil, nil, xerrors.Errorf("failed to create a package file: %w", err)
+	}
+	_, err = io.Copy(f, rc)
+	if err != nil {
+		return nil, nil, xerrors.Errorf("failed to copy a package file: %w", err)
 	}
 
 	// rpm-python 4.11.3 rpm-4.11.3-35.el7.src.rpm

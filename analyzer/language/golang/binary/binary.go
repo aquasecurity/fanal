@@ -26,7 +26,7 @@ const (
 type gobinaryLibraryAnalyzer struct{}
 
 func (a gobinaryLibraryAnalyzer) Analyze(_ context.Context, target analyzer.AnalysisTarget) (*analyzer.AnalysisResult, error) {
-	res, err := language.Analyze(types.GoBinary, target.FilePath, target.Content, binary.Parse)
+	res, err := language.Analyze(types.GoBinary, target.FilePath, target.ContentReader, binary.Parse)
 	if errors.Is(err, binary.ErrUnrecognizedExe) {
 		return nil, nil
 	} else if err != nil {

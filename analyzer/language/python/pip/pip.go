@@ -23,7 +23,7 @@ var requiredFile = "requirements.txt"
 type pipLibraryAnalyzer struct{}
 
 func (a pipLibraryAnalyzer) Analyze(_ context.Context, target analyzer.AnalysisTarget) (*analyzer.AnalysisResult, error) {
-	res, err := language.Analyze(types.Pip, target.FilePath, target.Content, pip.Parse)
+	res, err := language.Analyze(types.Pip, target.FilePath, target.ContentReader, pip.Parse)
 	if err != nil {
 		return nil, xerrors.Errorf("unable to parse requirements.txt: %w", err)
 	}

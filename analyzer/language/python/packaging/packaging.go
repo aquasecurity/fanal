@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"context"
 	"io"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -43,18 +44,22 @@ type packagingAnalyzer struct{}
 
 // Analyze analyzes egg and wheel files.
 func (a packagingAnalyzer) Analyze(_ context.Context, target analyzer.AnalysisTarget) (*analyzer.AnalysisResult, error) {
-	content := target.Content
+	var r = target.ContentReader
 
 	// .egg file is zip format and PKG-INFO needs to be extracted from the zip file.
 	if strings.HasSuffix(target.FilePath, ".egg") {
+		content, err := ioutil.ReadAll(r)
+		if err != nil {
+			return nil, xerrors.Errorf("failed to read the egg file: %w", err)
+		}
+
 		pkginfoInZip, err := a.analyzeEggZip(content)
 		if err != nil {
 			return nil, xerrors.Errorf("egg analysis error: %w", err)
 		}
-		content = pkginfoInZip
+		r = bytes.NewReader(pkginfoInZip)
 	}
 
-	r := bytes.NewReader(content)
 	lib, err := packaging.Parse(r)
 	if err != nil {
 		return nil, xerrors.Errorf("unable to parse %s: %w", target.FilePath, err)

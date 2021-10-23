@@ -1,9 +1,11 @@
 package analyzer_test
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"sync"
 	"testing"
@@ -364,12 +366,15 @@ func TestAnalyzeFile(t *testing.T) {
 			require.NoError(t, err)
 
 			ctx := context.Background()
-			err = a.AnalyzeFile(ctx, &wg, limit, got, "", tt.args.filePath, info, func() ([]byte, error) {
-				if tt.args.testFilePath == "testdata/error" {
-					return nil, xerrors.New("error")
-				}
-				return os.ReadFile(tt.args.testFilePath)
-			})
+			err = a.AnalyzeFile(ctx, &wg, limit, got, "", tt.args.filePath, info,
+				func() (io.ReadCloser, func() error, error) {
+					if tt.args.testFilePath == "testdata/error" {
+						return nil, nil, xerrors.New("error")
+					}
+					b, err := os.ReadFile(tt.args.testFilePath)
+					return io.NopCloser(bytes.NewReader(b)), func() error { return nil }, err
+				},
+			)
 
 			wg.Wait()
 			if tt.wantErr != "" {

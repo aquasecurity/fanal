@@ -1,8 +1,12 @@
 package walker
 
 import (
+	"bytes"
+	"io"
+	"io/ioutil"
 	"os"
 	"path/filepath"
+	"sync"
 
 	swalker "github.com/saracen/walker"
 	"golang.org/x/xerrors"
@@ -36,13 +40,7 @@ func (w Dir) Walk(root string, fn WalkFunc) error {
 			return nil
 		}
 
-		f, err := os.Open(pathname)
-		if err != nil {
-			return xerrors.Errorf("file open error (%s): %w", pathname, err)
-		}
-		defer f.Close()
-
-		if err = fn(pathname, fi, w.fileOnceOpener(f)); err != nil {
+		if err := fn(pathname, fi, w.fileOpener(fi, pathname)); err != nil {
 			return xerrors.Errorf("failed to analyze file: %w", err)
 		}
 		return nil
@@ -64,4 +62,27 @@ func (w Dir) Walk(root string, fn WalkFunc) error {
 		return xerrors.Errorf("walk error: %w", err)
 	}
 	return nil
+}
+
+func (w *walker) fileOpener(fi os.FileInfo, pathname string) func() (io.ReadCloser, func() error, error) {
+	var once sync.Once
+	var b []byte
+	var err error
+
+	return func() (io.ReadCloser, func() error, error) {
+		if fi.Size() > N {
+			f, err := os.Open(pathname)
+			if err != nil {
+				return nil, nil, xerrors.Errorf("unable to open the file: %w", err)
+			}
+			return f, func() error { return nil }, nil
+		}
+		once.Do(func() {
+			b, err = ioutil.ReadFile(pathname)
+		})
+		if err != nil {
+			return nil, nil, xerrors.Errorf("unable to read the file: %w", err)
+		}
+		return io.NopCloser(bytes.NewReader(b)), func() error { return nil }, nil
+	}
 }

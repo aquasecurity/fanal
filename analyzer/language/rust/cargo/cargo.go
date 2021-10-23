@@ -25,7 +25,7 @@ var requiredFiles = []string{"Cargo.lock"}
 type cargoLibraryAnalyzer struct{}
 
 func (a cargoLibraryAnalyzer) Analyze(_ context.Context, target analyzer.AnalysisTarget) (*analyzer.AnalysisResult, error) {
-	res, err := language.Analyze(types.Cargo, target.FilePath, target.Content, cargo.Parse)
+	res, err := language.Analyze(types.Cargo, target.FilePath, target.ContentReader, cargo.Parse)
 	if err != nil {
 		return nil, xerrors.Errorf("error with Cargo.lock: %w", err)
 	}

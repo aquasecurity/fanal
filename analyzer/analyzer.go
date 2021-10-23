@@ -2,6 +2,7 @@ package analyzer
 
 import (
 	"context"
+	"io"
 	"os"
 	"sort"
 	"strings"
@@ -28,9 +29,9 @@ var (
 )
 
 type AnalysisTarget struct {
-	Dir      string
-	FilePath string
-	Content  []byte
+	Dir           string
+	FilePath      string
+	ContentReader io.Reader
 }
 
 type analyzer interface {
@@ -55,7 +56,7 @@ func RegisterConfigAnalyzer(analyzer configAnalyzer) {
 	configAnalyzers[analyzer.Type()] = analyzer
 }
 
-type Opener func() ([]byte, error)
+type Opener func() (io.ReadCloser, func() error, error)
 
 type AnalysisResult struct {
 	m                    sync.Mutex
@@ -186,7 +187,7 @@ func (a Analyzer) ImageConfigAnalyzerVersions() map[string]int {
 }
 
 func (a Analyzer) AnalyzeFile(ctx context.Context, wg *sync.WaitGroup, limit *semaphore.Weighted, result *AnalysisResult,
-	dir, filePath string, info os.FileInfo, opener Opener) error {
+	dir, filePath string, info os.FileInfo, opener Opener) (err error) {
 	if info.IsDir() {
 		return nil
 	}
@@ -195,10 +196,14 @@ func (a Analyzer) AnalyzeFile(ctx context.Context, wg *sync.WaitGroup, limit *se
 		if !d.Required(strings.TrimLeft(filePath, "/"), info) {
 			continue
 		}
-		b, err := opener()
+		rc, cleaner, err := opener()
 		if err != nil {
 			return xerrors.Errorf("unable to open a file (%s): %w", filePath, err)
 		}
+		defer func() {
+			rc.Close()
+			err = cleaner()
+		}()
 
 		if err = limit.Acquire(ctx, 1); err != nil {
 			return xerrors.Errorf("semaphore acquire: %w", err)
@@ -215,7 +220,7 @@ func (a Analyzer) AnalyzeFile(ctx context.Context, wg *sync.WaitGroup, limit *se
 				return
 			}
 			result.Merge(ret)
-		}(d, AnalysisTarget{Dir: dir, FilePath: filePath, Content: b})
+		}(d, AnalysisTarget{Dir: dir, FilePath: filePath, ContentReader: rc})
 	}
 	return nil
 }

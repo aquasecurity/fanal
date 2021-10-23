@@ -25,7 +25,7 @@ var requiredFiles = []string{"yarn.lock"}
 type yarnLibraryAnalyzer struct{}
 
 func (a yarnLibraryAnalyzer) Analyze(_ context.Context, target analyzer.AnalysisTarget) (*analyzer.AnalysisResult, error) {
-	res, err := language.Analyze(types.Yarn, target.FilePath, target.Content, yarn.Parse)
+	res, err := language.Analyze(types.Yarn, target.FilePath, target.ContentReader, yarn.Parse)
 	if err != nil {
 		return nil, xerrors.Errorf("unable to parse yarn.lock: %w", err)
 	}
