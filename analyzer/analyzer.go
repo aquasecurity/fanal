@@ -123,9 +123,7 @@ func (r *AnalysisResult) Merge(new *AnalysisResult) {
 		r.Applications = append(r.Applications, new.Applications...)
 	}
 
-	for _, m := range new.Configs {
-		r.Configs = append(r.Configs, m)
-	}
+	r.Configs = append(r.Configs, new.Configs...)
 
 	r.SystemInstalledFiles = append(r.SystemInstalledFiles, new.SystemInstalledFiles...)
 }
