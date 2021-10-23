@@ -212,6 +212,7 @@ func (a Analyzer) AnalyzeFile(ctx context.Context, wg *sync.WaitGroup, limit *se
 		go func(a analyzer, target AnalysisTarget) {
 			defer limit.Release(1)
 			defer wg.Done()
+			defer rc.Close()
 
 			ret, err := a.Analyze(ctx, target)
 			if err != nil && !xerrors.Is(err, aos.AnalyzeOSError) {
