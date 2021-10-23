@@ -109,24 +109,47 @@ func (w *walker) fileWithTarOpener(fi os.FileInfo, r io.Reader) func() (io.ReadC
 			if fi.Size() > N {
 				var f *os.File
 				tempDirPath, err = ioutil.TempDir("", "trivy-*")
+				if err != nil {
+					err = xerrors.Errorf("failed to create the temp dir: %w", err)
+					return
+				}
+
 				f, err = os.CreateTemp(tempDirPath, "trivy-*")
+				if err != nil {
+					err = xerrors.Errorf("failed to create the temp file: %w", err)
+					return
+				}
+
 				_, err = io.Copy(f, r)
+				if err != nil {
+					err = xerrors.Errorf("failed to copy: %w", err)
+					return
+				}
+
 				tempFilePath = f.Name()
 			} else {
 				b, err = io.ReadAll(r)
+				if err != nil {
+					err = xerrors.Errorf("unable to read the file: %w", err)
+					return
+				}
 			}
 		})
 		if err != nil {
-			return nil, nil, xerrors.Errorf("unable to read the file: %w", err)
+			return nil, nil, xerrors.Errorf("failed to once do: %w", err)
 		}
 
 		if fi.Size() > N {
 			f, err := os.Open(tempFilePath)
 			if err != nil {
-				return nil, nil, xerrors.Errorf("failed to open the tmp file: %w", err)
+				return nil, nil, xerrors.Errorf("failed to open the temp file: %w", err)
 			}
+
 			return f, func() error {
-				return os.RemoveAll(tempDirPath)
+				if err := os.RemoveAll(tempDirPath); err != nil {
+					return xerrors.Errorf("failed to remove all: %w", err)
+				}
+				return nil
 			}, nil
 		} else {
 			return io.NopCloser(bytes.NewReader(b)),
