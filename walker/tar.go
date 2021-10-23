@@ -155,11 +155,7 @@ func (w *walker) fileWithTarOpener(fi os.FileInfo, r io.Reader) func() (io.ReadC
 				return nil
 			}, nil
 		} else {
-			return io.NopCloser(bytes.NewReader(b)),
-				func() error {
-					b = []byte{}
-					return nil
-				}, nil
+			return io.NopCloser(bytes.NewReader(b)), func() error { return nil }, nil
 		}
 	}
 }

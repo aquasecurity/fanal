@@ -86,10 +86,6 @@ func (w *walker) fileOpener(fi os.FileInfo, pathname string) func() (io.ReadClos
 		if err != nil {
 			return nil, nil, xerrors.Errorf("unable to read the file: %w", err)
 		}
-		return io.NopCloser(bytes.NewReader(b)),
-			func() error {
-				b = []byte{}
-				return nil
-			}, nil
+		return io.NopCloser(bytes.NewReader(b)), func() error { return nil }, nil
 	}
 }
