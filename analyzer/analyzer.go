@@ -201,8 +201,10 @@ func (a Analyzer) AnalyzeFile(ctx context.Context, wg *sync.WaitGroup, limit *se
 			return xerrors.Errorf("unable to open a file (%s): %w", filePath, err)
 		}
 		defer func() {
-			wg.Wait()
-			err = cleaner()
+			err := cleaner()
+			if err != nil {
+				log.Logger.Warn("Clean temp directory error: %s", err)
+			}
 		}()
 
 		if err = limit.Acquire(ctx, 1); err != nil {
@@ -223,6 +225,8 @@ func (a Analyzer) AnalyzeFile(ctx context.Context, wg *sync.WaitGroup, limit *se
 			result.Merge(ret)
 		}(d, AnalysisTarget{Dir: dir, FilePath: filePath, ContentReader: rc})
 	}
+	wg.Wait()
+
 	return nil
 }
 
