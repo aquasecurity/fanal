@@ -14,7 +14,7 @@ var (
 	systemDirs = []string{"proc", "sys", "dev"}
 )
 
-const N = int64(2) << 20
+const ThresholdSize = int64(2) << 20
 
 type WalkFunc func(filePath string, info os.FileInfo, opener analyzer.Opener) error
 
