@@ -96,6 +96,9 @@ func underSkippedDir(filePath string, skipDirs []string) bool {
 	return false
 }
 
+// fileWithTarOpener opens a file in a Tar.
+// If the file size is greater than or equal to N, it writes the file and caches the file name.
+// If the file size is less than N, it opens the file once and the content is shared so that some analyzers can use the same data
 func (w *walker) fileWithTarOpener(fi os.FileInfo, r io.Reader) func() (io.ReadCloser, func() error, error) {
 
 	var once sync.Once
@@ -106,7 +109,7 @@ func (w *walker) fileWithTarOpener(fi os.FileInfo, r io.Reader) func() (io.ReadC
 
 	return func() (io.ReadCloser, func() error, error) {
 		once.Do(func() {
-			if fi.Size() > N {
+			if fi.Size() >= N {
 				var f *os.File
 				tempDirPath, err = ioutil.TempDir("", "trivy-*")
 				if err != nil {
@@ -139,7 +142,7 @@ func (w *walker) fileWithTarOpener(fi os.FileInfo, r io.Reader) func() (io.ReadC
 			return nil, nil, xerrors.Errorf("failed to once do: %w", err)
 		}
 
-		if fi.Size() > N {
+		if fi.Size() >= N {
 			f, err := os.Open(tempFilePath)
 			if err != nil {
 				return nil, nil, xerrors.Errorf("failed to open the temp file: %w", err)

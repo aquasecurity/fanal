@@ -64,13 +64,16 @@ func (w Dir) Walk(root string, fn WalkFunc) error {
 	return nil
 }
 
+// fileOpener opens a file.
+// If the file size is greater than or equal to N, it executes os.Open on each call without caching the file data.
+// If the file size is less than N, it opens the file once and the content is shared so that some analyzers can use the same data
 func (w *walker) fileOpener(fi os.FileInfo, pathname string) func() (io.ReadCloser, func() error, error) {
 	var once sync.Once
 	var b []byte
 	var err error
 
 	return func() (io.ReadCloser, func() error, error) {
-		if fi.Size() > N {
+		if fi.Size() >= N {
 			f, err := os.Open(pathname)
 			if err != nil {
 				return nil, nil, xerrors.Errorf("unable to open the file: %w", err)
