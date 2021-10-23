@@ -111,8 +111,7 @@ func (w *walker) fileWithTarOpener(fi os.FileInfo, r io.Reader) func() (io.ReadC
 				tempDirPath, err = ioutil.TempDir("", "trivy-*")
 				f, err = os.CreateTemp(tempDirPath, "trivy-*")
 				_, err = io.Copy(f, r)
-
-				tempFilePath = filepath.Join(tempDirPath, f.Name())
+				tempFilePath = f.Name()
 			} else {
 				b, err = io.ReadAll(r)
 			}
