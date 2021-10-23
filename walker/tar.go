@@ -159,8 +159,7 @@ func (w *walker) fileWithTarOpener(fi os.FileInfo, r io.Reader) func() (io.ReadC
 				func() error {
 					b = []byte{}
 					return nil
-				},
-				nil
+				}, nil
 		}
 	}
 }
