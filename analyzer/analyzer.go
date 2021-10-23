@@ -201,7 +201,6 @@ func (a Analyzer) AnalyzeFile(ctx context.Context, wg *sync.WaitGroup, limit *se
 			return xerrors.Errorf("unable to open a file (%s): %w", filePath, err)
 		}
 		defer func() {
-			rc.Close()
 			err = cleaner()
 		}()
 
