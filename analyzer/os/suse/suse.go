@@ -3,6 +3,7 @@ package suse
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"os"
 	"strings"
 
@@ -18,6 +19,8 @@ func init() {
 	analyzer.RegisterAnalyzer(&suseOSAnalyzer{})
 }
 
+const version = 1
+
 var requiredFiles = []string{
 	"usr/lib/os-release",
 	"etc/os-release",
@@ -25,7 +28,7 @@ var requiredFiles = []string{
 
 type suseOSAnalyzer struct{}
 
-func (a suseOSAnalyzer) Analyze(target analyzer.AnalysisTarget) (*analyzer.AnalysisResult, error) {
+func (a suseOSAnalyzer) Analyze(_ context.Context, target analyzer.AnalysisTarget) (*analyzer.AnalysisResult, error) {
 	suseName := ""
 	scanner := bufio.NewScanner(bytes.NewBuffer(target.Content))
 	for scanner.Scan() {
@@ -61,6 +64,10 @@ func (a suseOSAnalyzer) Required(filePath string, _ os.FileInfo) bool {
 	return utils.StringInSlice(filePath, requiredFiles)
 }
 
-func (a suseOSAnalyzer) Name() string {
-	return "suse"
+func (a suseOSAnalyzer) Type() analyzer.Type {
+	return analyzer.TypeSUSE
+}
+
+func (a suseOSAnalyzer) Version() int {
+	return version
 }

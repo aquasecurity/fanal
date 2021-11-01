@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"github.com/aquasecurity/fanal/types"
-	godeptypes "github.com/aquasecurity/go-dep-parser/pkg/types"
 	"github.com/knqyf263/nested"
 )
 
@@ -31,27 +30,15 @@ func containsPackage(e types.Package, s []types.Package) bool {
 	return false
 }
 
-func containsLibrary(e godeptypes.Library, s []types.LibraryInfo) bool {
-	for _, a := range s {
-		if e.Name == a.Library.Name && e.Version == a.Library.Version {
-			return true
-		}
-	}
-	return false
-}
-
-func lookupOriginLayerForPkg(pkg types.Package, layers []types.BlobInfo) (types.Layer, []string) {
+func lookupOriginLayerForPkg(pkg types.Package, layers []types.BlobInfo) (string, string, []string) {
 	for i, layer := range layers {
 		for _, info := range layer.PackageInfos {
 			if containsPackage(pkg, info.Packages) {
-				return types.Layer{
-					Digest: layer.Digest,
-					DiffID: layer.DiffID,
-				}, lookupContentSets(i, layers)
+				return layer.Digest, layer.DiffID, lookupContentSets(i, layers)
 			}
 		}
 	}
-	return types.Layer{}, nil
+	return "", "", nil
 }
 
 // lookupContentSets looks up Red Hat content sets from all layers
@@ -79,21 +66,18 @@ func lookupContentSets(index int, layers []types.BlobInfo) []string {
 	return nil
 }
 
-func lookupOriginLayerForLib(filePath string, lib godeptypes.Library, layers []types.BlobInfo) types.Layer {
+func lookupOriginLayerForLib(filePath string, lib types.Package, layers []types.BlobInfo) (string, string) {
 	for _, layer := range layers {
 		for _, layerApp := range layer.Applications {
 			if filePath != layerApp.FilePath {
 				continue
 			}
-			if containsLibrary(lib, layerApp.Libraries) {
-				return types.Layer{
-					Digest: layer.Digest,
-					DiffID: layer.DiffID,
-				}
+			if containsPackage(lib, layerApp.Libraries) {
+				return layer.Digest, layer.DiffID
 			}
 		}
 	}
-	return types.Layer{}
+	return "", ""
 }
 
 func ApplyLayers(layers []types.BlobInfo) types.ArtifactDetail {
@@ -119,6 +103,13 @@ func ApplyLayers(layers []types.BlobInfo) types.ArtifactDetail {
 		for _, app := range layer.Applications {
 			nestedMap.SetByString(app.FilePath, sep, app)
 		}
+		for _, config := range layer.Misconfigurations {
+			config.Layer = types.Layer{
+				Digest: layer.Digest,
+				DiffID: layer.DiffID,
+			}
+			nestedMap.SetByString(config.FilePath, sep, config)
+		}
 	}
 
 	_ = nestedMap.Walk(func(keys []string, value interface{}) error {
@@ -127,21 +118,63 @@ func ApplyLayers(layers []types.BlobInfo) types.ArtifactDetail {
 			mergedLayer.Packages = append(mergedLayer.Packages, v.Packages...)
 		case types.Application:
 			mergedLayer.Applications = append(mergedLayer.Applications, v)
+		case types.Misconfiguration:
+			mergedLayer.Misconfigurations = append(mergedLayer.Misconfigurations, v)
 		}
 		return nil
 	})
 
 	for i, pkg := range mergedLayer.Packages {
-		originLayer, contentSets := lookupOriginLayerForPkg(pkg, layers)
-		mergedLayer.Packages[i].Layer = originLayer
+		originLayerDigest, originLayerDiffID, contentSets := lookupOriginLayerForPkg(pkg, layers)
+		mergedLayer.Packages[i].Layer = types.Layer{
+			Digest: originLayerDigest,
+			DiffID: originLayerDiffID,
+		}
 		mergedLayer.Packages[i].ContentSets = contentSets
 	}
 
 	for _, app := range mergedLayer.Applications {
-		for i, libInfo := range app.Libraries {
-			app.Libraries[i].Layer = lookupOriginLayerForLib(app.FilePath, libInfo.Library, layers)
+		for i, lib := range app.Libraries {
+			originLayerDigest, originLayerDiffID := lookupOriginLayerForLib(app.FilePath, lib, layers)
+			app.Libraries[i].Layer = types.Layer{
+				Digest: originLayerDigest,
+				DiffID: originLayerDiffID,
+			}
 		}
 	}
 
+	// Aggregate python/ruby/node.js packages
+	aggregate(&mergedLayer)
+
 	return mergedLayer
+}
+
+// aggregate merges all packages installed by pip/gem/npm/jar into each application
+func aggregate(detail *types.ArtifactDetail) {
+	var apps []types.Application
+
+	aggregatedApps := map[string]*types.Application{
+		types.PythonPkg: {Type: types.PythonPkg},
+		types.GemSpec:   {Type: types.GemSpec},
+		types.NodePkg:   {Type: types.NodePkg},
+		types.Jar:       {Type: types.Jar},
+	}
+
+	for _, app := range detail.Applications {
+		a, ok := aggregatedApps[app.Type]
+		if !ok {
+			apps = append(apps, app)
+			continue
+		}
+		a.Libraries = append(a.Libraries, app.Libraries...)
+	}
+
+	for _, app := range aggregatedApps {
+		if len(app.Libraries) > 0 {
+			apps = append(apps, *app)
+		}
+	}
+
+	// Overwrite Applications
+	detail.Applications = apps
 }

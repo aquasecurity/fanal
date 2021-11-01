@@ -3,6 +3,7 @@ package photon
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"os"
 	"strings"
 
@@ -21,6 +22,8 @@ func init() {
 	analyzer.RegisterAnalyzer(&photonOSAnalyzer{})
 }
 
+const version = 1
+
 var requiredFiles = []string{
 	"usr/lib/os-release",
 	"etc/os-release",
@@ -28,7 +31,7 @@ var requiredFiles = []string{
 
 type photonOSAnalyzer struct{}
 
-func (a photonOSAnalyzer) Analyze(target analyzer.AnalysisTarget) (*analyzer.AnalysisResult, error) {
+func (a photonOSAnalyzer) Analyze(_ context.Context, target analyzer.AnalysisTarget) (*analyzer.AnalysisResult, error) {
 	photonName := ""
 	scanner := bufio.NewScanner(bytes.NewBuffer(target.Content))
 	for scanner.Scan() {
@@ -54,6 +57,10 @@ func (a photonOSAnalyzer) Required(filePath string, _ os.FileInfo) bool {
 	return utils.StringInSlice(filePath, requiredFiles)
 }
 
-func (a photonOSAnalyzer) Name() string {
-	return aos.Photon
+func (a photonOSAnalyzer) Type() analyzer.Type {
+	return analyzer.TypePhoton
+}
+
+func (a photonOSAnalyzer) Version() int {
+	return version
 }

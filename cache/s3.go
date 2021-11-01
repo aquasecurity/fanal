@@ -4,12 +4,12 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+
 	"github.com/aquasecurity/fanal/types"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3iface"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager/s3manageriface"
-	"github.com/google/go-containerregistry/pkg/v1"
 	"golang.org/x/xerrors"
 )
 
@@ -40,9 +40,6 @@ func (c S3Cache) PutArtifact(artifactID string, artifactConfig types.ArtifactInf
 }
 
 func (c S3Cache) PutBlob(blobID string, blobInfo types.BlobInfo) error {
-	if _, err := v1.NewHash(blobID); err != nil {
-		return xerrors.Errorf("invalid diffID (%s): %w", blobID, err)
-	}
 	key := fmt.Sprintf("%s/%s/%s", blobBucket, c.prefix, blobID)
 	if err := c.put(key, blobInfo); err != nil {
 		return xerrors.Errorf("unable to store blob information in cache (%s): %w", blobID, err)

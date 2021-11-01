@@ -3,6 +3,7 @@ package dpkg
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"log"
 	"os"
 	"path/filepath"
@@ -10,10 +11,22 @@ import (
 	"strings"
 
 	debVersion "github.com/knqyf263/go-deb-version"
+	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/fanal/analyzer"
 	"github.com/aquasecurity/fanal/types"
-	"github.com/aquasecurity/fanal/utils"
+)
+
+func init() {
+	analyzer.RegisterAnalyzer(&dpkgAnalyzer{})
+}
+
+const (
+	version = 2
+
+	statusFile = "var/lib/dpkg/status"
+	statusDir  = "var/lib/dpkg/status.d/"
+	infoDir    = "var/lib/dpkg/info/"
 )
 
 var (
@@ -21,34 +34,55 @@ var (
 	dpkgSrcCaptureRegexpNames = dpkgSrcCaptureRegexp.SubexpNames()
 )
 
-func init() {
-	analyzer.RegisterAnalyzer(&debianPkgAnalyzer{})
+type dpkgAnalyzer struct{}
+
+func (a dpkgAnalyzer) Analyze(_ context.Context, target analyzer.AnalysisTarget) (*analyzer.AnalysisResult, error) {
+	scanner := bufio.NewScanner(bytes.NewBuffer(target.Content))
+	if a.isListFile(filepath.Split(target.FilePath)) {
+		return a.parseDpkgInfoList(scanner)
+	}
+
+	return a.parseDpkgStatus(target.FilePath, scanner)
 }
 
-var (
-	requiredFiles = []string{"var/lib/dpkg/status"}
-	requiredDirs  = []string{"var/lib/dpkg/status.d/"}
-)
+// parseDpkgStatus parses /var/lib/dpkg/info/*.list
+func (a dpkgAnalyzer) parseDpkgInfoList(scanner *bufio.Scanner) (*analyzer.AnalysisResult, error) {
+	var installedFiles []string
+	var previous string
+	for scanner.Scan() {
+		current := scanner.Text()
+		if current == "/." {
+			continue
+		}
 
-type debianPkgAnalyzer struct{}
+		// Add the file if it is not directory.
+		// e.g.
+		//  /usr/sbin
+		//  /usr/sbin/tarcat
+		//
+		// In the above case, we should take only /usr/sbin/tarcat since /usr/sbin is a directory
+		if !strings.HasPrefix(current, previous+"/") {
+			installedFiles = append(installedFiles, previous)
+		}
+		previous = current
+	}
 
-func (a debianPkgAnalyzer) Analyze(target analyzer.AnalysisTarget) (*analyzer.AnalysisResult, error) {
-	scanner := bufio.NewScanner(bytes.NewBuffer(target.Content))
-	parsedPkgs := a.parseDpkginfo(scanner)
+	// Add the last file
+	installedFiles = append(installedFiles, previous)
+
+	if err := scanner.Err(); err != nil {
+		return nil, xerrors.Errorf("scan error: %w", err)
+	}
 
 	return &analyzer.AnalysisResult{
-		PackageInfos: []types.PackageInfo{
-			{
-				FilePath: target.FilePath,
-				Packages: parsedPkgs,
-			},
-		},
+		SystemInstalledFiles: installedFiles,
 	}, nil
 }
 
-func (a debianPkgAnalyzer) parseDpkginfo(scanner *bufio.Scanner) []types.Package {
-	var pkgs []types.Package
-	uniq := map[string]struct{}{}
+// parseDpkgStatus parses /var/lib/dpkg/status or /var/lib/dpkg/status/*
+func (a dpkgAnalyzer) parseDpkgStatus(filePath string, scanner *bufio.Scanner) (*analyzer.AnalysisResult, error) {
+	var pkg *types.Package
+	pkgMap := map[string]*types.Package{}
 
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
@@ -56,20 +90,32 @@ func (a debianPkgAnalyzer) parseDpkginfo(scanner *bufio.Scanner) []types.Package
 			continue
 		}
 
-		pkg := a.parseDpkgPkg(scanner)
-		if pkg == nil {
-			continue
-		}
-
-		if _, ok := uniq[pkg.String()]; !ok {
-			uniq[pkg.String()] = struct{}{}
-			pkgs = append(pkgs, *pkg)
+		pkg = a.parseDpkgPkg(scanner)
+		if pkg != nil {
+			pkgMap[pkg.Name+"-"+pkg.Version] = pkg
 		}
 	}
-	return pkgs
+
+	if err := scanner.Err(); err != nil {
+		return nil, xerrors.Errorf("scan error: %w", err)
+	}
+
+	pkgs := make([]types.Package, 0, len(pkgMap))
+	for _, p := range pkgMap {
+		pkgs = append(pkgs, *p)
+	}
+
+	return &analyzer.AnalysisResult{
+		PackageInfos: []types.PackageInfo{
+			{
+				FilePath: filePath,
+				Packages: pkgs,
+			},
+		},
+	}, nil
 }
 
-func (a debianPkgAnalyzer) parseDpkgPkg(scanner *bufio.Scanner) (pkg *types.Package) {
+func (a dpkgAnalyzer) parseDpkgPkg(scanner *bufio.Scanner) (pkg *types.Package) {
 	var (
 		name          string
 		version       string
@@ -147,18 +193,30 @@ func (a debianPkgAnalyzer) parseDpkgPkg(scanner *bufio.Scanner) (pkg *types.Pack
 	return pkg
 }
 
-func (a debianPkgAnalyzer) Required(filePath string, fileInfo os.FileInfo) bool {
-	if utils.StringInSlice(filePath, requiredFiles) {
+func (a dpkgAnalyzer) Required(filePath string, _ os.FileInfo) bool {
+	dir, fileName := filepath.Split(filePath)
+	if a.isListFile(dir, fileName) || filePath == statusFile {
 		return true
 	}
 
-	dir := filepath.Dir(filePath) + "/"
-	if utils.StringInSlice(dir, requiredDirs) {
+	if dir == statusDir {
 		return true
 	}
 	return false
 }
 
-func (a debianPkgAnalyzer) Name() string {
-	return "dpkg"
+func (a dpkgAnalyzer) isListFile(dir, fileName string) bool {
+	if dir != infoDir {
+		return false
+	}
+
+	return strings.HasSuffix(fileName, ".list")
+}
+
+func (a dpkgAnalyzer) Type() analyzer.Type {
+	return analyzer.TypeDpkg
+}
+
+func (a dpkgAnalyzer) Version() int {
+	return version
 }

@@ -6,7 +6,6 @@ import (
 	"path/filepath"
 
 	"github.com/aquasecurity/fanal/types"
-	"github.com/google/go-containerregistry/pkg/v1"
 	bolt "go.etcd.io/bbolt"
 	"golang.org/x/xerrors"
 )
@@ -77,10 +76,6 @@ func (fs FSCache) getBlob(blobBucket *bolt.Bucket, diffID string) (types.BlobInf
 
 // PutBlob stores blob information such as layer information in local cache
 func (fs FSCache) PutBlob(blobID string, blobInfo types.BlobInfo) error {
-	if _, err := v1.NewHash(blobID); err != nil {
-		return xerrors.Errorf("invalid diffID (%s): %w", blobID, err)
-	}
-
 	b, err := json.Marshal(blobInfo)
 	if err != nil {
 		return xerrors.Errorf("unable to marshal blob JSON (%s): %w", blobID, err)

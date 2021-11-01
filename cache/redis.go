@@ -6,7 +6,6 @@ import (
 	"fmt"
 
 	"github.com/go-redis/redis/v8"
-	"github.com/google/go-containerregistry/pkg/v1"
 	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/fanal/types"
@@ -41,9 +40,6 @@ func (c RedisCache) PutArtifact(artifactID string, artifactConfig types.Artifact
 }
 
 func (c RedisCache) PutBlob(blobID string, blobInfo types.BlobInfo) error {
-	if _, err := v1.NewHash(blobID); err != nil {
-		return xerrors.Errorf("invalid diffID (%s): %w", blobID, err)
-	}
 	b, err := json.Marshal(blobInfo)
 	if err != nil {
 		return xerrors.Errorf("failed to marshal blob JSON: %w", err)

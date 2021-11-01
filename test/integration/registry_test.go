@@ -1,3 +1,4 @@
+//go:build integration
 // +build integration
 
 package integration
@@ -19,9 +20,10 @@ import (
 	testcontainers "github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
 
-	_ "github.com/aquasecurity/fanal/analyzer/os/alpine"
-	_ "github.com/aquasecurity/fanal/analyzer/pkg/apk"
+	_ "github.com/aquasecurity/fanal/analyzer/all"
+	"github.com/aquasecurity/fanal/analyzer/config"
 	"github.com/aquasecurity/fanal/applier"
+	"github.com/aquasecurity/fanal/artifact"
 	aimage "github.com/aquasecurity/fanal/artifact/image"
 	"github.com/aquasecurity/fanal/cache"
 	"github.com/aquasecurity/fanal/image"
@@ -202,7 +204,11 @@ func analyze(ctx context.Context, imageRef string, opt types.DockerOption) (*typ
 	}
 	defer cleanup()
 
-	ar := aimage.NewArtifact(img, c)
+	ar, err := aimage.NewArtifact(img, c, artifact.Option{}, config.ScannerOption{})
+	if err != nil {
+		return nil, err
+	}
+
 	ap := applier.NewApplier(c)
 
 	imageInfo, err := ar.Inspect(ctx)

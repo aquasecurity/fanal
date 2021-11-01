@@ -3,6 +3,7 @@ package ubuntu
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"os"
 	"strings"
 
@@ -18,11 +19,13 @@ func init() {
 	analyzer.RegisterAnalyzer(&ubuntuOSAnalyzer{})
 }
 
+const version = 1
+
 var requiredFiles = []string{"etc/lsb-release"}
 
 type ubuntuOSAnalyzer struct{}
 
-func (a ubuntuOSAnalyzer) Analyze(target analyzer.AnalysisTarget) (*analyzer.AnalysisResult, error) {
+func (a ubuntuOSAnalyzer) Analyze(_ context.Context, target analyzer.AnalysisTarget) (*analyzer.AnalysisResult, error) {
 	isUbuntu := false
 	scanner := bufio.NewScanner(bytes.NewBuffer(target.Content))
 	for scanner.Scan() {
@@ -48,6 +51,10 @@ func (a ubuntuOSAnalyzer) Required(filePath string, _ os.FileInfo) bool {
 	return utils.StringInSlice(filePath, requiredFiles)
 }
 
-func (a ubuntuOSAnalyzer) Name() string {
-	return aos.Ubuntu
+func (a ubuntuOSAnalyzer) Type() analyzer.Type {
+	return analyzer.TypeUbuntu
+}
+
+func (a ubuntuOSAnalyzer) Version() int {
+	return version
 }

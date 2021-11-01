@@ -1,6 +1,7 @@
 package buildinfo
 
 import (
+	"context"
 	"encoding/json"
 	"os"
 	"path/filepath"
@@ -14,6 +15,8 @@ func init() {
 	analyzer.RegisterAnalyzer(&contentManifestAnalyzer{})
 }
 
+const contentManifestAnalyzerversion = 1
+
 type contentManifest struct {
 	ContentSets []string `json:"content_sets"`
 }
@@ -21,7 +24,7 @@ type contentManifest struct {
 // For Red Hat products
 type contentManifestAnalyzer struct{}
 
-func (a contentManifestAnalyzer) Analyze(target analyzer.AnalysisTarget) (*analyzer.AnalysisResult, error) {
+func (a contentManifestAnalyzer) Analyze(ctx context.Context, target analyzer.AnalysisTarget) (*analyzer.AnalysisResult, error) {
 	var manifest contentManifest
 	if err := json.Unmarshal(target.Content, &manifest); err != nil {
 		return nil, xerrors.Errorf("invalid content manifests: %w", err)
@@ -42,6 +45,10 @@ func (a contentManifestAnalyzer) Required(filePath string, _ os.FileInfo) bool {
 	return filepath.Ext(file) == ".json"
 }
 
-func (a contentManifestAnalyzer) Name() string {
+func (a contentManifestAnalyzer) Type() analyzer.Type {
 	return "redhat content manifest"
+}
+
+func (a contentManifestAnalyzer) Version() int {
+	return contentManifestAnalyzerversion
 }

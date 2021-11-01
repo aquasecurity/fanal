@@ -1,7 +1,7 @@
 package remote
 
 import (
-	"net/http"
+	"context"
 	"net/http/httptest"
 	"testing"
 
@@ -9,7 +9,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/aquasecurity/fanal/analyzer/config"
+	"github.com/aquasecurity/fanal/artifact"
 	"github.com/aquasecurity/fanal/cache"
+	"github.com/aquasecurity/fanal/types"
 )
 
 func setupGitServer() (*httptest.Server, error) {
@@ -22,7 +25,6 @@ func setupGitServer() (*httptest.Server, error) {
 		return nil, err
 	}
 
-	http.Handle("/", service)
 	ts := httptest.NewServer(service)
 
 	return ts, nil
@@ -69,9 +71,50 @@ func TestNewArtifact(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_, cleanup, err := NewArtifact(tt.args.rawurl, tt.args.c)
+			_, cleanup, err := NewArtifact(tt.args.rawurl, tt.args.c, artifact.Option{}, config.ScannerOption{})
 			assert.Equal(t, tt.wantErr, err != nil)
 			defer cleanup()
+		})
+	}
+}
+
+func TestArtifact_Inspect(t *testing.T) {
+	ts, err := setupGitServer()
+	require.NoError(t, err)
+	defer ts.Close()
+
+	tests := []struct {
+		name    string
+		rawurl  string
+		want    types.ArtifactReference
+		wantErr bool
+	}{
+		{
+			name:   "happy path",
+			rawurl: ts.URL + "/test.git",
+			want: types.ArtifactReference{
+				Name: ts.URL + "/test.git",
+				Type: types.ArtifactRemoteRepository,
+				ID:   "sha256:c4924414863864534b5014027d19554842128b48eb6ea78d3d7fd8852e0f5ac4",
+				BlobIDs: []string{
+					"sha256:c4924414863864534b5014027d19554842128b48eb6ea78d3d7fd8852e0f5ac4",
+				},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			fsCache, err := cache.NewFSCache(t.TempDir())
+			require.NoError(t, err)
+
+			art, cleanup, err := NewArtifact(tt.rawurl, fsCache, artifact.Option{}, config.ScannerOption{})
+			require.NoError(t, err)
+			defer cleanup()
+
+			ref, err := art.Inspect(context.Background())
+			assert.NoError(t, err)
+			assert.Equal(t, tt.want, ref)
 		})
 	}
 }

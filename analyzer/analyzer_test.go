@@ -1,30 +1,57 @@
 package analyzer_test
 
 import (
+	"context"
 	"errors"
-	"io/ioutil"
+	"fmt"
 	"os"
 	"sync"
 	"testing"
 
-	_ "github.com/aquasecurity/fanal/analyzer/library/bundler"
+	_ "github.com/aquasecurity/fanal/analyzer/language/ruby/bundler"
 	_ "github.com/aquasecurity/fanal/analyzer/os/alpine"
 	_ "github.com/aquasecurity/fanal/analyzer/os/ubuntu"
 	_ "github.com/aquasecurity/fanal/analyzer/pkg/apk"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"golang.org/x/sync/semaphore"
 	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/fanal/analyzer"
-	_ "github.com/aquasecurity/fanal/analyzer/library/bundler"
+	_ "github.com/aquasecurity/fanal/analyzer/all"
 	aos "github.com/aquasecurity/fanal/analyzer/os"
-	_ "github.com/aquasecurity/fanal/analyzer/os/alpine"
-	_ "github.com/aquasecurity/fanal/analyzer/os/ubuntu"
-	_ "github.com/aquasecurity/fanal/analyzer/pkg/apk"
+	_ "github.com/aquasecurity/fanal/hook/all"
 	"github.com/aquasecurity/fanal/types"
-	godeptypes "github.com/aquasecurity/go-dep-parser/pkg/types"
 )
+
+type mockConfigAnalyzer struct{}
+
+func (mockConfigAnalyzer) Required(targetOS types.OS) bool {
+	return targetOS.Family == "alpine"
+}
+
+func (mockConfigAnalyzer) Analyze(targetOS types.OS, configBlob []byte) ([]types.Package, error) {
+	if string(configBlob) != `foo` {
+		return nil, errors.New("error")
+	}
+	return []types.Package{
+		{Name: "musl", Version: "1.1.24-r2"},
+	}, nil
+}
+
+func (mockConfigAnalyzer) Type() analyzer.Type {
+	return analyzer.Type("test")
+}
+
+func (mockConfigAnalyzer) Version() int {
+	return 1
+}
+
+func TestMain(m *testing.M) {
+	analyzer.RegisterConfigAnalyzer(mockConfigAnalyzer{})
+	os.Exit(m.Run())
+}
 
 func TestAnalysisResult_Merge(t *testing.T) {
 	type fields struct {
@@ -61,11 +88,10 @@ func TestAnalysisResult_Merge(t *testing.T) {
 					{
 						Type:     "bundler",
 						FilePath: "app/Gemfile.lock",
-						Libraries: []types.LibraryInfo{
+						Libraries: []types.Package{
 							{
-								Library: godeptypes.Library{
-									Name: "rails", Version: "5.0.0",
-								},
+								Name:    "rails",
+								Version: "5.0.0",
 							},
 						},
 					},
@@ -85,11 +111,10 @@ func TestAnalysisResult_Merge(t *testing.T) {
 						{
 							Type:     "bundler",
 							FilePath: "app2/Gemfile.lock",
-							Libraries: []types.LibraryInfo{
+							Libraries: []types.Package{
 								{
-									Library: godeptypes.Library{
-										Name: "nokogiri", Version: "1.0.0",
-									},
+									Name:    "nokogiri",
+									Version: "1.0.0",
 								},
 							},
 						},
@@ -119,22 +144,20 @@ func TestAnalysisResult_Merge(t *testing.T) {
 					{
 						Type:     "bundler",
 						FilePath: "app/Gemfile.lock",
-						Libraries: []types.LibraryInfo{
+						Libraries: []types.Package{
 							{
-								Library: godeptypes.Library{
-									Name: "rails", Version: "5.0.0",
-								},
+								Name:    "rails",
+								Version: "5.0.0",
 							},
 						},
 					},
 					{
 						Type:     "bundler",
 						FilePath: "app2/Gemfile.lock",
-						Libraries: []types.LibraryInfo{
+						Libraries: []types.Package{
 							{
-								Library: godeptypes.Library{
-									Name: "nokogiri", Version: "1.0.0",
-								},
+								Name:    "nokogiri",
+								Version: "1.0.0",
 							},
 						},
 					},
@@ -226,9 +249,9 @@ func TestAnalysisResult_Merge(t *testing.T) {
 
 func TestAnalyzeFile(t *testing.T) {
 	type args struct {
-		filePath string
-		info     os.FileInfo
-		opener   analyzer.Opener
+		filePath          string
+		testFilePath      string
+		disabledAnalyzers []analyzer.Type
 	}
 	tests := []struct {
 		name    string
@@ -239,10 +262,8 @@ func TestAnalyzeFile(t *testing.T) {
 		{
 			name: "happy path with os analyzer",
 			args: args{
-				filePath: "/etc/alpine-release",
-				opener: func() ([]byte, error) {
-					return ioutil.ReadFile("testdata/etc/alpine-release")
-				},
+				filePath:     "/etc/alpine-release",
+				testFilePath: "testdata/etc/alpine-release",
 			},
 			want: &analyzer.AnalysisResult{
 				OS: &types.OS{
@@ -252,43 +273,59 @@ func TestAnalyzeFile(t *testing.T) {
 			},
 		},
 		{
+			name: "happy path with disabled os analyzer",
+			args: args{
+				filePath:          "/etc/alpine-release",
+				testFilePath:      "testdata/etc/alpine-release",
+				disabledAnalyzers: []analyzer.Type{analyzer.TypeAlpine},
+			},
+			want: &analyzer.AnalysisResult{},
+		},
+		{
 			name: "happy path with package analyzer",
 			args: args{
-				filePath: "/lib/apk/db/installed",
-				opener: func() ([]byte, error) {
-					return ioutil.ReadFile("testdata/lib/apk/db/installed")
-				},
+				filePath:     "/lib/apk/db/installed",
+				testFilePath: "testdata/lib/apk/db/installed",
 			},
 			want: &analyzer.AnalysisResult{
 				PackageInfos: []types.PackageInfo{
 					{
 						FilePath: "/lib/apk/db/installed",
 						Packages: []types.Package{
-							{Name: "musl", Version: "1.1.24-r2", SrcName: "musl", SrcVersion: "1.1.24-r2"},
+							{Name: "musl", Version: "1.1.24-r2", SrcName: "musl", SrcVersion: "1.1.24-r2", License: "MIT"},
 						},
 					},
+				},
+				SystemInstalledFiles: []string{
+					"lib/libc.musl-x86_64.so.1",
+					"lib/ld-musl-x86_64.so.1",
 				},
 			},
 		},
 		{
+			name: "happy path with disabled package analyzer",
+			args: args{
+				filePath:          "/lib/apk/db/installed",
+				testFilePath:      "testdata/lib/apk/db/installed",
+				disabledAnalyzers: []analyzer.Type{analyzer.TypeApk},
+			},
+			want: &analyzer.AnalysisResult{},
+		},
+		{
 			name: "happy path with library analyzer",
 			args: args{
-				filePath: "/app/Gemfile.lock",
-				opener: func() ([]byte, error) {
-					return ioutil.ReadFile("testdata/app/Gemfile.lock")
-				},
+				filePath:     "/app/Gemfile.lock",
+				testFilePath: "testdata/app/Gemfile.lock",
 			},
 			want: &analyzer.AnalysisResult{
 				Applications: []types.Application{
 					{
 						Type:     "bundler",
 						FilePath: "/app/Gemfile.lock",
-						Libraries: []types.LibraryInfo{
+						Libraries: []types.Package{
 							{
-								Library: godeptypes.Library{
-									Name:    "actioncable",
-									Version: "5.2.3",
-								},
+								Name:    "actioncable",
+								Version: "5.2.3",
 							},
 						},
 					},
@@ -298,60 +335,66 @@ func TestAnalyzeFile(t *testing.T) {
 		{
 			name: "happy path with invalid os information",
 			args: args{
-				filePath: "/etc/lsb-release",
-				opener: func() ([]byte, error) {
-					return []byte(`foo`), nil
-				},
+				filePath:     "/etc/lsb-release",
+				testFilePath: "testdata/etc/hostname",
+			},
+			want: &analyzer.AnalysisResult{},
+		},
+		{
+			name: "happy path with a directory",
+			args: args{
+				filePath:     "/etc/lsb-release",
+				testFilePath: "testdata/etc",
 			},
 			want: &analyzer.AnalysisResult{},
 		},
 		{
 			name: "sad path with opener error",
 			args: args{
-				filePath: "/lib/apk/db/installed",
-				opener: func() ([]byte, error) {
-					return nil, xerrors.New("error")
-				},
+				filePath:     "/lib/apk/db/installed",
+				testFilePath: "testdata/error",
 			},
 			wantErr: "unable to open a file (/lib/apk/db/installed)",
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := analyzer.AnalyzeFile(tt.args.filePath, tt.args.info, tt.args.opener)
+			var wg sync.WaitGroup
+			limit := semaphore.NewWeighted(3)
+
+			got := new(analyzer.AnalysisResult)
+			a := analyzer.NewAnalyzer(tt.args.disabledAnalyzers)
+
+			info, err := os.Stat(tt.args.testFilePath)
+			require.NoError(t, err)
+
+			ctx := context.Background()
+			err = a.AnalyzeFile(ctx, &wg, limit, got, "", tt.args.filePath, info, func() ([]byte, error) {
+				if tt.args.testFilePath == "testdata/error" {
+					return nil, xerrors.New("error")
+				}
+				return os.ReadFile(tt.args.testFilePath)
+			})
+
+			wg.Wait()
 			if tt.wantErr != "" {
 				require.NotNil(t, err)
 				assert.Contains(t, err.Error(), tt.wantErr)
 				return
-			} else {
-				require.NoError(t, err)
 			}
+
+			require.NoError(t, err)
 			assert.Equal(t, tt.want, got)
 		})
 	}
 }
 
-type mockConfigAnalyzer struct{}
-
-func (mockConfigAnalyzer) Required(targetOS types.OS) bool {
-	return targetOS.Family == "alpine"
-}
-
-func (mockConfigAnalyzer) Analyze(targetOS types.OS, configBlob []byte) ([]types.Package, error) {
-	if string(configBlob) != `foo` {
-		return nil, errors.New("error")
-	}
-	return []types.Package{
-		{Name: "musl", Version: "1.1.24-r2"},
-	}, nil
-}
-
 func TestAnalyzeConfig(t *testing.T) {
-	analyzer.RegisterConfigAnalyzer(mockConfigAnalyzer{})
 
 	type args struct {
-		targetOS   types.OS
-		configBlob []byte
+		targetOS          types.OS
+		configBlob        []byte
+		disabledAnalyzers []analyzer.Type
 	}
 	tests := []struct {
 		name string
@@ -394,46 +437,129 @@ func TestAnalyzeConfig(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := analyzer.AnalyzeConfig(tt.args.targetOS, tt.args.configBlob)
+			a := analyzer.NewAnalyzer(tt.args.disabledAnalyzers)
+			got := a.AnalyzeImageConfig(tt.args.targetOS, tt.args.configBlob)
 			assert.Equal(t, tt.want, got)
 		})
 	}
 }
 
-func TestCheckPackage(t *testing.T) {
+func TestAnalyzer_AnalyzerVersions(t *testing.T) {
 	tests := []struct {
-		name string
-		pkg  *types.Package
-		want bool
+		name     string
+		disabled []analyzer.Type
+		want     map[string]int
 	}{
 		{
-			name: "valid package",
-			pkg: &types.Package{
-				Name:    "musl",
-				Version: "1.2.3",
+			name:     "happy path",
+			disabled: []analyzer.Type{},
+			want: map[string]int{
+				"alpine":     1,
+				"amazon":     1,
+				"apk":        1,
+				"bundler":    1,
+				"cargo":      1,
+				"centos":     1,
+				"rocky":      1,
+				"alma":       1,
+				"composer":   1,
+				"debian":     1,
+				"dpkg":       2,
+				"fedora":     1,
+				"gobinary":   1,
+				"gomod":      1,
+				"jar":        1,
+				"node-pkg":   1,
+				"npm":        1,
+				"nuget":      2,
+				"oracle":     1,
+				"photon":     1,
+				"pip":        1,
+				"pipenv":     1,
+				"poetry":     1,
+				"redhat":     1,
+				"rpm":        1,
+				"suse":       1,
+				"ubuntu":     1,
+				"yarn":       1,
+				"python-pkg": 1,
+				"gemspec":    1,
 			},
-			want: true,
 		},
 		{
-			name: "empty name",
-			pkg: &types.Package{
-				Name:    "",
-				Version: "1.2.3",
+			name:     "disable analyzers",
+			disabled: []analyzer.Type{analyzer.TypeAlpine, analyzer.TypeUbuntu},
+			want: map[string]int{
+				"alpine":     0,
+				"amazon":     1,
+				"apk":        1,
+				"bundler":    1,
+				"cargo":      1,
+				"centos":     1,
+				"rocky":      1,
+				"alma":       1,
+				"composer":   1,
+				"debian":     1,
+				"dpkg":       2,
+				"fedora":     1,
+				"gobinary":   1,
+				"gomod":      1,
+				"jar":        1,
+				"node-pkg":   1,
+				"npm":        1,
+				"nuget":      2,
+				"oracle":     1,
+				"photon":     1,
+				"pip":        1,
+				"pipenv":     1,
+				"poetry":     1,
+				"redhat":     1,
+				"rpm":        1,
+				"suse":       1,
+				"ubuntu":     0,
+				"yarn":       1,
+				"python-pkg": 1,
+				"gemspec":    1,
 			},
-			want: false,
-		},
-		{
-			name: "empty version",
-			pkg: &types.Package{
-				Name:    "musl",
-				Version: "",
-			},
-			want: false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := analyzer.CheckPackage(tt.pkg)
+			a := analyzer.NewAnalyzer(tt.disabled)
+			got := a.AnalyzerVersions()
+			fmt.Printf("%v\n", got)
+			assert.Equal(t, tt.want, got)
+		})
+	}
+}
+
+func TestAnalyzer_ImageConfigAnalyzerVersions(t *testing.T) {
+	tests := []struct {
+		name     string
+		disabled []analyzer.Type
+		want     map[string]int
+	}{
+		{
+			name:     "happy path",
+			disabled: []analyzer.Type{},
+			want: map[string]int{
+				"apk-command": 1,
+				"test":        1,
+			},
+		},
+		{
+			name:     "disable analyzers",
+			disabled: []analyzer.Type{analyzer.TypeAlpine, analyzer.TypeApkCommand},
+			want: map[string]int{
+				"apk-command": 0,
+				"test":        1,
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			a := analyzer.NewAnalyzer(tt.disabled)
+			got := a.ImageConfigAnalyzerVersions()
 			assert.Equal(t, tt.want, got)
 		})
 	}

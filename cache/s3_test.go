@@ -1,14 +1,15 @@
 package cache
 
 import (
+	"reflect"
+	"testing"
+	"time"
+
 	"github.com/aquasecurity/fanal/types"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3iface"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"golang.org/x/xerrors"
-	"reflect"
-	"testing"
-	"time"
 )
 
 type mockS3Client struct {
@@ -188,8 +189,10 @@ func TestS3Cache_MissingBlobs(t *testing.T) {
 		Prefix     string
 	}
 	type args struct {
-		artifactID string
-		blobIDs    []string
+		artifactID             string
+		blobIDs                []string
+		analyzerVersions       map[string]int
+		configAnalyzerVersions map[string]int
 	}
 	tests := []struct {
 		name            string
@@ -205,9 +208,12 @@ func TestS3Cache_MissingBlobs(t *testing.T) {
 			BucketName: "test",
 			Prefix:     "prefix",
 		},
-		args:            args{artifactID: "sha256:58701fd185bda36cab0557bb6438661831267aa4a9e0b54211c4d5317a48aff4", blobIDs: []string{"sha256:24df0d4e20c0f42d3703bf1f1db2bdd77346c7956f74f423603d651e8e5ae8a7"}},
+		args: args{
+			artifactID: "sha256:58701fd185bda36cab0557bb6438661831267aa4a9e0b54211c4d5317a48aff4/1",
+			blobIDs:    []string{"sha256:24df0d4e20c0f42d3703bf1f1db2bdd77346c7956f74f423603d651e8e5ae8a7/10011"},
+		},
 		want:            true,
-		wantStringSlice: []string{"sha256:24df0d4e20c0f42d3703bf1f1db2bdd77346c7956f74f423603d651e8e5ae8a7"},
+		wantStringSlice: []string{"sha256:24df0d4e20c0f42d3703bf1f1db2bdd77346c7956f74f423603d651e8e5ae8a7/10011"},
 		wantErr:         false,
 	},
 	}

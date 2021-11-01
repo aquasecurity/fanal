@@ -3,6 +3,7 @@ package redhatbase
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"os"
 	"strings"
 
@@ -14,13 +15,15 @@ import (
 	"golang.org/x/xerrors"
 )
 
+const fedoraAnalyzerVersion = 1
+
 func init() {
 	analyzer.RegisterAnalyzer(&fedoraOSAnalyzer{})
 }
 
 type fedoraOSAnalyzer struct{}
 
-func (a fedoraOSAnalyzer) Analyze(target analyzer.AnalysisTarget) (*analyzer.AnalysisResult, error) {
+func (a fedoraOSAnalyzer) Analyze(_ context.Context, target analyzer.AnalysisTarget) (*analyzer.AnalysisResult, error) {
 	scanner := bufio.NewScanner(bytes.NewBuffer(target.Content))
 	for scanner.Scan() {
 		line := scanner.Text()
@@ -50,6 +53,10 @@ func (a fedoraOSAnalyzer) requiredFiles() []string {
 	}
 }
 
-func (a fedoraOSAnalyzer) Name() string {
-	return aos.Fedora
+func (a fedoraOSAnalyzer) Type() analyzer.Type {
+	return analyzer.TypeFedora
+}
+
+func (a fedoraOSAnalyzer) Version() int {
+	return fedoraAnalyzerVersion
 }

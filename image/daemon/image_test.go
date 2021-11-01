@@ -5,11 +5,11 @@ import (
 	"io/ioutil"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/docker/docker/api/types"
 	"github.com/google/go-containerregistry/pkg/name"
 	v1 "github.com/google/go-containerregistry/pkg/v1"
 
@@ -22,6 +22,8 @@ func TestMain(m *testing.M) {
 		"index.docker.io/library/alpine:3.11": "../../test/testdata/alpine-311.tar.gz",
 		"gcr.io/distroless/base:latest":       "../../test/testdata/distroless.tar.gz",
 	}
+
+	// for Docker
 	opt := engine.Option{
 		APIVersion: "1.38",
 		ImagePaths: imagePaths,
@@ -32,46 +34,6 @@ func TestMain(m *testing.M) {
 	os.Setenv("DOCKER_HOST", fmt.Sprintf("tcp://%s", te.Listener.Addr().String()))
 
 	os.Exit(m.Run())
-}
-
-func TestImage(t *testing.T) {
-	type fields struct {
-		Image   v1.Image
-		opener  opener
-		inspect types.ImageInspect
-	}
-	tests := []struct {
-		name      string
-		imageName string
-		fields    fields
-		want      *v1.ConfigFile
-		wantErr   bool
-	}{
-		{
-			name:      "happy path",
-			imageName: "alpine:3.11",
-			wantErr:   false,
-		},
-		{
-			name:      "unknown image",
-			imageName: "alpine:unknown",
-			wantErr:   true,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			ref, err := name.ParseReference(tt.imageName)
-			require.NoError(t, err)
-
-			_, _, cleanup, err := Image(ref)
-			assert.Equal(t, tt.wantErr, err != nil, err)
-			defer func() {
-				if cleanup != nil {
-					cleanup()
-				}
-			}()
-		})
-	}
 }
 
 func Test_image_ConfigName(t *testing.T) {
@@ -96,7 +58,7 @@ func Test_image_ConfigName(t *testing.T) {
 			ref, err := name.ParseReference(tt.imageName)
 			require.NoError(t, err)
 
-			img, _, cleanup, err := Image(ref)
+			img, cleanup, err := DockerImage(ref)
 			require.NoError(t, err)
 			defer cleanup()
 
@@ -118,15 +80,32 @@ func Test_image_ConfigFile(t *testing.T) {
 			name:      "one diff_id",
 			imageName: "alpine:3.11",
 			want: &v1.ConfigFile{
-				RootFS: v1.RootFS{
-					Type: "layers",
-					DiffIDs: []v1.Hash{
-						{
-							Algorithm: "sha256",
-							Hex:       "beee9f30bc1f711043e78d4a2be0668955d4b761d587d6f60c2c8dc081efb203",
-						},
+				Architecture:  "amd64",
+				Container:     "fb71ddde5f6411a82eb056a9190f0cc1c80d7f77a8509ee90a2054428edb0024",
+				OS:            "linux",
+				Created:       v1.Time{Time: time.Date(2020, 3, 23, 21, 19, 34, 196162891, time.UTC)},
+				DockerVersion: "18.09.7",
+				History: []v1.History{
+					{
+						Created:    v1.Time{Time: time.Date(2020, 3, 23, 21, 19, 34, 0, time.UTC)},
+						CreatedBy:  "/bin/sh -c #(nop)  CMD [\"/bin/sh\"]",
+						Comment:    "",
+						EmptyLayer: true,
+					},
+					{
+						Created:    v1.Time{Time: time.Date(2020, 3, 23, 21, 19, 34, 0, time.UTC)},
+						CreatedBy:  "/bin/sh -c #(nop) ADD file:0c4555f363c2672e350001f1293e689875a3760afe7b3f9146886afe67121cba in / ",
+						EmptyLayer: false,
 					},
 				},
+				RootFS: v1.RootFS{Type: "layers", DiffIDs: []v1.Hash{v1.Hash{Algorithm: "sha256", Hex: "beee9f30bc1f711043e78d4a2be0668955d4b761d587d6f60c2c8dc081efb203"}}},
+				Config: v1.Config{
+					Cmd:         []string{"/bin/sh"},
+					Image:       "sha256:74df73bb19fbfc7fb5ab9a8234b3d98ee2fb92df5b824496679802685205ab8c",
+					Env:         []string{"PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"},
+					ArgsEscaped: true,
+				},
+				OSVersion: "",
 			},
 			wantErr: false,
 		},
@@ -134,19 +113,31 @@ func Test_image_ConfigFile(t *testing.T) {
 			name:      "multiple diff_ids",
 			imageName: "gcr.io/distroless/base",
 			want: &v1.ConfigFile{
+				Architecture: "amd64",
+				OS:           "linux",
+				Author:       "Bazel",
+				Created:      v1.Time{Time: time.Date(1970, 1, 1, 0, 0, 0, 0, time.UTC)},
+				History: []v1.History{
+					{
+						Created:    v1.Time{Time: time.Date(1970, 1, 1, 0, 0, 0, 0, time.UTC)},
+						CreatedBy:  "bazel build ...",
+						EmptyLayer: false,
+					},
+					{
+						Created:    v1.Time{Time: time.Date(1970, 1, 1, 0, 0, 0, 0, time.UTC)},
+						CreatedBy:  "bazel build ...",
+						EmptyLayer: false,
+					},
+				},
 				RootFS: v1.RootFS{
 					Type: "layers",
 					DiffIDs: []v1.Hash{
-						{
-							Algorithm: "sha256",
-							Hex:       "42a3027eaac150d2b8f516100921f4bd83b3dbc20bfe64124f686c072b49c602",
-						},
-						{
-							Algorithm: "sha256",
-							Hex:       "f47163e8de57e3e3ccfe89d5dfbd9c252d9eca53dc7906b8db60eddcb876c592",
-						},
+						{Algorithm: "sha256", Hex: "42a3027eaac150d2b8f516100921f4bd83b3dbc20bfe64124f686c072b49c602"},
+						{Algorithm: "sha256", Hex: "f47163e8de57e3e3ccfe89d5dfbd9c252d9eca53dc7906b8db60eddcb876c592"},
 					},
 				},
+				Config:    v1.Config{Env: []string{"PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin", "SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt"}},
+				OSVersion: "",
 			},
 			wantErr: false,
 		},
@@ -156,13 +147,13 @@ func Test_image_ConfigFile(t *testing.T) {
 			ref, err := name.ParseReference(tt.imageName)
 			require.NoError(t, err)
 
-			img, _, cleanup, err := Image(ref)
+			img, cleanup, err := DockerImage(ref)
 			require.NoError(t, err)
 			defer cleanup()
 
 			conf, err := img.ConfigFile()
+			require.Equal(t, tt.wantErr, err != nil, err)
 			assert.Equal(t, tt.want, conf)
-			assert.Equal(t, tt.wantErr, err != nil)
 		})
 	}
 }
@@ -201,7 +192,7 @@ func Test_image_LayerByDiffID(t *testing.T) {
 			ref, err := name.ParseReference(tt.imageName)
 			require.NoError(t, err)
 
-			img, _, cleanup, err := Image(ref)
+			img, cleanup, err := DockerImage(ref)
 			require.NoError(t, err)
 			defer cleanup()
 
@@ -230,7 +221,7 @@ func Test_image_RawConfigFile(t *testing.T) {
 			ref, err := name.ParseReference(tt.imageName)
 			require.NoError(t, err)
 
-			img, _, cleanup, err := Image(ref)
+			img, cleanup, err := DockerImage(ref)
 			require.NoError(t, err)
 			defer cleanup()
 

@@ -3,6 +3,7 @@ package alpine
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"os"
 
 	"golang.org/x/xerrors"
@@ -17,11 +18,13 @@ func init() {
 	analyzer.RegisterAnalyzer(&alpineOSAnalyzer{})
 }
 
+const version = 1
+
 var requiredFiles = []string{"etc/alpine-release"}
 
 type alpineOSAnalyzer struct{}
 
-func (a alpineOSAnalyzer) Analyze(target analyzer.AnalysisTarget) (*analyzer.AnalysisResult, error) {
+func (a alpineOSAnalyzer) Analyze(_ context.Context, target analyzer.AnalysisTarget) (*analyzer.AnalysisResult, error) {
 	scanner := bufio.NewScanner(bytes.NewBuffer(target.Content))
 	for scanner.Scan() {
 		line := scanner.Text()
@@ -36,6 +39,10 @@ func (a alpineOSAnalyzer) Required(filePath string, _ os.FileInfo) bool {
 	return utils.StringInSlice(filePath, requiredFiles)
 }
 
-func (a alpineOSAnalyzer) Name() string {
-	return aos.Alpine
+func (a alpineOSAnalyzer) Type() analyzer.Type {
+	return analyzer.TypeAlpine
+}
+
+func (a alpineOSAnalyzer) Version() int {
+	return version
 }

@@ -1,18 +1,28 @@
 package remote
 
 import (
+	"context"
 	"io/ioutil"
 	"net/url"
 	"os"
 
 	git "github.com/go-git/go-git/v5"
+	"golang.org/x/xerrors"
 
+	"github.com/aquasecurity/fanal/analyzer/config"
 	"github.com/aquasecurity/fanal/artifact"
 	"github.com/aquasecurity/fanal/artifact/local"
 	"github.com/aquasecurity/fanal/cache"
+	"github.com/aquasecurity/fanal/types"
 )
 
-func NewArtifact(rawurl string, c cache.ArtifactCache) (artifact.Artifact, func(), error) {
+type Artifact struct {
+	url   string
+	local artifact.Artifact
+}
+
+func NewArtifact(rawurl string, c cache.ArtifactCache, artifactOpt artifact.Option, scannerOpt config.ScannerOption) (
+	artifact.Artifact, func(), error) {
 	cleanup := func() {}
 
 	u, err := newURL(rawurl)
@@ -31,20 +41,40 @@ func NewArtifact(rawurl string, c cache.ArtifactCache) (artifact.Artifact, func(
 		Depth:    1,
 	})
 	if err != nil {
-		return nil, cleanup, err
+		return nil, cleanup, xerrors.Errorf("git error: %w", err)
 	}
 
 	cleanup = func() {
 		_ = os.RemoveAll(tmpDir)
 	}
 
-	return local.NewArtifact(tmpDir, c), cleanup, nil
+	art, err := local.NewArtifact(tmpDir, c, artifactOpt, scannerOpt)
+	if err != nil {
+		return nil, cleanup, xerrors.Errorf("fs artifact: %w", err)
+	}
+
+	return Artifact{
+		url:   rawurl,
+		local: art,
+	}, cleanup, nil
+}
+
+func (a Artifact) Inspect(ctx context.Context) (types.ArtifactReference, error) {
+	ref, err := a.local.Inspect(ctx)
+	if err != nil {
+		return types.ArtifactReference{}, xerrors.Errorf("remote repository error: %w", err)
+	}
+
+	ref.Name = a.url
+	ref.Type = types.ArtifactRemoteRepository
+
+	return ref, nil
 }
 
 func newURL(rawurl string) (*url.URL, error) {
 	u, err := url.Parse(rawurl)
 	if err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("url parse error: %w", err)
 	}
 	// "https://" can be omitted
 	// e.g. github.com/aquasecurity/fanal

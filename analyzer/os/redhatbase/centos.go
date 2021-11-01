@@ -3,6 +3,7 @@ package redhatbase
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"os"
 	"strings"
 
@@ -14,17 +15,15 @@ import (
 	"golang.org/x/xerrors"
 )
 
+const centosAnalyzerVersion = 1
+
 func init() {
 	analyzer.RegisterAnalyzer(&centOSAnalyzer{})
 }
 
-var (
-	requiredFiles = []string{"etc/centos-release"}
-)
-
 type centOSAnalyzer struct{}
 
-func (a centOSAnalyzer) Analyze(target analyzer.AnalysisTarget) (*analyzer.AnalysisResult, error) {
+func (a centOSAnalyzer) Analyze(_ context.Context, target analyzer.AnalysisTarget) (*analyzer.AnalysisResult, error) {
 	scanner := bufio.NewScanner(bytes.NewBuffer(target.Content))
 	for scanner.Scan() {
 		line := scanner.Text()
@@ -45,13 +44,17 @@ func (a centOSAnalyzer) Analyze(target analyzer.AnalysisTarget) (*analyzer.Analy
 }
 
 func (a centOSAnalyzer) Required(filePath string, _ os.FileInfo) bool {
-	return utils.StringInSlice(filePath, requiredFiles)
+	return utils.StringInSlice(filePath, a.requiredFiles())
 }
 
 func (a centOSAnalyzer) requiredFiles() []string {
 	return []string{"etc/centos-release"}
 }
 
-func (a centOSAnalyzer) Name() string {
-	return aos.CentOS
+func (a centOSAnalyzer) Type() analyzer.Type {
+	return analyzer.TypeCentOS
+}
+
+func (a centOSAnalyzer) Version() int {
+	return centosAnalyzerVersion
 }

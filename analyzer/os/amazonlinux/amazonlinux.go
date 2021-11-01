@@ -3,6 +3,7 @@ package amazonlinux
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"fmt"
 	"os"
 	"strings"
@@ -22,11 +23,13 @@ func init() {
 	analyzer.RegisterAnalyzer(&amazonlinuxOSAnalyzer{})
 }
 
+const version = 1
+
 var requiredFiles = []string{"etc/system-release"}
 
 type amazonlinuxOSAnalyzer struct{}
 
-func (a amazonlinuxOSAnalyzer) Analyze(target analyzer.AnalysisTarget) (*analyzer.AnalysisResult, error) {
+func (a amazonlinuxOSAnalyzer) Analyze(_ context.Context, target analyzer.AnalysisTarget) (*analyzer.AnalysisResult, error) {
 	foundOS, err := a.parseRelease(target.Content)
 	if err != nil {
 		return nil, err
@@ -64,6 +67,10 @@ func (a amazonlinuxOSAnalyzer) Required(filePath string, _ os.FileInfo) bool {
 	return utils.StringInSlice(filePath, requiredFiles)
 }
 
-func (a amazonlinuxOSAnalyzer) Name() string {
-	return aos.Amazon
+func (a amazonlinuxOSAnalyzer) Type() analyzer.Type {
+	return analyzer.TypeAmazon
+}
+
+func (a amazonlinuxOSAnalyzer) Version() int {
+	return version
 }
