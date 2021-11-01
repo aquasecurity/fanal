@@ -1,6 +1,7 @@
 package buildinfo
 
 import (
+	"context"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -18,6 +19,8 @@ func init() {
 	analyzer.RegisterAnalyzer(&dockerfileAnalyzer{})
 }
 
+const dockerfileAnalyzerVersion = 1
+
 var (
 	componentPattern    = `"?com.redhat.component"?="(.*?)"`
 	architecturePattern = `"?architecture"?="(.*?)"`
@@ -28,7 +31,7 @@ var (
 // For Red Hat products
 type dockerfileAnalyzer struct{}
 
-func (a dockerfileAnalyzer) Analyze(target analyzer.AnalysisTarget) (*analyzer.AnalysisResult, error) {
+func (a dockerfileAnalyzer) Analyze(_ context.Context, target analyzer.AnalysisTarget) (*analyzer.AnalysisResult, error) {
 	res := componentRegexp.FindStringSubmatch(string(target.Content))
 	if len(res) < 2 {
 		return nil, xerrors.Errorf("unknown Dockerfile format: %s", target.FilePath)
@@ -50,15 +53,19 @@ func (a dockerfileAnalyzer) Analyze(target analyzer.AnalysisTarget) (*analyzer.A
 }
 
 func (a dockerfileAnalyzer) Required(filePath string, _ os.FileInfo) bool {
-	dir, file := filepath.Split(filePath)
+	dir, file := filepath.Split(filepath.ToSlash(filePath))
 	if dir != "root/buildinfo/" {
 		return false
 	}
 	return strings.HasPrefix(file, "Dockerfile")
 }
 
-func (a dockerfileAnalyzer) Name() string {
+func (a dockerfileAnalyzer) Type() analyzer.Type {
 	return "redhat dockerfile"
+}
+
+func (a dockerfileAnalyzer) Version() int {
+	return dockerfileAnalyzerVersion
 }
 
 // parseVersion parses version from a file name
