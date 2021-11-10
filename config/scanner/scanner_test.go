@@ -125,7 +125,7 @@ func TestScanner_ScanConfig(t *testing.T) {
 				},
 				Failures: []types.MisconfResult{
 					{
-						Message: "Resource 'S3Bucket' Public access block does not block public ACLs",
+						Message: "Public access block does not block public ACLs",
 						PolicyMetadata: types.PolicyMetadata{
 							ID:                 "AVD-AWS-0086",
 							Type:               "Cloudformation Security Check powered by cfsec",
@@ -142,7 +142,7 @@ func TestScanner_ScanConfig(t *testing.T) {
 						},
 					},
 					{
-						Message: "Resource 'S3Bucket' Public access block does not block public policies",
+						Message: "Public access block does not block public policies",
 						PolicyMetadata: types.PolicyMetadata{
 							ID:                 "AVD-AWS-0087",
 							Type:               "Cloudformation Security Check powered by cfsec",
@@ -159,7 +159,7 @@ func TestScanner_ScanConfig(t *testing.T) {
 						},
 					},
 					{
-						Message: "Resource 'S3Bucket' Bucket does not have encryption enabled",
+						Message: "Bucket does not have encryption enabled",
 						PolicyMetadata: types.PolicyMetadata{
 							ID:                 "AVD-AWS-0088",
 							Type:               "Cloudformation Security Check powered by cfsec",
@@ -176,7 +176,7 @@ func TestScanner_ScanConfig(t *testing.T) {
 						},
 					},
 					{
-						Message: "Resource 'S3Bucket' Bucket does not have logging enabled",
+						Message: "Bucket does not have logging enabled",
 						PolicyMetadata: types.PolicyMetadata{
 							ID:                 "AVD-AWS-0089",
 							Type:               "Cloudformation Security Check powered by cfsec",
@@ -193,7 +193,7 @@ func TestScanner_ScanConfig(t *testing.T) {
 						},
 					},
 					{
-						Message: "Resource 'S3Bucket' Bucket does not have versioning enabled",
+						Message: "Bucket does not have versioning enabled",
 						PolicyMetadata: types.PolicyMetadata{
 							ID:                 "AVD-AWS-0090",
 							Type:               "Cloudformation Security Check powered by cfsec",
@@ -210,7 +210,7 @@ func TestScanner_ScanConfig(t *testing.T) {
 						},
 					},
 					{
-						Message: "Resource 'S3Bucket' Public access block does not restrict public buckets",
+						Message: "Public access block does not restrict public buckets",
 						PolicyMetadata: types.PolicyMetadata{
 							ID:                 "AVD-AWS-0093",
 							Type:               "Cloudformation Security Check powered by cfsec",
