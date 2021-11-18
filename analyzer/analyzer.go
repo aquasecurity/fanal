@@ -38,6 +38,7 @@ type analyzer interface {
 	Version() int
 	Analyze(ctx context.Context, input AnalysisTarget) (*AnalysisResult, error)
 	Required(filePath string, info os.FileInfo) bool
+	CacheType() types.CacheType
 }
 
 type configAnalyzer interface {
@@ -64,11 +65,12 @@ type AnalysisResult struct {
 	Applications         []types.Application
 	Configs              []types.Config
 	SystemInstalledFiles []string // A list of files installed by OS package manager
+	CustomResources      []types.CustomResource
 }
 
 func (r *AnalysisResult) isEmpty() bool {
 	return r.OS == nil && len(r.PackageInfos) == 0 && len(r.Applications) == 0 &&
-		len(r.Configs) == 0 && len(r.SystemInstalledFiles) == 0
+		len(r.Configs) == 0 && len(r.SystemInstalledFiles) == 0 && len(r.CustomResources) == 0
 }
 
 func (r *AnalysisResult) Sort() {
@@ -122,6 +124,14 @@ func (r *AnalysisResult) Merge(new *AnalysisResult) {
 		r.Applications = append(r.Applications, new.Applications...)
 	}
 
+	if len(new.CustomResources) > 0 {
+		if r.CustomResources == nil {
+			r.CustomResources = new.CustomResources
+		} else {
+			r.CustomResources = append(r.CustomResources, new.CustomResources...)
+		}
+	}
+
 	for _, m := range new.Configs {
 		r.Configs = append(r.Configs, m)
 	}
@@ -160,9 +170,12 @@ func NewAnalyzer(disabledAnalyzers []Type) Analyzer {
 }
 
 // AnalyzerVersions returns analyzer version identifier used for cache keys.
-func (a Analyzer) AnalyzerVersions() map[string]int {
+func (a Analyzer) AnalyzerVersions(cache types.CacheType) map[string]int {
 	versions := map[string]int{}
 	for analyzerType, aa := range analyzers {
+		if aa.CacheType() != cache {
+			continue
+		}
 		if isDisabled(analyzerType, a.disabledAnalyzers) {
 			versions[string(analyzerType)] = 0
 			continue
@@ -185,7 +198,7 @@ func (a Analyzer) ImageConfigAnalyzerVersions() map[string]int {
 	return versions
 }
 
-func (a Analyzer) AnalyzeFile(ctx context.Context, wg *sync.WaitGroup, limit *semaphore.Weighted, result *AnalysisResult,
+func (a Analyzer) AnalyzeFile(ctx context.Context, wg *sync.WaitGroup, limit *semaphore.Weighted, result map[types.CacheType]*AnalysisResult,
 	dir, filePath string, info os.FileInfo, opener Opener) error {
 	if info.IsDir() {
 		return nil
@@ -214,7 +227,7 @@ func (a Analyzer) AnalyzeFile(ctx context.Context, wg *sync.WaitGroup, limit *se
 				log.Logger.Debugf("Analysis error: %s", err)
 				return
 			}
-			result.Merge(ret)
+			result[a.CacheType()].Merge(ret)
 		}(d, AnalysisTarget{Dir: dir, FilePath: filePath, Content: b})
 	}
 	return nil

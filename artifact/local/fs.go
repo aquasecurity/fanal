@@ -75,7 +75,13 @@ func (a Artifact) Inspect(ctx context.Context) (types.ArtifactReference, error) 
 		if err != nil {
 			return xerrors.Errorf("filepath rel (%s): %w", filePath, err)
 		}
-		if err = a.analyzer.AnalyzeFile(ctx, &wg, limit, result, a.dir, filePath, info, opener); err != nil {
+
+		// extraCaches are not supported for fs scan, add to map for the support
+		resultMap := map[types.CacheType]*analyzer.AnalysisResult{
+			a.cache.Type(): result,
+		}
+
+		if err = a.analyzer.AnalyzeFile(ctx, &wg, limit, resultMap, a.dir, filePath, info, opener); err != nil {
 			return xerrors.Errorf("analyze file (%s): %w", filePath, err)
 		}
 		return nil
@@ -118,7 +124,7 @@ func (a Artifact) Inspect(ctx context.Context) (types.ArtifactReference, error) 
 	d := digest.NewDigest(digest.SHA256, h)
 	diffID := d.String()
 	blobInfo.DiffID = diffID
-	cacheKey, err := cache.CalcKey(diffID, a.analyzer.AnalyzerVersions(), a.hookManager.Versions(),
+	cacheKey, err := cache.CalcKey(diffID, a.analyzer.AnalyzerVersions(a.cache.Type()), a.hookManager.Versions(),
 		a.artifactOption, a.configScannerOption)
 	if err != nil {
 		return types.ArtifactReference{}, xerrors.Errorf("cache key: %w", err)

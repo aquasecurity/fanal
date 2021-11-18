@@ -78,6 +78,10 @@ func (_m *MockLocalArtifactCache) Close() error {
 	return r0
 }
 
+func (_m *MockLocalArtifactCache) Type() types.CacheType {
+	return types.BuiltInCache
+}
+
 type LocalArtifactCacheGetArtifactArgs struct {
 	ArtifactID         string
 	ArtifactIDAnything bool

@@ -194,8 +194,6 @@ github.com/aquasecurity/cfsec v0.0.12 h1:6zvaJ34qKbElT5CyeMDre5WxtphPCt+XXKqz0At
 github.com/aquasecurity/cfsec v0.0.12/go.mod h1:26CqZRuXnPWAEqN2duORHQAPfz8Fh5FjVE+AT0wu78k=
 github.com/aquasecurity/defsec v0.0.30 h1:7GSGUUH0xeWRlyLeksdYz+PLZqQu6taICzapGvdlu4c=
 github.com/aquasecurity/defsec v0.0.30/go.mod h1:E53TX/xJkcgpJyF5GPSat3Z+cZiLyvSNBdJAyfdl3fc=
-github.com/aquasecurity/go-dep-parser v0.0.0-20211013074621-eb58e8565220 h1:4ck6/2PNmzcNPUgFT3gCq6oVFB/Do/qiasRuBL9xGDI=
-github.com/aquasecurity/go-dep-parser v0.0.0-20211013074621-eb58e8565220/go.mod h1:Zc7Eo6tFl9l4XcqsWeabD7jHnXRBK/LdgZuu9GTSVLU=
 github.com/aquasecurity/go-dep-parser v0.0.0-20211110174639-8257534ffed3 h1:zYNhYU4HUqJq+Lqhwf68gvd+v0cKqM2XOmggtHYLkoU=
 github.com/aquasecurity/go-dep-parser v0.0.0-20211110174639-8257534ffed3/go.mod h1:Zc7Eo6tFl9l4XcqsWeabD7jHnXRBK/LdgZuu9GTSVLU=
 github.com/aquasecurity/testdocker v0.0.0-20210911155206-e1e85f5a1516 h1:moQmzbpLo5dxHQCyEhqzizsDSNrNhn/7uRTCZzo4A1o=

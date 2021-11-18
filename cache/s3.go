@@ -157,3 +157,8 @@ func (c S3Cache) Close() error {
 func (c S3Cache) Clear() error {
 	return nil
 }
+
+// Type returns default type
+func (c S3Cache) Type() types.CacheType {
+	return types.BuiltInCache
+}

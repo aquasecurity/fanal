@@ -60,3 +60,7 @@ func (a fedoraOSAnalyzer) Type() analyzer.Type {
 func (a fedoraOSAnalyzer) Version() int {
 	return fedoraAnalyzerVersion
 }
+
+func (a fedoraOSAnalyzer) CacheType() types.CacheType {
+	return types.BuiltInCache
+}

@@ -44,3 +44,7 @@ func (a composerLibraryAnalyzer) Type() analyzer.Type {
 func (a composerLibraryAnalyzer) Version() int {
 	return version
 }
+
+func (a composerLibraryAnalyzer) CacheType() types.CacheType {
+	return types.BuiltInCache
+}

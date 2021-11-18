@@ -59,3 +59,7 @@ func (a nodePkgLibraryAnalyzer) Type() analyzer.Type {
 func (a nodePkgLibraryAnalyzer) Version() int {
 	return version
 }
+
+func (a nodePkgLibraryAnalyzer) CacheType() types.CacheType {
+	return types.BuiltInCache
+}

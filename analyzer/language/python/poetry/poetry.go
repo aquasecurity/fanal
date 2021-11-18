@@ -44,3 +44,7 @@ func (a poetryLibraryAnalyzer) Type() analyzer.Type {
 func (a poetryLibraryAnalyzer) Version() int {
 	return version
 }
+
+func (a poetryLibraryAnalyzer) CacheType() types.CacheType {
+	return types.BuiltInCache
+}

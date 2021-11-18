@@ -241,7 +241,7 @@ func imageArtifact(ctx context.Context, imageName string, c cache.ArtifactCache,
 		return nil, func() {}, err
 	}
 
-	art, err := aimage.NewArtifact(img, c, artifactOpt, scannerOpt)
+	art, err := aimage.NewArtifact(img, c, nil, artifactOpt, scannerOpt)
 	if err != nil {
 		return nil, func() {}, err
 	}
@@ -254,7 +254,7 @@ func archiveImageArtifact(imagePath string, c cache.ArtifactCache) (artifact.Art
 		return nil, err
 	}
 
-	art, err := aimage.NewArtifact(img, c, artifact.Option{}, config.ScannerOption{})
+	art, err := aimage.NewArtifact(img, c, nil, artifact.Option{}, config.ScannerOption{})
 	if err != nil {
 		return nil, err
 	}

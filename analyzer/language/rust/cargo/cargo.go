@@ -44,3 +44,7 @@ func (a cargoLibraryAnalyzer) Type() analyzer.Type {
 func (a cargoLibraryAnalyzer) Version() int {
 	return version
 }
+
+func (a cargoLibraryAnalyzer) CacheType() types.CacheType {
+	return types.BuiltInCache
+}

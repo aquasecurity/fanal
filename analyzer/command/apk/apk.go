@@ -59,6 +59,10 @@ type pkg struct {
 
 type version map[string]int
 
+func (a alpineCmdAnalyzer) CacheType() types.CacheType {
+	return types.BuiltInCache
+}
+
 func (a alpineCmdAnalyzer) Analyze(targetOS types.OS, configBlob []byte) ([]types.Package, error) {
 	var apkIndexArchive *apkIndex
 	var err error

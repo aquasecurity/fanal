@@ -55,3 +55,7 @@ func (a oracleOSAnalyzer) Type() analyzer.Type {
 func (a oracleOSAnalyzer) Version() int {
 	return oracleAnalyzerVersion
 }
+
+func (a oracleOSAnalyzer) CacheType() types.CacheType {
+	return types.BuiltInCache
+}

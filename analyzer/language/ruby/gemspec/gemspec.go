@@ -61,3 +61,7 @@ func (a gemspecLibraryAnalyzer) Type() analyzer.Type {
 func (a gemspecLibraryAnalyzer) Version() int {
 	return version
 }
+
+func (a gemspecLibraryAnalyzer) CacheType() types.CacheType {
+	return types.BuiltInCache
+}

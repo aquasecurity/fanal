@@ -58,3 +58,7 @@ func (a almaOSAnalyzer) Type() analyzer.Type {
 func (a almaOSAnalyzer) Version() int {
 	return almaAnalyzerVersion
 }
+
+func (a almaOSAnalyzer) CacheType() types.CacheType {
+	return types.BuiltInCache
+}

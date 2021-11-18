@@ -71,3 +71,7 @@ func (a suseOSAnalyzer) Type() analyzer.Type {
 func (a suseOSAnalyzer) Version() int {
 	return version
 }
+
+func (a suseOSAnalyzer) CacheType() types.CacheType {
+	return types.BuiltInCache
+}

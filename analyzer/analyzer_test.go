@@ -364,7 +364,7 @@ func TestAnalyzeFile(t *testing.T) {
 			require.NoError(t, err)
 
 			ctx := context.Background()
-			err = a.AnalyzeFile(ctx, &wg, limit, got, "", tt.args.filePath, info, func() ([]byte, error) {
+			err = a.AnalyzeFile(ctx, &wg, limit, map[types.CacheType]*analyzer.AnalysisResult{types.BuiltInCache: got}, "", tt.args.filePath, info, func() ([]byte, error) {
 				if tt.args.testFilePath == "testdata/error" {
 					return nil, xerrors.New("error")
 				}
@@ -442,11 +442,13 @@ func TestAnalyzeConfig(t *testing.T) {
 func TestAnalyzer_AnalyzerVersions(t *testing.T) {
 	tests := []struct {
 		name     string
+		cache    types.CacheType
 		disabled []analyzer.Type
 		want     map[string]int
 	}{
 		{
 			name:     "happy path",
+			cache:    types.BuiltInCache,
 			disabled: []analyzer.Type{},
 			want: map[string]int{
 				"alpine":     1,
@@ -483,6 +485,7 @@ func TestAnalyzer_AnalyzerVersions(t *testing.T) {
 		},
 		{
 			name:     "disable analyzers",
+			cache:    types.BuiltInCache,
 			disabled: []analyzer.Type{analyzer.TypeAlpine, analyzer.TypeUbuntu},
 			want: map[string]int{
 				"alpine":     0,
@@ -521,7 +524,7 @@ func TestAnalyzer_AnalyzerVersions(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			a := analyzer.NewAnalyzer(tt.disabled)
-			got := a.AnalyzerVersions()
+			got := a.AnalyzerVersions(tt.cache)
 			fmt.Printf("%v\n", got)
 			assert.Equal(t, tt.want, got)
 		})

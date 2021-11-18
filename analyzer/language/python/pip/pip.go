@@ -42,3 +42,7 @@ func (a pipLibraryAnalyzer) Type() analyzer.Type {
 func (a pipLibraryAnalyzer) Version() int {
 	return version
 }
+
+func (a pipLibraryAnalyzer) CacheType() types.CacheType {
+	return types.BuiltInCache
+}

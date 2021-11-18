@@ -46,3 +46,7 @@ func (a bundlerLibraryAnalyzer) Type() analyzer.Type {
 func (a bundlerLibraryAnalyzer) Version() int {
 	return version
 }
+
+func (a bundlerLibraryAnalyzer) CacheType() types.CacheType {
+	return types.BuiltInCache
+}

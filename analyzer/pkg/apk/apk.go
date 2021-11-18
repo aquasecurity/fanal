@@ -113,3 +113,7 @@ func (a alpinePkgAnalyzer) Type() analyzer.Type {
 func (a alpinePkgAnalyzer) Version() int {
 	return version
 }
+
+func (a alpinePkgAnalyzer) CacheType() types.CacheType {
+	return types.BuiltInCache
+}

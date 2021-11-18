@@ -221,3 +221,7 @@ func (a dpkgAnalyzer) Type() analyzer.Type {
 func (a dpkgAnalyzer) Version() int {
 	return version
 }
+
+func (a dpkgAnalyzer) CacheType() types.CacheType {
+	return types.BuiltInCache
+}

@@ -31,7 +31,7 @@ func NewFSCache(cacheDir string) (FSCache, error) {
 	err = db.Update(func(tx *bolt.Tx) error {
 		for _, bucket := range []string{artifactBucket, blobBucket} {
 			if _, err := tx.CreateBucketIfNotExists([]byte(bucket)); err != nil {
-				return xerrors.Errorf("unable to create %s bucket: %w", err)
+				return xerrors.Errorf("unable to create %s bucket: %w", bucket, err)
 			}
 		}
 		return nil
@@ -186,4 +186,9 @@ func (fs FSCache) Clear() error {
 		return xerrors.Errorf("failed to remove cache: %w", err)
 	}
 	return nil
+}
+
+// Type returns default type
+func (fs FSCache) Type() types.CacheType {
+	return types.BuiltInCache
 }

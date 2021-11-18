@@ -57,3 +57,7 @@ func (a nugetLibraryAnalyzer) Type() analyzer.Type {
 func (a nugetLibraryAnalyzer) Version() int {
 	return version
 }
+
+func (a nugetLibraryAnalyzer) CacheType() types.CacheType {
+	return types.BuiltInCache
+}

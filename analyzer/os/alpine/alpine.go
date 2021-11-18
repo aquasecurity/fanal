@@ -46,3 +46,7 @@ func (a alpineOSAnalyzer) Type() analyzer.Type {
 func (a alpineOSAnalyzer) Version() int {
 	return version
 }
+
+func (a alpineOSAnalyzer) CacheType() types.CacheType {
+	return types.BuiltInCache
+}

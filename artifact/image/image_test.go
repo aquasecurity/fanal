@@ -100,10 +100,11 @@ func TestArtifact_Inspect(t *testing.T) {
 				},
 			},
 			want: types.ArtifactReference{
-				Name:    "../../test/testdata/alpine-311.tar.gz",
-				Type:    types.ArtifactContainerImage,
-				ID:      "sha256:059741cfbdc039e88e337d621e57e03e99b0e0a75df32f2027ebef13f839af65",
-				BlobIDs: []string{"sha256:e42b13a4ef21c0534f4e571c1b2c3b10bce9d1fc125e05c36876fc6fb81b0bae"},
+				Name:         "../../test/testdata/alpine-311.tar.gz",
+				Type:         types.ArtifactContainerImage,
+				ID:           "sha256:059741cfbdc039e88e337d621e57e03e99b0e0a75df32f2027ebef13f839af65",
+				BlobIDs:      []string{"sha256:e42b13a4ef21c0534f4e571c1b2c3b10bce9d1fc125e05c36876fc6fb81b0bae"},
+				ExtraBlobIDs: map[types.CacheType][]string{},
 				ImageMetadata: types.ImageMetadata{
 					ID: "sha256:a187dde48cd289ac374ad8539930628314bc581a481cdb41409c9289419ddb72",
 					DiffIDs: []string{
@@ -341,6 +342,7 @@ func TestArtifact_Inspect(t *testing.T) {
 					"sha256:3f84d42a9e989dd28923abdebb9682ddad5df1d4473f07e2d6efc0b8bbeed9e7",
 					"sha256:578af74fc912ba68214654e1640a651c905b1d6bcf4e7fafe08e4203044d1b8d",
 				},
+				ExtraBlobIDs: map[types.CacheType][]string{},
 				ImageMetadata: types.ImageMetadata{
 					ID: "sha256:58701fd185bda36cab0557bb6438661831267aa4a9e0b54211c4d5317a48aff4",
 					DiffIDs: []string{
@@ -488,6 +490,7 @@ func TestArtifact_Inspect(t *testing.T) {
 					"sha256:b44e7ddf51955f547a773cabeafcf4d35ede96ceb2124ae1b4e540c04d9ef6a8",
 					"sha256:d0afd4834f3ed2c44410a5a83364de5f2c3efe5105c158954482b2569c42dc1f",
 				},
+				ExtraBlobIDs: map[types.CacheType][]string{},
 				ImageMetadata: types.ImageMetadata{
 					ID: "sha256:58701fd185bda36cab0557bb6438661831267aa4a9e0b54211c4d5317a48aff4",
 					DiffIDs: []string{
@@ -697,7 +700,7 @@ func TestArtifact_Inspect(t *testing.T) {
 			img, err := image.NewArchiveImage(tt.imagePath)
 			require.NoError(t, err)
 
-			a, err := image2.NewArtifact(img, mockCache, tt.artifactOpt, config.ScannerOption{})
+			a, err := image2.NewArtifact(img, mockCache, []cache.ArtifactCache{}, tt.artifactOpt, config.ScannerOption{})
 			require.NoError(t, err)
 
 			got, err := a.Inspect(context.Background())

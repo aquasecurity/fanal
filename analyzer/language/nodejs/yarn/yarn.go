@@ -44,3 +44,7 @@ func (a yarnLibraryAnalyzer) Type() analyzer.Type {
 func (a yarnLibraryAnalyzer) Version() int {
 	return version
 }
+
+func (a yarnLibraryAnalyzer) CacheType() types.CacheType {
+	return types.BuiltInCache
+}
