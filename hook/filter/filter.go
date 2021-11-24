@@ -22,6 +22,23 @@ var (
 		"/usr/lib/python2.7/lib-dynload/Python-2.7.egg-info",
 		"/usr/lib/python2.7/wsgiref.egg-info",
 	}
+
+	affectedTypes = []string{
+		//ruby
+		types.Bundler,
+		types.GemSpec,
+
+		//python
+		types.Pip,
+		types.Pipenv,
+		types.Poetry,
+		types.PythonPkg,
+
+		//node.js
+		types.NodePkg,
+		types.Npm,
+		types.Yarn,
+	}
 )
 
 type systemFileFilterHook struct{}
@@ -38,7 +55,7 @@ func (h systemFileFilterHook) Hook(blob *types.BlobInfo) error {
 	for _, app := range blob.Applications {
 		// If the lang-specific package was installed by OS package manager, it should not be taken.
 		// Otherwise, the package version will be wrong, then it will lead to false positive.
-		if utils.StringInSlice(app.FilePath, systemFiles) {
+		if utils.StringInSlice(app.FilePath, systemFiles) && utils.StringInSlice(app.Type, affectedTypes) {
 			continue
 		}
 
