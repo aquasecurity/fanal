@@ -62,6 +62,7 @@ func ApplyLayers(layers []types.BlobInfo) types.ArtifactDetail {
 
 	for _, layer := range layers {
 		for _, opqDir := range layer.OpaqueDirs {
+			//opqDir = strings.TrimSuffix(opqDir, sep)
 			_ = nestedMap.DeleteByString(opqDir, sep)
 		}
 		for _, whFile := range layer.WhiteoutFiles {

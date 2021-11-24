@@ -380,7 +380,7 @@ func TestApplyLayers(t *testing.T) {
 							},
 						},
 					},
-					OpaqueDirs: []string{"app"},
+					OpaqueDirs: []string{"app/"},
 				},
 			},
 			expectedArtifactDetail: types.ArtifactDetail{
