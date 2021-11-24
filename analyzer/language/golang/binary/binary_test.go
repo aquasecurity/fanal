@@ -1,6 +1,7 @@
 package binary
 
 import (
+	"context"
 	"io/ioutil"
 	"os"
 	"testing"
@@ -10,7 +11,6 @@ import (
 
 	"github.com/aquasecurity/fanal/analyzer"
 	"github.com/aquasecurity/fanal/types"
-	godeptypes "github.com/aquasecurity/go-dep-parser/pkg/types"
 )
 
 func Test_gobinaryLibraryAnalyzer_Analyze(t *testing.T) {
@@ -28,19 +28,23 @@ func Test_gobinaryLibraryAnalyzer_Analyze(t *testing.T) {
 					{
 						Type:     types.GoBinary,
 						FilePath: "testdata/executable_gobinary",
-						Libraries: []types.LibraryInfo{
-							{Library: godeptypes.Library{Name: "github.com/aquasecurity/go-pep440-version", Version: "v0.0.0-20210121094942-22b2f8951d46"}},
-							{Library: godeptypes.Library{Name: "github.com/aquasecurity/go-version", Version: "v0.0.0-20210121072130-637058cfe492"}},
-							{Library: godeptypes.Library{Name: "golang.org/x/xerrors", Version: "v0.0.0-20200804184101-5ec99f83aff1"}},
+						Libraries: []types.Package{
+							{Name: "github.com/aquasecurity/go-pep440-version", Version: "v0.0.0-20210121094942-22b2f8951d46"},
+							{Name: "github.com/aquasecurity/go-version", Version: "v0.0.0-20210121072130-637058cfe492"},
+							{Name: "golang.org/x/xerrors", Version: "v0.0.0-20200804184101-5ec99f83aff1"},
 						},
 					},
 				},
 			},
 		},
 		{
-			name:      "sad path not gobinary",
+			name:      "not go binary",
 			inputFile: "testdata/executable_bash",
-			wantErr:   "unrecognized executable format",
+		},
+		{
+			name:      "broken elf",
+			inputFile: "testdata/broken_elf",
+			wantErr:   "unexpected EOF",
 		},
 	}
 	for _, tt := range tests {
@@ -49,7 +53,8 @@ func Test_gobinaryLibraryAnalyzer_Analyze(t *testing.T) {
 			require.NoError(t, err)
 
 			a := gobinaryLibraryAnalyzer{}
-			got, err := a.Analyze(analyzer.AnalysisTarget{
+			ctx := context.Background()
+			got, err := a.Analyze(ctx, analyzer.AnalysisTarget{
 				FilePath: tt.inputFile,
 				Content:  b,
 			})
@@ -81,11 +86,16 @@ func Test_gobinaryLibraryAnalyzer_Required(t *testing.T) {
 			filePath: "testdata/0644",
 			want:     false,
 		},
+		{
+			name:     "symlink",
+			filePath: "testdata/symlink",
+			want:     false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			a := gobinaryLibraryAnalyzer{}
-			fileInfo, err := os.Stat(tt.filePath)
+			fileInfo, err := os.Lstat(tt.filePath)
 			require.NoError(t, err)
 			got := a.Required(tt.filePath, fileInfo)
 			assert.Equal(t, tt.want, got, fileInfo.Mode().Perm())

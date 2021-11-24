@@ -3,10 +3,8 @@ package walker
 import (
 	"archive/tar"
 	"io"
-	"io/ioutil"
 	"path/filepath"
 	"strings"
-	"sync"
 
 	"golang.org/x/xerrors"
 )
@@ -16,18 +14,25 @@ const (
 	wh  string = ".wh."
 )
 
-func WalkLayerTar(layer io.Reader, analyzeFn WalkFunc) ([]string, []string, int64, error) {
-	var opqDirs, whFiles []string
-	var size int64
+type LayerTar struct {
+	walker
+}
+
+func NewLayerTar(skipFiles, skipDirs []string) LayerTar {
+	return LayerTar{
+		walker: newWalker(skipFiles, skipDirs),
+	}
+}
+
+func (w LayerTar) Walk(layer io.Reader, analyzeFn WalkFunc) ([]string, []string, error) {
+	var opqDirs, whFiles, skipDirs []string
 	tr := tar.NewReader(layer)
 	for {
 		hdr, err := tr.Next()
 		if err == io.EOF {
 			break
-		}
-		size += hdr.Size
-		if err != nil {
-			return nil, nil, 0, xerrors.Errorf("failed to extract the archive: %w", err)
+		} else if err != nil {
+			return nil, nil, xerrors.Errorf("failed to extract the archive: %w", err)
 		}
 
 		filePath := hdr.Name
@@ -47,33 +52,42 @@ func WalkLayerTar(layer io.Reader, analyzeFn WalkFunc) ([]string, []string, int6
 			continue
 		}
 
-		if isIgnored(filePath) {
+		switch hdr.Typeflag {
+		case tar.TypeDir:
+			if w.shouldSkipDir(filePath) {
+				skipDirs = append(skipDirs, filePath)
+				continue
+			}
+		case tar.TypeSymlink, tar.TypeLink, tar.TypeReg:
+			if w.shouldSkipFile(filePath) {
+				continue
+			}
+		default:
 			continue
 		}
 
-		if hdr.Typeflag == tar.TypeSymlink || hdr.Typeflag == tar.TypeLink || hdr.Typeflag == tar.TypeReg {
-			err = analyzeFn(filePath, hdr.FileInfo(), tarOnceOpener(tr))
-			if err != nil {
-				return nil, nil, 0, xerrors.Errorf("failed to analyze file: %w", err)
-			}
+		if underSkippedDir(filePath, skipDirs) {
+			continue
+		}
+
+		// A symbolic/hard link or regular file will reach here.
+		err = analyzeFn(filePath, hdr.FileInfo(), w.fileOnceOpener(tr))
+		if err != nil {
+			return nil, nil, xerrors.Errorf("failed to analyze file: %w", err)
 		}
 	}
-	return opqDirs, whFiles, size, nil
+	return opqDirs, whFiles, nil
 }
 
-// tarOnceOpener reads a file once and the content is shared so that some analyzers can use the same data
-func tarOnceOpener(r io.Reader) func() ([]byte, error) {
-	var once sync.Once
-	var b []byte
-	var err error
-
-	return func() ([]byte, error) {
-		once.Do(func() {
-			b, err = ioutil.ReadAll(r)
-		})
+func underSkippedDir(filePath string, skipDirs []string) bool {
+	for _, skipDir := range skipDirs {
+		rel, err := filepath.Rel(skipDir, filePath)
 		if err != nil {
-			return nil, xerrors.Errorf("unable to read tar file: %w", err)
+			return false
 		}
-		return b, nil
+		if !strings.HasPrefix(rel, "../") {
+			return true
+		}
 	}
+	return false
 }

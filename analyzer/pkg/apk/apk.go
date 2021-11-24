@@ -3,8 +3,10 @@ package apk
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"log"
 	"os"
+	"path/filepath"
 
 	apkVersion "github.com/knqyf263/go-apk-version"
 
@@ -23,9 +25,9 @@ var requiredFiles = []string{"lib/apk/db/installed"}
 
 type alpinePkgAnalyzer struct{}
 
-func (a alpinePkgAnalyzer) Analyze(target analyzer.AnalysisTarget) (*analyzer.AnalysisResult, error) {
+func (a alpinePkgAnalyzer) Analyze(_ context.Context, target analyzer.AnalysisTarget) (*analyzer.AnalysisResult, error) {
 	scanner := bufio.NewScanner(bytes.NewBuffer(target.Content))
-	parsedPkgs := a.parseApkInfo(scanner)
+	parsedPkgs, installedFiles := a.parseApkInfo(scanner)
 
 	return &analyzer.AnalysisResult{
 		PackageInfos: []types.PackageInfo{
@@ -34,18 +36,25 @@ func (a alpinePkgAnalyzer) Analyze(target analyzer.AnalysisTarget) (*analyzer.An
 				Packages: parsedPkgs,
 			},
 		},
+		SystemInstalledFiles: installedFiles,
 	}, nil
 }
 
-func (a alpinePkgAnalyzer) parseApkInfo(scanner *bufio.Scanner) (pkgs []types.Package) {
-	var pkg types.Package
-	var version string
+func (a alpinePkgAnalyzer) parseApkInfo(scanner *bufio.Scanner) ([]types.Package, []string) {
+	var (
+		pkgs           []types.Package
+		pkg            types.Package
+		version        string
+		dir            string
+		installedFiles []string
+	)
+
 	for scanner.Scan() {
 		line := scanner.Text()
 
 		// check package if paragraph end
 		if len(line) < 2 {
-			if analyzer.CheckPackage(&pkg) {
+			if !pkg.Empty() {
 				pkgs = append(pkgs, pkg)
 			}
 			pkg = types.Package{}
@@ -56,7 +65,7 @@ func (a alpinePkgAnalyzer) parseApkInfo(scanner *bufio.Scanner) (pkgs []types.Pa
 		case "P:":
 			pkg.Name = line[2:]
 		case "V:":
-			version = string(line[2:])
+			version = line[2:]
 			if !apkVersion.Valid(version) {
 				log.Printf("Invalid Version Found : OS %s, Package %s, Version %s", "alpine", pkg.Name, version)
 				continue
@@ -68,14 +77,18 @@ func (a alpinePkgAnalyzer) parseApkInfo(scanner *bufio.Scanner) (pkgs []types.Pa
 			pkg.SrcVersion = version
 		case "L:":
 			pkg.License = line[2:]
+		case "F:":
+			dir = line[2:]
+		case "R:":
+			installedFiles = append(installedFiles, filepath.Join(dir, line[2:]))
 		}
 	}
 	// in case of last paragraph
-	if analyzer.CheckPackage(&pkg) {
+	if !pkg.Empty() {
 		pkgs = append(pkgs, pkg)
 	}
 
-	return a.uniquePkgs(pkgs)
+	return a.uniquePkgs(pkgs), installedFiles
 }
 func (a alpinePkgAnalyzer) uniquePkgs(pkgs []types.Package) (uniqPkgs []types.Package) {
 	uniq := map[string]struct{}{}

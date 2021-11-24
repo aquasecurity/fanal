@@ -36,7 +36,7 @@ type AnalysisTarget struct {
 type analyzer interface {
 	Type() Type
 	Version() int
-	Analyze(input AnalysisTarget) (*AnalysisResult, error)
+	Analyze(ctx context.Context, input AnalysisTarget) (*AnalysisResult, error)
 	Required(filePath string, info os.FileInfo) bool
 }
 
@@ -58,15 +58,17 @@ func RegisterConfigAnalyzer(analyzer configAnalyzer) {
 type Opener func() ([]byte, error)
 
 type AnalysisResult struct {
-	m            sync.Mutex
-	OS           *types.OS
-	PackageInfos []types.PackageInfo
-	Applications []types.Application
-	Configs      []types.Config
+	m                    sync.Mutex
+	OS                   *types.OS
+	PackageInfos         []types.PackageInfo
+	Applications         []types.Application
+	Configs              []types.Config
+	SystemInstalledFiles []string // A list of files installed by OS package manager
 }
 
 func (r *AnalysisResult) isEmpty() bool {
-	return r.OS == nil && len(r.PackageInfos) == 0 && len(r.Applications) == 0 && len(r.Configs) == 0
+	return r.OS == nil && len(r.PackageInfos) == 0 && len(r.Applications) == 0 &&
+		len(r.Configs) == 0 && len(r.SystemInstalledFiles) == 0
 }
 
 func (r *AnalysisResult) Sort() {
@@ -86,10 +88,10 @@ func (r *AnalysisResult) Sort() {
 
 	for _, app := range r.Applications {
 		sort.Slice(app.Libraries, func(i, j int) bool {
-			if app.Libraries[i].Library.Name != app.Libraries[j].Library.Name {
-				return app.Libraries[i].Library.Name < app.Libraries[j].Library.Name
+			if app.Libraries[i].Name != app.Libraries[j].Name {
+				return app.Libraries[i].Name < app.Libraries[j].Name
 			}
-			return app.Libraries[i].Library.Version < app.Libraries[j].Library.Version
+			return app.Libraries[i].Version < app.Libraries[j].Version
 		})
 	}
 }
@@ -123,6 +125,8 @@ func (r *AnalysisResult) Merge(new *AnalysisResult) {
 	for _, m := range new.Configs {
 		r.Configs = append(r.Configs, m)
 	}
+
+	r.SystemInstalledFiles = append(r.SystemInstalledFiles, new.SystemInstalledFiles...)
 }
 
 type Analyzer struct {
@@ -205,7 +209,7 @@ func (a Analyzer) AnalyzeFile(ctx context.Context, wg *sync.WaitGroup, limit *se
 			defer limit.Release(1)
 			defer wg.Done()
 
-			ret, err := a.Analyze(target)
+			ret, err := a.Analyze(ctx, target)
 			if err != nil && !xerrors.Is(err, aos.AnalyzeOSError) {
 				log.Logger.Debugf("Analysis error: %s", err)
 				return
@@ -238,8 +242,4 @@ func isDisabled(t Type, disabled []Type) bool {
 		}
 	}
 	return false
-}
-
-func CheckPackage(pkg *types.Package) bool {
-	return pkg.Name != "" && pkg.Version != ""
 }

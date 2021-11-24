@@ -2,23 +2,27 @@ package types
 
 const (
 	ArtifactJSONSchemaVersion = 1
-	BlobJSONSchemaVersion     = 1
+	BlobJSONSchemaVersion     = 2
 )
 
 const (
 	// Programming language dependencies
-	Bundler  = "bundler"
-	Cargo    = "cargo"
-	Composer = "composer"
-	Npm      = "npm"
-	NuGet    = "nuget"
-	Pip      = "pip"
-	Pipenv   = "pipenv"
-	Poetry   = "poetry"
-	Yarn     = "yarn"
-	Jar      = "jar"
-	GoBinary = "gobinary"
-	GoMod    = "gomod"
+	Bundler    = "bundler"
+	GemSpec    = "gemspec"
+	Cargo      = "cargo"
+	Composer   = "composer"
+	Npm        = "npm"
+	NuGet      = "nuget"
+	Pip        = "pip"
+	Pipenv     = "pipenv"
+	Poetry     = "poetry"
+	PythonPkg  = "python-pkg"
+	NodePkg    = "node-pkg"
+	Yarn       = "yarn"
+	Jar        = "jar"
+	GoBinary   = "gobinary"
+	GoMod      = "gomod"
+	JavaScript = "javascript"
 
 	// Config files
 	YAML           = "yaml"
