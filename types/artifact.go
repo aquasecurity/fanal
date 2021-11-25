@@ -139,5 +139,6 @@ type ArtifactDetail struct {
 type CustomResource struct {
 	Type     string
 	FilePath string
-	Info     map[string]interface{}
+	Layer    Layer
+	Info     interface{}
 }

@@ -91,6 +91,10 @@ func ApplyLayers(layers []types.BlobInfo) types.ArtifactDetail {
 		}
 		for _, customResource := range layer.CustomResources {
 			key := fmt.Sprintf("%s/custom:%s", customResource.FilePath, customResource.Type)
+			customResource.Layer = types.Layer{
+				Digest: layer.Digest,
+				DiffID: layer.DiffID,
+			}
 			nestedMap.SetByString(key, sep, customResource)
 		}
 	}
