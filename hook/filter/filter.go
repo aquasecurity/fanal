@@ -24,20 +24,14 @@ var (
 	}
 
 	affectedTypes = []string{
-		//ruby
-		types.Bundler,
+		// ruby
 		types.GemSpec,
 
-		//python
-		types.Pip,
-		types.Pipenv,
-		types.Poetry,
+		// python
 		types.PythonPkg,
 
-		//node.js
+		// node.js
 		types.NodePkg,
-		types.Npm,
-		types.Yarn,
 	}
 )
 
