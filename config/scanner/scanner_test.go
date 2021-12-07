@@ -271,7 +271,7 @@ func TestScanner_ScanConfig(t *testing.T) {
 						},
 						IacMetadata: types.IacMetadata{
 							Resource:  "aws_security_group_rule.my-rule",
-							Provider:  "AWS",
+							Provider:  "",
 							Service:   "vpc",
 							StartLine: 1,
 							EndLine:   4,
@@ -288,7 +288,7 @@ func TestScanner_ScanConfig(t *testing.T) {
 						},
 						IacMetadata: types.IacMetadata{
 							Resource:  "aws_security_group_rule.my-rule",
-							Provider:  "AWS",
+							Provider:  "",
 							Service:   "vpc",
 							StartLine: 1,
 							EndLine:   4,
@@ -305,7 +305,7 @@ func TestScanner_ScanConfig(t *testing.T) {
 						},
 						IacMetadata: types.IacMetadata{
 							Resource:  "aws_security_group_rule.my-rule",
-							Provider:  "General",
+							Provider:  "",
 							Service:   "secrets",
 							StartLine: 1,
 							EndLine:   4,
@@ -322,7 +322,7 @@ func TestScanner_ScanConfig(t *testing.T) {
 						},
 						IacMetadata: types.IacMetadata{
 							Resource:  "azurerm_managed_disk.source",
-							Provider:  "General",
+							Provider:  "",
 							Service:   "secrets",
 							StartLine: 10,
 							EndLine:   14,
@@ -339,7 +339,7 @@ func TestScanner_ScanConfig(t *testing.T) {
 						},
 						IacMetadata: types.IacMetadata{
 							Resource:  "aws_security_group_rule.my-rule",
-							Provider:  "General",
+							Provider:  "",
 							Service:   "secrets",
 							StartLine: 1,
 							EndLine:   4,
@@ -356,7 +356,7 @@ func TestScanner_ScanConfig(t *testing.T) {
 						},
 						IacMetadata: types.IacMetadata{
 							Resource:  "azurerm_managed_disk.source",
-							Provider:  "General",
+							Provider:  "",
 							Service:   "secrets",
 							StartLine: 10,
 							EndLine:   14,
@@ -374,7 +374,7 @@ func TestScanner_ScanConfig(t *testing.T) {
 						},
 						IacMetadata: types.IacMetadata{
 							Resource:  "variable.enableEncryption",
-							Provider:  "General",
+							Provider:  "",
 							Service:   "secrets",
 							StartLine: 6,
 							EndLine:   8,
@@ -391,7 +391,7 @@ func TestScanner_ScanConfig(t *testing.T) {
 						},
 						IacMetadata: types.IacMetadata{
 							Resource:  "variable.enableEncryption",
-							Provider:  "General",
+							Provider:  "",
 							Service:   "secrets",
 							StartLine: 6,
 							EndLine:   8,
