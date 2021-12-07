@@ -54,7 +54,7 @@ func (p *Parser) Parse(contents []byte) (interface{}, error) {
 			stages = append(stages, stage)
 		}
 
-		if child.Value == "from" {
+		if child.Value == "FROM" {
 			fromValue = strings.TrimPrefix(child.Original, "FROM ")
 		}
 
