@@ -36,7 +36,7 @@ func New(rootDir string, namespaces, policyPaths, dataPaths []string, trace bool
 		namespaces: namespaces,
 		tfscanner: tfExternal.NewExternalScanner(
 			tfExternal.OptionIncludePassed(),
-			tfExternal.OptionDebugEnabled(true),
+			tfExternal.OptionDebugEnabled(trace),
 		),
 		cfScanner: cfExternal.NewExternalScanner(cfExternal.OptionIncludePassed()),
 	}
