@@ -358,7 +358,7 @@ func TestAnalyzeFile(t *testing.T) {
 			limit := semaphore.NewWeighted(3)
 
 			got := new(analyzer.AnalysisResult)
-			a := analyzer.NewAnalyzer(tt.args.disabledAnalyzers)
+			a := analyzer.NewAnalyzerGroup(analyzer.GroupBuiltin, tt.args.disabledAnalyzers)
 
 			info, err := os.Stat(tt.args.testFilePath)
 			require.NoError(t, err)
@@ -432,7 +432,7 @@ func TestAnalyzeConfig(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			a := analyzer.NewAnalyzer(tt.args.disabledAnalyzers)
+			a := analyzer.NewAnalyzerGroup(analyzer.GroupBuiltin, tt.args.disabledAnalyzers)
 			got := a.AnalyzeImageConfig(tt.args.targetOS, tt.args.configBlob)
 			assert.Equal(t, tt.want, got)
 		})
@@ -520,7 +520,7 @@ func TestAnalyzer_AnalyzerVersions(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			a := analyzer.NewAnalyzer(tt.disabled)
+			a := analyzer.NewAnalyzerGroup(analyzer.GroupBuiltin, tt.disabled)
 			got := a.AnalyzerVersions()
 			fmt.Printf("%v\n", got)
 			assert.Equal(t, tt.want, got)
@@ -553,7 +553,7 @@ func TestAnalyzer_ImageConfigAnalyzerVersions(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			a := analyzer.NewAnalyzer(tt.disabled)
+			a := analyzer.NewAnalyzerGroup(analyzer.GroupBuiltin, tt.disabled)
 			got := a.ImageConfigAnalyzerVersions()
 			assert.Equal(t, tt.want, got)
 		})

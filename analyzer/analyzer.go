@@ -47,6 +47,16 @@ type configAnalyzer interface {
 	Required(osFound types.OS) bool
 }
 
+type Group string
+
+const GroupBuiltin Group = "builtin"
+
+// CustomGroup returns a group name for custom analyzers
+// This is mainly intended to be used in Aqua products.
+type CustomGroup interface {
+	Group() Group
+}
+
 func RegisterAnalyzer(analyzer analyzer) {
 	analyzers[analyzer.Type()] = analyzer
 }
@@ -64,11 +74,15 @@ type AnalysisResult struct {
 	Applications         []types.Application
 	Configs              []types.Config
 	SystemInstalledFiles []string // A list of files installed by OS package manager
+
+	// CustomResources hold analysis results from custom analyzers.
+	// It is for extensibility and not used in OSS.
+	CustomResources []types.CustomResource
 }
 
 func (r *AnalysisResult) isEmpty() bool {
 	return r.OS == nil && len(r.PackageInfos) == 0 && len(r.Applications) == 0 &&
-		len(r.Configs) == 0 && len(r.SystemInstalledFiles) == 0
+		len(r.Configs) == 0 && len(r.SystemInstalledFiles) == 0 && len(r.CustomResources) == 0
 }
 
 func (r *AnalysisResult) Sort() {
@@ -127,72 +141,73 @@ func (r *AnalysisResult) Merge(new *AnalysisResult) {
 	}
 
 	r.SystemInstalledFiles = append(r.SystemInstalledFiles, new.SystemInstalledFiles...)
+
+	r.CustomResources = append(r.CustomResources, new.CustomResources...)
 }
 
-type Analyzer struct {
-	drivers           []analyzer
-	configDrivers     []configAnalyzer
-	disabledAnalyzers []Type
+type AnalyzerGroup struct {
+	analyzers       []analyzer
+	configAnalyzers []configAnalyzer
 }
 
-func NewAnalyzer(disabledAnalyzers []Type) Analyzer {
-	var drivers []analyzer
+func NewAnalyzerGroup(groupName Group, disabledAnalyzers []Type) AnalyzerGroup {
+	if groupName == "" {
+		groupName = GroupBuiltin
+	}
+
+	var group AnalyzerGroup
 	for analyzerType, a := range analyzers {
 		if isDisabled(analyzerType, disabledAnalyzers) {
 			continue
 		}
-		drivers = append(drivers, a)
+
+		analyzerGroupName := GroupBuiltin
+		if cg, ok := a.(CustomGroup); ok {
+			analyzerGroupName = cg.Group()
+		}
+		if analyzerGroupName != groupName {
+			continue
+		}
+
+		group.analyzers = append(group.analyzers, a)
 	}
 
-	var configDrivers []configAnalyzer
 	for analyzerType, a := range configAnalyzers {
 		if isDisabled(analyzerType, disabledAnalyzers) {
 			continue
 		}
-		configDrivers = append(configDrivers, a)
+		group.configAnalyzers = append(group.configAnalyzers, a)
 	}
 
-	return Analyzer{
-		drivers:           drivers,
-		configDrivers:     configDrivers,
-		disabledAnalyzers: disabledAnalyzers,
-	}
+	return group
 }
 
 // AnalyzerVersions returns analyzer version identifier used for cache keys.
-func (a Analyzer) AnalyzerVersions() map[string]int {
+func (ag AnalyzerGroup) AnalyzerVersions() map[string]int {
 	versions := map[string]int{}
-	for analyzerType, aa := range analyzers {
-		if isDisabled(analyzerType, a.disabledAnalyzers) {
-			versions[string(analyzerType)] = 0
-			continue
-		}
-		versions[string(analyzerType)] = aa.Version()
+	for _, aa := range ag.analyzers {
+		versions[string(aa.Type())] = aa.Version()
 	}
 	return versions
 }
 
 // ImageConfigAnalyzerVersions returns analyzer version identifier used for cache keys.
-func (a Analyzer) ImageConfigAnalyzerVersions() map[string]int {
+func (ag AnalyzerGroup) ImageConfigAnalyzerVersions() map[string]int {
 	versions := map[string]int{}
-	for _, ca := range configAnalyzers {
-		if isDisabled(ca.Type(), a.disabledAnalyzers) {
-			versions[string(ca.Type())] = 0
-			continue
-		}
+	for _, ca := range ag.configAnalyzers {
 		versions[string(ca.Type())] = ca.Version()
 	}
 	return versions
 }
 
-func (a Analyzer) AnalyzeFile(ctx context.Context, wg *sync.WaitGroup, limit *semaphore.Weighted, result *AnalysisResult,
+func (ag AnalyzerGroup) AnalyzeFile(ctx context.Context, wg *sync.WaitGroup, limit *semaphore.Weighted, result *AnalysisResult,
 	dir, filePath string, info os.FileInfo, opener Opener) error {
 	if info.IsDir() {
 		return nil
 	}
-	for _, d := range a.drivers {
+	for _, a := range ag.analyzers {
 		// filepath extracted from tar file doesn't have the prefix "/"
-		if !d.Required(strings.TrimLeft(filePath, "/"), info) {
+		if !a.Required(strings.TrimLeft(filePath, "/"), info) {
 			continue
 		}
 		b, err := opener()
@@ -215,13 +230,13 @@ func (a Analyzer) AnalyzeFile(ctx context.Context, wg *sync.WaitGroup, limit *se
 				return
 			}
 			result.Merge(ret)
-		}(d, AnalysisTarget{Dir: dir, FilePath: filePath, Content: b})
+		}(a, AnalysisTarget{Dir: dir, FilePath: filePath, Content: b})
 	}
 	return nil
 }
 
-func (a Analyzer) AnalyzeImageConfig(targetOS types.OS, configBlob []byte) []types.Package {
-	for _, d := range a.configDrivers {
+func (ag AnalyzerGroup) AnalyzeImageConfig(targetOS types.OS, configBlob []byte) []types.Package {
+	for _, d := range ag.configAnalyzers {
 		if !d.Required(targetOS) {
 			continue
 		}

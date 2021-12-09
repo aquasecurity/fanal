@@ -32,7 +32,7 @@ type Artifact struct {
 	dir         string
 	cache       cache.ArtifactCache
 	walker      walker.Dir
-	analyzer    analyzer.Analyzer
+	analyzer    analyzer.AnalyzerGroup
 	hookManager hook.Manager
 	scanner     scanner.Scanner
 
@@ -55,7 +55,7 @@ func NewArtifact(dir string, c cache.ArtifactCache, artifactOpt artifact.Option,
 		dir:         dir,
 		cache:       c,
 		walker:      walker.NewDir(artifactOpt.SkipFiles, artifactOpt.SkipDirs),
-		analyzer:    analyzer.NewAnalyzer(artifactOpt.DisabledAnalyzers),
+		analyzer:    analyzer.NewAnalyzerGroup(artifactOpt.AnalyzerGroup, artifactOpt.DisabledAnalyzers),
 		hookManager: hook.NewManager(artifactOpt.DisabledHooks),
 		scanner:     s,
 
