@@ -60,6 +60,8 @@ func (a rpmPkgAnalyzer) parsePkgInfo(rc io.Reader) ([]types.Package, []string, e
 	if err != nil {
 		return nil, nil, xerrors.Errorf("failed to create a package file: %w", err)
 	}
+	defer f.Close()
+
 	_, err = io.Copy(f, rc)
 	if err != nil {
 		return nil, nil, xerrors.Errorf("failed to copy a package file: %w", err)

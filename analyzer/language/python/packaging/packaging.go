@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"context"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -48,7 +47,7 @@ func (a packagingAnalyzer) Analyze(_ context.Context, target analyzer.AnalysisTa
 
 	// .egg file is zip format and PKG-INFO needs to be extracted from the zip file.
 	if strings.HasSuffix(target.FilePath, ".egg") {
-		content, err := ioutil.ReadAll(r)
+		content, err := io.ReadAll(r)
 		if err != nil {
 			return nil, xerrors.Errorf("failed to read the egg file: %w", err)
 		}
@@ -57,7 +56,8 @@ func (a packagingAnalyzer) Analyze(_ context.Context, target analyzer.AnalysisTa
 		if err != nil {
 			return nil, xerrors.Errorf("egg analysis error: %w", err)
 		}
-		r = bytes.NewReader(pkginfoInZip)
+		defer pkginfoInZip.Close()
+		r = pkginfoInZip
 	}
 
 	lib, err := packaging.Parse(r)
@@ -81,7 +81,7 @@ func (a packagingAnalyzer) Analyze(_ context.Context, target analyzer.AnalysisTa
 	}}, nil
 }
 
-func (a packagingAnalyzer) analyzeEggZip(content []byte) ([]byte, error) {
+func (a packagingAnalyzer) analyzeEggZip(content []byte) (io.ReadCloser, error) {
 	zr, err := zip.NewReader(bytes.NewReader(content), int64(len(content)))
 	if err != nil {
 		return nil, xerrors.Errorf("zip reader error: %w", err)
@@ -98,18 +98,12 @@ func (a packagingAnalyzer) analyzeEggZip(content []byte) ([]byte, error) {
 	return nil, nil
 }
 
-func (a packagingAnalyzer) open(file *zip.File) ([]byte, error) {
+func (a packagingAnalyzer) open(file *zip.File) (io.ReadCloser, error) {
 	f, err := file.Open()
 	if err != nil {
 		return nil, err
 	}
-	defer f.Close()
-
-	b, err := io.ReadAll(f)
-	if err != nil {
-		return nil, xerrors.Errorf("file read error: %w", err)
-	}
-	return b, nil
+	return f, nil
 }
 
 func (a packagingAnalyzer) Required(filePath string, _ os.FileInfo) bool {

@@ -4,7 +4,6 @@ import (
 	"archive/tar"
 	"bytes"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -75,7 +74,7 @@ func (w LayerTar) Walk(layer io.Reader, analyzeFn WalkFunc) ([]string, []string,
 		}
 
 		// A symbolic/hard link or regular file will reach here.
-		err = analyzeFn(filePath, hdr.FileInfo(), w.fileWithTarOpener(hdr.FileInfo(), tr))
+		err = analyzeFn(filePath, hdr.FileInfo(), w.fileWithTarOpener(hdr.FileInfo().Size(), tr))
 		if err != nil {
 			return nil, nil, xerrors.Errorf("failed to analyze file: %w", err)
 		}
@@ -99,7 +98,7 @@ func underSkippedDir(filePath string, skipDirs []string) bool {
 // fileWithTarOpener opens a file in a Tar.
 // If the file size is greater than or equal to ThresholdSize(200MB), it writes the file and caches the file name.
 // If the file size is less than ThresholdSize(200MB), it opens the file once and the content is shared so that some analyzers can use the same data
-func (w *walker) fileWithTarOpener(fi os.FileInfo, r io.Reader) func() (io.ReadCloser, func() error, error) {
+func (w *walker) fileWithTarOpener(fileSize int64, r io.Reader) func() (io.ReadCloser, func() error, error) {
 
 	var once sync.Once
 	var b []byte
@@ -109,15 +108,10 @@ func (w *walker) fileWithTarOpener(fi os.FileInfo, r io.Reader) func() (io.ReadC
 
 	return func() (io.ReadCloser, func() error, error) {
 		once.Do(func() {
-			if fi.Size() >= ThresholdSize {
+			if fileSize >= ThresholdSize {
 				var f *os.File
-				tempDirPath, err = ioutil.TempDir("", "trivy-*")
-				if err != nil {
-					err = xerrors.Errorf("failed to create the temp dir: %w", err)
-					return
-				}
 
-				f, err = os.CreateTemp(tempDirPath, "trivy-*")
+				f, err = os.CreateTemp("", "fanal-*")
 				if err != nil {
 					err = xerrors.Errorf("failed to create the temp file: %w", err)
 					return
@@ -142,7 +136,7 @@ func (w *walker) fileWithTarOpener(fi os.FileInfo, r io.Reader) func() (io.ReadC
 			return nil, nil, xerrors.Errorf("failed to once do: %w", err)
 		}
 
-		if fi.Size() >= ThresholdSize {
+		if fileSize >= ThresholdSize {
 			f, err := os.Open(tempFilePath)
 			if err != nil {
 				return nil, nil, xerrors.Errorf("failed to open the temp file: %w", err)

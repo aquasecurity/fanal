@@ -2,7 +2,7 @@ package yaml
 
 import (
 	"context"
-	"io/ioutil"
+	"io"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -31,7 +31,7 @@ func NewConfigAnalyzer(filePattern *regexp.Regexp) ConfigAnalyzer {
 }
 
 func (a ConfigAnalyzer) Analyze(_ context.Context, target analyzer.AnalysisTarget) (*analyzer.AnalysisResult, error) {
-	content, err := ioutil.ReadAll(target.ContentReader)
+	content, err := io.ReadAll(target.ContentReader)
 	if err != nil {
 		return nil, xerrors.Errorf("failed to read the yaml content: %w", err)
 	}

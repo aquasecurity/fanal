@@ -2,7 +2,7 @@ package hcl
 
 import (
 	"context"
-	"io/ioutil"
+	"io"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -53,7 +53,7 @@ func (a ConfigAnalyzer) analyze(target analyzer.AnalysisTarget) (interface{}, er
 	var errs error
 	var parsed interface{}
 
-	content, err := ioutil.ReadAll(target.ContentReader)
+	content, err := io.ReadAll(target.ContentReader)
 	if err != nil {
 		return nil, xerrors.Errorf("failed to read the HCL2 file: %w", err)
 	}

@@ -1,8 +1,8 @@
 package language_test
 
 import (
-	"bytes"
 	"io"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -32,7 +32,7 @@ func TestAnalyze(t *testing.T) {
 			args: args{
 				analyzerType:  types.GoBinary,
 				filePath:      "app/myweb",
-				contentReader: bytes.NewReader([]byte("happy")),
+				contentReader: strings.NewReader("happy"),
 			},
 			want: &analyzer.AnalysisResult{
 				Applications: []types.Application{
@@ -54,7 +54,7 @@ func TestAnalyze(t *testing.T) {
 			args: args{
 				analyzerType:  types.GoBinary,
 				filePath:      "app/myweb",
-				contentReader: bytes.NewReader([]byte("")),
+				contentReader: strings.NewReader(""),
 			},
 			want: nil,
 		},
@@ -63,7 +63,7 @@ func TestAnalyze(t *testing.T) {
 			args: args{
 				analyzerType:  types.Jar,
 				filePath:      "app/myweb",
-				contentReader: bytes.NewReader([]byte("sad")),
+				contentReader: strings.NewReader("sad"),
 			},
 			wantErr: "unexpected error",
 		},
