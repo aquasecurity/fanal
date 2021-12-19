@@ -2,6 +2,8 @@ package cloudformation
 
 import (
 	"context"
+	"io"
+	"strings"
 	"testing"
 
 	"github.com/aquasecurity/fanal/analyzer"
@@ -47,26 +49,26 @@ func TestConfigAnalyzer_Required(t *testing.T) {
 
 func TestConfigAnalyzer_Analyzed(t *testing.T) {
 	tests := []struct {
-		name     string
-		content  string
-		filePath string
-		want     int
+		name          string
+		contentReader io.Reader
+		filePath      string
+		want          int
 	}{
 		{
 			name: "CloudFormation yaml",
-			content: `---
+			contentReader: strings.NewReader(`---
 Parameters:
   SomeParameter:
 Resources:
   SomeResource:
     Type: Something
-`,
+`),
 			filePath: "main.yaml",
 			want:     1,
 		},
 		{
 			name: "Cloudformation JSON",
-			content: `{
+			contentReader: strings.NewReader(`{
   "Parameters": {
     "SomeParameter": null
   },
@@ -75,13 +77,13 @@ Resources:
       "Type": "Something"
     }
   }
-}`,
+}`),
 			filePath: "main.json",
 			want:     1,
 		},
 		{
 			name: "non CloudFormation yaml",
-			content: `---
+			contentReader: strings.NewReader(`---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -101,20 +103,20 @@ spec:
         image: nginx:1.14.2
         ports:
         - containerPort: 80
-`,
+`),
 			filePath: "k8s.yaml",
 			want:     0,
 		},
 		{
 			name: "non CloudFormation json",
-			content: `{
+			contentReader: strings.NewReader(`{
   "foo": [ 
        "baaaaa", 
        "bar", 
        "baa"
     ]
 }
-`,
+`),
 			filePath: "random.yaml",
 			want:     0,
 		},
@@ -123,8 +125,8 @@ spec:
 		t.Run(tt.name, func(t *testing.T) {
 			a := ConfigAnalyzer{}
 			got, err := a.Analyze(context.Background(), analyzer.AnalysisTarget{
-				FilePath: tt.filePath,
-				Content:  []byte(tt.content),
+				FilePath:      tt.filePath,
+				ContentReader: tt.contentReader,
 			})
 			require.NoError(t, err)
 			assert.Len(t, got.Configs, tt.want)
