@@ -195,22 +195,36 @@ func (a Artifact) inspectLayer(ctx context.Context, diffID string) (types.BlobIn
 		return types.BlobInfo{}, xerrors.Errorf("unable to get uncompressed layer %s: %w", diffID, err)
 	}
 
+	var cleaners []func() error
 	var wg sync.WaitGroup
 	result := new(analyzer.AnalysisResult)
 	limit := semaphore.NewWeighted(parallel)
 
 	opqDirs, whFiles, err := a.walker.Walk(r, func(filePath string, info os.FileInfo, opener analyzer.Opener) error {
-		if err = a.analyzer.AnalyzeFile(ctx, &wg, limit, result, "", filePath, info, opener); err != nil {
+		cleaner, err := a.analyzer.AnalyzeFile(ctx, &wg, limit, result, "", filePath, info, opener)
+		if err != nil {
 			return xerrors.Errorf("failed to analyze %s: %w", filePath, err)
 		}
+		if cleaner != nil {
+			cleaners = append(cleaners, cleaner)
+		}
+
 		return nil
 	})
 	if err != nil {
 		return types.BlobInfo{}, xerrors.Errorf("walk error: %w", err)
+
 	}
 
 	// Wait for all the goroutine to finish.
 	wg.Wait()
+
+	// Clean for all temporary data after all analyzers.
+	for _, c := range cleaners {
+		if err := c(); err != nil {
+			log.Logger.Warn("Clean temp directory error: %s", err)
+		}
+	}
 
 	// Sort the analysis result for consistent results
 	result.Sort()

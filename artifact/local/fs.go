@@ -20,6 +20,7 @@ import (
 	"github.com/aquasecurity/fanal/cache"
 	"github.com/aquasecurity/fanal/config/scanner"
 	"github.com/aquasecurity/fanal/hook"
+	"github.com/aquasecurity/fanal/log"
 	"github.com/aquasecurity/fanal/types"
 	"github.com/aquasecurity/fanal/walker"
 )
@@ -77,6 +78,7 @@ func buildAbsPaths(base string, paths []string) []string {
 }
 
 func (a Artifact) Inspect(ctx context.Context) (types.ArtifactReference, error) {
+	var cleaners []func() error
 	var wg sync.WaitGroup
 	result := new(analyzer.AnalysisResult)
 	limit := semaphore.NewWeighted(parallel)
@@ -87,9 +89,14 @@ func (a Artifact) Inspect(ctx context.Context) (types.ArtifactReference, error) 
 		if err != nil {
 			return xerrors.Errorf("filepath rel (%s): %w", filePath, err)
 		}
-		if err = a.analyzer.AnalyzeFile(ctx, &wg, limit, result, a.dir, filePath, info, opener); err != nil {
+		cleaner, err := a.analyzer.AnalyzeFile(ctx, &wg, limit, result, a.dir, filePath, info, opener)
+		if err != nil {
 			return xerrors.Errorf("analyze file (%s): %w", filePath, err)
 		}
+		if cleaner != nil {
+			cleaners = append(cleaners, cleaner)
+		}
+
 		return nil
 	})
 	if err != nil {
@@ -98,6 +105,13 @@ func (a Artifact) Inspect(ctx context.Context) (types.ArtifactReference, error) 
 
 	// Wait for all the goroutine to finish.
 	wg.Wait()
+
+	// Clean for all temporary data after all analyzers.
+	for _, c := range cleaners {
+		if err := c(); err != nil {
+			log.Logger.Warn("Clean temp directory error: %s", err)
+		}
+	}
 
 	// Sort the analysis result for consistent results
 	result.Sort()

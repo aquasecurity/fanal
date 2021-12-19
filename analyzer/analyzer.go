@@ -185,28 +185,23 @@ func (a Analyzer) ImageConfigAnalyzerVersions() map[string]int {
 }
 
 func (a Analyzer) AnalyzeFile(ctx context.Context, wg *sync.WaitGroup, limit *semaphore.Weighted, result *AnalysisResult,
-	dir, filePath string, info os.FileInfo, opener Opener) (err error) {
+	dir, filePath string, info os.FileInfo, opener Opener) (cleaner func() error, err error) {
 	if info.IsDir() {
-		return nil
+		return nil, nil
 	}
 	for _, d := range a.drivers {
 		// filepath extracted from tar file doesn't have the prefix "/"
 		if !d.Required(strings.TrimLeft(filePath, "/"), info) {
 			continue
 		}
-		rc, cleaner, err := opener()
+		rc, c, err := opener()
 		if err != nil {
-			return xerrors.Errorf("unable to open a file (%s): %w", filePath, err)
+			return nil, xerrors.Errorf("unable to open a file (%s): %w", filePath, err)
 		}
-		defer func() {
-			err := cleaner()
-			if err != nil {
-				log.Logger.Warn("Clean temp directory error: %s", err)
-			}
-		}()
+		cleaner = c
 
 		if err = limit.Acquire(ctx, 1); err != nil {
-			return xerrors.Errorf("semaphore acquire: %w", err)
+			return nil, xerrors.Errorf("semaphore acquire: %w", err)
 		}
 		wg.Add(1)
 
@@ -223,9 +218,8 @@ func (a Analyzer) AnalyzeFile(ctx context.Context, wg *sync.WaitGroup, limit *se
 			result.Merge(ret)
 		}(d, AnalysisTarget{Dir: dir, FilePath: filePath, ContentReader: rc})
 	}
-	wg.Wait()
 
-	return nil
+	return cleaner, nil
 }
 
 func (a Analyzer) AnalyzeImageConfig(targetOS types.OS, configBlob []byte) []types.Package {
