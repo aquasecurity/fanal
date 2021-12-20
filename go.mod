@@ -17,7 +17,7 @@ require (
 	github.com/go-git/go-git/v5 v5.4.2
 	github.com/go-redis/redis/v8 v8.11.4
 	github.com/golang-jwt/jwt v3.2.2+incompatible
-	github.com/google/go-containerregistry v0.6.0
+	github.com/google/go-containerregistry v0.7.0
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-hclog v0.15.0 // indirect
 	github.com/hashicorp/go-multierror v1.1.1
@@ -31,7 +31,7 @@ require (
 	github.com/moby/buildkit v0.8.1
 	github.com/open-policy-agent/opa v0.34.0
 	github.com/opencontainers/go-digest v1.0.0
-	github.com/opencontainers/image-spec v1.0.2-0.20190823105129-775207bd45b6
+	github.com/opencontainers/image-spec v1.0.2-0.20210819154149-5ad6f50d6283
 	github.com/saracen/walker v0.0.0-20191201085201-324a081bae7e
 	github.com/sosedoff/gitkit v0.3.0
 	github.com/stretchr/testify v1.7.0
@@ -44,4 +44,15 @@ require (
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1
 	sigs.k8s.io/yaml v1.3.0
+)
+
+replace (
+	github.com/Microsoft/hcsshim v0.8.7 => github.com/Microsoft/hcsshim v0.8.8
+	github.com/containerd/stargz-snapshotter v0.0.0-20201027054423-3a04e4c2c116 => github.com/containerd/stargz-snapshotter v0.10.1
+	github.com/dgrijalva/jwt-go v0.0.0-20170104182250-a601269ab70c => github.com/golang-jwt/jwt v3.2.1+incompatible
+	github.com/dgrijalva/jwt-go v3.2.0+incompatible => github.com/golang-jwt/jwt v3.2.1+incompatible
+	github.com/gorilla/handlers v0.0.0-20150720190736-60c7bfde3e33 => github.com/gorilla/handlers v1.5.1
+	github.com/miekg/dns v1.0.14 => github.com/miekg/dns v1.1.43
+	github.com/sassoftware/go-rpmutils v0.0.0-20190420191620-a8f1baeba37b => github.com/sassoftware/go-rpmutils v0.1.0
+	github.com/satori/go.uuid v1.2.0 => github.com/satori/go.uuid v1.2.1-0.20181016170032-d91630c85102
 )
