@@ -89,9 +89,17 @@ func (a Artifact) Inspect(ctx context.Context) (types.ArtifactReference, error) 
 		return types.ArtifactReference{}, err
 	}
 
-	missingImage, missingLayers, err := a.cache.MissingBlobs(imageKey, layerKeys)
-	if err != nil {
-		return types.ArtifactReference{}, xerrors.Errorf("unable to get missing layers: %w", err)
+	missingImage := false
+	var missingLayers = []string{}
+
+	if a.artifactOption.SkipCache {
+		missingImage = true
+		missingLayers = layerKeys
+	} else {
+		missingImage, missingLayers, err = a.cache.MissingBlobs(imageKey, layerKeys)
+		if err != nil {
+			return types.ArtifactReference{}, xerrors.Errorf("unable to get missing layers: %w", err)
+		}
 	}
 
 	missingImageKey := imageKey

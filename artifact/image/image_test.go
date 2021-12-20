@@ -144,6 +144,107 @@ func TestArtifact_Inspect(t *testing.T) {
 			},
 		},
 		{
+			name:        "happy path with skip cache",
+			imagePath:   "../../test/testdata/alpine-311.tar.gz",
+			artifactOpt: artifact.Option{SkipCache: true},
+			putBlobExpectations: []cache.ArtifactCachePutBlobExpectation{
+				{
+					Args: cache.ArtifactCachePutBlobArgs{
+						BlobID: "sha256:e42b13a4ef21c0534f4e571c1b2c3b10bce9d1fc125e05c36876fc6fb81b0bae",
+						BlobInfo: types.BlobInfo{
+							SchemaVersion: types.BlobJSONSchemaVersion,
+							Digest:        "",
+							DiffID:        "sha256:beee9f30bc1f711043e78d4a2be0668955d4b761d587d6f60c2c8dc081efb203",
+							OS: &types.OS{
+								Family: "alpine",
+								Name:   "3.11.5",
+							},
+							PackageInfos: []types.PackageInfo{{
+								FilePath: "lib/apk/db/installed",
+								Packages: []types.Package{
+									{Name: "alpine-baselayout", Version: "3.2.0-r3", SrcName: "alpine-baselayout", SrcVersion: "3.2.0-r3", License: "GPL-2.0-only"},
+									{Name: "alpine-keys", Version: "2.1-r2", SrcName: "alpine-keys", SrcVersion: "2.1-r2", License: "MIT"},
+									{Name: "apk-tools", Version: "2.10.4-r3", SrcName: "apk-tools", SrcVersion: "2.10.4-r3", License: "GPL2"},
+									{Name: "busybox", Version: "1.31.1-r9", SrcName: "busybox", SrcVersion: "1.31.1-r9", License: "GPL-2.0-only"},
+									{Name: "ca-certificates-cacert", Version: "20191127-r1", SrcName: "ca-certificates", SrcVersion: "20191127-r1", License: "MPL-2.0 GPL-2.0-or-later"},
+									{Name: "libc-utils", Version: "0.7.2-r0", SrcName: "libc-dev", SrcVersion: "0.7.2-r0", License: "BSD"},
+									{Name: "libcrypto1.1", Version: "1.1.1d-r3", SrcName: "openssl", SrcVersion: "1.1.1d-r3", License: "OpenSSL"},
+									{Name: "libssl1.1", Version: "1.1.1d-r3", SrcName: "openssl", SrcVersion: "1.1.1d-r3", License: "OpenSSL"},
+									{Name: "libtls-standalone", Version: "2.9.1-r0", SrcName: "libtls-standalone", SrcVersion: "2.9.1-r0", License: "ISC"},
+									{Name: "musl", Version: "1.1.24-r2", SrcName: "musl", SrcVersion: "1.1.24-r2", License: "MIT"},
+									{Name: "musl-utils", Version: "1.1.24-r2", SrcName: "musl", SrcVersion: "1.1.24-r2", License: "MIT BSD GPL2+"},
+									{Name: "scanelf", Version: "1.2.4-r0", SrcName: "pax-utils", SrcVersion: "1.2.4-r0", License: "GPL-2.0-only"},
+									{Name: "ssl_client", Version: "1.31.1-r9", SrcName: "busybox", SrcVersion: "1.31.1-r9", License: "GPL-2.0-only"},
+									{Name: "zlib", Version: "1.2.11-r3", SrcName: "zlib", SrcVersion: "1.2.11-r3", License: "Zlib"},
+								},
+							}},
+							Applications:  []types.Application(nil),
+							OpaqueDirs:    []string(nil),
+							WhiteoutFiles: []string(nil),
+						},
+					},
+					Returns: cache.ArtifactCachePutBlobReturns{},
+				},
+			},
+			putArtifactExpectations: []cache.ArtifactCachePutArtifactExpectation{
+				{
+					Args: cache.ArtifactCachePutArtifactArgs{
+						ArtifactID: "sha256:059741cfbdc039e88e337d621e57e03e99b0e0a75df32f2027ebef13f839af65",
+						ArtifactInfo: types.ArtifactInfo{
+							SchemaVersion: types.ArtifactJSONSchemaVersion,
+							Architecture:  "amd64",
+							Created:       time.Date(2020, 3, 23, 21, 19, 34, 196162891, time.UTC),
+							DockerVersion: "18.09.7",
+							OS:            "linux",
+						},
+					},
+				},
+			},
+			want: types.ArtifactReference{
+				Name:    "../../test/testdata/alpine-311.tar.gz",
+				Type:    types.ArtifactContainerImage,
+				ID:      "sha256:059741cfbdc039e88e337d621e57e03e99b0e0a75df32f2027ebef13f839af65",
+				BlobIDs: []string{"sha256:e42b13a4ef21c0534f4e571c1b2c3b10bce9d1fc125e05c36876fc6fb81b0bae"},
+				ImageMetadata: types.ImageMetadata{
+					ID: "sha256:a187dde48cd289ac374ad8539930628314bc581a481cdb41409c9289419ddb72",
+					DiffIDs: []string{
+						"sha256:beee9f30bc1f711043e78d4a2be0668955d4b761d587d6f60c2c8dc081efb203",
+					},
+					ConfigFile: v1.ConfigFile{
+						Architecture:  "amd64",
+						Author:        "",
+						Container:     "fb71ddde5f6411a82eb056a9190f0cc1c80d7f77a8509ee90a2054428edb0024",
+						Created:       v1.Time{Time: time.Date(2020, 3, 23, 21, 19, 34, 196162891, time.UTC)},
+						DockerVersion: "18.09.7",
+						History: []v1.History{
+							{
+								Author:     "",
+								Created:    v1.Time{Time: time.Date(2020, 3, 23, 21, 19, 34, 27725872, time.UTC)},
+								CreatedBy:  "/bin/sh -c #(nop) ADD file:0c4555f363c2672e350001f1293e689875a3760afe7b3f9146886afe67121cba in / ",
+								Comment:    "",
+								EmptyLayer: false,
+							},
+							{
+								Author:     "",
+								Created:    v1.Time{Time: time.Date(2020, 3, 23, 21, 19, 34, 196162891, time.UTC)},
+								CreatedBy:  "/bin/sh -c #(nop)  CMD [\"/bin/sh\"]",
+								Comment:    "",
+								EmptyLayer: true,
+							},
+						},
+						OS:     "linux",
+						RootFS: v1.RootFS{Type: "layers", DiffIDs: []v1.Hash{v1.Hash{Algorithm: "sha256", Hex: "beee9f30bc1f711043e78d4a2be0668955d4b761d587d6f60c2c8dc081efb203"}}},
+						Config: v1.Config{
+							Cmd:      []string{"/bin/sh"},
+							Env:      []string{"PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"},
+							Hostname: "", Image: "sha256:74df73bb19fbfc7fb5ab9a8234b3d98ee2fb92df5b824496679802685205ab8c",
+							ArgsEscaped: true,
+						},
+					},
+				},
+			},
+		},
+		{
 			name:      "happy path: include lock files",
 			imagePath: "../../test/testdata/vuln-image.tar.gz",
 			missingBlobsExpectation: cache.ArtifactCacheMissingBlobsExpectation{
