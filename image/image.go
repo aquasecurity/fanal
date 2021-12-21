@@ -39,6 +39,12 @@ func NewDockerImage(ctx context.Context, imageName string, option types.DockerOp
 	}
 	errs = multierror.Append(errs, err)
 
+	img, cleanup, err = tryContainerdDaemon(imageName, ref)
+	if err == nil {
+		return img, cleanup, nil
+	}
+	errs = multierror.Append(errs, err)
+
 	// Try accessing Docker Registry
 	img, err = tryRemote(ctx, imageName, ref, option)
 	if err == nil {

@@ -17,6 +17,7 @@ require (
 	github.com/aquasecurity/tfsec v0.63.1
 	github.com/aws/aws-sdk-go v1.42.30
 	github.com/docker/docker v20.10.12+incompatible
+	github.com/containerd/containerd v1.5.8
 	github.com/docker/go-connections v0.4.0
 	github.com/go-git/go-git/v5 v5.4.2
 	github.com/go-redis/redis/v8 v8.11.4

@@ -2,6 +2,7 @@ package daemon
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"os"
 	"sync"
@@ -27,10 +28,10 @@ type opener func() (v1.Image, error)
 
 type imageSave func(context.Context, []string) (io.ReadCloser, error)
 
-func imageOpener(ref string, f *os.File, imageSave imageSave) opener {
+func imageOpener(ctx context.Context, ref string, f *os.File, imageSave imageSave) opener {
 	return func() (v1.Image, error) {
 		// Store the tarball in local filesystem and return a new reader into the bytes each time we need to access something.
-		rc, err := imageSave(context.Background(), []string{ref})
+		rc, err := imageSave(ctx, []string{ref})
 		if err != nil {
 			return nil, xerrors.Errorf("unable to export the image: %w", err)
 		}
@@ -41,6 +42,7 @@ func imageOpener(ref string, f *os.File, imageSave imageSave) opener {
 		}
 		defer f.Close()
 
+		fmt.Printf("imageFromPath: %v", f.Name())
 		img, err := tarball.ImageFromPath(f.Name(), nil)
 		if err != nil {
 			return nil, xerrors.Errorf("failed to initialize the struct from the temporary file: %w", err)
