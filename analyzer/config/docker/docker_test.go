@@ -33,7 +33,7 @@ func Test_dockerConfigAnalyzer_Analyze(t *testing.T) {
 							"stages": map[string]interface{}{
 								"foo": []interface{}{
 									map[string]interface{}{
-										"Cmd":       "from",
+										"Cmd":       "FROM",
 										"Flags":     []interface{}{},
 										"JSON":      false,
 										"Original":  "FROM foo",
@@ -44,7 +44,7 @@ func Test_dockerConfigAnalyzer_Analyze(t *testing.T) {
 										"Value":     []interface{}{"foo"},
 									},
 									map[string]interface{}{
-										"Cmd":       "copy",
+										"Cmd":       "COPY",
 										"Flags":     []interface{}{},
 										"JSON":      false,
 										"Original":  "COPY . /",
@@ -55,7 +55,7 @@ func Test_dockerConfigAnalyzer_Analyze(t *testing.T) {
 										"Value":     []interface{}{".", "/"},
 									},
 									map[string]interface{}{
-										"Cmd":       "run",
+										"Cmd":       "RUN",
 										"Flags":     []interface{}{},
 										"JSON":      false,
 										"Original":  "RUN echo hello",
@@ -86,7 +86,7 @@ func Test_dockerConfigAnalyzer_Analyze(t *testing.T) {
 							"stages": map[string]interface{}{
 								"foo AS build": []interface{}{
 									map[string]interface{}{
-										"Cmd":       "from",
+										"Cmd":       "FROM",
 										"Flags":     []interface{}{},
 										"JSON":      false,
 										"Original":  "FROM foo AS build",
@@ -97,7 +97,7 @@ func Test_dockerConfigAnalyzer_Analyze(t *testing.T) {
 										"Value":     []interface{}{"foo", "AS", "build"},
 									},
 									map[string]interface{}{
-										"Cmd":       "copy",
+										"Cmd":       "COPY",
 										"Flags":     []interface{}{},
 										"JSON":      false,
 										"Original":  "COPY . /",
@@ -108,7 +108,7 @@ func Test_dockerConfigAnalyzer_Analyze(t *testing.T) {
 										"Value":     []interface{}{".", "/"},
 									},
 									map[string]interface{}{
-										"Cmd":       "run",
+										"Cmd":       "RUN",
 										"Flags":     []interface{}{},
 										"JSON":      false,
 										"Original":  "RUN echo hello",
@@ -121,7 +121,7 @@ func Test_dockerConfigAnalyzer_Analyze(t *testing.T) {
 								},
 								"scratch ": []interface{}{
 									map[string]interface{}{
-										"Cmd":       "from",
+										"Cmd":       "FROM",
 										"Flags":     []interface{}{},
 										"JSON":      false,
 										"Original":  "FROM scratch ",
@@ -132,7 +132,7 @@ func Test_dockerConfigAnalyzer_Analyze(t *testing.T) {
 										"Value":     []interface{}{"scratch"},
 									},
 									map[string]interface{}{
-										"Cmd":       "copy",
+										"Cmd":       "COPY",
 										"Flags":     []interface{}{"--from=build"},
 										"JSON":      false,
 										"Original":  "COPY --from=build /bar /bar",
