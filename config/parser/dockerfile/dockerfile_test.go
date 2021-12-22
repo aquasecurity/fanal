@@ -24,7 +24,7 @@ func TestParser_Parse(t *testing.T) {
 				"stages": map[string]interface{}{
 					"foo": []interface{}{
 						map[string]interface{}{
-							"Cmd":       "FROM",
+							"Cmd":       "from",
 							"Flags":     []interface{}{},
 							"JSON":      false,
 							"Original":  "FROM foo",
@@ -35,7 +35,7 @@ func TestParser_Parse(t *testing.T) {
 							"Value":     []interface{}{"foo"},
 						},
 						map[string]interface{}{
-							"Cmd":       "COPY",
+							"Cmd":       "copy",
 							"Flags":     []interface{}{},
 							"JSON":      false,
 							"Original":  "COPY . /",
@@ -46,7 +46,7 @@ func TestParser_Parse(t *testing.T) {
 							"Value":     []interface{}{".", "/"},
 						},
 						map[string]interface{}{
-							"Cmd":       "RUN",
+							"Cmd":       "run",
 							"Flags":     []interface{}{},
 							"JSON":      false,
 							"Original":  "RUN echo hello",
@@ -67,7 +67,7 @@ func TestParser_Parse(t *testing.T) {
 				"stages": map[string]interface{}{
 					"golang:1.16 AS builder": []interface{}{
 						map[string]interface{}{
-							"Cmd":       "FROM",
+							"Cmd":       "from",
 							"EndLine":   float64(1),
 							"Flags":     []interface{}{},
 							"JSON":      false,
@@ -78,7 +78,7 @@ func TestParser_Parse(t *testing.T) {
 							"Value":     []interface{}{"golang:1.16", "AS", "builder"},
 						},
 						map[string]interface{}{
-							"Cmd":       "WORKDIR",
+							"Cmd":       "workdir",
 							"EndLine":   float64(2),
 							"Flags":     []interface{}{},
 							"JSON":      false,
@@ -89,7 +89,7 @@ func TestParser_Parse(t *testing.T) {
 							"Value":     []interface{}{"/go/src/github.com/alexellis/href-counter/"},
 						},
 						map[string]interface{}{
-							"Cmd":       "RUN",
+							"Cmd":       "run",
 							"EndLine":   float64(3),
 							"Flags":     []interface{}{},
 							"JSON":      false,
@@ -100,7 +100,7 @@ func TestParser_Parse(t *testing.T) {
 							"Value":     []interface{}{"go get -d -v golang.org/x/net/html"},
 						},
 						map[string]interface{}{
-							"Cmd":       "COPY",
+							"Cmd":       "copy",
 							"EndLine":   float64(4),
 							"Flags":     []interface{}{},
 							"JSON":      false,
@@ -111,7 +111,7 @@ func TestParser_Parse(t *testing.T) {
 							"Value":     []interface{}{"app.go", "."},
 						},
 						map[string]interface{}{
-							"Cmd":       "RUN",
+							"Cmd":       "run",
 							"EndLine":   float64(5),
 							"Flags":     []interface{}{},
 							"JSON":      false,
@@ -124,7 +124,7 @@ func TestParser_Parse(t *testing.T) {
 					},
 					"alpine:latest": []interface{}{
 						map[string]interface{}{
-							"Cmd":       "FROM",
+							"Cmd":       "from",
 							"Flags":     []interface{}{},
 							"JSON":      false,
 							"Original":  "FROM alpine:latest",
@@ -135,7 +135,7 @@ func TestParser_Parse(t *testing.T) {
 							"Value":     []interface{}{"alpine:latest"},
 						},
 						map[string]interface{}{
-							"Cmd":       "RUN",
+							"Cmd":       "run",
 							"Flags":     []interface{}{},
 							"JSON":      false,
 							"Original":  "RUN apk --no-cache add ca-certificates     && apk add --no-cache bash",
@@ -146,7 +146,7 @@ func TestParser_Parse(t *testing.T) {
 							"Value":     []interface{}{"apk --no-cache add ca-certificates     && apk add --no-cache bash"},
 						},
 						map[string]interface{}{
-							"Cmd":       "WORKDIR",
+							"Cmd":       "workdir",
 							"Flags":     []interface{}{},
 							"JSON":      false,
 							"Original":  "WORKDIR /root/",
@@ -157,7 +157,7 @@ func TestParser_Parse(t *testing.T) {
 							"Value":     []interface{}{"/root/"},
 						},
 						map[string]interface{}{
-							"Cmd":       "COPY",
+							"Cmd":       "copy",
 							"Flags":     []interface{}{"--from=builder"},
 							"JSON":      false,
 							"Original":  "COPY --from=builder /go/src/github.com/alexellis/href-counter/app .",
@@ -168,7 +168,7 @@ func TestParser_Parse(t *testing.T) {
 							"Value":     []interface{}{"/go/src/github.com/alexellis/href-counter/app", "."},
 						},
 						map[string]interface{}{
-							"Cmd":       "CMD",
+							"Cmd":       "cmd",
 							"Flags":     []interface{}{},
 							"JSON":      true,
 							"Original":  `CMD ["./app"]`,
