@@ -39,11 +39,13 @@ func (p *Parser) Parse(contents []byte) (interface{}, error) {
 		return nil, xerrors.Errorf("dockerfile parse error: %w", err)
 	}
 
-	fromValue := "ARGS"
+	fromValue := "args"
 	from := make(map[string][]Command)
 
 	var stages []*instructions.Stage
 	for _, child := range parsed.AST.Children {
+		child.Value = strings.ToLower(child.Value)
+
 		instr, err := instructions.ParseInstruction(child)
 		if err != nil {
 			return nil, xerrors.Errorf("process dockerfile instructions: %w", err)
@@ -54,7 +56,7 @@ func (p *Parser) Parse(contents []byte) (interface{}, error) {
 			stages = append(stages, stage)
 		}
 
-		if child.Value == "FROM" {
+		if child.Value == "from" {
 			fromValue = strings.TrimPrefix(child.Original, "FROM ")
 		}
 
