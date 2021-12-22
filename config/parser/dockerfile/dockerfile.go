@@ -39,7 +39,7 @@ func (p *Parser) Parse(contents []byte) (interface{}, error) {
 		return nil, xerrors.Errorf("dockerfile parse error: %w", err)
 	}
 
-	fromValue := "args"
+	fromValue := "ARGS"
 	from := make(map[string][]Command)
 
 	var stages []*instructions.Stage
