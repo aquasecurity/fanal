@@ -50,7 +50,10 @@ func (a rpmPkgAnalyzer) Analyze(_ context.Context, target analyzer.AnalysisTarge
 }
 
 func (a rpmPkgAnalyzer) parsePkgInfo(rc io.Reader) ([]types.Package, []string, error) {
-	tmpDir := os.TempDir()
+	tmpDir, err := os.MkdirTemp("", "rpm")
+	if err != nil {
+		return nil, nil, xerrors.Errorf("failed to create a temp dir: %w", err)
+	}
 	defer os.RemoveAll(tmpDir)
 
 	filename := filepath.Join(tmpDir, "Packages")

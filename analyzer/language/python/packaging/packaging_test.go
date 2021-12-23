@@ -104,10 +104,14 @@ func Test_packagingAnalyzer_Analyze(t *testing.T) {
 			require.NoError(t, err)
 			defer f.Close()
 
+			stat, err := f.Stat()
+			require.NoError(t, err)
+
 			a := packagingAnalyzer{}
 			ctx := context.Background()
 			got, err := a.Analyze(ctx, analyzer.AnalysisTarget{
 				FilePath: tt.inputFile,
+				Info:     stat,
 				Content:  f,
 			})
 
