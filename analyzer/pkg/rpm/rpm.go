@@ -3,7 +3,6 @@ package rpm
 import (
 	"context"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -51,22 +50,22 @@ func (a rpmPkgAnalyzer) Analyze(_ context.Context, target analyzer.AnalysisTarge
 }
 
 func (a rpmPkgAnalyzer) parsePkgInfo(rc io.Reader) ([]types.Package, []string, error) {
-	tmpDir, err := ioutil.TempDir("", "rpm")
+	tmpDir := os.TempDir()
 	defer os.RemoveAll(tmpDir)
-	if err != nil {
-		return nil, nil, xerrors.Errorf("failed to create a temp dir: %w", err)
-	}
 
 	filename := filepath.Join(tmpDir, "Packages")
 	f, err := os.Create(filename)
 	if err != nil {
 		return nil, nil, xerrors.Errorf("failed to create a package file: %w", err)
 	}
-	defer f.Close()
 
-	_, err = io.Copy(f, rc)
-	if err != nil {
+	if _, err = io.Copy(f, rc); err != nil {
 		return nil, nil, xerrors.Errorf("failed to copy a package file: %w", err)
+	}
+
+	// The temp file must be closed before being opened as Berkeley DB.
+	if err = f.Close(); err != nil {
+		return nil, nil, xerrors.Errorf("failed to close a temp file: %w", err)
 	}
 
 	// rpm-python 4.11.3 rpm-4.11.3-35.el7.src.rpm
