@@ -10,7 +10,7 @@ require (
 	github.com/aquasecurity/defsec v0.0.37
 	github.com/aquasecurity/go-dep-parser v0.0.0-20211223152202-b497b40cd9d2
 	github.com/aquasecurity/testdocker v0.0.0-20210911155206-e1e85f5a1516
-	github.com/aquasecurity/tfsec v0.61.4-0.20211130135821-0a1997e494fa
+	github.com/aquasecurity/tfsec v0.63.1
 	github.com/aws/aws-sdk-go v1.42.0
 	github.com/docker/docker v20.10.10+incompatible
 	github.com/docker/go-connections v0.4.0
@@ -23,11 +23,11 @@ require (
 	github.com/hashicorp/hcl v1.0.0
 	github.com/knqyf263/go-apk-version v0.0.0-20200609155635-041fdbb8563f
 	github.com/knqyf263/go-deb-version v0.0.0-20190517075300-09fca494f03d
-	github.com/knqyf263/go-rpmdb v0.0.0-20210911072402-73bd0ce46c49
+	github.com/knqyf263/go-rpmdb v0.0.0-20211216113947-1369b2ee40b7
 	github.com/knqyf263/nested v0.0.1
 	github.com/kylelemons/godebug v1.1.0
 	github.com/mitchellh/mapstructure v1.4.2
-	github.com/moby/buildkit v0.8.1
+	github.com/moby/buildkit v0.9.3
 	github.com/open-policy-agent/opa v0.34.0
 	github.com/opencontainers/go-digest v1.0.0
 	github.com/opencontainers/image-spec v1.0.2-0.20190823105129-775207bd45b6
