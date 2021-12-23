@@ -26,7 +26,8 @@ var requiredExtensions = []string{".jar", ".war", ".ear"}
 type javaLibraryAnalyzer struct{}
 
 func (a javaLibraryAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisInput) (*analyzer.AnalysisResult, error) {
-	libs, err := jar.Parse(input.Content, input.Info.Size(), jar.WithFilePath(input.FilePath))
+	libs, err := jar.Parse(input.Content, input.Info.Size(),
+		jar.WithFilePath(input.FilePath), jar.WithOffline(input.Options.Offline))
 	if err != nil {
 		return nil, xerrors.Errorf("jar/war/ear parse error: %w", err)
 	}
