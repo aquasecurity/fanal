@@ -11,6 +11,8 @@ import (
 	"sync"
 
 	"golang.org/x/xerrors"
+
+	dio "github.com/aquasecurity/go-dep-parser/pkg/io"
 )
 
 const (
@@ -128,7 +130,7 @@ func newTarFile(size int64, r io.Reader) tarFile {
 // Open opens a file in the tar file.
 // If the file size is greater than or equal to threshold, it copies the content to a temp file and opens it next time.
 // If the file size is less than threshold, it opens the file once and the content will be shared so that others analyzers can use the same data.
-func (o *tarFile) Open() (io.ReadCloser, error) {
+func (o *tarFile) Open() (dio.ReadSeekCloserAt, error) {
 	o.once.Do(func() {
 		// When the file is large, it will be written down to a temp file.
 		if o.size >= ThresholdSize {
@@ -160,7 +162,7 @@ func (o *tarFile) Open() (io.ReadCloser, error) {
 	return o.open()
 }
 
-func (o *tarFile) open() (io.ReadCloser, error) {
+func (o *tarFile) open() (dio.ReadSeekCloserAt, error) {
 	if o.filePath != "" {
 		f, err := os.Open(o.filePath)
 		if err != nil {
@@ -169,7 +171,7 @@ func (o *tarFile) open() (io.ReadCloser, error) {
 		return f, nil
 	}
 
-	return io.NopCloser(bytes.NewReader(o.content)), nil
+	return dio.NopCloser(bytes.NewReader(o.content)), nil
 }
 
 func (o *tarFile) Clean() error {

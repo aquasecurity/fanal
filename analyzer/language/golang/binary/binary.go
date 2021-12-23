@@ -22,13 +22,14 @@ const version = 1
 type gobinaryLibraryAnalyzer struct{}
 
 func (a gobinaryLibraryAnalyzer) Analyze(_ context.Context, target analyzer.AnalysisTarget) (*analyzer.AnalysisResult, error) {
-	res, err := language.Analyze(types.GoBinary, target.FilePath, target.ContentReader, binary.Parse)
-	if errors.Is(err, binary.ErrUnrecognizedExe) {
+	libs, err := binary.Parse(target.Content)
+	if errors.Is(err, binary.ErrUnrecognizedExe) || errors.Is(err, binary.ErrNonGoBinary) {
 		return nil, nil
 	} else if err != nil {
-		return nil, xerrors.Errorf("unable to parse %s: %w", target.FilePath, err)
+		return nil, xerrors.Errorf("go binary parse error: %w", err)
 	}
-	return res, nil
+
+	return language.ToAnalysisResult(types.GoBinary, target.FilePath, libs), nil
 }
 
 func (a gobinaryLibraryAnalyzer) Required(_ string, fileInfo os.FileInfo) bool {

@@ -2,7 +2,6 @@ package analyzer
 
 import (
 	"context"
-	"io"
 	"os"
 	"sort"
 	"strings"
@@ -14,6 +13,7 @@ import (
 	aos "github.com/aquasecurity/fanal/analyzer/os"
 	"github.com/aquasecurity/fanal/log"
 	"github.com/aquasecurity/fanal/types"
+	dio "github.com/aquasecurity/go-dep-parser/pkg/io"
 )
 
 var (
@@ -57,7 +57,7 @@ func RegisterConfigAnalyzer(analyzer configAnalyzer) {
 	configAnalyzers[analyzer.Type()] = analyzer
 }
 
-type Opener func() (io.ReadCloser, error)
+type Opener func() (dio.ReadSeekCloserAt, error)
 
 type AnalysisResult struct {
 	m                    sync.Mutex

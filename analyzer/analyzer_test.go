@@ -1,11 +1,9 @@
 package analyzer_test
 
 import (
-	"bytes"
 	"context"
 	"errors"
 	"fmt"
-	"io"
 	"os"
 	"sync"
 	"testing"
@@ -20,6 +18,7 @@ import (
 	aos "github.com/aquasecurity/fanal/analyzer/os"
 	_ "github.com/aquasecurity/fanal/hook/all"
 	"github.com/aquasecurity/fanal/types"
+	dio "github.com/aquasecurity/go-dep-parser/pkg/io"
 )
 
 type mockConfigAnalyzer struct{}
@@ -367,12 +366,11 @@ func TestAnalyzeFile(t *testing.T) {
 
 			ctx := context.Background()
 			err = a.AnalyzeFile(ctx, &wg, limit, got, "", tt.args.filePath, info,
-				func() (io.ReadCloser, error) {
+				func() (dio.ReadSeekCloserAt, error) {
 					if tt.args.testFilePath == "testdata/error" {
 						return nil, xerrors.New("error")
 					}
-					b, err := os.ReadFile(tt.args.testFilePath)
-					return io.NopCloser(bytes.NewReader(b)), err
+					return os.Open(tt.args.testFilePath)
 				},
 			)
 

@@ -1,12 +1,13 @@
 package walker
 
 import (
-	"io"
 	"os"
 	"path/filepath"
 
 	swalker "github.com/saracen/walker"
 	"golang.org/x/xerrors"
+
+	dio "github.com/aquasecurity/go-dep-parser/pkg/io"
 )
 
 type Dir struct {
@@ -64,8 +65,8 @@ func (w Dir) Walk(root string, fn WalkFunc) error {
 // fileOpener opens a file.
 // If the file size is greater than or equal to ThresholdSize(200MB), it executes os.Open on each call without caching the file data.
 // If the file size is less than ThresholdSize(200MB), it opens the file once and the content is shared so that some analyzers can use the same data
-func (w *walker) fileOpener(_ os.FileInfo, pathname string) func() (io.ReadCloser, error) {
-	return func() (io.ReadCloser, error) {
+func (w *walker) fileOpener(_ os.FileInfo, pathname string) func() (dio.ReadSeekCloserAt, error) {
+	return func() (dio.ReadSeekCloserAt, error) {
 		return os.Open(pathname)
 	}
 }
