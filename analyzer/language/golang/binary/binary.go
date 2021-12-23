@@ -29,7 +29,7 @@ func (a gobinaryLibraryAnalyzer) Analyze(_ context.Context, target analyzer.Anal
 		return nil, xerrors.Errorf("go binary parse error: %w", err)
 	}
 
-	return language.ToAnalysisResult(types.GoBinary, target.FilePath, libs), nil
+	return language.ToAnalysisResult(types.GoBinary, target.FilePath, "", libs), nil
 }
 
 func (a gobinaryLibraryAnalyzer) Required(_ string, fileInfo os.FileInfo) bool {
