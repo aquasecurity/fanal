@@ -38,7 +38,7 @@ func (w Dir) Walk(root string, fn WalkFunc) error {
 			return nil
 		}
 
-		if err := fn(pathname, fi, w.fileOpener(fi, pathname)); err != nil {
+		if err := fn(pathname, fi, w.fileOpener(pathname)); err != nil {
 			return xerrors.Errorf("failed to analyze file: %w", err)
 		}
 		return nil
@@ -62,10 +62,8 @@ func (w Dir) Walk(root string, fn WalkFunc) error {
 	return nil
 }
 
-// fileOpener opens a file.
-// If the file size is greater than or equal to ThresholdSize(200MB), it executes os.Open on each call without caching the file data.
-// If the file size is less than ThresholdSize(200MB), it opens the file once and the content is shared so that some analyzers can use the same data
-func (w *walker) fileOpener(_ os.FileInfo, pathname string) func() (dio.ReadSeekCloserAt, error) {
+// fileOpener returns a function opening a file.
+func (w *walker) fileOpener(pathname string) func() (dio.ReadSeekCloserAt, error) {
 	return func() (dio.ReadSeekCloserAt, error) {
 		return os.Open(pathname)
 	}

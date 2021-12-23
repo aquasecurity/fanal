@@ -186,7 +186,7 @@ func (a Analyzer) ImageConfigAnalyzerVersions() map[string]int {
 }
 
 func (a Analyzer) AnalyzeFile(ctx context.Context, wg *sync.WaitGroup, limit *semaphore.Weighted, result *AnalysisResult,
-	dir, filePath string, info os.FileInfo, opener Opener) (err error) {
+	dir, filePath string, info os.FileInfo, opener Opener) error {
 	if info.IsDir() {
 		return nil
 	}

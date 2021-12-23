@@ -2,7 +2,6 @@ package packaging
 
 import (
 	"archive/zip"
-	"bytes"
 	"context"
 	"io"
 	"os"
@@ -47,12 +46,7 @@ func (a packagingAnalyzer) Analyze(_ context.Context, target analyzer.AnalysisTa
 
 	// .egg file is zip format and PKG-INFO needs to be extracted from the zip file.
 	if strings.HasSuffix(target.FilePath, ".egg") {
-		content, err := io.ReadAll(r)
-		if err != nil {
-			return nil, xerrors.Errorf("failed to read the egg file: %w", err)
-		}
-
-		pkginfoInZip, err := a.analyzeEggZip(content)
+		pkginfoInZip, err := a.analyzeEggZip(target.Content, target.Info.Size())
 		if err != nil {
 			return nil, xerrors.Errorf("egg analysis error: %w", err)
 		}
@@ -81,8 +75,8 @@ func (a packagingAnalyzer) Analyze(_ context.Context, target analyzer.AnalysisTa
 	}}, nil
 }
 
-func (a packagingAnalyzer) analyzeEggZip(content []byte) (io.ReadCloser, error) {
-	zr, err := zip.NewReader(bytes.NewReader(content), int64(len(content)))
+func (a packagingAnalyzer) analyzeEggZip(r io.ReaderAt, size int64) (io.ReadCloser, error) {
+	zr, err := zip.NewReader(r, size)
 	if err != nil {
 		return nil, xerrors.Errorf("zip reader error: %w", err)
 	}
