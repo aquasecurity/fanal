@@ -351,7 +351,7 @@ func TestAnalyzeFile(t *testing.T) {
 				filePath:     "/lib/apk/db/installed",
 				testFilePath: "testdata/error",
 			},
-			wantErr: "unable to open a file (/lib/apk/db/installed)",
+			wantErr: "unable to open /lib/apk/db/installed",
 		},
 	}
 	for _, tt := range tests {
@@ -367,12 +367,12 @@ func TestAnalyzeFile(t *testing.T) {
 
 			ctx := context.Background()
 			err = a.AnalyzeFile(ctx, &wg, limit, got, "", tt.args.filePath, info,
-				func() (io.ReadCloser, func() error, error) {
+				func() (io.ReadCloser, error) {
 					if tt.args.testFilePath == "testdata/error" {
-						return nil, nil, xerrors.New("error")
+						return nil, xerrors.New("error")
 					}
 					b, err := os.ReadFile(tt.args.testFilePath)
-					return io.NopCloser(bytes.NewReader(b)), func() error { return nil }, err
+					return io.NopCloser(bytes.NewReader(b)), err
 				},
 			)
 

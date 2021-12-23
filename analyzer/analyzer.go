@@ -56,7 +56,7 @@ func RegisterConfigAnalyzer(analyzer configAnalyzer) {
 	configAnalyzers[analyzer.Type()] = analyzer
 }
 
-type Opener func() (io.ReadCloser, func() error, error)
+type Opener func() (io.ReadCloser, error)
 
 type AnalysisResult struct {
 	m                    sync.Mutex
@@ -194,16 +194,10 @@ func (a Analyzer) AnalyzeFile(ctx context.Context, wg *sync.WaitGroup, limit *se
 		if !d.Required(strings.TrimLeft(filePath, "/"), info) {
 			continue
 		}
-		rc, cleaner, err := opener()
+		rc, err := opener()
 		if err != nil {
-			return xerrors.Errorf("unable to open a file (%s): %w", filePath, err)
+			return xerrors.Errorf("unable to open %s: %w", filePath, err)
 		}
-		defer func() {
-			err := cleaner()
-			if err != nil {
-				log.Logger.Warn("Clean temp directory error: %s", err)
-			}
-		}()
 
 		if err = limit.Acquire(ctx, 1); err != nil {
 			return xerrors.Errorf("semaphore acquire: %w", err)
@@ -223,7 +217,6 @@ func (a Analyzer) AnalyzeFile(ctx context.Context, wg *sync.WaitGroup, limit *se
 			result.Merge(ret)
 		}(d, AnalysisTarget{Dir: dir, FilePath: filePath, ContentReader: rc})
 	}
-	wg.Wait()
 
 	return nil
 }

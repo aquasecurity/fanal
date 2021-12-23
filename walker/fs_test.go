@@ -2,7 +2,7 @@ package walker_test
 
 import (
 	"errors"
-	"io/ioutil"
+	"io"
 	"os"
 	"strings"
 	"testing"
@@ -31,10 +31,10 @@ func TestDir_Walk(t *testing.T) {
 			rootDir: "testdata/fs",
 			analyzeFn: func(filePath string, info os.FileInfo, opener analyzer.Opener) error {
 				if filePath == "testdata/fs/bar" {
-					got, cleaner, err := opener()
+					got, err := opener()
 					require.NoError(t, err)
-					defer cleaner()
-					b, err := ioutil.ReadAll(got)
+
+					b, err := io.ReadAll(got)
 					require.NoError(t, err)
 
 					assert.Equal(t, "bar", string(b))

@@ -39,7 +39,7 @@ func (a ConfigAnalyzer) Analyze(_ context.Context, target analyzer.AnalysisTarge
 	// YAML might have sub documents separated by "---"
 	//
 	// If the current configuration contains multiple configurations, evaluate each policy
-	// independent from one another and aggregate the results under the same file name.
+	// independent of one another and aggregate the results under the same file name.
 	docs := a.parser.SeparateSubDocuments(content)
 
 	var configs []types.Config

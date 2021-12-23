@@ -1,12 +1,9 @@
 package walker
 
 import (
-	"bytes"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
-	"sync"
 
 	swalker "github.com/saracen/walker"
 	"golang.org/x/xerrors"
@@ -67,25 +64,8 @@ func (w Dir) Walk(root string, fn WalkFunc) error {
 // fileOpener opens a file.
 // If the file size is greater than or equal to ThresholdSize(200MB), it executes os.Open on each call without caching the file data.
 // If the file size is less than ThresholdSize(200MB), it opens the file once and the content is shared so that some analyzers can use the same data
-func (w *walker) fileOpener(fi os.FileInfo, pathname string) func() (io.ReadCloser, func() error, error) {
-	var once sync.Once
-	var b []byte
-	var err error
-
-	return func() (io.ReadCloser, func() error, error) {
-		if fi.Size() >= ThresholdSize {
-			f, err := os.Open(pathname)
-			if err != nil {
-				return nil, nil, xerrors.Errorf("unable to open the file: %w", err)
-			}
-			return f, func() error { return nil }, nil
-		}
-		once.Do(func() {
-			b, err = ioutil.ReadFile(pathname)
-		})
-		if err != nil {
-			return nil, nil, xerrors.Errorf("unable to read the file: %w", err)
-		}
-		return io.NopCloser(bytes.NewReader(b)), func() error { return nil }, nil
+func (w *walker) fileOpener(_ os.FileInfo, pathname string) func() (io.ReadCloser, error) {
+	return func() (io.ReadCloser, error) {
+		return os.Open(pathname)
 	}
 }
