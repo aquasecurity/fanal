@@ -40,8 +40,8 @@ func Test_redhatOSAnalyzer_Analyze(t *testing.T) {
 
 			ctx := context.Background()
 			got, err := a.Analyze(ctx, analyzer.AnalysisTarget{
-				FilePath:      "etc/redhat-release",
-				ContentReader: f,
+				FilePath: "etc/redhat-release",
+				Content:  f,
 			})
 			if tt.wantErr != "" {
 				require.NotNil(t, err)

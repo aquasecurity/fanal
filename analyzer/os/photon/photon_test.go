@@ -45,8 +45,8 @@ func Test_photonOSAnalyzer_Analyze(t *testing.T) {
 
 			ctx := context.Background()
 			got, err := a.Analyze(ctx, analyzer.AnalysisTarget{
-				FilePath:      "etc/os-release",
-				ContentReader: f,
+				FilePath: "etc/os-release",
+				Content:  f,
 			})
 			if tt.wantErr != "" {
 				require.NotNil(t, err)

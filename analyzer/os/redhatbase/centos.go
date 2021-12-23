@@ -23,7 +23,7 @@ func init() {
 type centOSAnalyzer struct{}
 
 func (a centOSAnalyzer) Analyze(_ context.Context, target analyzer.AnalysisTarget) (*analyzer.AnalysisResult, error) {
-	scanner := bufio.NewScanner(target.ContentReader)
+	scanner := bufio.NewScanner(target.Content)
 	for scanner.Scan() {
 		line := scanner.Text()
 		result := redhatRe.FindStringSubmatch(strings.TrimSpace(line))

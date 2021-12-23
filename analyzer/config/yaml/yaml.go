@@ -31,7 +31,7 @@ func NewConfigAnalyzer(filePattern *regexp.Regexp) ConfigAnalyzer {
 }
 
 func (a ConfigAnalyzer) Analyze(_ context.Context, target analyzer.AnalysisTarget) (*analyzer.AnalysisResult, error) {
-	content, err := io.ReadAll(target.ContentReader)
+	content, err := io.ReadAll(target.Content)
 	if err != nil {
 		return nil, xerrors.Errorf("failed to read the yaml content: %w", err)
 	}

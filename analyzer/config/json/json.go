@@ -32,7 +32,7 @@ func NewConfigAnalyzer(filePattern *regexp.Regexp) ConfigAnalyzer {
 
 func (a ConfigAnalyzer) Analyze(_ context.Context, target analyzer.AnalysisTarget) (*analyzer.AnalysisResult, error) {
 	var parsed interface{}
-	if err := json.NewDecoder(target.ContentReader).Decode(&parsed); err != nil {
+	if err := json.NewDecoder(target.Content).Decode(&parsed); err != nil {
 		return nil, xerrors.Errorf("unable to decode JSON (%s): %w", target.FilePath, err)
 	}
 

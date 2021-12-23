@@ -32,7 +32,7 @@ var errUnexpectedNameFormat = xerrors.New("unexpected name format")
 type rpmPkgAnalyzer struct{}
 
 func (a rpmPkgAnalyzer) Analyze(_ context.Context, target analyzer.AnalysisTarget) (*analyzer.AnalysisResult, error) {
-	parsedPkgs, installedFiles, err := a.parsePkgInfo(target.ContentReader)
+	parsedPkgs, installedFiles, err := a.parsePkgInfo(target.Content)
 	if err != nil {
 		return nil, xerrors.Errorf("failed to parse rpmdb: %w", err)
 	}

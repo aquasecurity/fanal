@@ -2,13 +2,14 @@ package cloudformation
 
 import (
 	"context"
-	"io"
 	"strings"
 	"testing"
 
-	"github.com/aquasecurity/fanal/analyzer"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/aquasecurity/fanal/analyzer"
+	dio "github.com/aquasecurity/go-dep-parser/pkg/io"
 )
 
 func TestConfigAnalyzer_Required(t *testing.T) {
@@ -49,14 +50,14 @@ func TestConfigAnalyzer_Required(t *testing.T) {
 
 func TestConfigAnalyzer_Analyzed(t *testing.T) {
 	tests := []struct {
-		name          string
-		contentReader io.Reader
-		filePath      string
-		want          int
+		name     string
+		content  dio.ReadSeekerAt
+		filePath string
+		want     int
 	}{
 		{
 			name: "CloudFormation yaml",
-			contentReader: strings.NewReader(`---
+			content: strings.NewReader(`---
 Parameters:
   SomeParameter:
 Resources:
@@ -68,7 +69,7 @@ Resources:
 		},
 		{
 			name: "Cloudformation JSON",
-			contentReader: strings.NewReader(`{
+			content: strings.NewReader(`{
   "Parameters": {
     "SomeParameter": null
   },
@@ -83,7 +84,7 @@ Resources:
 		},
 		{
 			name: "non CloudFormation yaml",
-			contentReader: strings.NewReader(`---
+			content: strings.NewReader(`---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -109,7 +110,7 @@ spec:
 		},
 		{
 			name: "non CloudFormation json",
-			contentReader: strings.NewReader(`{
+			content: strings.NewReader(`{
   "foo": [ 
        "baaaaa", 
        "bar", 
@@ -125,8 +126,8 @@ spec:
 		t.Run(tt.name, func(t *testing.T) {
 			a := ConfigAnalyzer{}
 			got, err := a.Analyze(context.Background(), analyzer.AnalysisTarget{
-				FilePath:      tt.filePath,
-				ContentReader: tt.contentReader,
+				FilePath: tt.filePath,
+				Content:  tt.content,
 			})
 			require.NoError(t, err)
 			assert.Len(t, got.Configs, tt.want)

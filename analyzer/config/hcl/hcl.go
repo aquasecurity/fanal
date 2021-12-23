@@ -53,7 +53,7 @@ func (a ConfigAnalyzer) analyze(target analyzer.AnalysisTarget) (interface{}, er
 	var errs error
 	var parsed interface{}
 
-	content, err := io.ReadAll(target.ContentReader)
+	content, err := io.ReadAll(target.Content)
 	if err != nil {
 		return nil, xerrors.Errorf("failed to read the HCL2 file: %w", err)
 	}

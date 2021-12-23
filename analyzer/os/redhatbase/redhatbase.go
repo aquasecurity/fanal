@@ -30,7 +30,7 @@ var redhatRe = regexp.MustCompile(`(.*) release (\d[\d\.]*)`)
 type redhatOSAnalyzer struct{}
 
 func (a redhatOSAnalyzer) Analyze(_ context.Context, target analyzer.AnalysisTarget) (*analyzer.AnalysisResult, error) {
-	foundOS, err := a.parseRelease(target.ContentReader)
+	foundOS, err := a.parseRelease(target.Content)
 	if err != nil {
 		return nil, err
 	}

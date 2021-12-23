@@ -40,8 +40,8 @@ func Test_oracleOSAnalyzer_Analyze(t *testing.T) {
 
 			ctx := context.Background()
 			got, err := a.Analyze(ctx, analyzer.AnalysisTarget{
-				FilePath:      "etc/oracle-release",
-				ContentReader: f,
+				FilePath: "etc/oracle-release",
+				Content:  f,
 			})
 			if tt.wantErr != "" {
 				require.NotNil(t, err)

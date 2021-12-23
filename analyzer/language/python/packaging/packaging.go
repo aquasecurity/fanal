@@ -43,7 +43,7 @@ type packagingAnalyzer struct{}
 
 // Analyze analyzes egg and wheel files.
 func (a packagingAnalyzer) Analyze(_ context.Context, target analyzer.AnalysisTarget) (*analyzer.AnalysisResult, error) {
-	var r = target.ContentReader
+	var r io.Reader = target.Content
 
 	// .egg file is zip format and PKG-INFO needs to be extracted from the zip file.
 	if strings.HasSuffix(target.FilePath, ".egg") {

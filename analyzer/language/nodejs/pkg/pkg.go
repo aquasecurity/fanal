@@ -25,7 +25,7 @@ type nodePkgLibraryAnalyzer struct{}
 
 // Analyze analyzes package.json for node packages
 func (a nodePkgLibraryAnalyzer) Analyze(_ context.Context, target analyzer.AnalysisTarget) (*analyzer.AnalysisResult, error) {
-	parsedLib, err := packagejson.Parse(target.ContentReader)
+	parsedLib, err := packagejson.Parse(target.Content)
 	if err != nil {
 		return nil, xerrors.Errorf("unable to parse %s: %w", target.FilePath, err)
 	}

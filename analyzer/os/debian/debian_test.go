@@ -56,8 +56,8 @@ func Test_debianOSAnalyzer_Analyze(t *testing.T) {
 			ctx := context.Background()
 
 			got, err := a.Analyze(ctx, analyzer.AnalysisTarget{
-				FilePath:      "etc/debian_version",
-				ContentReader: f,
+				FilePath: "etc/debian_version",
+				Content:  f,
 			})
 			if tt.wantErr != "" {
 				require.NotNil(t, err)

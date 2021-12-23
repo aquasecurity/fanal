@@ -107,8 +107,8 @@ func Test_packagingAnalyzer_Analyze(t *testing.T) {
 			a := packagingAnalyzer{}
 			ctx := context.Background()
 			got, err := a.Analyze(ctx, analyzer.AnalysisTarget{
-				FilePath:      tt.inputFile,
-				ContentReader: f,
+				FilePath: tt.inputFile,
+				Content:  f,
 			})
 
 			if tt.wantErr != "" {

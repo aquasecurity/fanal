@@ -41,8 +41,8 @@ func Test_ubuntuOSAnalyzer_Analyze(t *testing.T) {
 
 			ctx := context.Background()
 			got, err := a.Analyze(ctx, analyzer.AnalysisTarget{
-				FilePath:      "etc/lsb-release",
-				ContentReader: f,
+				FilePath: "etc/lsb-release",
+				Content:  f,
 			})
 			if tt.wantErr != "" {
 				require.NotNil(t, err)

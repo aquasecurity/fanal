@@ -192,8 +192,8 @@ func Test_dpkgAnalyzer_Analyze(t *testing.T) {
 			a := dpkgAnalyzer{}
 			ctx := context.Background()
 			got, err := a.Analyze(ctx, analyzer.AnalysisTarget{
-				FilePath:      tt.filePath,
-				ContentReader: f,
+				FilePath: tt.filePath,
+				Content:  f,
 			})
 
 			// Sort the result for consistency

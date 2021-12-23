@@ -29,7 +29,7 @@ type suseOSAnalyzer struct{}
 
 func (a suseOSAnalyzer) Analyze(_ context.Context, target analyzer.AnalysisTarget) (*analyzer.AnalysisResult, error) {
 	suseName := ""
-	scanner := bufio.NewScanner(target.ContentReader)
+	scanner := bufio.NewScanner(target.Content)
 	for scanner.Scan() {
 		line := scanner.Text()
 		if strings.HasPrefix(line, "NAME=\"openSUSE") {

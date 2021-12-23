@@ -40,8 +40,8 @@ func Test_rockyOSAnalyzer_Analyze(t *testing.T) {
 
 			ctx := context.Background()
 			got, err := a.Analyze(ctx, analyzer.AnalysisTarget{
-				FilePath:      "etc/rocky-release",
-				ContentReader: f,
+				FilePath: "etc/rocky-release",
+				Content:  f,
 			})
 			if tt.wantErr != "" {
 				require.Error(t, err)

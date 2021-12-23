@@ -40,8 +40,8 @@ func Test_fedoraOSAnalyzer_Analyze(t *testing.T) {
 
 			ctx := context.Background()
 			got, err := a.Analyze(ctx, analyzer.AnalysisTarget{
-				FilePath:      "etc/fedora-release",
-				ContentReader: f,
+				FilePath: "etc/fedora-release",
+				Content:  f,
 			})
 			if tt.wantErr != "" {
 				require.NotNil(t, err)

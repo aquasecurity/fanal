@@ -220,8 +220,8 @@ func Test_yamlConfigAnalyzer_Analyze(t *testing.T) {
 			a := yaml.NewConfigAnalyzer(nil)
 			ctx := context.Background()
 			got, err := a.Analyze(ctx, analyzer.AnalysisTarget{
-				FilePath:      tt.inputFile,
-				ContentReader: f,
+				FilePath: tt.inputFile,
+				Content:  f,
 			})
 
 			if tt.wantErr != "" {

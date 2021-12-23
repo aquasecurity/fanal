@@ -25,7 +25,7 @@ var requiredFiles = []string{"Pipfile.lock"}
 type pipenvLibraryAnalyzer struct{}
 
 func (a pipenvLibraryAnalyzer) Analyze(_ context.Context, target analyzer.AnalysisTarget) (*analyzer.AnalysisResult, error) {
-	res, err := language.Analyze(types.Pipenv, target.FilePath, target.ContentReader, pipenv.Parse)
+	res, err := language.Analyze(types.Pipenv, target.FilePath, target.Content, pipenv.Parse)
 	if err != nil {
 		return nil, xerrors.Errorf("unable to parse Pipfile.lock: %w", err)
 	}

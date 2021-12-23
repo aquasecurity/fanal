@@ -24,7 +24,7 @@ var fileRegex = regexp.MustCompile(`.*/specifications/.+\.gemspec`)
 type gemspecLibraryAnalyzer struct{}
 
 func (a gemspecLibraryAnalyzer) Analyze(_ context.Context, target analyzer.AnalysisTarget) (*analyzer.AnalysisResult, error) {
-	parsedLib, err := gemspec.Parse(target.ContentReader)
+	parsedLib, err := gemspec.Parse(target.Content)
 	if err != nil {
 		return nil, xerrors.Errorf("failed to parse %s: %w", target.FilePath, err)
 	}

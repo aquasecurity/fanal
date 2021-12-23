@@ -41,8 +41,8 @@ func Test_centosOSAnalyzer_Analyze(t *testing.T) {
 			ctx := context.Background()
 
 			got, err := a.Analyze(ctx, analyzer.AnalysisTarget{
-				FilePath:      "etc/centos-release",
-				ContentReader: f,
+				FilePath: "etc/centos-release",
+				Content:  f,
 			})
 			if tt.wantErr != "" {
 				require.NotNil(t, err)

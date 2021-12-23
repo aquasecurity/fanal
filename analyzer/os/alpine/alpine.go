@@ -24,7 +24,7 @@ var requiredFiles = []string{"etc/alpine-release"}
 type alpineOSAnalyzer struct{}
 
 func (a alpineOSAnalyzer) Analyze(_ context.Context, target analyzer.AnalysisTarget) (*analyzer.AnalysisResult, error) {
-	scanner := bufio.NewScanner(target.ContentReader)
+	scanner := bufio.NewScanner(target.Content)
 	for scanner.Scan() {
 		line := scanner.Text()
 		return &analyzer.AnalysisResult{

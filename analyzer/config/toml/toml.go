@@ -29,7 +29,7 @@ func NewConfigAnalyzer(filePattern *regexp.Regexp) ConfigAnalyzer {
 
 func (a ConfigAnalyzer) Analyze(_ context.Context, target analyzer.AnalysisTarget) (*analyzer.AnalysisResult, error) {
 	var parsed interface{}
-	if _, err := toml.NewDecoder(target.ContentReader).Decode(&parsed); err != nil {
+	if _, err := toml.NewDecoder(target.Content).Decode(&parsed); err != nil {
 		return nil, xerrors.Errorf("unable to decode TOML (%s): %w", target.FilePath, err)
 	}
 

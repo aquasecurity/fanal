@@ -29,9 +29,10 @@ var (
 )
 
 type AnalysisTarget struct {
-	Dir           string
-	FilePath      string
-	ContentReader io.Reader
+	Dir      string
+	FilePath string
+	Info     os.FileInfo
+	Content  dio.ReadSeekerAt
 }
 
 type analyzer interface {
@@ -215,7 +216,7 @@ func (a Analyzer) AnalyzeFile(ctx context.Context, wg *sync.WaitGroup, limit *se
 				return
 			}
 			result.Merge(ret)
-		}(d, AnalysisTarget{Dir: dir, FilePath: filePath, ContentReader: rc})
+		}(d, AnalysisTarget{Dir: dir, FilePath: filePath, Info: info, Content: rc})
 	}
 
 	return nil

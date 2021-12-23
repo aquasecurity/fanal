@@ -41,8 +41,8 @@ func Test_almaOSAnalyzer_Analyze(t *testing.T) {
 			ctx := context.Background()
 
 			got, err := a.Analyze(ctx, analyzer.AnalysisTarget{
-				FilePath:      "etc/almalinux-release",
-				ContentReader: f,
+				FilePath: "etc/almalinux-release",
+				Content:  f,
 			})
 			if tt.wantErr != "" {
 				require.Error(t, err)
