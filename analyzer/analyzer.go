@@ -13,6 +13,7 @@ import (
 	aos "github.com/aquasecurity/fanal/analyzer/os"
 	"github.com/aquasecurity/fanal/log"
 	"github.com/aquasecurity/fanal/types"
+	dio "github.com/aquasecurity/go-dep-parser/pkg/io"
 )
 
 var (
@@ -27,16 +28,23 @@ var (
 	ErrNoPkgsDetected = xerrors.New("no packages detected")
 )
 
-type AnalysisTarget struct {
+type AnalysisInput struct {
 	Dir      string
 	FilePath string
-	Content  []byte
+	Info     os.FileInfo
+	Content  dio.ReadSeekerAt
+
+	Options AnalysisOptions
+}
+
+type AnalysisOptions struct {
+	Offline bool
 }
 
 type analyzer interface {
 	Type() Type
 	Version() int
-	Analyze(ctx context.Context, input AnalysisTarget) (*AnalysisResult, error)
+	Analyze(ctx context.Context, input AnalysisInput) (*AnalysisResult, error)
 	Required(filePath string, info os.FileInfo) bool
 }
 
@@ -55,7 +63,7 @@ func RegisterConfigAnalyzer(analyzer configAnalyzer) {
 	configAnalyzers[analyzer.Type()] = analyzer
 }
 
-type Opener func() ([]byte, error)
+type Opener func() (dio.ReadSeekCloserAt, error)
 
 type AnalysisResult struct {
 	m                    sync.Mutex
@@ -122,9 +130,7 @@ func (r *AnalysisResult) Merge(new *AnalysisResult) {
 		r.Applications = append(r.Applications, new.Applications...)
 	}
 
-	for _, m := range new.Configs {
-		r.Configs = append(r.Configs, m)
-	}
+	r.Configs = append(r.Configs, new.Configs...)
 
 	r.SystemInstalledFiles = append(r.SystemInstalledFiles, new.SystemInstalledFiles...)
 }
@@ -186,7 +192,7 @@ func (a Analyzer) ImageConfigAnalyzerVersions() map[string]int {
 }
 
 func (a Analyzer) AnalyzeFile(ctx context.Context, wg *sync.WaitGroup, limit *semaphore.Weighted, result *AnalysisResult,
-	dir, filePath string, info os.FileInfo, opener Opener) error {
+	dir, filePath string, info os.FileInfo, opener Opener, opts AnalysisOptions) error {
 	if info.IsDir() {
 		return nil
 	}
@@ -195,9 +201,9 @@ func (a Analyzer) AnalyzeFile(ctx context.Context, wg *sync.WaitGroup, limit *se
 		if !d.Required(strings.TrimLeft(filePath, "/"), info) {
 			continue
 		}
-		b, err := opener()
+		rc, err := opener()
 		if err != nil {
-			return xerrors.Errorf("unable to open a file (%s): %w", filePath, err)
+			return xerrors.Errorf("unable to open %s: %w", filePath, err)
 		}
 
 		if err = limit.Acquire(ctx, 1); err != nil {
@@ -205,18 +211,26 @@ func (a Analyzer) AnalyzeFile(ctx context.Context, wg *sync.WaitGroup, limit *se
 		}
 		wg.Add(1)
 
-		go func(a analyzer, target AnalysisTarget) {
+		go func(a analyzer, rc dio.ReadSeekCloserAt) {
 			defer limit.Release(1)
 			defer wg.Done()
+			defer rc.Close()
 
-			ret, err := a.Analyze(ctx, target)
+			ret, err := a.Analyze(ctx, AnalysisInput{
+				Dir:      dir,
+				FilePath: filePath,
+				Info:     info,
+				Content:  rc,
+				Options:  opts,
+			})
 			if err != nil && !xerrors.Is(err, aos.AnalyzeOSError) {
 				log.Logger.Debugf("Analysis error: %s", err)
 				return
 			}
 			result.Merge(ret)
-		}(d, AnalysisTarget{Dir: dir, FilePath: filePath, Content: b})
+		}(d, rc)
 	}
+
 	return nil
 }
 

@@ -1,18 +1,17 @@
-package pip
+package pom
 
 import (
-	"context"
 	"os"
 	"testing"
 
+	"github.com/aquasecurity/fanal/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/aquasecurity/fanal/analyzer"
-	"github.com/aquasecurity/fanal/types"
 )
 
-func Test_pipAnalyzer_Analyze(t *testing.T) {
+func Test_pomAnalyzer_Analyze(t *testing.T) {
 	tests := []struct {
 		name      string
 		inputFile string
@@ -21,33 +20,26 @@ func Test_pipAnalyzer_Analyze(t *testing.T) {
 	}{
 		{
 			name:      "happy path",
-			inputFile: "testdata/requirements.txt",
+			inputFile: "testdata/happy/pom.xml",
 			want: &analyzer.AnalysisResult{
 				Applications: []types.Application{
 					{
-						Type:     types.Pip,
-						FilePath: "testdata/requirements.txt",
+						Type:     types.Pom,
+						FilePath: "testdata/happy/pom.xml",
 						Libraries: []types.Package{
 							{
-								Name:    "click",
-								Version: "8.0.0",
-							},
-							{
-								Name:    "Flask",
-								Version: "2.0.0",
-							},
-							{
-								Name:    "itsdangerous",
-								Version: "2.0.0",
+								Name:    "com.example:example",
+								Version: "1.0.0",
 							},
 						},
 					},
 				},
 			},
-		}, {
-			name:      "happy path with not related filename",
-			inputFile: "testdata/not-related.txt",
-			want:      nil,
+		},
+		{
+			name:      "sad path",
+			inputFile: "testdata/broken/pom.xml",
+			wantErr:   "xml decode error",
 		},
 	}
 	for _, tt := range tests {
@@ -56,13 +48,11 @@ func Test_pipAnalyzer_Analyze(t *testing.T) {
 			require.NoError(t, err)
 			defer f.Close()
 
-			a := pipLibraryAnalyzer{}
-			ctx := context.Background()
-			got, err := a.Analyze(ctx, analyzer.AnalysisInput{
+			a := pomAnalyzer{}
+			got, err := a.Analyze(nil, analyzer.AnalysisInput{
 				FilePath: tt.inputFile,
 				Content:  f,
 			})
-
 			if tt.wantErr != "" {
 				require.NotNil(t, err)
 				assert.Contains(t, err.Error(), tt.wantErr)
@@ -74,7 +64,7 @@ func Test_pipAnalyzer_Analyze(t *testing.T) {
 	}
 }
 
-func Test_pipAnalyzer_Required(t *testing.T) {
+func Test_pomAnalyzer_Required(t *testing.T) {
 	tests := []struct {
 		name     string
 		filePath string
@@ -82,18 +72,23 @@ func Test_pipAnalyzer_Required(t *testing.T) {
 	}{
 		{
 			name:     "happy",
-			filePath: "test/requirements.txt",
+			filePath: "test/pom.xml",
 			want:     true,
 		},
 		{
-			name:     "sad",
-			filePath: "a/b/c/d/test.sum",
+			name:     "no extension",
+			filePath: "test/pom",
+			want:     false,
+		},
+		{
+			name:     "json",
+			filePath: "test/pom.json",
 			want:     false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			a := pipLibraryAnalyzer{}
+			a := pomAnalyzer{}
 			got := a.Required(tt.filePath, nil)
 			assert.Equal(t, tt.want, got)
 		})

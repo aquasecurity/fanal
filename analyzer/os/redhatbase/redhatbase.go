@@ -2,8 +2,8 @@ package redhatbase
 
 import (
 	"bufio"
-	"bytes"
 	"context"
+	"io"
 	"os"
 	"regexp"
 	"strings"
@@ -29,8 +29,8 @@ var redhatRe = regexp.MustCompile(`(.*) release (\d[\d\.]*)`)
 
 type redhatOSAnalyzer struct{}
 
-func (a redhatOSAnalyzer) Analyze(_ context.Context, target analyzer.AnalysisTarget) (*analyzer.AnalysisResult, error) {
-	foundOS, err := a.parseRelease(target.Content)
+func (a redhatOSAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisInput) (*analyzer.AnalysisResult, error) {
+	foundOS, err := a.parseRelease(input.Content)
 	if err != nil {
 		return nil, err
 	}
@@ -40,8 +40,8 @@ func (a redhatOSAnalyzer) Analyze(_ context.Context, target analyzer.AnalysisTar
 
 }
 
-func (a redhatOSAnalyzer) parseRelease(content []byte) (types.OS, error) {
-	scanner := bufio.NewScanner(bytes.NewBuffer(content))
+func (a redhatOSAnalyzer) parseRelease(r io.Reader) (types.OS, error) {
+	scanner := bufio.NewScanner(r)
 	for scanner.Scan() {
 		line := scanner.Text()
 		result := redhatRe.FindStringSubmatch(strings.TrimSpace(line))

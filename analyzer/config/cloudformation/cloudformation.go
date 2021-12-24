@@ -2,12 +2,14 @@ package cloudformation
 
 import (
 	"context"
+	"io"
 	"os"
 	"path/filepath"
 	"regexp"
 
 	"github.com/aquasecurity/fanal/analyzer"
 	"github.com/aquasecurity/fanal/types"
+	"golang.org/x/xerrors"
 )
 
 const version = 1
@@ -28,14 +30,18 @@ func NewConfigAnalyzer() ConfigAnalyzer {
 }
 
 // Analyze returns a results of CloudFormation file
-func (a ConfigAnalyzer) Analyze(_ context.Context, target analyzer.AnalysisTarget) (*analyzer.AnalysisResult, error) {
+func (a ConfigAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisInput) (*analyzer.AnalysisResult, error) {
+	content, err := io.ReadAll(input.Content)
+	if err != nil {
+		return nil, xerrors.Errorf("failed to read the CloudFormation file: %w", err)
+	}
 
-	if looksLikeCloudFormation(target.Content) {
+	if looksLikeCloudFormation(content) {
 		return &analyzer.AnalysisResult{
 			Configs: []types.Config{
 				{
 					Type:     types.CloudFormation,
-					FilePath: filepath.Join(target.Dir, target.FilePath),
+					FilePath: filepath.Join(input.Dir, input.FilePath),
 				},
 			},
 		}, nil

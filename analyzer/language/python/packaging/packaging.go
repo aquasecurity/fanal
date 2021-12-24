@@ -2,7 +2,6 @@ package packaging
 
 import (
 	"archive/zip"
-	"bytes"
 	"context"
 	"io"
 	"os"
@@ -42,42 +41,42 @@ var (
 type packagingAnalyzer struct{}
 
 // Analyze analyzes egg and wheel files.
-func (a packagingAnalyzer) Analyze(_ context.Context, target analyzer.AnalysisTarget) (*analyzer.AnalysisResult, error) {
-	content := target.Content
+func (a packagingAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisInput) (*analyzer.AnalysisResult, error) {
+	var r io.Reader = input.Content
 
 	// .egg file is zip format and PKG-INFO needs to be extracted from the zip file.
-	if strings.HasSuffix(target.FilePath, ".egg") {
-		pkginfoInZip, err := a.analyzeEggZip(content)
+	if strings.HasSuffix(input.FilePath, ".egg") {
+		pkginfoInZip, err := a.analyzeEggZip(input.Content, input.Info.Size())
 		if err != nil {
 			return nil, xerrors.Errorf("egg analysis error: %w", err)
 		}
-		content = pkginfoInZip
+		defer pkginfoInZip.Close()
+		r = pkginfoInZip
 	}
 
-	r := bytes.NewReader(content)
 	lib, err := packaging.Parse(r)
 	if err != nil {
-		return nil, xerrors.Errorf("unable to parse %s: %w", target.FilePath, err)
+		return nil, xerrors.Errorf("unable to parse %s: %w", input.FilePath, err)
 	}
 
 	return &analyzer.AnalysisResult{Applications: []types.Application{
 		{
 			Type:     types.PythonPkg,
-			FilePath: target.FilePath,
+			FilePath: input.FilePath,
 			Libraries: []types.Package{
 				{
 					Name:     lib.Name,
 					Version:  lib.Version,
 					License:  lib.License,
-					FilePath: target.FilePath,
+					FilePath: input.FilePath,
 				},
 			},
 		},
 	}}, nil
 }
 
-func (a packagingAnalyzer) analyzeEggZip(content []byte) ([]byte, error) {
-	zr, err := zip.NewReader(bytes.NewReader(content), int64(len(content)))
+func (a packagingAnalyzer) analyzeEggZip(r io.ReaderAt, size int64) (io.ReadCloser, error) {
+	zr, err := zip.NewReader(r, size)
 	if err != nil {
 		return nil, xerrors.Errorf("zip reader error: %w", err)
 	}
@@ -93,18 +92,12 @@ func (a packagingAnalyzer) analyzeEggZip(content []byte) ([]byte, error) {
 	return nil, nil
 }
 
-func (a packagingAnalyzer) open(file *zip.File) ([]byte, error) {
+func (a packagingAnalyzer) open(file *zip.File) (io.ReadCloser, error) {
 	f, err := file.Open()
 	if err != nil {
 		return nil, err
 	}
-	defer f.Close()
-
-	b, err := io.ReadAll(f)
-	if err != nil {
-		return nil, xerrors.Errorf("file read error: %w", err)
-	}
-	return b, nil
+	return f, nil
 }
 
 func (a packagingAnalyzer) Required(filePath string, _ os.FileInfo) bool {
