@@ -24,7 +24,7 @@ var requiredFiles = []string{"composer.lock"}
 
 type composerLibraryAnalyzer struct{}
 
-func (a composerLibraryAnalyzer) Analyze(ctx context.Context, input analyzer.AnalysisInput) (*analyzer.AnalysisResult, error) {
+func (a composerLibraryAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisInput) (*analyzer.AnalysisResult, error) {
 	res, err := language.Analyze(types.Composer, input.FilePath, input.Content, composer.Parse)
 	if err != nil {
 		return nil, xerrors.Errorf("error with composer.lock: %w", err)
