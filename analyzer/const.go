@@ -40,6 +40,7 @@ const (
 
 	// Java
 	TypeJar Type = "jar"
+	TypePom Type = "pom"
 
 	// Node.js
 	TypeNpmPkgLock Type = "npm"
@@ -67,12 +68,13 @@ const (
 	// =================
 	// Structured Config
 	// =================
-	TypeYaml       Type = "yaml"
-	TypeTOML       Type = "toml"
-	TypeJSON       Type = "json"
-	TypeDockerfile Type = "dockerfile"
-	TypeHCL        Type = "hcl"
-	TypeTerraform  Type = "terraform"
+	TypeYaml           Type = "yaml"
+	TypeTOML           Type = "toml"
+	TypeJSON           Type = "json"
+	TypeDockerfile     Type = "dockerfile"
+	TypeHCL            Type = "hcl"
+	TypeTerraform      Type = "terraform"
+	TypeCloudFormation Type = "cloudFormation"
 )
 
 var (
@@ -83,16 +85,16 @@ var (
 	}
 
 	// TypeLanguages has all language analyzers
-	TypeLanguages = []Type{TypeBundler, TypeGemSpec, TypeCargo, TypeComposer, TypeJar,
+	TypeLanguages = []Type{TypeBundler, TypeGemSpec, TypeCargo, TypeComposer, TypeJar, TypePom,
 		TypeNpmPkgLock, TypeNodePkg, TypeYarn, TypeNuget, TypePythonPkg, TypePip, TypePipenv,
 		TypePoetry, TypeGoBinary, TypeGoMod,
 	}
 
 	// TypeLockfiles has all lock file analyzers
 	TypeLockfiles = []Type{TypeBundler, TypeNpmPkgLock, TypeYarn,
-		TypePip, TypePipenv, TypePoetry, TypeGoMod,
+		TypePip, TypePipenv, TypePoetry, TypeGoMod, TypePom,
 	}
 
 	// TypeIndividualPkgs has all analyzers for individual packages
-	TypeIndividualPkgs = []Type{TypeGemSpec, TypeNodePkg, TypePythonPkg, TypeGoBinary}
+	TypeIndividualPkgs = []Type{TypeGemSpec, TypeNodePkg, TypePythonPkg, TypeGoBinary, TypeJar}
 )

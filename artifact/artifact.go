@@ -14,6 +14,8 @@ type Option struct {
 	DisabledHooks     []hook.Type
 	SkipFiles         []string
 	SkipDirs          []string
+	Quiet             bool
+	Offline           bool
 }
 
 func (o *Option) Sort() {

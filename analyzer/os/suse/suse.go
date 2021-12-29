@@ -2,7 +2,6 @@ package suse
 
 import (
 	"bufio"
-	"bytes"
 	"context"
 	"os"
 	"strings"
@@ -28,9 +27,9 @@ var requiredFiles = []string{
 
 type suseOSAnalyzer struct{}
 
-func (a suseOSAnalyzer) Analyze(_ context.Context, target analyzer.AnalysisTarget) (*analyzer.AnalysisResult, error) {
+func (a suseOSAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisInput) (*analyzer.AnalysisResult, error) {
 	suseName := ""
-	scanner := bufio.NewScanner(bytes.NewBuffer(target.Content))
+	scanner := bufio.NewScanner(input.Content)
 	for scanner.Scan() {
 		line := scanner.Text()
 		if strings.HasPrefix(line, "NAME=\"openSUSE") {

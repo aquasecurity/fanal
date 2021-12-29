@@ -7,6 +7,7 @@ import (
 	"os"
 
 	git "github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing/transport/http"
 	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/fanal/analyzer/config"
@@ -35,11 +36,19 @@ func NewArtifact(rawurl string, c cache.ArtifactCache, artifactOpt artifact.Opti
 		return nil, cleanup, err
 	}
 
-	_, err = git.PlainClone(tmpDir, false, &git.CloneOptions{
+	cloneOptions := git.CloneOptions{
 		URL:      u.String(),
+		Auth:     gitAuth(),
 		Progress: os.Stdout,
 		Depth:    1,
-	})
+	}
+
+	// suppress clone output if quiet
+	if artifactOpt.Quiet {
+		cloneOptions.Progress = nil
+	}
+
+	_, err = git.PlainClone(tmpDir, false, &cloneOptions)
 	if err != nil {
 		return nil, cleanup, xerrors.Errorf("git error: %w", err)
 	}
@@ -83,4 +92,39 @@ func newURL(rawurl string) (*url.URL, error) {
 	}
 
 	return u, nil
+}
+
+// Helper function to check for a GitHub/GitLab token from env vars in order to
+// make authenticated requests to access private repos
+func gitAuth() *http.BasicAuth {
+
+	var auth *http.BasicAuth
+
+	// The username can be anything for HTTPS Git operations
+	gitUsername := "fanal-aquasecurity-scan"
+
+	// We first check if a GitHub token was provided
+	githubToken := os.Getenv("GITHUB_TOKEN")
+	if githubToken != "" {
+		auth = &http.BasicAuth{
+			Username: gitUsername,
+			Password: githubToken,
+		}
+		return auth
+	}
+
+	// Otherwise we check if a GitLab token was provided
+	gitlabToken := os.Getenv("GITLAB_TOKEN")
+	if gitlabToken != "" {
+		auth = &http.BasicAuth{
+			Username: gitUsername,
+			Password: gitlabToken,
+		}
+		return auth
+	}
+
+	// If no token was provided, we simply return a nil,
+	// which will make the request to be unauthenticated
+	return nil
+
 }

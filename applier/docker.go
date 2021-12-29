@@ -1,6 +1,7 @@
 package applier
 
 import (
+	"strings"
 	"time"
 
 	"github.com/aquasecurity/fanal/types"
@@ -87,6 +88,7 @@ func ApplyLayers(layers []types.BlobInfo) types.ArtifactDetail {
 
 	for _, layer := range layers {
 		for _, opqDir := range layer.OpaqueDirs {
+			opqDir = strings.TrimSuffix(opqDir, sep) //this is necessary so that an empty element is not contribute into the array of the DeleteByString function
 			_ = nestedMap.DeleteByString(opqDir, sep)
 		}
 		for _, whFile := range layer.WhiteoutFiles {

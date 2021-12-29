@@ -54,7 +54,7 @@ func NewArtifact(dir string, c cache.ArtifactCache, artifactOpt artifact.Option,
 	return Artifact{
 		dir:         dir,
 		cache:       c,
-		walker:      walker.NewDir(artifactOpt.SkipFiles, artifactOpt.SkipDirs),
+		walker:      walker.NewDir(buildAbsPaths(dir, artifactOpt.SkipFiles), buildAbsPaths(dir, artifactOpt.SkipDirs)),
 		analyzer:    analyzer.NewAnalyzer(artifactOpt.DisabledAnalyzers),
 		hookManager: hook.NewManager(artifactOpt.DisabledHooks),
 		scanner:     s,
@@ -62,6 +62,18 @@ func NewArtifact(dir string, c cache.ArtifactCache, artifactOpt artifact.Option,
 		artifactOption:      artifactOpt,
 		configScannerOption: scannerOpt,
 	}, nil
+}
+
+func buildAbsPaths(base string, paths []string) []string {
+	absPaths := []string{}
+	for _, path := range paths {
+		if filepath.IsAbs(path) {
+			absPaths = append(absPaths, path)
+		} else {
+			absPaths = append(absPaths, filepath.Join(base, path))
+		}
+	}
+	return absPaths
 }
 
 func (a Artifact) Inspect(ctx context.Context) (types.ArtifactReference, error) {
@@ -75,7 +87,9 @@ func (a Artifact) Inspect(ctx context.Context) (types.ArtifactReference, error) 
 		if err != nil {
 			return xerrors.Errorf("filepath rel (%s): %w", filePath, err)
 		}
-		if err = a.analyzer.AnalyzeFile(ctx, &wg, limit, result, a.dir, filePath, info, opener); err != nil {
+
+		opts := analyzer.AnalysisOptions{Offline: a.artifactOption.Offline}
+		if err = a.analyzer.AnalyzeFile(ctx, &wg, limit, result, a.dir, filePath, info, opener, opts); err != nil {
 			return xerrors.Errorf("analyze file (%s): %w", filePath, err)
 		}
 		return nil
