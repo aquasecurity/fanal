@@ -80,6 +80,7 @@ const (
 	// Red Hat
 	// =======
 	TypeRedHatContentManifestType = "redhat-content-manifest"
+	TypeRedHatDockerfileType      = "redhat-dockerfile"
 )
 
 var (
