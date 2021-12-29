@@ -40,9 +40,9 @@ type Package struct {
 
 // BuildInfo represents information under /root/buildinfo in RHEL
 type BuildInfo struct {
-	ContentSets []string
-	Nvr         string
-	Arch        string
+	ContentSets []string `json:",omitempty"`
+	Nvr         string   `json:",omitempty"`
+	Arch        string   `json:",omitempty"`
 }
 
 func (pkg *Package) Empty() bool {
