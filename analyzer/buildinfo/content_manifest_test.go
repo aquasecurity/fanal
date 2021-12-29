@@ -1,6 +1,8 @@
 package buildinfo
 
 import (
+	"context"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -12,25 +14,13 @@ import (
 func Test_contentManifestAnalyzer_Analyze(t *testing.T) {
 	tests := []struct {
 		name    string
-		content []byte
+		input   string
 		want    *analyzer.AnalysisResult
-		wantErr bool
+		wantErr string
 	}{
 		{
-			name: "happy path",
-			content: []byte(`
-{
-    "metadata": {
-        "icm_version": 1,
-        "icm_spec": "https://raw.githubusercontent.com/containerbuildsystem/atomic-reactor/master/atomic_reactor/schemas/content_manifest.json",
-        "image_layer_index": 4
-    },
-    "content_sets": [
-        "rhel-8-for-x86_64-baseos-rpms",
-        "rhel-8-for-x86_64-appstream-rpms"
-    ],
-    "image_contents": []
-}`),
+			name:  "happy path",
+			input: "testdata/content_manifests/ubi8-minimal-container-8.5-218.json",
 			want: &analyzer.AnalysisResult{
 				BuildInfo: &analyzer.BuildInfo{
 					ContentSets: []string{
@@ -42,22 +32,29 @@ func Test_contentManifestAnalyzer_Analyze(t *testing.T) {
 		},
 		{
 			name:    "broken json",
-			content: []byte(`{"content_sets": 1}`),
-			wantErr: true,
+			input:   "testdata/content_manifests/broken.json",
+			wantErr: "invalid content manifest",
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			f, err := os.Open(tt.input)
+			require.NoError(t, err)
+			defer f.Close()
+
 			a := contentManifestAnalyzer{}
-			got, err := a.Analyze(analyzer.AnalysisTarget{
-				FilePath: "root/buildinfo/content_manifests/ubi8-container-8.3-227.json",
-				Content:  tt.content,
+			got, err := a.Analyze(context.Background(), analyzer.AnalysisInput{
+				FilePath: tt.input,
+				Content:  f,
 			})
-			if tt.wantErr {
-				require.NotNil(t, err)
+
+			if tt.wantErr != "" {
+				require.Error(t, err)
+				assert.Contains(t, err.Error(), tt.wantErr)
 				return
 			}
-			assert.NoError(t, err)
+
+			require.NoError(t, err)
 			assert.Equal(t, tt.want, got)
 		})
 	}

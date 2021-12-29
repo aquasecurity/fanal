@@ -15,7 +15,7 @@ func init() {
 	analyzer.RegisterAnalyzer(&contentManifestAnalyzer{})
 }
 
-const contentManifestAnalyzerversion = 1
+const contentManifestAnalyzerVersion = 1
 
 type contentManifest struct {
 	ContentSets []string `json:"content_sets"`
@@ -24,10 +24,10 @@ type contentManifest struct {
 // For Red Hat products
 type contentManifestAnalyzer struct{}
 
-func (a contentManifestAnalyzer) Analyze(ctx context.Context, target analyzer.AnalysisTarget) (*analyzer.AnalysisResult, error) {
+func (a contentManifestAnalyzer) Analyze(_ context.Context, target analyzer.AnalysisInput) (*analyzer.AnalysisResult, error) {
 	var manifest contentManifest
-	if err := json.Unmarshal(target.Content, &manifest); err != nil {
-		return nil, xerrors.Errorf("invalid content manifests: %w", err)
+	if err := json.NewDecoder(target.Content).Decode(&manifest); err != nil {
+		return nil, xerrors.Errorf("invalid content manifest: %w", err)
 	}
 
 	return &analyzer.AnalysisResult{
@@ -46,9 +46,9 @@ func (a contentManifestAnalyzer) Required(filePath string, _ os.FileInfo) bool {
 }
 
 func (a contentManifestAnalyzer) Type() analyzer.Type {
-	return "redhat content manifest"
+	return analyzer.TypeRedHatContentManifestType
 }
 
 func (a contentManifestAnalyzer) Version() int {
-	return contentManifestAnalyzerversion
+	return contentManifestAnalyzerVersion
 }

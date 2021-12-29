@@ -75,6 +75,11 @@ const (
 	TypeHCL            Type = "hcl"
 	TypeTerraform      Type = "terraform"
 	TypeCloudFormation Type = "cloudFormation"
+
+	// =======
+	// Red Hat
+	// =======
+	TypeRedHatContentManifestType = "redhat-content-manifest"
 )
 
 var (
