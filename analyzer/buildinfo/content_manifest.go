@@ -9,6 +9,7 @@ import (
 	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/fanal/analyzer"
+	"github.com/aquasecurity/fanal/types"
 )
 
 func init() {
@@ -31,7 +32,7 @@ func (a contentManifestAnalyzer) Analyze(_ context.Context, target analyzer.Anal
 	}
 
 	return &analyzer.AnalysisResult{
-		BuildInfo: &analyzer.BuildInfo{
+		BuildInfo: &types.BuildInfo{
 			ContentSets: manifest.ContentSets,
 		},
 	}, nil

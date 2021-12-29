@@ -28,14 +28,21 @@ type Package struct {
 	SrcRelease string `json:",omitempty"`
 	SrcEpoch   int    `json:",omitempty"`
 
-	Modularitylabel string   `json:",omitempty"` // only for Red Hat based distributions
-	ContentSets     []string `json:",omitempty"` // only for Red Hat
+	Modularitylabel string     `json:",omitempty"` // only for Red Hat based distributions
+	BuildInfo       *BuildInfo `json:",omitempty"` // only for Red Hat
 
 	License string `json:",omitempty"`
 	Layer   Layer  `json:",omitempty"`
 
 	// Each package metadata have the file path, while the package from lock files does not have.
 	FilePath string `json:",omitempty"`
+}
+
+// BuildInfo represents information under /root/buildinfo in RHEL
+type BuildInfo struct {
+	ContentSets []string
+	Nvr         string
+	Arch        string
 }
 
 func (pkg *Package) Empty() bool {
@@ -120,8 +127,10 @@ type BlobInfo struct {
 	OpaqueDirs        []string           `json:",omitempty"`
 	WhiteoutFiles     []string           `json:",omitempty"`
 
-	// for Red Hat
-	ContentSets []string `json:",omitempty"`
+	// Red Hat distributions have build info per layer.
+	// This information will be embedded into packages when applying layers.
+	// ref. https://redhat-connect.gitbook.io/partner-guide-for-adopting-red-hat-oval-v2/determining-common-platform-enumeration-cpe
+	BuildInfo *BuildInfo `json:",omitempty"`
 
 	// SystemFiles represents installed files by OS package manager
 	// This field is used only in hooks and removed after that.

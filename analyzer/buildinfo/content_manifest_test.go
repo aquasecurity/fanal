@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/aquasecurity/fanal/analyzer"
+	"github.com/aquasecurity/fanal/types"
 )
 
 func Test_contentManifestAnalyzer_Analyze(t *testing.T) {
@@ -22,7 +23,7 @@ func Test_contentManifestAnalyzer_Analyze(t *testing.T) {
 			name:  "happy path",
 			input: "testdata/content_manifests/ubi8-minimal-container-8.5-218.json",
 			want: &analyzer.AnalysisResult{
-				BuildInfo: &analyzer.BuildInfo{
+				BuildInfo: &types.BuildInfo{
 					ContentSets: []string{
 						"rhel-8-for-x86_64-baseos-rpms",
 						"rhel-8-for-x86_64-appstream-rpms",

@@ -31,37 +31,37 @@ func containsPackage(e types.Package, s []types.Package) bool {
 	return false
 }
 
-func lookupOriginLayerForPkg(pkg types.Package, layers []types.BlobInfo) (string, string, []string) {
+func lookupOriginLayerForPkg(pkg types.Package, layers []types.BlobInfo) (string, string, *types.BuildInfo) {
 	for i, layer := range layers {
 		for _, info := range layer.PackageInfos {
 			if containsPackage(pkg, info.Packages) {
-				return layer.Digest, layer.DiffID, lookupContentSets(i, layers)
+				return layer.Digest, layer.DiffID, lookupBuildInfo(i, layers)
 			}
 		}
 	}
 	return "", "", nil
 }
 
-// lookupContentSets looks up Red Hat content sets from all layers
-func lookupContentSets(index int, layers []types.BlobInfo) []string {
-	if len(layers[index].ContentSets) != 0 {
-		return layers[index].ContentSets
+// lookupBuildInfo looks up Red Hat content sets from all layers
+func lookupBuildInfo(index int, layers []types.BlobInfo) *types.BuildInfo {
+	if layers[index].BuildInfo != nil {
+		return layers[index].BuildInfo
 	}
 
 	// Base layer (layers[0]) is missing content sets
 	//   - it needs to be shared from layers[1]
 	if index == 0 {
 		if len(layers) > 1 {
-			return layers[1].ContentSets
+			return layers[1].BuildInfo
 		}
 		return nil
 	}
 
-	// Customers layers build on top of Red Hat image are also missing content sets
+	// Customer's layers build on top of Red Hat image are also missing content sets
 	//   - it needs to be shared from the last Red Hat's layers which contains content sets
 	for i := index - 1; i >= 1; i-- {
-		if len(layers[i].ContentSets) != 0 {
-			return layers[i].ContentSets
+		if layers[i].BuildInfo != nil {
+			return layers[i].BuildInfo
 		}
 	}
 	return nil
@@ -127,12 +127,12 @@ func ApplyLayers(layers []types.BlobInfo) types.ArtifactDetail {
 	})
 
 	for i, pkg := range mergedLayer.Packages {
-		originLayerDigest, originLayerDiffID, contentSets := lookupOriginLayerForPkg(pkg, layers)
+		originLayerDigest, originLayerDiffID, buildInfo := lookupOriginLayerForPkg(pkg, layers)
 		mergedLayer.Packages[i].Layer = types.Layer{
 			Digest: originLayerDigest,
 			DiffID: originLayerDiffID,
 		}
-		mergedLayer.Packages[i].ContentSets = contentSets
+		mergedLayer.Packages[i].BuildInfo = buildInfo
 	}
 
 	for _, app := range mergedLayer.Applications {

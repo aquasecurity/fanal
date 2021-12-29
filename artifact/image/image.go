@@ -213,11 +213,6 @@ func (a Artifact) inspectLayer(ctx context.Context, diffID string) (types.BlobIn
 	// Wait for all the goroutine to finish.
 	wg.Wait()
 
-	// For Red Hat
-	if err = result.FillContentSets(); err != nil {
-		return types.BlobInfo{}, xerrors.Errorf("failed to fill content sets via Pyxis API: %w", err)
-	}
-
 	// Sort the analysis result for consistent results
 	result.Sort()
 
@@ -231,7 +226,9 @@ func (a Artifact) inspectLayer(ctx context.Context, diffID string) (types.BlobIn
 		SystemFiles:   result.SystemInstalledFiles,
 		OpaqueDirs:    opqDirs,
 		WhiteoutFiles: whFiles,
-		ContentSets:   result.BuildInfo.ContentSets,
+
+		// For Red Hat
+		BuildInfo: result.BuildInfo,
 	}
 
 	// Call hooks to modify blob info

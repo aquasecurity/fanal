@@ -10,7 +10,6 @@ import (
 	"golang.org/x/sync/semaphore"
 	"golang.org/x/xerrors"
 
-	"github.com/aquasecurity/fanal/analyzer/buildinfo/pyxis"
 	aos "github.com/aquasecurity/fanal/analyzer/os"
 	"github.com/aquasecurity/fanal/log"
 	"github.com/aquasecurity/fanal/types"
@@ -66,13 +65,6 @@ func RegisterConfigAnalyzer(analyzer configAnalyzer) {
 
 type Opener func() (dio.ReadSeekCloserAt, error)
 
-// BuildInfo represents information under /root/buildinfo in RHEL
-type BuildInfo struct {
-	ContentSets []string
-	Nvr         string
-	Arch        string
-}
-
 type AnalysisResult struct {
 	m                    sync.Mutex
 	OS                   *types.OS
@@ -81,8 +73,8 @@ type AnalysisResult struct {
 	Configs              []types.Config
 	SystemInstalledFiles []string // A list of files installed by OS package manager
 
-	// for Red Hat
-	BuildInfo *BuildInfo
+	// For Red Hat
+	BuildInfo *types.BuildInfo
 }
 
 func (r *AnalysisResult) isEmpty() bool {
@@ -146,25 +138,20 @@ func (r *AnalysisResult) Merge(new *AnalysisResult) {
 	r.SystemInstalledFiles = append(r.SystemInstalledFiles, new.SystemInstalledFiles...)
 
 	if new.BuildInfo != nil {
-		r.BuildInfo = new.BuildInfo
-	}
-}
-
-// FillContentSets fills content sets from /root/buildinfo/Dockerfile-*
-func (r *AnalysisResult) FillContentSets() (err error) {
-	if r.BuildInfo == nil {
-		r.BuildInfo = &BuildInfo{}
-		return nil
-	}
-	// Only when content manifests don't exist, but Dockerfile in the layer
-	if len(r.BuildInfo.ContentSets) == 0 && r.BuildInfo.Nvr != "" {
-		p := pyxis.NewPyxis()
-		r.BuildInfo.ContentSets, err = p.FetchContentSets(r.BuildInfo.Nvr, r.BuildInfo.Arch)
-		if err != nil {
-			return xerrors.Errorf("unable to fetch content sets: %w", err)
+		if r.BuildInfo == nil {
+			r.BuildInfo = new.BuildInfo
+		} else {
+			// We don't need to merge build info here
+			// because there is theoretically only one file about build info in each layer.
+			if new.BuildInfo.Nvr != "" || new.BuildInfo.Arch != "" {
+				r.BuildInfo.Nvr = new.BuildInfo.Nvr
+				r.BuildInfo.Arch = new.BuildInfo.Arch
+			}
+			if len(new.BuildInfo.ContentSets) > 0 {
+				r.BuildInfo.ContentSets = new.BuildInfo.ContentSets
+			}
 		}
 	}
-	return nil
 }
 
 type Analyzer struct {

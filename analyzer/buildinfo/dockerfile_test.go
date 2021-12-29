@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/aquasecurity/fanal/analyzer"
+	"github.com/aquasecurity/fanal/types"
 )
 
 func Test_dockerfileAnalyzer_Analyze(t *testing.T) {
@@ -22,7 +23,7 @@ func Test_dockerfileAnalyzer_Analyze(t *testing.T) {
 			name:      "com.redhat.component",
 			inputFile: "testdata/dockerfile/Dockerfile-ubi8-8.3-227",
 			want: &analyzer.AnalysisResult{
-				BuildInfo: &analyzer.BuildInfo{
+				BuildInfo: &types.BuildInfo{
 					Nvr:  "ubi8-container-8.3-227",
 					Arch: "x86_64",
 				},
@@ -32,7 +33,7 @@ func Test_dockerfileAnalyzer_Analyze(t *testing.T) {
 			name:      "BZcomponent",
 			inputFile: "testdata/dockerfile/Dockerfile-jboss-base-7-base-1.1-3",
 			want: &analyzer.AnalysisResult{
-				BuildInfo: &analyzer.BuildInfo{
+				BuildInfo: &types.BuildInfo{
 					Nvr:  "jboss-base-7-docker-1.1-3",
 					Arch: "x86_64",
 				},

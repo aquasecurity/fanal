@@ -12,6 +12,7 @@ import (
 	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/fanal/analyzer"
+	"github.com/aquasecurity/fanal/types"
 )
 
 func init() {
@@ -82,7 +83,7 @@ func (a dockerfileAnalyzer) Analyze(_ context.Context, target analyzer.AnalysisI
 	}
 
 	return &analyzer.AnalysisResult{
-		BuildInfo: &analyzer.BuildInfo{
+		BuildInfo: &types.BuildInfo{
 			Nvr:  component + "-" + parseVersion(target.FilePath),
 			Arch: arch,
 		},
