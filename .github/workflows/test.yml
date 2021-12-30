@@ -18,7 +18,7 @@ jobs:
       - name: Setup golangci-lint
         uses: golangci/golangci-lint-action@v2
         with:
-          version: v1.43
+          version: latest
           args : --verbose
           skip-go-installation: true
   unittest:
