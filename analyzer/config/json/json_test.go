@@ -90,16 +90,17 @@ func Test_jsonConfigAnalyzer_Analyze(t *testing.T) {
 					{
 						Type:     "json",
 						FilePath: "testdata/array.json",
-						Content: []interface{}{map[string]interface{}{
-							"apiVersion": "apps/v1",
-							"kind":       "Deployment",
-							"metadata": map[string]interface{}{
-								"name": "hello-kubernetes",
+						Content: []interface{}{
+							map[string]interface{}{
+								"apiVersion": "apps/v1",
+								"kind":       "Deployment",
+								"metadata": map[string]interface{}{
+									"name": "hello-kubernetes",
+								},
+								"spec": map[string]interface{}{
+									"replicas": float64(4),
+								},
 							},
-							"spec": map[string]interface{}{
-								"replicas": float64(4),
-							},
-						},
 							map[string]interface{}{
 								"apiVersion": "apps/v2",
 								"kind":       "Deployment",

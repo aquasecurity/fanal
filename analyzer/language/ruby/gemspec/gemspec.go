@@ -45,7 +45,6 @@ func (a gemspecLibraryAnalyzer) Analyze(_ context.Context, input analyzer.Analys
 			},
 		},
 	}, nil
-
 }
 
 func (a gemspecLibraryAnalyzer) Required(filePath string, _ os.FileInfo) bool {

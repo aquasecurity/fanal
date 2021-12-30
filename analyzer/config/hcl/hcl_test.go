@@ -174,6 +174,7 @@ func TestConfigAnalyzer_Required(t *testing.T) {
 		})
 	}
 }
+
 func TestConfigAnalyzer_Type(t *testing.T) {
 	s := hcl.NewConfigAnalyzer(nil)
 	want := analyzer.TypeHCL

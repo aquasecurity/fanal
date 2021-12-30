@@ -20,9 +20,7 @@ func init() {
 
 const version = 1
 
-var (
-	requiredFiles = []string{"Gemfile.lock"}
-)
+var requiredFiles = []string{"Gemfile.lock"}
 
 type bundlerLibraryAnalyzer struct{}
 

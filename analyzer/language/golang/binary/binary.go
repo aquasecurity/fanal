@@ -39,7 +39,7 @@ func (a gobinaryLibraryAnalyzer) Required(_ string, fileInfo os.FileInfo) bool {
 	}
 
 	// Check executable file
-	if mode.Perm()&0111 != 0 {
+	if mode.Perm()&0o111 != 0 {
 		return true
 	}
 	return false

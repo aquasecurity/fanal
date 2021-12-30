@@ -13,8 +13,7 @@ const version = 1
 
 const requiredExt = ".tf"
 
-type ConfigAnalyzer struct {
-}
+type ConfigAnalyzer struct{}
 
 func NewConfigAnalyzer() ConfigAnalyzer {
 	return ConfigAnalyzer{}

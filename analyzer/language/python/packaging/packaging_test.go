@@ -124,7 +124,6 @@ func Test_packagingAnalyzer_Analyze(t *testing.T) {
 			assert.Equal(t, tt.want, got)
 		})
 	}
-
 }
 
 func Test_packagingAnalyzer_Required(t *testing.T) {

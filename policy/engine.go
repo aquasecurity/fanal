@@ -225,8 +225,8 @@ func (e *Engine) Check(ctx context.Context, configs []types.Config, namespaces [
 }
 
 func (e Engine) check(ctx context.Context, currentNamespace string, rules []string, configs []types.Config,
-	metadata types.PolicyMetadata) (map[string]types.Misconfiguration, error) {
-
+	metadata types.PolicyMetadata) (map[string]types.Misconfiguration, error,
+) {
 	// Initialize misconfigurations
 	misconfs := map[string]types.Misconfiguration{}
 	for _, c := range configs {

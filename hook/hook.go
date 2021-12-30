@@ -5,9 +5,7 @@ import (
 	"golang.org/x/xerrors"
 )
 
-var (
-	registeredHooks = map[Type]hook{}
-)
+var registeredHooks = map[Type]hook{}
 
 type hook interface {
 	Type() Type

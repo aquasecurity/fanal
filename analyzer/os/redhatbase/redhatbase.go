@@ -37,7 +37,6 @@ func (a redhatOSAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisInpu
 	return &analyzer.AnalysisResult{
 		OS: &foundOS,
 	}, nil
-
 }
 
 func (a redhatOSAnalyzer) parseRelease(r io.Reader) (types.OS, error) {

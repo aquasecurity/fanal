@@ -16,7 +16,6 @@ func tryDockerDaemon(imageName string, ref name.Reference) (types.Image, func(),
 		Image: img,
 		name:  imageName,
 	}, cleanup, nil
-
 }
 
 func tryPodmanDaemon(ref string) (types.Image, func(), error) {

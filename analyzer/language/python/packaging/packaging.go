@@ -21,22 +21,20 @@ func init() {
 
 const version = 1
 
-var (
-	requiredFiles = []string{
-		// .egg format
-		// https://setuptools.readthedocs.io/en/latest/deprecated/python_eggs.html#eggs-and-their-formats
-		".egg", // zip format
-		"EGG-INFO/PKG-INFO",
+var requiredFiles = []string{
+	// .egg format
+	// https://setuptools.readthedocs.io/en/latest/deprecated/python_eggs.html#eggs-and-their-formats
+	".egg", // zip format
+	"EGG-INFO/PKG-INFO",
 
-		// .egg-info format: .egg-info can be a file or directory
-		// https://setuptools.readthedocs.io/en/latest/deprecated/python_eggs.html#eggs-and-their-formats
-		".egg-info",
-		".egg-info/PKG-INFO",
+	// .egg-info format: .egg-info can be a file or directory
+	// https://setuptools.readthedocs.io/en/latest/deprecated/python_eggs.html#eggs-and-their-formats
+	".egg-info",
+	".egg-info/PKG-INFO",
 
-		// wheel
-		".dist-info/METADATA",
-	}
-)
+	// wheel
+	".dist-info/METADATA",
+}
 
 type packagingAnalyzer struct{}
 

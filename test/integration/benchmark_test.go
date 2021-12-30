@@ -1,3 +1,4 @@
+//go:build performance
 // +build performance
 
 package integration
@@ -103,7 +104,6 @@ func BenchmarkDockerMode_WithCache(b *testing.B) {
 
 			teardown(b, ctx, tc.imageName, imageName, cli)
 		})
-
 	}
 }
 

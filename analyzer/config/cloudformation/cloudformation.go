@@ -16,14 +16,15 @@ const version = 1
 
 var requiredExts = []string{".yaml", ".json", ".yml"}
 
-var awsConfigurationRegex = regexp.MustCompile(`(?i)(?m)^\s*?["|]?AWSTemplateFormatVersion[:|"]?`)
-var cloudFormationMatchRegex = []*regexp.Regexp{
-	regexp.MustCompile(`(?i)(?m)^\s*?["|]?Resources[:|"]?`),
-	regexp.MustCompile(`(?i)(?m)^\s*?["|]?Parameters[:|"]?`),
-}
+var (
+	awsConfigurationRegex    = regexp.MustCompile(`(?i)(?m)^\s*?["|]?AWSTemplateFormatVersion[:|"]?`)
+	cloudFormationMatchRegex = []*regexp.Regexp{
+		regexp.MustCompile(`(?i)(?m)^\s*?["|]?Resources[:|"]?`),
+		regexp.MustCompile(`(?i)(?m)^\s*?["|]?Parameters[:|"]?`),
+	}
+)
 
-type ConfigAnalyzer struct {
-}
+type ConfigAnalyzer struct{}
 
 func NewConfigAnalyzer() ConfigAnalyzer {
 	return ConfigAnalyzer{}
@@ -67,7 +68,6 @@ func (ConfigAnalyzer) Version() int {
 }
 
 func looksLikeCloudFormation(content []byte) bool {
-
 	if awsConfigurationRegex.MatchString(string(content)) {
 		return true
 	}

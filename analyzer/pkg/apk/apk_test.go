@@ -11,7 +11,7 @@ import (
 )
 
 func TestParseApkInfo(t *testing.T) {
-	var tests = map[string]struct {
+	tests := map[string]struct {
 		path      string
 		wantPkgs  []types.Package
 		wantFiles []string

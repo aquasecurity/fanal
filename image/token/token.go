@@ -10,9 +10,7 @@ import (
 	"github.com/aquasecurity/fanal/types"
 )
 
-var (
-	registries []Registry
-)
+var registries []Registry
 
 func init() {
 	RegisterRegistry(&google.Registry{})

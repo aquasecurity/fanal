@@ -7,7 +7,7 @@ import (
 )
 
 func TestIsGzip(t *testing.T) {
-	var tests = []struct {
+	tests := []struct {
 		in   string
 		want bool
 	}{

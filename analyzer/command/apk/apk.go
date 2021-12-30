@@ -75,6 +75,7 @@ func (a alpineCmdAnalyzer) Analyze(targetOS types.OS, configBlob []byte) ([]type
 
 	return pkgs, nil
 }
+
 func (a alpineCmdAnalyzer) fetchApkIndexArchive(targetOS types.OS) (*apkIndex, error) {
 	// 3.9.3 => 3.9
 	osVer := targetOS.Name
@@ -165,6 +166,7 @@ func (a alpineCmdAnalyzer) parseCommand(command string, envs map[string]string) 
 	}
 	return pkgs
 }
+
 func (a alpineCmdAnalyzer) resolveDependencies(apkIndexArchive *apkIndex, originalPkgs []string) (pkgs []string) {
 	uniqPkgs := map[string]struct{}{}
 	for _, pkgName := range originalPkgs {

@@ -7,9 +7,7 @@ import (
 	"os/exec"
 )
 
-var (
-	PathSeparator = fmt.Sprintf("%c", os.PathSeparator)
-)
+var PathSeparator = fmt.Sprintf("%c", os.PathSeparator)
 
 func CacheDir() string {
 	cacheDir, err := os.UserCacheDir()

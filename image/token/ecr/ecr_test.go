@@ -15,7 +15,7 @@ import (
 )
 
 func TestCheckOptions(t *testing.T) {
-	var tests = map[string]struct {
+	tests := map[string]struct {
 		domain  string
 		opt     types.DockerOption
 		wantErr error

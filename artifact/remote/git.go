@@ -97,7 +97,6 @@ func newURL(rawurl string) (*url.URL, error) {
 // Helper function to check for a GitHub/GitLab token from env vars in order to
 // make authenticated requests to access private repos
 func gitAuth() *http.BasicAuth {
-
 	var auth *http.BasicAuth
 
 	// The username can be anything for HTTPS Git operations
@@ -126,5 +125,4 @@ func gitAuth() *http.BasicAuth {
 	// If no token was provided, we simply return a nil,
 	// which will make the request to be unauthenticated
 	return nil
-
 }

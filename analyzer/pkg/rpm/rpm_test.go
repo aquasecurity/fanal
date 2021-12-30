@@ -12,7 +12,7 @@ import (
 )
 
 func TestParseRpmInfo(t *testing.T) {
-	var tests = map[string]struct {
+	tests := map[string]struct {
 		path string
 		pkgs []types.Package
 	}{

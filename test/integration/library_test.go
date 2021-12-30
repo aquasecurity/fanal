@@ -87,7 +87,7 @@ var testCases = []testCase{
 		wantOS:          types.OS{Name: "15.1", Family: "opensuse.leap"},
 	},
 	{
-                // from registry.suse.com/suse/sle15:15.3.17.8.16
+		// from registry.suse.com/suse/sle15:15.3.17.8.16
 		name:            "happy path, suse 15.3 (NDB)",
 		imageName:       "suse/sle15:15.3.17.8.16",
 		remoteImageName: "knqyf263/suse-sle15:15.3.17.8.16",
@@ -263,7 +263,7 @@ func checkOSPackages(t *testing.T, detail types.ArtifactDetail, tc testCase) {
 	if *update {
 		b, err := json.MarshalIndent(detail.Packages, "", "  ")
 		require.NoError(t, err)
-		err = ioutil.WriteFile(goldenFile, b, 0666)
+		err = ioutil.WriteFile(goldenFile, b, 0o666)
 		require.NoError(t, err)
 		return
 	}
@@ -310,7 +310,7 @@ func checkLangPkgs(detail types.ArtifactDetail, t *testing.T, tc testCase) {
 		if *update {
 			b, err := json.MarshalIndent(detail.Applications, "", "  ")
 			require.NoError(t, err)
-			err = os.WriteFile(tc.wantApplicationFile, b, 0666)
+			err = os.WriteFile(tc.wantApplicationFile, b, 0o666)
 			require.NoError(t, err)
 			return
 		}

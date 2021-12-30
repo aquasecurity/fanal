@@ -92,7 +92,7 @@ func TestNewDockerImage(t *testing.T) {
 						EmptyLayer: false,
 					},
 				},
-				RootFS: v1.RootFS{Type: "layers", DiffIDs: []v1.Hash{v1.Hash{Algorithm: "sha256", Hex: "beee9f30bc1f711043e78d4a2be0668955d4b761d587d6f60c2c8dc081efb203"}}},
+				RootFS: v1.RootFS{Type: "layers", DiffIDs: []v1.Hash{{Algorithm: "sha256", Hex: "beee9f30bc1f711043e78d4a2be0668955d4b761d587d6f60c2c8dc081efb203"}}},
 				Config: v1.Config{
 					Cmd:         []string{"/bin/sh"},
 					Env:         []string{"PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"},
@@ -116,16 +116,16 @@ func TestNewDockerImage(t *testing.T) {
 			wantConfigFile: &v1.ConfigFile{
 				Architecture:  "amd64",
 				Container:     "7f4a36a667d138b079b5ff059485ff65bfbb5ebc48f24a89f983b918e73f4f28",
-				Created:       v1.Time{Time: time.Date(2020, 1, 23, 16, 53, 06, 686519038, time.UTC)},
+				Created:       v1.Time{Time: time.Date(2020, 1, 23, 16, 53, 0o6, 686519038, time.UTC)},
 				DockerVersion: "18.06.1-ce",
 				History: []v1.History{
 					{
-						Created:    v1.Time{Time: time.Date(2020, 1, 23, 16, 53, 06, 551172402, time.UTC)},
+						Created:    v1.Time{Time: time.Date(2020, 1, 23, 16, 53, 0o6, 551172402, time.UTC)},
 						CreatedBy:  "/bin/sh -c #(nop) ADD file:d48cac34fac385cbc1de6adfdd88300f76f9bbe346cd17e64fd834d042a98326 in / ",
 						EmptyLayer: false,
 					},
 					{
-						Created:    v1.Time{Time: time.Date(2020, 1, 23, 16, 53, 06, 686519038, time.UTC)},
+						Created:    v1.Time{Time: time.Date(2020, 1, 23, 16, 53, 0o6, 686519038, time.UTC)},
 						CreatedBy:  "/bin/sh -c #(nop)  CMD [\"/bin/sh\"]",
 						Comment:    "",
 						EmptyLayer: true,
@@ -133,8 +133,9 @@ func TestNewDockerImage(t *testing.T) {
 				},
 				OS: "linux",
 
-				RootFS: v1.RootFS{Type: "layers", DiffIDs: []v1.Hash{v1.Hash{Algorithm: "sha256", Hex: "531743b7098cb2aaf615641007a129173f63ed86ca32fe7b5a246a1c47286028"}}},
-				Config: v1.Config{Env: []string{"PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"},
+				RootFS: v1.RootFS{Type: "layers", DiffIDs: []v1.Hash{{Algorithm: "sha256", Hex: "531743b7098cb2aaf615641007a129173f63ed86ca32fe7b5a246a1c47286028"}}},
+				Config: v1.Config{
+					Env:         []string{"PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"},
 					Cmd:         []string{"/bin/sh"},
 					Image:       "sha256:7c41e139ba64dd2eba852a2e963ee86f2e8da3a5bbfaf10cf4349535dbf0ff08",
 					ArgsEscaped: true,
@@ -162,16 +163,16 @@ func TestNewDockerImage(t *testing.T) {
 			wantConfigFile: &v1.ConfigFile{
 				Architecture:  "amd64",
 				Container:     "7f4a36a667d138b079b5ff059485ff65bfbb5ebc48f24a89f983b918e73f4f28",
-				Created:       v1.Time{Time: time.Date(2020, 1, 23, 16, 53, 06, 686519038, time.UTC)},
+				Created:       v1.Time{Time: time.Date(2020, 1, 23, 16, 53, 0o6, 686519038, time.UTC)},
 				DockerVersion: "18.06.1-ce",
 				History: []v1.History{
 					{
-						Created:    v1.Time{Time: time.Date(2020, 1, 23, 16, 53, 06, 551172402, time.UTC)},
+						Created:    v1.Time{Time: time.Date(2020, 1, 23, 16, 53, 0o6, 551172402, time.UTC)},
 						CreatedBy:  "/bin/sh -c #(nop) ADD file:d48cac34fac385cbc1de6adfdd88300f76f9bbe346cd17e64fd834d042a98326 in / ",
 						EmptyLayer: false,
 					},
 					{
-						Created:    v1.Time{Time: time.Date(2020, 1, 23, 16, 53, 06, 686519038, time.UTC)},
+						Created:    v1.Time{Time: time.Date(2020, 1, 23, 16, 53, 0o6, 686519038, time.UTC)},
 						CreatedBy:  "/bin/sh -c #(nop)  CMD [\"/bin/sh\"]",
 						Comment:    "",
 						EmptyLayer: true,
@@ -179,8 +180,9 @@ func TestNewDockerImage(t *testing.T) {
 				},
 				OS: "linux",
 
-				RootFS: v1.RootFS{Type: "layers", DiffIDs: []v1.Hash{v1.Hash{Algorithm: "sha256", Hex: "531743b7098cb2aaf615641007a129173f63ed86ca32fe7b5a246a1c47286028"}}},
-				Config: v1.Config{Env: []string{"PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"},
+				RootFS: v1.RootFS{Type: "layers", DiffIDs: []v1.Hash{{Algorithm: "sha256", Hex: "531743b7098cb2aaf615641007a129173f63ed86ca32fe7b5a246a1c47286028"}}},
+				Config: v1.Config{
+					Env:         []string{"PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"},
 					Cmd:         []string{"/bin/sh"},
 					Image:       "sha256:7c41e139ba64dd2eba852a2e963ee86f2e8da3a5bbfaf10cf4349535dbf0ff08",
 					ArgsEscaped: true,

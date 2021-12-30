@@ -121,7 +121,6 @@ func (a Artifact) Inspect(ctx context.Context) (types.ArtifactReference, error) 
 }
 
 func (a Artifact) calcCacheKeys(imageID string, diffIDs []string) (string, []string, map[string]string, error) {
-
 	// Pass an empty config scanner option so that the cache key can be the same, even when policies are updated.
 	imageKey, err := cache.CalcKey(imageID, a.analyzer.ImageConfigAnalyzerVersions(), nil, artifact.Option{}, config.ScannerOption{})
 	if err != nil {
@@ -184,7 +183,6 @@ func (a Artifact) inspect(ctx context.Context, missingImage string, layerKeys []
 	}
 
 	return nil
-
 }
 
 func (a Artifact) inspectLayer(ctx context.Context, diffID string) (types.BlobInfo, error) {

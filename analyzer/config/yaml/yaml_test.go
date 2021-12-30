@@ -154,11 +154,12 @@ func Test_yamlConfigAnalyzer_Analyze(t *testing.T) {
 								"name": "hello-kubernetes",
 							},
 							"spec": map[string]interface{}{
-								"ports": []interface{}{map[string]interface{}{
-									"port":       float64(80),
-									"protocol":   "TCP",
-									"targetPort": float64(8080),
-								},
+								"ports": []interface{}{
+									map[string]interface{}{
+										"port":       float64(80),
+										"protocol":   "TCP",
+										"targetPort": float64(8080),
+									},
 								},
 							},
 						},

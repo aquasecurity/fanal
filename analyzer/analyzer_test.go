@@ -389,7 +389,6 @@ func TestAnalyzeFile(t *testing.T) {
 }
 
 func TestAnalyzeConfig(t *testing.T) {
-
 	type args struct {
 		targetOS          types.OS
 		configBlob        []byte
