@@ -8,6 +8,7 @@ import (
 	"regexp"
 
 	"github.com/BurntSushi/toml"
+
 	"github.com/aquasecurity/fanal/analyzer"
 	"github.com/aquasecurity/fanal/types"
 )

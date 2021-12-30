@@ -9,12 +9,12 @@ import (
 	"strings"
 	"sync"
 
+	dio "github.com/aquasecurity/go-dep-parser/pkg/io"
 	"golang.org/x/sync/semaphore"
 
 	aos "github.com/aquasecurity/fanal/analyzer/os"
 	"github.com/aquasecurity/fanal/log"
 	"github.com/aquasecurity/fanal/types"
-	dio "github.com/aquasecurity/go-dep-parser/pkg/io"
 )
 
 var (

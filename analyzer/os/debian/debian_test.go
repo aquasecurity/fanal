@@ -5,12 +5,12 @@ import (
 	"os"
 	"testing"
 
-	aos "github.com/aquasecurity/fanal/analyzer/os"
-	"github.com/aquasecurity/fanal/types"
-
-	"github.com/aquasecurity/fanal/analyzer"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/aquasecurity/fanal/analyzer"
+	aos "github.com/aquasecurity/fanal/analyzer/os"
+	"github.com/aquasecurity/fanal/types"
 )
 
 func Test_debianOSAnalyzer_Analyze(t *testing.T) {

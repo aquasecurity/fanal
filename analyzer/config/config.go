@@ -6,9 +6,8 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/aquasecurity/fanal/analyzer/config/cloudformation"
-
 	"github.com/aquasecurity/fanal/analyzer"
+	"github.com/aquasecurity/fanal/analyzer/config/cloudformation"
 	"github.com/aquasecurity/fanal/analyzer/config/docker"
 	"github.com/aquasecurity/fanal/analyzer/config/hcl"
 	"github.com/aquasecurity/fanal/analyzer/config/json"

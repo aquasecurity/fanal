@@ -8,13 +8,10 @@ import (
 	"os"
 	"strings"
 
-	"github.com/aquasecurity/fanal/utils"
-
-	"github.com/aquasecurity/fanal/types"
-
-	aos "github.com/aquasecurity/fanal/analyzer/os"
-
 	"github.com/aquasecurity/fanal/analyzer"
+	aos "github.com/aquasecurity/fanal/analyzer/os"
+	"github.com/aquasecurity/fanal/types"
+	"github.com/aquasecurity/fanal/utils"
 )
 
 func init() {

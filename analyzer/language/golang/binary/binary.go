@@ -6,10 +6,11 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/aquasecurity/go-dep-parser/pkg/golang/binary"
+
 	"github.com/aquasecurity/fanal/analyzer"
 	"github.com/aquasecurity/fanal/analyzer/language"
 	"github.com/aquasecurity/fanal/types"
-	"github.com/aquasecurity/go-dep-parser/pkg/golang/binary"
 )
 
 func init() {

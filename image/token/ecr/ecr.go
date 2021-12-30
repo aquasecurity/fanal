@@ -6,14 +6,13 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/aquasecurity/fanal/types"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
-
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ecr"
 	"github.com/aws/aws-sdk-go/service/ecr/ecriface"
+
+	"github.com/aquasecurity/fanal/types"
 )
 
 const ecrURL = "amazonaws.com"

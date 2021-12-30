@@ -8,9 +8,10 @@ import (
 	"io/ioutil"
 	"os"
 
-	"github.com/aquasecurity/fanal/utils"
 	v1 "github.com/google/go-containerregistry/pkg/v1"
 	"github.com/google/go-containerregistry/pkg/v1/tarball"
+
+	"github.com/aquasecurity/fanal/utils"
 )
 
 func tryDockerArchive(fileName string) (v1.Image, error) {

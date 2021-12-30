@@ -5,11 +5,11 @@ import (
 	"strings"
 	"testing"
 
+	dio "github.com/aquasecurity/go-dep-parser/pkg/io"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/aquasecurity/fanal/analyzer"
-	dio "github.com/aquasecurity/go-dep-parser/pkg/io"
 )
 
 func TestConfigAnalyzer_Required(t *testing.T) {

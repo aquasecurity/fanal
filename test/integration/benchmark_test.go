@@ -13,12 +13,13 @@ import (
 	"testing"
 	"time"
 
-	_ "github.com/aquasecurity/fanal/analyzer/all"
-	"github.com/aquasecurity/fanal/cache"
-	"github.com/aquasecurity/fanal/types"
 	dtypes "github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
 	"github.com/stretchr/testify/require"
+
+	_ "github.com/aquasecurity/fanal/analyzer/all"
+	"github.com/aquasecurity/fanal/cache"
+	"github.com/aquasecurity/fanal/types"
 )
 
 type testCase struct {

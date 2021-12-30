@@ -6,11 +6,12 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/aquasecurity/go-dep-parser/pkg/nodejs/npm"
+
 	"github.com/aquasecurity/fanal/analyzer"
 	"github.com/aquasecurity/fanal/analyzer/language"
 	"github.com/aquasecurity/fanal/types"
 	"github.com/aquasecurity/fanal/utils"
-	"github.com/aquasecurity/go-dep-parser/pkg/nodejs/npm"
 )
 
 func init() {

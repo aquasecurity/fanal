@@ -4,8 +4,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aquasecurity/fanal/types"
 	"github.com/knqyf263/nested"
+
+	"github.com/aquasecurity/fanal/types"
 )
 
 type Config struct {

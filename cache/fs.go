@@ -6,8 +6,9 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/aquasecurity/fanal/types"
 	bolt "go.etcd.io/bbolt"
+
+	"github.com/aquasecurity/fanal/types"
 )
 
 var _ Cache = &FSCache{}

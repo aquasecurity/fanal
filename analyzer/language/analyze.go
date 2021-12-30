@@ -4,9 +4,10 @@ import (
 	"fmt"
 	"io"
 
+	godeptypes "github.com/aquasecurity/go-dep-parser/pkg/types"
+
 	"github.com/aquasecurity/fanal/analyzer"
 	"github.com/aquasecurity/fanal/types"
-	godeptypes "github.com/aquasecurity/go-dep-parser/pkg/types"
 )
 
 type Parser func(r io.Reader) ([]godeptypes.Library, error)

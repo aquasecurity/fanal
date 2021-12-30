@@ -5,9 +5,9 @@ import (
 	"testing"
 
 	"github.com/google/go-containerregistry/pkg/authn"
+	"github.com/stretchr/testify/assert"
 
 	"github.com/aquasecurity/fanal/types"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestGetToken(t *testing.T) {

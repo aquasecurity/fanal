@@ -9,9 +9,10 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/aquasecurity/go-dep-parser/pkg/python/packaging"
+
 	"github.com/aquasecurity/fanal/analyzer"
 	"github.com/aquasecurity/fanal/types"
-	"github.com/aquasecurity/go-dep-parser/pkg/python/packaging"
 )
 
 func init() {

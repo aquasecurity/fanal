@@ -7,9 +7,10 @@ import (
 	"path/filepath"
 	"regexp"
 
+	"github.com/aquasecurity/go-dep-parser/pkg/ruby/gemspec"
+
 	"github.com/aquasecurity/fanal/analyzer"
 	"github.com/aquasecurity/fanal/types"
-	"github.com/aquasecurity/go-dep-parser/pkg/ruby/gemspec"
 )
 
 func init() {

@@ -8,10 +8,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/aquasecurity/fanal/analyzer"
 	aos "github.com/aquasecurity/fanal/analyzer/os"
 	"github.com/aquasecurity/fanal/types"
-
-	"github.com/aquasecurity/fanal/analyzer"
 )
 
 func Test_amazonlinuxOSAnalyzer_Analyze(t *testing.T) {

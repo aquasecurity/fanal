@@ -4,11 +4,11 @@ import (
 	"os"
 	"testing"
 
-	"github.com/aquasecurity/fanal/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/aquasecurity/fanal/analyzer"
+	"github.com/aquasecurity/fanal/types"
 )
 
 func Test_pomAnalyzer_Analyze(t *testing.T) {

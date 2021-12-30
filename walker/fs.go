@@ -5,9 +5,8 @@ import (
 	"os"
 	"path/filepath"
 
-	swalker "github.com/saracen/walker"
-
 	dio "github.com/aquasecurity/go-dep-parser/pkg/io"
+	swalker "github.com/saracen/walker"
 )
 
 type Dir struct {

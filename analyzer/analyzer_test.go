@@ -8,6 +8,7 @@ import (
 	"sync"
 	"testing"
 
+	dio "github.com/aquasecurity/go-dep-parser/pkg/io"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/sync/semaphore"
@@ -17,7 +18,6 @@ import (
 	aos "github.com/aquasecurity/fanal/analyzer/os"
 	_ "github.com/aquasecurity/fanal/hook/all"
 	"github.com/aquasecurity/fanal/types"
-	dio "github.com/aquasecurity/go-dep-parser/pkg/io"
 )
 
 type mockConfigAnalyzer struct{}

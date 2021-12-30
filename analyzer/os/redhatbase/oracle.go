@@ -9,11 +9,9 @@ import (
 	"strings"
 
 	"github.com/aquasecurity/fanal/analyzer"
-
-	"github.com/aquasecurity/fanal/utils"
-
 	aos "github.com/aquasecurity/fanal/analyzer/os"
 	"github.com/aquasecurity/fanal/types"
+	"github.com/aquasecurity/fanal/utils"
 )
 
 const oracleAnalyzerVersion = 1

@@ -4,6 +4,7 @@ linters:
   enable: 
     - contextcheck
     - errorlint
+    - gci
     - gofmt
     - gofumpt
   disable:
@@ -14,3 +15,6 @@ linters:
     - staticcheck
     - structcheck
     - unused 
+linters-settings:
+  gci:
+    local-prefixes: github.com/aquasecurity/fanal

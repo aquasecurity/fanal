@@ -8,15 +8,15 @@ import (
 	"testing"
 	"time"
 
+	"github.com/aquasecurity/testdocker/auth"
+	"github.com/aquasecurity/testdocker/engine"
+	"github.com/aquasecurity/testdocker/registry"
 	"github.com/golang-jwt/jwt"
 	v1 "github.com/google/go-containerregistry/pkg/v1"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/aquasecurity/fanal/types"
-	"github.com/aquasecurity/testdocker/auth"
-	"github.com/aquasecurity/testdocker/engine"
-	"github.com/aquasecurity/testdocker/registry"
 )
 
 func setupEngineAndRegistry() (*httptest.Server, *httptest.Server) {

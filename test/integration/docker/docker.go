@@ -11,9 +11,8 @@ import (
 	"os"
 	"os/exec"
 
-	"github.com/docker/docker/client"
-
 	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/client"
 )
 
 type RegistryConfig struct {

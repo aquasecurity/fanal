@@ -11,9 +11,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/assert"
-
 	"github.com/kylelemons/godebug/pretty"
+	"github.com/stretchr/testify/assert"
 
 	"github.com/aquasecurity/fanal/types"
 )
