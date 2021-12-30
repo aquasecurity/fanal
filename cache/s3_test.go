@@ -192,10 +192,8 @@ func TestS3Cache_MissingBlobs(t *testing.T) {
 		Prefix     string
 	}
 	type args struct {
-		artifactID             string
-		blobIDs                []string
-		analyzerVersions       map[string]int
-		configAnalyzerVersions map[string]int
+		artifactID string
+		blobIDs    []string
 	}
 	tests := []struct {
 		name            string

@@ -109,10 +109,7 @@ func TestFSCache_GetBlob(t *testing.T) {
 }
 
 func TestFSCache_PutBlob(t *testing.T) {
-	type fields struct {
-		db        *bolt.DB
-		directory string
-	}
+	type fields struct{}
 	type args struct {
 		diffID    string
 		layerInfo types.BlobInfo

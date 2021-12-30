@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	"github.com/aquasecurity/testdocker/engine"
-	"github.com/docker/docker/api/types"
 	"github.com/google/go-containerregistry/pkg/name"
 	v1 "github.com/google/go-containerregistry/pkg/v1"
 	"github.com/stretchr/testify/assert"
@@ -42,9 +41,7 @@ func setupPodmanSock(t *testing.T) *httptest.Server {
 
 func TestPodmanImage(t *testing.T) {
 	type fields struct {
-		Image   v1.Image
-		opener  opener
-		inspect types.ImageInspect
+		Image v1.Image
 	}
 	tests := []struct {
 		name           string

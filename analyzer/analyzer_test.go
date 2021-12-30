@@ -50,7 +50,6 @@ func TestMain(m *testing.M) {
 
 func TestAnalysisResult_Merge(t *testing.T) {
 	type fields struct {
-		m            sync.Mutex
 		OS           *types.OS
 		PackageInfos []types.PackageInfo
 		Applications []types.Application
