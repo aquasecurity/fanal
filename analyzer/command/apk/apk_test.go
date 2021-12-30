@@ -26,7 +26,6 @@ func TestAnalyze(t *testing.T) {
 		}
 		res.WriteHeader(http.StatusOK)
 		res.Write(content)
-		return
 	}))
 	defer testServer.Close()
 	type args struct {

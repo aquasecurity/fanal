@@ -7,9 +7,9 @@ linters:
     - gci
     - gofmt
     - gofumpt
+    - gosimple
   disable:
     - errcheck
-    - gosimple
     - govet
     - ineffassign
     - staticcheck
