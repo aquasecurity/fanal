@@ -11,7 +11,7 @@ import (
 	"github.com/aquasecurity/testdocker/auth"
 	"github.com/aquasecurity/testdocker/engine"
 	"github.com/aquasecurity/testdocker/registry"
-	"github.com/golang-jwt/jwt"
+	"github.com/golang-jwt/jwt/v4"
 	v1 "github.com/google/go-containerregistry/pkg/v1"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
