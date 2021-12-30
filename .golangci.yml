@@ -2,7 +2,9 @@ run:
   timeout: 5m
 linters:
   enable: 
-    - contextcheck 
+    - contextcheck
+    - gofmt
+    - gofumpt
   disable:
     - errcheck
     - gosimple
