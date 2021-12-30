@@ -3,6 +3,8 @@ package redhatbase
 import (
 	"bufio"
 	"context"
+	"errors"
+	"fmt"
 	"io"
 	"os"
 	"regexp"
@@ -11,8 +13,6 @@ import (
 	"github.com/aquasecurity/fanal/utils"
 
 	"github.com/aquasecurity/fanal/types"
-
-	"golang.org/x/xerrors"
 
 	aos "github.com/aquasecurity/fanal/analyzer/os"
 
@@ -45,7 +45,7 @@ func (a redhatOSAnalyzer) parseRelease(r io.Reader) (types.OS, error) {
 		line := scanner.Text()
 		result := redhatRe.FindStringSubmatch(strings.TrimSpace(line))
 		if len(result) != 3 {
-			return types.OS{}, xerrors.New("redhat: invalid redhat-release")
+			return types.OS{}, errors.New("redhat: invalid redhat-release")
 		}
 
 		switch strings.ToLower(result[1]) {
@@ -63,7 +63,7 @@ func (a redhatOSAnalyzer) parseRelease(r io.Reader) (types.OS, error) {
 			return types.OS{Family: aos.RedHat, Name: result[2]}, nil
 		}
 	}
-	return types.OS{}, xerrors.Errorf("redhatbase: %w", aos.AnalyzeOSError)
+	return types.OS{}, fmt.Errorf("redhatbase: %w", aos.AnalyzeOSError)
 }
 
 func (a redhatOSAnalyzer) Required(filePath string, _ os.FileInfo) bool {

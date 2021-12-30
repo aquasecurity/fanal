@@ -1,6 +1,6 @@
 package os
 
-import "golang.org/x/xerrors"
+import "errors"
 
 const (
 	// RedHat is done
@@ -56,4 +56,4 @@ const (
 	Alpine = "alpine"
 )
 
-var AnalyzeOSError = xerrors.New("unable to analyze OS information")
+var AnalyzeOSError = errors.New("unable to analyze OS information")

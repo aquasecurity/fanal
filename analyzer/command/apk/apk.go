@@ -11,8 +11,6 @@ import (
 	"strings"
 	"time"
 
-	"golang.org/x/xerrors"
-
 	"github.com/aquasecurity/fanal/analyzer"
 	"github.com/aquasecurity/fanal/analyzer/os"
 	"github.com/aquasecurity/fanal/applier"
@@ -64,12 +62,12 @@ func (a alpineCmdAnalyzer) Analyze(targetOS types.OS, configBlob []byte) ([]type
 	var err error
 	if apkIndexArchive, err = a.fetchApkIndexArchive(targetOS); err != nil {
 		log.Println(err)
-		return nil, xerrors.Errorf("failed to fetch apk index archive: %w", err)
+		return nil, fmt.Errorf("failed to fetch apk index archive: %w", err)
 	}
 
 	var config applier.Config
 	if err = json.Unmarshal(configBlob, &config); err != nil {
-		return nil, xerrors.Errorf("failed to unmarshal docker config: %w", err)
+		return nil, fmt.Errorf("failed to unmarshal docker config: %w", err)
 	}
 	pkgs := a.parseConfig(apkIndexArchive, config)
 
@@ -89,19 +87,19 @@ func (a alpineCmdAnalyzer) fetchApkIndexArchive(targetOS types.OS) (*apkIndex, e
 		var err error
 		reader, err = builtinos.Open(strings.TrimPrefix(url, "file://"))
 		if err != nil {
-			return nil, xerrors.Errorf("failed to read APKINDEX archive file: %w", err)
+			return nil, fmt.Errorf("failed to read APKINDEX archive file: %w", err)
 		}
 	} else {
 		resp, err := http.Get(url)
 		if err != nil {
-			return nil, xerrors.Errorf("failed to fetch APKINDEX archive: %w", err)
+			return nil, fmt.Errorf("failed to fetch APKINDEX archive: %w", err)
 		}
 		defer resp.Body.Close()
 		reader = resp.Body
 	}
 	apkIndexArchive := &apkIndex{}
 	if err := json.NewDecoder(reader).Decode(apkIndexArchive); err != nil {
-		return nil, xerrors.Errorf("failed to decode APKINDEX JSON: %w", err)
+		return nil, fmt.Errorf("failed to decode APKINDEX JSON: %w", err)
 	}
 
 	return apkIndexArchive, nil

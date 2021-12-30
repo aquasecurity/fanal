@@ -3,6 +3,8 @@ package redhatbase
 import (
 	"bufio"
 	"context"
+	"errors"
+	"fmt"
 	"os"
 	"strings"
 
@@ -11,7 +13,6 @@ import (
 	aos "github.com/aquasecurity/fanal/analyzer/os"
 	"github.com/aquasecurity/fanal/types"
 	"github.com/aquasecurity/fanal/utils"
-	"golang.org/x/xerrors"
 )
 
 const fedoraAnalyzerVersion = 1
@@ -28,7 +29,7 @@ func (a fedoraOSAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisInpu
 		line := scanner.Text()
 		result := redhatRe.FindStringSubmatch(strings.TrimSpace(line))
 		if len(result) != 3 {
-			return nil, xerrors.New("cent: Invalid fedora-release")
+			return nil, errors.New("cent: Invalid fedora-release")
 		}
 
 		switch strings.ToLower(result[1]) {
@@ -38,7 +39,7 @@ func (a fedoraOSAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisInpu
 			}, nil
 		}
 	}
-	return nil, xerrors.Errorf("fedora: %w", aos.AnalyzeOSError)
+	return nil, fmt.Errorf("fedora: %w", aos.AnalyzeOSError)
 }
 
 func (a fedoraOSAnalyzer) Required(filePath string, _ os.FileInfo) bool {

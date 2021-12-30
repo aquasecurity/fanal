@@ -1,13 +1,13 @@
 package language_test
 
 import (
+	"errors"
 	"io"
 	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/fanal/analyzer"
 	"github.com/aquasecurity/fanal/analyzer/language"
@@ -78,7 +78,7 @@ func TestAnalyze(t *testing.T) {
 				case "happy":
 					return []godeptypes.Library{{Name: "test", Version: "1.2.3"}}, nil
 				case "sad":
-					return nil, xerrors.New("unexpected error")
+					return nil, errors.New("unexpected error")
 				}
 
 				return nil, nil

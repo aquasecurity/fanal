@@ -9,7 +9,6 @@ import (
 	v1 "github.com/google/go-containerregistry/pkg/v1"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/fanal/analyzer"
 	_ "github.com/aquasecurity/fanal/analyzer/all"
@@ -560,7 +559,7 @@ func TestArtifact_Inspect(t *testing.T) {
 					BlobIDs:    []string{"sha256:6ca0e41a85a9d08155d1a9e40c8a7898a93eb5d9c1a4053c9d2101042e286003"},
 				},
 				Returns: cache.ArtifactCacheMissingBlobsReturns{
-					Err: xerrors.New("MissingBlobs failed"),
+					Err: errors.New("MissingBlobs failed"),
 				},
 			},
 			wantErr: "MissingBlobs failed",

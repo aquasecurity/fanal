@@ -2,12 +2,12 @@ package dockerfile
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"strings"
 
 	"github.com/moby/buildkit/frontend/dockerfile/instructions"
 	"github.com/moby/buildkit/frontend/dockerfile/parser"
-	"golang.org/x/xerrors"
 )
 
 // Parser is a Dockerfile parser
@@ -35,7 +35,7 @@ type Command struct {
 func (p *Parser) Parse(r io.Reader) (interface{}, error) {
 	parsed, err := parser.Parse(r)
 	if err != nil {
-		return nil, xerrors.Errorf("dockerfile parse error: %w", err)
+		return nil, fmt.Errorf("dockerfile parse error: %w", err)
 	}
 
 	fromValue := "args"
@@ -47,7 +47,7 @@ func (p *Parser) Parse(r io.Reader) (interface{}, error) {
 
 		instr, err := instructions.ParseInstruction(child)
 		if err != nil {
-			return nil, xerrors.Errorf("process dockerfile instructions: %w", err)
+			return nil, fmt.Errorf("process dockerfile instructions: %w", err)
 		}
 
 		stage, ok := instr.(*instructions.Stage)
@@ -86,12 +86,12 @@ func (p *Parser) Parse(r io.Reader) (interface{}, error) {
 
 	j, err := json.Marshal(resource)
 	if err != nil {
-		return nil, xerrors.Errorf("json marshal error: %w", err)
+		return nil, fmt.Errorf("json marshal error: %w", err)
 	}
 
 	var res interface{}
 	if err = json.Unmarshal(j, &res); err != nil {
-		return nil, xerrors.Errorf("json unmarshal error: %w", err)
+		return nil, fmt.Errorf("json unmarshal error: %w", err)
 	}
 
 	return res, nil

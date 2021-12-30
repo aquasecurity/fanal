@@ -2,13 +2,13 @@ package remote
 
 import (
 	"context"
+	"fmt"
 	"io/ioutil"
 	"net/url"
 	"os"
 
 	git "github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing/transport/http"
-	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/fanal/analyzer/config"
 	"github.com/aquasecurity/fanal/artifact"
@@ -50,7 +50,7 @@ func NewArtifact(rawurl string, c cache.ArtifactCache, artifactOpt artifact.Opti
 
 	_, err = git.PlainClone(tmpDir, false, &cloneOptions)
 	if err != nil {
-		return nil, cleanup, xerrors.Errorf("git error: %w", err)
+		return nil, cleanup, fmt.Errorf("git error: %w", err)
 	}
 
 	cleanup = func() {
@@ -59,7 +59,7 @@ func NewArtifact(rawurl string, c cache.ArtifactCache, artifactOpt artifact.Opti
 
 	art, err := local.NewArtifact(tmpDir, c, artifactOpt, scannerOpt)
 	if err != nil {
-		return nil, cleanup, xerrors.Errorf("fs artifact: %w", err)
+		return nil, cleanup, fmt.Errorf("fs artifact: %w", err)
 	}
 
 	return Artifact{
@@ -71,7 +71,7 @@ func NewArtifact(rawurl string, c cache.ArtifactCache, artifactOpt artifact.Opti
 func (a Artifact) Inspect(ctx context.Context) (types.ArtifactReference, error) {
 	ref, err := a.local.Inspect(ctx)
 	if err != nil {
-		return types.ArtifactReference{}, xerrors.Errorf("remote repository error: %w", err)
+		return types.ArtifactReference{}, fmt.Errorf("remote repository error: %w", err)
 	}
 
 	ref.Name = a.url
@@ -83,7 +83,7 @@ func (a Artifact) Inspect(ctx context.Context) (types.ArtifactReference, error) 
 func newURL(rawurl string) (*url.URL, error) {
 	u, err := url.Parse(rawurl)
 	if err != nil {
-		return nil, xerrors.Errorf("url parse error: %w", err)
+		return nil, fmt.Errorf("url parse error: %w", err)
 	}
 	// "https://" can be omitted
 	// e.g. github.com/aquasecurity/fanal

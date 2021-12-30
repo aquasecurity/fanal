@@ -2,13 +2,14 @@ package analyzer
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"os"
 	"sort"
 	"strings"
 	"sync"
 
 	"golang.org/x/sync/semaphore"
-	"golang.org/x/xerrors"
 
 	aos "github.com/aquasecurity/fanal/analyzer/os"
 	"github.com/aquasecurity/fanal/log"
@@ -21,11 +22,11 @@ var (
 	configAnalyzers = map[Type]configAnalyzer{}
 
 	// ErrUnknownOS occurs when unknown OS is analyzed.
-	ErrUnknownOS = xerrors.New("unknown OS")
+	ErrUnknownOS = errors.New("unknown OS")
 	// ErrPkgAnalysis occurs when the analysis of packages is failed.
-	ErrPkgAnalysis = xerrors.New("failed to analyze packages")
+	ErrPkgAnalysis = errors.New("failed to analyze packages")
 	// ErrNoPkgsDetected occurs when the required files for an OS package manager are not detected
-	ErrNoPkgsDetected = xerrors.New("no packages detected")
+	ErrNoPkgsDetected = errors.New("no packages detected")
 )
 
 type AnalysisInput struct {
@@ -203,11 +204,11 @@ func (a Analyzer) AnalyzeFile(ctx context.Context, wg *sync.WaitGroup, limit *se
 		}
 		rc, err := opener()
 		if err != nil {
-			return xerrors.Errorf("unable to open %s: %w", filePath, err)
+			return fmt.Errorf("unable to open %s: %w", filePath, err)
 		}
 
 		if err = limit.Acquire(ctx, 1); err != nil {
-			return xerrors.Errorf("semaphore acquire: %w", err)
+			return fmt.Errorf("semaphore acquire: %w", err)
 		}
 		wg.Add(1)
 
@@ -223,7 +224,7 @@ func (a Analyzer) AnalyzeFile(ctx context.Context, wg *sync.WaitGroup, limit *se
 				Content:  rc,
 				Options:  opts,
 			})
-			if err != nil && !xerrors.Is(err, aos.AnalyzeOSError) {
+			if err != nil && !errors.Is(err, aos.AnalyzeOSError) {
 				log.Logger.Debugf("Analysis error: %s", err)
 				return
 			}

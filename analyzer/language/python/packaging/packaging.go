@@ -3,12 +3,11 @@ package packaging
 import (
 	"archive/zip"
 	"context"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
 	"strings"
-
-	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/fanal/analyzer"
 	"github.com/aquasecurity/fanal/types"
@@ -46,7 +45,7 @@ func (a packagingAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisInp
 	if strings.HasSuffix(input.FilePath, ".egg") {
 		pkginfoInZip, err := a.analyzeEggZip(input.Content, input.Info.Size())
 		if err != nil {
-			return nil, xerrors.Errorf("egg analysis error: %w", err)
+			return nil, fmt.Errorf("egg analysis error: %w", err)
 		}
 		defer pkginfoInZip.Close()
 		r = pkginfoInZip
@@ -54,7 +53,7 @@ func (a packagingAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisInp
 
 	lib, err := packaging.Parse(r)
 	if err != nil {
-		return nil, xerrors.Errorf("unable to parse %s: %w", input.FilePath, err)
+		return nil, fmt.Errorf("unable to parse %s: %w", input.FilePath, err)
 	}
 
 	return &analyzer.AnalysisResult{Applications: []types.Application{
@@ -76,7 +75,7 @@ func (a packagingAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisInp
 func (a packagingAnalyzer) analyzeEggZip(r io.ReaderAt, size int64) (io.ReadCloser, error) {
 	zr, err := zip.NewReader(r, size)
 	if err != nil {
-		return nil, xerrors.Errorf("zip reader error: %w", err)
+		return nil, fmt.Errorf("zip reader error: %w", err)
 	}
 
 	for _, file := range zr.File {

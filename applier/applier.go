@@ -1,10 +1,11 @@
 package applier
 
 import (
+	"fmt"
+
 	"github.com/aquasecurity/fanal/analyzer"
 	"github.com/aquasecurity/fanal/cache"
 	"github.com/aquasecurity/fanal/types"
-	"golang.org/x/xerrors"
 )
 
 type Applier struct {
@@ -20,7 +21,7 @@ func (a Applier) ApplyLayers(imageID string, diffIDs []string) (types.ArtifactDe
 	for _, diffID := range diffIDs {
 		layer, _ := a.cache.GetBlob(diffID)
 		if layer.SchemaVersion == 0 {
-			return types.ArtifactDetail{}, xerrors.Errorf("layer cache missing: %s", diffID)
+			return types.ArtifactDetail{}, fmt.Errorf("layer cache missing: %s", diffID)
 		}
 		layers = append(layers, layer)
 	}

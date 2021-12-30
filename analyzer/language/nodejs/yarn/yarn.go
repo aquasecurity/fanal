@@ -2,10 +2,9 @@ package yarn
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"path/filepath"
-
-	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/fanal/analyzer"
 	"github.com/aquasecurity/fanal/analyzer/language"
@@ -27,7 +26,7 @@ type yarnLibraryAnalyzer struct{}
 func (a yarnLibraryAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisInput) (*analyzer.AnalysisResult, error) {
 	res, err := language.Analyze(types.Yarn, input.FilePath, input.Content, yarn.Parse)
 	if err != nil {
-		return nil, xerrors.Errorf("unable to parse yarn.lock: %w", err)
+		return nil, fmt.Errorf("unable to parse yarn.lock: %w", err)
 	}
 	return res, nil
 }

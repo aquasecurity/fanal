@@ -2,11 +2,11 @@ package image
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/google/go-containerregistry/pkg/name"
 	v1 "github.com/google/go-containerregistry/pkg/v1"
 	multierror "github.com/hashicorp/go-multierror"
-	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/fanal/types"
 )
@@ -20,7 +20,7 @@ func NewDockerImage(ctx context.Context, imageName string, option types.DockerOp
 	}
 	ref, err := name.ParseReference(imageName, nameOpts...)
 	if err != nil {
-		return nil, func() {}, xerrors.Errorf("failed to parse the image name: %w", err)
+		return nil, func() {}, fmt.Errorf("failed to parse the image name: %w", err)
 	}
 
 	// Try accessing Docker Daemon
@@ -53,7 +53,7 @@ func NewDockerImage(ctx context.Context, imageName string, option types.DockerOp
 func ID(img v1.Image) (string, error) {
 	h, err := img.ConfigName()
 	if err != nil {
-		return "", xerrors.Errorf("unable to get the image ID: %w", err)
+		return "", fmt.Errorf("unable to get the image ID: %w", err)
 	}
 	return h.String(), nil
 }
@@ -61,7 +61,7 @@ func ID(img v1.Image) (string, error) {
 func LayerIDs(img v1.Image) ([]string, error) {
 	conf, err := img.ConfigFile()
 	if err != nil {
-		return nil, xerrors.Errorf("unable to get the config file: %w", err)
+		return nil, fmt.Errorf("unable to get the config file: %w", err)
 	}
 
 	var layerIDs []string

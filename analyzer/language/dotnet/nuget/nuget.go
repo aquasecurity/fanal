@@ -2,10 +2,9 @@ package nuget
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"path/filepath"
-
-	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/fanal/analyzer"
 	"github.com/aquasecurity/fanal/analyzer/language"
@@ -40,7 +39,7 @@ func (a nugetLibraryAnalyzer) Analyze(_ context.Context, input analyzer.Analysis
 
 	res, err := language.Analyze(types.NuGet, input.FilePath, input.Content, parser)
 	if err != nil {
-		return nil, xerrors.Errorf("NuGet analysis error: %w", err)
+		return nil, fmt.Errorf("NuGet analysis error: %w", err)
 	}
 	return res, nil
 }

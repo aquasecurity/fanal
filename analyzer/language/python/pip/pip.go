@@ -2,6 +2,7 @@ package pip
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"path/filepath"
 
@@ -9,7 +10,6 @@ import (
 	"github.com/aquasecurity/fanal/analyzer/language"
 	"github.com/aquasecurity/fanal/types"
 	"github.com/aquasecurity/go-dep-parser/pkg/python/pip"
-	"golang.org/x/xerrors"
 )
 
 func init() {
@@ -25,7 +25,7 @@ type pipLibraryAnalyzer struct{}
 func (a pipLibraryAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisInput) (*analyzer.AnalysisResult, error) {
 	res, err := language.Analyze(types.Pip, input.FilePath, input.Content, pip.Parse)
 	if err != nil {
-		return nil, xerrors.Errorf("unable to parse requirements.txt: %w", err)
+		return nil, fmt.Errorf("unable to parse requirements.txt: %w", err)
 	}
 	return res, nil
 }

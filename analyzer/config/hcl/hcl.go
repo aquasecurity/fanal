@@ -2,6 +2,7 @@ package hcl
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -9,7 +10,6 @@ import (
 
 	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/hcl"
-	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/fanal/analyzer"
 	"github.com/aquasecurity/fanal/config/parser/hcl2"
@@ -35,7 +35,7 @@ func NewConfigAnalyzer(filePattern *regexp.Regexp) ConfigAnalyzer {
 func (a ConfigAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisInput) (*analyzer.AnalysisResult, error) {
 	parsed, err := a.analyze(input)
 	if err != nil {
-		return nil, xerrors.Errorf("unable to parse HCL (%a): %w", input.FilePath, err)
+		return nil, fmt.Errorf("unable to parse HCL (%s): %w", input.FilePath, err)
 	}
 
 	return &analyzer.AnalysisResult{
@@ -55,17 +55,17 @@ func (a ConfigAnalyzer) analyze(target analyzer.AnalysisInput) (interface{}, err
 
 	content, err := io.ReadAll(target.Content)
 	if err != nil {
-		return nil, xerrors.Errorf("failed to read the HCL2 file: %w", err)
+		return nil, fmt.Errorf("failed to read the HCL2 file: %w", err)
 	}
 
 	if err := hcl2.Unmarshal(content, &parsed); err != nil {
-		errs = multierror.Append(errs, xerrors.Errorf("unable to parse HCL2 (%s): %w", target.FilePath, err))
+		errs = multierror.Append(errs, fmt.Errorf("unable to parse HCL2 (%s): %w", target.FilePath, err))
 	} else {
 		return parsed, nil
 	}
 
 	if err := hcl.Unmarshal(content, &parsed); err != nil {
-		errs = multierror.Append(errs, xerrors.Errorf("unable to parse HCL1 (%s): %w", target.FilePath, err))
+		errs = multierror.Append(errs, fmt.Errorf("unable to parse HCL1 (%s): %w", target.FilePath, err))
 	} else {
 		return parsed, nil
 	}

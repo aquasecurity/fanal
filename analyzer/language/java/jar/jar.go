@@ -2,11 +2,10 @@ package jar
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
-
-	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/fanal/analyzer"
 	"github.com/aquasecurity/fanal/analyzer/language"
@@ -29,7 +28,7 @@ func (a javaLibraryAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisI
 	libs, err := jar.Parse(input.Content, input.Info.Size(),
 		jar.WithFilePath(input.FilePath), jar.WithOffline(input.Options.Offline))
 	if err != nil {
-		return nil, xerrors.Errorf("jar/war/ear parse error: %w", err)
+		return nil, fmt.Errorf("jar/war/ear parse error: %w", err)
 	}
 
 	return language.ToAnalysisResult(types.Jar, input.FilePath, input.FilePath, libs), nil

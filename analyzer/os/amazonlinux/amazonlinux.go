@@ -8,8 +8,6 @@ import (
 	"os"
 	"strings"
 
-	"golang.org/x/xerrors"
-
 	"github.com/aquasecurity/fanal/utils"
 
 	"github.com/aquasecurity/fanal/types"
@@ -60,7 +58,7 @@ func (a amazonlinuxOSAnalyzer) parseRelease(r io.Reader) (types.OS, error) {
 			}, nil
 		}
 	}
-	return types.OS{}, xerrors.Errorf("amazon: %w", aos.AnalyzeOSError)
+	return types.OS{}, fmt.Errorf("amazon: %w", aos.AnalyzeOSError)
 }
 
 func (a amazonlinuxOSAnalyzer) Required(filePath string, _ os.FileInfo) bool {

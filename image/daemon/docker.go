@@ -2,11 +2,11 @@ package daemon
 
 import (
 	"context"
+	"fmt"
 	"os"
 
 	"github.com/docker/docker/client"
 	"github.com/google/go-containerregistry/pkg/name"
-	"golang.org/x/xerrors"
 )
 
 // DockerImage implements v1.Image by extending daemon.Image.
@@ -16,7 +16,7 @@ func DockerImage(ref name.Reference) (Image, func(), error) {
 
 	c, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
-		return nil, cleanup, xerrors.Errorf("failed to initialize a docker client: %w", err)
+		return nil, cleanup, fmt.Errorf("failed to initialize a docker client: %w", err)
 	}
 	defer func() {
 		if err != nil {
@@ -26,17 +26,17 @@ func DockerImage(ref name.Reference) (Image, func(), error) {
 
 	inspect, _, err := c.ImageInspectWithRaw(context.Background(), ref.Name())
 	if err != nil {
-		return nil, cleanup, xerrors.Errorf("unable to inspect the image (%s): %w", ref.Name(), err)
+		return nil, cleanup, fmt.Errorf("unable to inspect the image (%s): %w", ref.Name(), err)
 	}
 
 	history, err := c.ImageHistory(context.Background(), ref.Name())
 	if err != nil {
-		return nil, cleanup, xerrors.Errorf("unable to get history (%s): %w", ref.Name(), err)
+		return nil, cleanup, fmt.Errorf("unable to get history (%s): %w", ref.Name(), err)
 	}
 
 	f, err := os.CreateTemp("", "fanal-*")
 	if err != nil {
-		return nil, cleanup, xerrors.Errorf("failed to create a temporary file")
+		return nil, cleanup, fmt.Errorf("failed to create a temporary file")
 	}
 
 	cleanup = func() {

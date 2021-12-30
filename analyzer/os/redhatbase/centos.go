@@ -3,6 +3,8 @@ package redhatbase
 import (
 	"bufio"
 	"context"
+	"errors"
+	"fmt"
 	"os"
 	"strings"
 
@@ -11,7 +13,6 @@ import (
 	aos "github.com/aquasecurity/fanal/analyzer/os"
 	"github.com/aquasecurity/fanal/types"
 	"github.com/aquasecurity/fanal/utils"
-	"golang.org/x/xerrors"
 )
 
 const centosAnalyzerVersion = 1
@@ -28,7 +29,7 @@ func (a centOSAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisInput)
 		line := scanner.Text()
 		result := redhatRe.FindStringSubmatch(strings.TrimSpace(line))
 		if len(result) != 3 {
-			return nil, xerrors.New("centos: invalid centos-release")
+			return nil, errors.New("centos: invalid centos-release")
 		}
 
 		switch strings.ToLower(result[1]) {
@@ -39,7 +40,7 @@ func (a centOSAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisInput)
 		}
 	}
 
-	return nil, xerrors.Errorf("centos: %w", aos.AnalyzeOSError)
+	return nil, fmt.Errorf("centos: %w", aos.AnalyzeOSError)
 }
 
 func (a centOSAnalyzer) Required(filePath string, _ os.FileInfo) bool {

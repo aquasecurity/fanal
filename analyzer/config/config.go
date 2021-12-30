@@ -1,12 +1,12 @@
 package config
 
 import (
+	"fmt"
 	"regexp"
 	"sort"
 	"strings"
 
 	"github.com/aquasecurity/fanal/analyzer/config/cloudformation"
-	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/fanal/analyzer"
 	"github.com/aquasecurity/fanal/analyzer/config/docker"
@@ -41,12 +41,12 @@ func RegisterConfigAnalyzers(filePatterns []string) error {
 		// e.g. "dockerfile:my_dockerfile_*"
 		s := strings.SplitN(p, separator, 2)
 		if len(s) != 2 {
-			return xerrors.Errorf("invalid file pattern (%s)", p)
+			return fmt.Errorf("invalid file pattern (%s)", p)
 		}
 		fileType, pattern := s[0], s[1]
 		r, err := regexp.Compile(pattern)
 		if err != nil {
-			return xerrors.Errorf("invalid file regexp (%s): %w", p, err)
+			return fmt.Errorf("invalid file regexp (%s): %w", p, err)
 		}
 
 		switch fileType {
@@ -61,7 +61,7 @@ func RegisterConfigAnalyzers(filePatterns []string) error {
 		case types.YAML:
 			yamlRegexp = r
 		default:
-			return xerrors.Errorf("unknown file type: %s, pattern: %s", fileType, pattern)
+			return fmt.Errorf("unknown file type: %s, pattern: %s", fileType, pattern)
 		}
 	}
 

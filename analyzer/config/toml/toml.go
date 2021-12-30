@@ -2,11 +2,10 @@ package toml
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"path/filepath"
 	"regexp"
-
-	"golang.org/x/xerrors"
 
 	"github.com/BurntSushi/toml"
 	"github.com/aquasecurity/fanal/analyzer"
@@ -30,7 +29,7 @@ func NewConfigAnalyzer(filePattern *regexp.Regexp) ConfigAnalyzer {
 func (a ConfigAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisInput) (*analyzer.AnalysisResult, error) {
 	var parsed interface{}
 	if _, err := toml.NewDecoder(input.Content).Decode(&parsed); err != nil {
-		return nil, xerrors.Errorf("unable to decode TOML (%s): %w", input.FilePath, err)
+		return nil, fmt.Errorf("unable to decode TOML (%s): %w", input.FilePath, err)
 	}
 
 	return &analyzer.AnalysisResult{

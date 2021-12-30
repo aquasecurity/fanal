@@ -2,10 +2,9 @@ package mod
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"path/filepath"
-
-	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/fanal/analyzer"
 	"github.com/aquasecurity/fanal/analyzer/language"
@@ -27,7 +26,7 @@ type gomodAnalyzer struct{}
 func (a gomodAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisInput) (*analyzer.AnalysisResult, error) {
 	res, err := language.Analyze(types.GoMod, input.FilePath, input.Content, mod.Parse)
 	if err != nil {
-		return nil, xerrors.Errorf("failed to analyze %s: %w", input.FilePath, err)
+		return nil, fmt.Errorf("failed to analyze %s: %w", input.FilePath, err)
 	}
 	return res, nil
 }

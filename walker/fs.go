@@ -1,11 +1,11 @@
 package walker
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 
 	swalker "github.com/saracen/walker"
-	"golang.org/x/xerrors"
 
 	dio "github.com/aquasecurity/go-dep-parser/pkg/io"
 )
@@ -39,7 +39,7 @@ func (w Dir) Walk(root string, fn WalkFunc) error {
 		}
 
 		if err := fn(pathname, fi, w.fileOpener(pathname)); err != nil {
-			return xerrors.Errorf("failed to analyze file: %w", err)
+			return fmt.Errorf("failed to analyze file: %w", err)
 		}
 		return nil
 	}
@@ -51,13 +51,13 @@ func (w Dir) Walk(root string, fn WalkFunc) error {
 			return nil
 		}
 		// halt traversal on any other error
-		return xerrors.Errorf("unknown error with %s: %w", pathname, err)
+		return fmt.Errorf("unknown error with %s: %w", pathname, err)
 	})
 
 	// Multiple goroutines stat the filesystem concurrently. The provided
 	// walkFn must be safe for concurrent use.
 	if err := swalker.Walk(root, walkFn, errorCallbackOption); err != nil {
-		return xerrors.Errorf("walk error: %w", err)
+		return fmt.Errorf("walk error: %w", err)
 	}
 	return nil
 }

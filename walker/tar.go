@@ -3,14 +3,14 @@ package walker
 import (
 	"archive/tar"
 	"bytes"
+	"errors"
+	"fmt"
 	"io"
 	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
 	"sync"
-
-	"golang.org/x/xerrors"
 
 	dio "github.com/aquasecurity/go-dep-parser/pkg/io"
 )
@@ -35,10 +35,10 @@ func (w LayerTar) Walk(layer io.Reader, analyzeFn WalkFunc) ([]string, []string,
 	tr := tar.NewReader(layer)
 	for {
 		hdr, err := tr.Next()
-		if err == io.EOF {
+		if errors.Is(err, io.EOF) {
 			break
 		} else if err != nil {
-			return nil, nil, xerrors.Errorf("failed to extract the archive: %w", err)
+			return nil, nil, fmt.Errorf("failed to extract the archive: %w", err)
 		}
 
 		filePath := hdr.Name
@@ -78,7 +78,7 @@ func (w LayerTar) Walk(layer io.Reader, analyzeFn WalkFunc) ([]string, []string,
 
 		// A symbolic/hard link or regular file will reach here.
 		if err = w.processFile(filePath, tr, hdr.FileInfo(), analyzeFn); err != nil {
-			return nil, nil, xerrors.Errorf("failed to process the file: %w", err)
+			return nil, nil, fmt.Errorf("failed to process the file: %w", err)
 		}
 	}
 	return opqDirs, whFiles, nil
@@ -89,7 +89,7 @@ func (w LayerTar) processFile(filePath string, tr *tar.Reader, fi fs.FileInfo, a
 	defer tf.Clean()
 
 	if err := analyzeFn(filePath, fi, tf.Open); err != nil {
-		return xerrors.Errorf("failed to analyze file: %w", err)
+		return fmt.Errorf("failed to analyze file: %w", err)
 	}
 
 	return nil
@@ -136,12 +136,12 @@ func (o *tarFile) Open() (dio.ReadSeekCloserAt, error) {
 		if o.size >= ThresholdSize {
 			f, err := os.CreateTemp("", "fanal-*")
 			if err != nil {
-				o.err = xerrors.Errorf("failed to create the temp file: %w", err)
+				o.err = fmt.Errorf("failed to create the temp file: %w", err)
 				return
 			}
 
 			if _, err = io.Copy(f, o.reader); err != nil {
-				o.err = xerrors.Errorf("failed to copy: %w", err)
+				o.err = fmt.Errorf("failed to copy: %w", err)
 				return
 			}
 
@@ -149,14 +149,14 @@ func (o *tarFile) Open() (dio.ReadSeekCloserAt, error) {
 		} else {
 			b, err := io.ReadAll(o.reader)
 			if err != nil {
-				o.err = xerrors.Errorf("unable to read the file: %w", err)
+				o.err = fmt.Errorf("unable to read the file: %w", err)
 				return
 			}
 			o.content = b
 		}
 	})
 	if o.err != nil {
-		return nil, xerrors.Errorf("failed to open: %w", o.err)
+		return nil, fmt.Errorf("failed to open: %w", o.err)
 	}
 
 	return o.open()
@@ -166,7 +166,7 @@ func (o *tarFile) open() (dio.ReadSeekCloserAt, error) {
 	if o.filePath != "" {
 		f, err := os.Open(o.filePath)
 		if err != nil {
-			return nil, xerrors.Errorf("failed to open the temp file: %w", err)
+			return nil, fmt.Errorf("failed to open the temp file: %w", err)
 		}
 		return f, nil
 	}

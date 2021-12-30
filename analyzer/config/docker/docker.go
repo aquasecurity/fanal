@@ -2,12 +2,11 @@ package docker
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
-
-	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/fanal/analyzer"
 	"github.com/aquasecurity/fanal/config/parser/dockerfile"
@@ -33,7 +32,7 @@ func NewConfigAnalyzer(filePattern *regexp.Regexp) ConfigAnalyzer {
 func (s ConfigAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisInput) (*analyzer.AnalysisResult, error) {
 	parsed, err := s.parser.Parse(input.Content)
 	if err != nil {
-		return nil, xerrors.Errorf("unable to parse Dockerfile (%s): %w", input.FilePath, err)
+		return nil, fmt.Errorf("unable to parse Dockerfile (%s): %w", input.FilePath, err)
 	}
 
 	return &analyzer.AnalysisResult{

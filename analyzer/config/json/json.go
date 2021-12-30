@@ -3,11 +3,10 @@ package json
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 	"regexp"
-
-	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/fanal/analyzer"
 	"github.com/aquasecurity/fanal/types"
@@ -33,7 +32,7 @@ func NewConfigAnalyzer(filePattern *regexp.Regexp) ConfigAnalyzer {
 func (a ConfigAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisInput) (*analyzer.AnalysisResult, error) {
 	var parsed interface{}
 	if err := json.NewDecoder(input.Content).Decode(&parsed); err != nil {
-		return nil, xerrors.Errorf("unable to decode JSON (%s): %w", input.FilePath, err)
+		return nil, fmt.Errorf("unable to decode JSON (%s): %w", input.FilePath, err)
 	}
 
 	return &analyzer.AnalysisResult{

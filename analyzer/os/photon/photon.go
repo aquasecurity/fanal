@@ -3,14 +3,13 @@ package photon
 import (
 	"bufio"
 	"context"
+	"fmt"
 	"os"
 	"strings"
 
 	"github.com/aquasecurity/fanal/utils"
 
 	"github.com/aquasecurity/fanal/types"
-
-	"golang.org/x/xerrors"
 
 	aos "github.com/aquasecurity/fanal/analyzer/os"
 
@@ -49,7 +48,7 @@ func (a photonOSAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisInpu
 			}, nil
 		}
 	}
-	return nil, xerrors.Errorf("photon: %w", aos.AnalyzeOSError)
+	return nil, fmt.Errorf("photon: %w", aos.AnalyzeOSError)
 }
 
 func (a photonOSAnalyzer) Required(filePath string, _ os.FileInfo) bool {

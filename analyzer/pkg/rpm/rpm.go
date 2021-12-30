@@ -2,6 +2,8 @@ package rpm
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -9,7 +11,6 @@ import (
 
 	"github.com/aquasecurity/fanal/log"
 	rpmdb "github.com/knqyf263/go-rpmdb/pkg"
-	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/fanal/analyzer"
 	"github.com/aquasecurity/fanal/types"
@@ -28,14 +29,14 @@ var requiredFiles = []string{
 	"var/lib/rpm/Packages.db",
 	"var/lib/rpm/Packages",
 }
-var errUnexpectedNameFormat = xerrors.New("unexpected name format")
+var errUnexpectedNameFormat = errors.New("unexpected name format")
 
 type rpmPkgAnalyzer struct{}
 
 func (a rpmPkgAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisInput) (*analyzer.AnalysisResult, error) {
 	parsedPkgs, installedFiles, err := a.parsePkgInfo(input.Content)
 	if err != nil {
-		return nil, xerrors.Errorf("failed to parse rpmdb: %w", err)
+		return nil, fmt.Errorf("failed to parse rpmdb: %w", err)
 	}
 
 	return &analyzer.AnalysisResult{
@@ -52,30 +53,30 @@ func (a rpmPkgAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisInput)
 func (a rpmPkgAnalyzer) parsePkgInfo(rc io.Reader) ([]types.Package, []string, error) {
 	tmpDir, err := os.MkdirTemp("", "rpm")
 	if err != nil {
-		return nil, nil, xerrors.Errorf("failed to create a temp dir: %w", err)
+		return nil, nil, fmt.Errorf("failed to create a temp dir: %w", err)
 	}
 	defer os.RemoveAll(tmpDir)
 
 	filename := filepath.Join(tmpDir, "Packages")
 	f, err := os.Create(filename)
 	if err != nil {
-		return nil, nil, xerrors.Errorf("failed to create a package file: %w", err)
+		return nil, nil, fmt.Errorf("failed to create a package file: %w", err)
 	}
 
 	if _, err = io.Copy(f, rc); err != nil {
-		return nil, nil, xerrors.Errorf("failed to copy a package file: %w", err)
+		return nil, nil, fmt.Errorf("failed to copy a package file: %w", err)
 	}
 
 	// The temp file must be closed before being opened as Berkeley DB.
 	if err = f.Close(); err != nil {
-		return nil, nil, xerrors.Errorf("failed to close a temp file: %w", err)
+		return nil, nil, fmt.Errorf("failed to close a temp file: %w", err)
 	}
 
 	// rpm-python 4.11.3 rpm-4.11.3-35.el7.src.rpm
 	// Extract binary package names because RHSA refers to binary package names.
 	db, err := rpmdb.Open(filename)
 	if err != nil {
-		return nil, nil, xerrors.Errorf("failed to open RPM DB: %w", err)
+		return nil, nil, fmt.Errorf("failed to open RPM DB: %w", err)
 	}
 
 	// equivalent:
@@ -83,7 +84,7 @@ func (a rpmPkgAnalyzer) parsePkgInfo(rc io.Reader) ([]types.Package, []string, e
 	//   old version: rpm -qa --qf "%{NAME} %{EPOCH} %{VERSION} %{RELEASE} %{SOURCERPM} %{ARCH}\n"
 	pkgList, err := db.ListPackages()
 	if err != nil {
-		return nil, nil, xerrors.Errorf("failed to list packages", err)
+		return nil, nil, fmt.Errorf("failed to list packages: %w", err)
 	}
 
 	var pkgs []types.Package
@@ -106,7 +107,7 @@ func (a rpmPkgAnalyzer) parsePkgInfo(rc io.Reader) ([]types.Package, []string, e
 
 		files, err := pkg.InstalledFiles()
 		if err != nil {
-			return nil, nil, xerrors.Errorf("unable to get installed files: %w", err)
+			return nil, nil, fmt.Errorf("unable to get installed files: %w", err)
 		}
 
 		p := types.Package{

@@ -3,13 +3,13 @@ package scanner
 import (
 	"context"
 	_ "embed"
+	"fmt"
 	"path/filepath"
 
 	cfExternal "github.com/aquasecurity/cfsec/pkg/externalscan"
 	"github.com/aquasecurity/defsec/rules"
 	tfExternal "github.com/aquasecurity/tfsec/pkg/externalscan"
 	"github.com/open-policy-agent/opa/rego"
-	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/fanal/policy"
 	"github.com/aquasecurity/fanal/types"
@@ -44,7 +44,7 @@ func New(rootDir string, namespaces, policyPaths, dataPaths []string, trace bool
 	if len(namespaces) > 0 && len(policyPaths) > 0 {
 		engine, err := policy.Load(policyPaths, dataPaths, trace)
 		if err != nil {
-			return Scanner{}, xerrors.Errorf("policy load error: %w", err)
+			return Scanner{}, fmt.Errorf("policy load error: %w", err)
 		}
 		scanner.engine = engine
 	}
@@ -70,21 +70,21 @@ func (s Scanner) ScanConfigs(ctx context.Context, files []types.Config) ([]types
 	// Scan config files by OPA/Rego
 	results, err := s.scanConfigsByRego(ctx, configFiles)
 	if err != nil {
-		return nil, xerrors.Errorf("scan config error: %w", err)
+		return nil, fmt.Errorf("scan config error: %w", err)
 	}
 	misconfs = append(misconfs, results...)
 
 	// Scan terraform files by TFSec
 	results, err = s.scanTerraformByTFSec(tfFiles)
 	if err != nil {
-		return nil, xerrors.Errorf("scan terraform error: %w", err)
+		return nil, fmt.Errorf("scan terraform error: %w", err)
 	}
 	misconfs = append(misconfs, results...)
 
 	// Scan CloudFormation files by CFSec
 	results, err = s.scanCloudFormationByCFSec(cfFiles)
 	if err != nil {
-		return nil, xerrors.Errorf("scan cloudformation error: %w", err)
+		return nil, fmt.Errorf("scan cloudformation error: %w", err)
 	}
 	misconfs = append(misconfs, results...)
 
@@ -101,7 +101,7 @@ func (s Scanner) scanConfigsByRego(ctx context.Context, files []types.Config) ([
 		// Detect config types such as CloudFormation and Kubernetes.
 		configType, err := detectType(ctx, file.Content)
 		if err != nil {
-			return nil, xerrors.Errorf("unable to detect config type: %w", err)
+			return nil, fmt.Errorf("unable to detect config type: %w", err)
 		}
 		if configType != "" {
 			file.Type = configType
@@ -112,7 +112,7 @@ func (s Scanner) scanConfigsByRego(ctx context.Context, files []types.Config) ([
 
 	misconfs, err := s.engine.Check(ctx, configs, s.namespaces)
 	if err != nil {
-		return nil, xerrors.Errorf("failed to scan: %w", err)
+		return nil, fmt.Errorf("failed to scan: %w", err)
 	}
 
 	return misconfs, nil
@@ -127,11 +127,11 @@ func (s Scanner) scanCloudFormationByCFSec(files []types.Config) ([]types.Miscon
 	for _, file := range files {
 		results, err := s.cfScanner.Scan(file.FilePath)
 		if err != nil {
-			return nil, xerrors.Errorf("cloudformation scan error: %w", err)
+			return nil, fmt.Errorf("cloudformation scan error: %w", err)
 		}
 		rootDir, err := filepath.Abs(s.rootDir)
 		if err != nil {
-			return nil, xerrors.Errorf("filepath abs (%s): %w", s.rootDir, err)
+			return nil, fmt.Errorf("filepath abs (%s): %w", s.rootDir, err)
 		}
 
 		for _, result := range results {
@@ -162,7 +162,7 @@ func (s Scanner) scanCloudFormationByCFSec(files []types.Config) ([]types.Miscon
 
 			filePath, err := filepath.Rel(rootDir, filename)
 			if err != nil {
-				return nil, xerrors.Errorf("filepath rel, root: [%s], result: [%s] %w", rootDir, file.FilePath, err)
+				return nil, fmt.Errorf("filepath rel, root: [%s], result: [%s] %w", rootDir, file.FilePath, err)
 			}
 
 			misconf, ok := misConfs[filePath]
@@ -193,17 +193,17 @@ func (s Scanner) scanTerraformByTFSec(files []types.Config) ([]types.Misconfigur
 
 	for _, file := range files {
 		if err := s.tfscanner.AddPath(file.FilePath); err != nil {
-			return nil, xerrors.Errorf("terraform path error: %w", err)
+			return nil, fmt.Errorf("terraform path error: %w", err)
 		}
 	}
 	results, err := s.tfscanner.Scan()
 	if err != nil {
-		return nil, xerrors.Errorf("terraform scan error: %w", err)
+		return nil, fmt.Errorf("terraform scan error: %w", err)
 	}
 
 	rootDir, err := filepath.Abs(s.rootDir)
 	if err != nil {
-		return nil, xerrors.Errorf("filepath abs (%s): %w", s.rootDir, err)
+		return nil, fmt.Errorf("filepath abs (%s): %w", s.rootDir, err)
 	}
 
 	misconfs := map[string]types.Misconfiguration{}
@@ -229,7 +229,7 @@ func (s Scanner) scanTerraformByTFSec(files []types.Config) ([]types.Misconfigur
 		}
 		filePath, err := filepath.Rel(rootDir, result.Range().Filename)
 		if err != nil {
-			return nil, xerrors.Errorf("filepath rel: %w", err)
+			return nil, fmt.Errorf("filepath rel: %w", err)
 		}
 
 		misconf, ok := misconfs[filePath]
@@ -258,14 +258,14 @@ func detectType(ctx context.Context, input interface{}) (string, error) {
 		rego.Module("detection.rego", defaultDetectionModule),
 	).Eval(ctx)
 	if err != nil {
-		return "", xerrors.Errorf("rego eval error: %w", err)
+		return "", fmt.Errorf("rego eval error: %w", err)
 	}
 
 	for _, result := range results {
 		for _, configType := range result.Bindings["x"].([]interface{}) {
 			v, ok := configType.(string)
 			if !ok {
-				return "", xerrors.Errorf("'detect' must return string")
+				return "", fmt.Errorf("'detect' must return string")
 			}
 			// Return the first element
 			return v, nil

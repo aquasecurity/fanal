@@ -2,11 +2,10 @@ package gemspec
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"path/filepath"
 	"regexp"
-
-	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/fanal/analyzer"
 	"github.com/aquasecurity/fanal/types"
@@ -26,7 +25,7 @@ type gemspecLibraryAnalyzer struct{}
 func (a gemspecLibraryAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisInput) (*analyzer.AnalysisResult, error) {
 	parsedLib, err := gemspec.Parse(input.Content)
 	if err != nil {
-		return nil, xerrors.Errorf("failed to parse %s: %w", input.FilePath, err)
+		return nil, fmt.Errorf("failed to parse %s: %w", input.FilePath, err)
 	}
 
 	return &analyzer.AnalysisResult{

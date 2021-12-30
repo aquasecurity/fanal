@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -12,7 +13,6 @@ import (
 
 	digest "github.com/opencontainers/go-digest"
 	"golang.org/x/sync/semaphore"
-	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/fanal/analyzer"
 	"github.com/aquasecurity/fanal/analyzer/config"
@@ -43,12 +43,12 @@ type Artifact struct {
 func NewArtifact(dir string, c cache.ArtifactCache, artifactOpt artifact.Option, scannerOpt config.ScannerOption) (artifact.Artifact, error) {
 	// Register config analyzers
 	if err := config.RegisterConfigAnalyzers(scannerOpt.FilePatterns); err != nil {
-		return nil, xerrors.Errorf("config analyzer error: %w", err)
+		return nil, fmt.Errorf("config analyzer error: %w", err)
 	}
 
 	s, err := scanner.New(dir, scannerOpt.Namespaces, scannerOpt.PolicyPaths, scannerOpt.DataPaths, scannerOpt.Trace)
 	if err != nil {
-		return nil, xerrors.Errorf("scanner error: %w", err)
+		return nil, fmt.Errorf("scanner error: %w", err)
 	}
 
 	return Artifact{
@@ -85,17 +85,17 @@ func (a Artifact) Inspect(ctx context.Context) (types.ArtifactReference, error) 
 		// For exported rootfs (e.g. images/alpine/etc/alpine-release)
 		filePath, err := filepath.Rel(a.dir, filePath)
 		if err != nil {
-			return xerrors.Errorf("filepath rel (%s): %w", filePath, err)
+			return fmt.Errorf("filepath rel (%s): %w", filePath, err)
 		}
 
 		opts := analyzer.AnalysisOptions{Offline: a.artifactOption.Offline}
 		if err = a.analyzer.AnalyzeFile(ctx, &wg, limit, result, a.dir, filePath, info, opener, opts); err != nil {
-			return xerrors.Errorf("analyze file (%s): %w", filePath, err)
+			return fmt.Errorf("analyze file (%s): %w", filePath, err)
 		}
 		return nil
 	})
 	if err != nil {
-		return types.ArtifactReference{}, xerrors.Errorf("walk dir: %w", err)
+		return types.ArtifactReference{}, fmt.Errorf("walk dir: %w", err)
 	}
 
 	// Wait for all the goroutine to finish.
@@ -107,7 +107,7 @@ func (a Artifact) Inspect(ctx context.Context) (types.ArtifactReference, error) 
 	// Scan config files
 	misconfs, err := a.scanner.ScanConfigs(ctx, result.Configs)
 	if err != nil {
-		return types.ArtifactReference{}, xerrors.Errorf("config scan error: %w", err)
+		return types.ArtifactReference{}, fmt.Errorf("config scan error: %w", err)
 	}
 
 	blobInfo := types.BlobInfo{
@@ -120,13 +120,13 @@ func (a Artifact) Inspect(ctx context.Context) (types.ArtifactReference, error) 
 	}
 
 	if err = a.hookManager.CallHooks(&blobInfo); err != nil {
-		return types.ArtifactReference{}, xerrors.Errorf("failed to call hooks: %w", err)
+		return types.ArtifactReference{}, fmt.Errorf("failed to call hooks: %w", err)
 	}
 
 	// calculate hash of JSON and use it as pseudo artifactID and blobID
 	h := sha256.New()
 	if err = json.NewEncoder(h).Encode(blobInfo); err != nil {
-		return types.ArtifactReference{}, xerrors.Errorf("json error: %w", err)
+		return types.ArtifactReference{}, fmt.Errorf("json error: %w", err)
 	}
 
 	d := digest.NewDigest(digest.SHA256, h)
@@ -135,11 +135,11 @@ func (a Artifact) Inspect(ctx context.Context) (types.ArtifactReference, error) 
 	cacheKey, err := cache.CalcKey(diffID, a.analyzer.AnalyzerVersions(), a.hookManager.Versions(),
 		a.artifactOption, a.configScannerOption)
 	if err != nil {
-		return types.ArtifactReference{}, xerrors.Errorf("cache key: %w", err)
+		return types.ArtifactReference{}, fmt.Errorf("cache key: %w", err)
 	}
 
 	if err = a.cache.PutBlob(cacheKey, blobInfo); err != nil {
-		return types.ArtifactReference{}, xerrors.Errorf("failed to store blob (%s) in cache: %w", diffID, err)
+		return types.ArtifactReference{}, fmt.Errorf("failed to store blob (%s) in cache: %w", diffID, err)
 	}
 
 	// get hostname

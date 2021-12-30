@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -10,7 +11,6 @@ import (
 
 	"github.com/go-redis/redis/v8"
 	"github.com/urfave/cli/v2"
-	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/fanal/analyzer"
 	_ "github.com/aquasecurity/fanal/analyzer/all"
@@ -120,7 +120,7 @@ func globalOption(f func(*cli.Context, cache.Cache) error) func(c *cli.Context) 
 		clearCache := c.Bool("clear")
 		if clearCache {
 			if err := cacheClient.Clear(); err != nil {
-				return xerrors.Errorf("%w", err)
+				return fmt.Errorf("%w", err)
 			}
 			return nil
 		}
@@ -203,8 +203,8 @@ func inspect(ctx context.Context, art artifact.Artifact, c cache.LocalArtifactCa
 	a := applier.NewApplier(c)
 	mergedLayer, err := a.ApplyLayers(imageInfo.ID, imageInfo.BlobIDs)
 	if err != nil {
-		switch err {
-		case analyzer.ErrUnknownOS, analyzer.ErrNoPkgsDetected:
+		switch {
+		case errors.Is(err, analyzer.ErrUnknownOS), errors.Is(err, analyzer.ErrNoPkgsDetected):
 			fmt.Printf("WARN: %s\n", err)
 		default:
 			return err

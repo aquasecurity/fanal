@@ -8,7 +8,6 @@ import (
 	"github.com/aquasecurity/fanal/artifact"
 
 	"golang.org/x/mod/sumdb/dirhash"
-	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/fanal/analyzer/config"
 )
@@ -30,7 +29,7 @@ func CalcKey(id string, analyzerVersions, hookVersions map[string]int, artifactO
 	}{id, analyzerVersions, hookVersions, artifactOpt.SkipFiles, artifactOpt.SkipDirs}
 
 	if err := json.NewEncoder(h).Encode(keyBase); err != nil {
-		return "", xerrors.Errorf("json encode error: %w", err)
+		return "", fmt.Errorf("json encode error: %w", err)
 	}
 
 	// Write policy and data contents
@@ -38,11 +37,11 @@ func CalcKey(id string, analyzerVersions, hookVersions map[string]int, artifactO
 		for _, p := range paths {
 			s, err := dirhash.HashDir(p, "", dirhash.DefaultHash)
 			if err != nil {
-				return "", xerrors.Errorf("hash dir (%s): %w", p, err)
+				return "", fmt.Errorf("hash dir (%s): %w", p, err)
 			}
 
 			if _, err = h.Write([]byte(s)); err != nil {
-				return "", xerrors.Errorf("sha256 write error: %w", err)
+				return "", fmt.Errorf("sha256 write error: %w", err)
 			}
 		}
 	}

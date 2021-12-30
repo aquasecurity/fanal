@@ -1,8 +1,9 @@
 package hook
 
 import (
+	"fmt"
+
 	"github.com/aquasecurity/fanal/types"
-	"golang.org/x/xerrors"
 )
 
 var registeredHooks = map[Type]hook{}
@@ -51,7 +52,7 @@ func (m Manager) CallHooks(blob *types.BlobInfo) error {
 		}
 
 		if err := h.Hook(blob); err != nil {
-			return xerrors.Errorf("hook error: %w", err)
+			return fmt.Errorf("hook error: %w", err)
 		}
 	}
 	return nil

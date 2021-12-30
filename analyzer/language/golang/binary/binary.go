@@ -3,9 +3,8 @@ package binary
 import (
 	"context"
 	"errors"
+	"fmt"
 	"os"
-
-	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/fanal/analyzer"
 	"github.com/aquasecurity/fanal/analyzer/language"
@@ -26,7 +25,7 @@ func (a gobinaryLibraryAnalyzer) Analyze(_ context.Context, input analyzer.Analy
 	if errors.Is(err, binary.ErrUnrecognizedExe) || errors.Is(err, binary.ErrNonGoBinary) {
 		return nil, nil
 	} else if err != nil {
-		return nil, xerrors.Errorf("go binary parse error: %w", err)
+		return nil, fmt.Errorf("go binary parse error: %w", err)
 	}
 
 	return language.ToAnalysisResult(types.GoBinary, input.FilePath, "", libs), nil

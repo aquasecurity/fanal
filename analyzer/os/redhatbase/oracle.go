@@ -3,6 +3,8 @@ package redhatbase
 import (
 	"bufio"
 	"context"
+	"errors"
+	"fmt"
 	"os"
 	"strings"
 
@@ -12,7 +14,6 @@ import (
 
 	aos "github.com/aquasecurity/fanal/analyzer/os"
 	"github.com/aquasecurity/fanal/types"
-	"golang.org/x/xerrors"
 )
 
 const oracleAnalyzerVersion = 1
@@ -29,14 +30,14 @@ func (a oracleOSAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisInpu
 		line := scanner.Text()
 		result := redhatRe.FindStringSubmatch(strings.TrimSpace(line))
 		if len(result) != 3 {
-			return nil, xerrors.New("oracle: invalid oracle-release")
+			return nil, errors.New("oracle: invalid oracle-release")
 		}
 		return &analyzer.AnalysisResult{
 			OS: &types.OS{Family: aos.Oracle, Name: result[2]},
 		}, nil
 	}
 
-	return nil, xerrors.Errorf("oracle: %w", aos.AnalyzeOSError)
+	return nil, fmt.Errorf("oracle: %w", aos.AnalyzeOSError)
 }
 
 func (a oracleOSAnalyzer) Required(filePath string, _ os.FileInfo) bool {

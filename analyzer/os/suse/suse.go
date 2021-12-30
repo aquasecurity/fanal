@@ -3,10 +3,9 @@ package suse
 import (
 	"bufio"
 	"context"
+	"fmt"
 	"os"
 	"strings"
-
-	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/fanal/analyzer"
 	aos "github.com/aquasecurity/fanal/analyzer/os"
@@ -56,7 +55,7 @@ func (a suseOSAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisInput)
 			}, nil
 		}
 	}
-	return nil, xerrors.Errorf("suse: %w", aos.AnalyzeOSError)
+	return nil, fmt.Errorf("suse: %w", aos.AnalyzeOSError)
 }
 
 func (a suseOSAnalyzer) Required(filePath string, _ os.FileInfo) bool {

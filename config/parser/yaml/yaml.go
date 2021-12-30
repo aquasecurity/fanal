@@ -2,8 +2,8 @@ package yaml
 
 import (
 	"bytes"
+	"fmt"
 
-	"golang.org/x/xerrors"
 	"sigs.k8s.io/yaml"
 )
 
@@ -14,7 +14,7 @@ type Parser struct{}
 func (p *Parser) Parse(b []byte) (interface{}, error) {
 	var v interface{}
 	if err := yaml.Unmarshal(b, &v); err != nil {
-		return nil, xerrors.Errorf("unmarshal yaml: %w", err)
+		return nil, fmt.Errorf("unmarshal yaml: %w", err)
 	}
 
 	return v, nil

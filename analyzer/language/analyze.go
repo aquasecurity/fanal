@@ -1,9 +1,8 @@
 package language
 
 import (
+	"fmt"
 	"io"
-
-	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/fanal/analyzer"
 	"github.com/aquasecurity/fanal/types"
@@ -15,7 +14,7 @@ type Parser func(r io.Reader) ([]godeptypes.Library, error)
 func Analyze(fileType, filePath string, r io.Reader, parse Parser) (*analyzer.AnalysisResult, error) {
 	parsedLibs, err := parse(r)
 	if err != nil {
-		return nil, xerrors.Errorf("failed to parse %s: %w", filePath, err)
+		return nil, fmt.Errorf("failed to parse %s: %w", filePath, err)
 	}
 
 	if len(parsedLibs) == 0 {

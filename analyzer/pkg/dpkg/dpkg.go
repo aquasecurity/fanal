@@ -3,6 +3,7 @@ package dpkg
 import (
 	"bufio"
 	"context"
+	"fmt"
 	"log"
 	"os"
 	"path/filepath"
@@ -10,7 +11,6 @@ import (
 	"strings"
 
 	debVersion "github.com/knqyf263/go-deb-version"
-	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/fanal/analyzer"
 	"github.com/aquasecurity/fanal/types"
@@ -70,7 +70,7 @@ func (a dpkgAnalyzer) parseDpkgInfoList(scanner *bufio.Scanner) (*analyzer.Analy
 	installedFiles = append(installedFiles, previous)
 
 	if err := scanner.Err(); err != nil {
-		return nil, xerrors.Errorf("scan error: %w", err)
+		return nil, fmt.Errorf("scan error: %w", err)
 	}
 
 	return &analyzer.AnalysisResult{
@@ -97,7 +97,7 @@ func (a dpkgAnalyzer) parseDpkgStatus(filePath string, scanner *bufio.Scanner) (
 	}
 
 	if err := scanner.Err(); err != nil {
-		return nil, xerrors.Errorf("scan error: %w", err)
+		return nil, fmt.Errorf("scan error: %w", err)
 	}
 
 	pkgs := make([]types.Package, 0, len(pkgMap))

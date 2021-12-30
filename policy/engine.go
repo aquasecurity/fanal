@@ -3,6 +3,7 @@ package policy
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -16,7 +17,6 @@ import (
 	"github.com/open-policy-agent/opa/rego"
 	"github.com/open-policy-agent/opa/storage"
 	"github.com/open-policy-agent/opa/version"
-	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/fanal/types"
 	"github.com/aquasecurity/fanal/utils"
@@ -41,14 +41,14 @@ type Engine struct {
 func Load(policyPaths []string, dataPaths []string, trace bool) (*Engine, error) {
 	policies, err := loader.AllRegos(policyPaths)
 	if err != nil {
-		return nil, xerrors.Errorf("load: %w", err)
+		return nil, fmt.Errorf("load: %w", err)
 	} else if len(policies.Modules) == 0 {
-		return nil, xerrors.Errorf("no policies found in %v", policyPaths)
+		return nil, fmt.Errorf("no policies found in %v", policyPaths)
 	}
 
 	compiler, err := policies.Compiler()
 	if err != nil {
-		return nil, xerrors.Errorf("get compiler: %w", err)
+		return nil, fmt.Errorf("get compiler: %w", err)
 	}
 
 	policyContents := make(map[string]string)
@@ -63,7 +63,7 @@ func Load(policyPaths []string, dataPaths []string, trace bool) (*Engine, error)
 
 	store, docs, err := loadData(dataPaths, allNamespaces(modules))
 	if err != nil {
-		return nil, xerrors.Errorf("unable to load data: %w", err)
+		return nil, fmt.Errorf("unable to load data: %w", err)
 	}
 
 	return &Engine{
@@ -101,12 +101,12 @@ func loadData(dataPaths, namespaces []string) (storage.Store, map[string]string,
 		return !utils.StringInSlice(ext, []string{".yaml", ".yml", ".json"})
 	})
 	if err != nil {
-		return nil, nil, xerrors.Errorf("filter data paths: %w", err)
+		return nil, nil, fmt.Errorf("filter data paths: %w", err)
 	}
 
 	documents, err := loader.NewFileLoader().All(allDocumentPaths)
 	if err != nil {
-		return nil, nil, xerrors.Errorf("load documents: %w", err)
+		return nil, nil, fmt.Errorf("load documents: %w", err)
 	}
 
 	// Pass all namespaces so that Rego rule can refer to namespaces as data.namespaces
@@ -114,14 +114,14 @@ func loadData(dataPaths, namespaces []string) (storage.Store, map[string]string,
 
 	store, err := documents.Store()
 	if err != nil {
-		return nil, nil, xerrors.Errorf("get documents store: %w", err)
+		return nil, nil, fmt.Errorf("get documents store: %w", err)
 	}
 
 	documentContents := make(map[string]string)
 	for _, documentPath := range allDocumentPaths {
 		contents, err := ioutil.ReadFile(documentPath)
 		if err != nil {
-			return nil, nil, xerrors.Errorf("read file: %w", err)
+			return nil, nil, fmt.Errorf("read file: %w", err)
 		}
 
 		documentPath = filepath.Clean(documentPath)
@@ -184,12 +184,12 @@ func (e *Engine) Check(ctx context.Context, configs []types.Config, namespaces [
 
 		metadata, err := e.queryMetadata(ctx, currentNamespace)
 		if err != nil {
-			return nil, xerrors.Errorf("failed to query metadata: %w", err)
+			return nil, fmt.Errorf("failed to query metadata: %w", err)
 		}
 
 		inputOption, err := e.queryInputOption(ctx, currentNamespace)
 		if err != nil {
-			return nil, xerrors.Errorf("failed to query input option: %w", err)
+			return nil, fmt.Errorf("failed to query input option: %w", err)
 		}
 
 		var selectedConfigs []types.Config
@@ -213,7 +213,7 @@ func (e *Engine) Check(ctx context.Context, configs []types.Config, namespaces [
 			result, err = e.check(ctx, currentNamespace, rules, selectedConfigs, metadata)
 		}
 		if err != nil {
-			return nil, xerrors.Errorf("policy check error: %w", err)
+			return nil, fmt.Errorf("policy check error: %w", err)
 		}
 
 		for filePath, misconf := range result {
@@ -240,7 +240,7 @@ func (e Engine) check(ctx context.Context, currentNamespace string, rules []stri
 		for _, rule := range rules {
 			result, err := e.checkRule(ctx, currentNamespace, rule, config.Content, metadata)
 			if err != nil {
-				return nil, xerrors.Errorf("check rule: %w", err)
+				return nil, fmt.Errorf("check rule: %w", err)
 			}
 			misconfs[config.FilePath] = mergeMisconfs(misconfs[config.FilePath], result)
 		}
@@ -288,7 +288,7 @@ func (e *Engine) checkRule(ctx context.Context, namespace, rule string, input in
 	// Exceptions based on namespace and rule
 	exceptions, err := e.exceptions(ctx, namespace, rule, input, metadata)
 	if err != nil {
-		return types.Misconfiguration{}, xerrors.Errorf("exception error: %w", err)
+		return types.Misconfiguration{}, fmt.Errorf("exception error: %w", err)
 	} else if len(exceptions) > 0 {
 		return types.Misconfiguration{
 			Exceptions: exceptions,
@@ -298,7 +298,7 @@ func (e *Engine) checkRule(ctx context.Context, namespace, rule string, input in
 	ruleQuery := fmt.Sprintf("data.%s.%s", namespace, rule)
 	ruleQueryResult, err := e.query(ctx, input, ruleQuery)
 	if err != nil {
-		return types.Misconfiguration{}, xerrors.Errorf("query rule: %w", err)
+		return types.Misconfiguration{}, fmt.Errorf("query rule: %w", err)
 	}
 
 	var successes, failures, warnings []types.MisconfResult
@@ -345,7 +345,7 @@ func (e *Engine) checkRuleCombined(ctx context.Context, namespace, rule string, 
 	// Exceptions based on namespace and rule
 	exceptions, err := e.exceptions(ctx, namespace, rule, inputs, metadata)
 	if err != nil {
-		return nil, xerrors.Errorf("exception error: %w", err)
+		return nil, fmt.Errorf("exception error: %w", err)
 	} else if len(exceptions) > 0 {
 		for _, input := range inputs {
 			misconfs[input.Path] = types.Misconfiguration{
@@ -359,7 +359,7 @@ func (e *Engine) checkRuleCombined(ctx context.Context, namespace, rule string, 
 	ruleQuery := fmt.Sprintf("data.%s.%s", namespace, rule)
 	ruleQueryResult, err := e.query(ctx, inputs, ruleQuery)
 	if err != nil {
-		return nil, xerrors.Errorf("query rule: %w", err)
+		return nil, fmt.Errorf("query rule: %w", err)
 	}
 
 	// Fill failures and warnings
@@ -368,7 +368,7 @@ func (e *Engine) checkRuleCombined(ctx context.Context, namespace, rule string, 
 		case ruleResult.Message == "":
 			continue
 		case ruleResult.FilePath == "":
-			return nil, xerrors.Errorf("rule missing 'filepath' field")
+			return nil, fmt.Errorf("rule missing 'filepath' field")
 		}
 
 		misconf := misconfs[ruleResult.FilePath]
@@ -414,14 +414,14 @@ func (e *Engine) exceptions(ctx context.Context, namespace, rule string, config 
 	metadata types.PolicyMetadata) ([]types.MisconfResult, error) {
 	exceptions, err := e.namespaceExceptions(ctx, namespace, config, metadata)
 	if err != nil {
-		return nil, xerrors.Errorf("namespace exceptions: %w", err)
+		return nil, fmt.Errorf("namespace exceptions: %w", err)
 	} else if len(exceptions) > 0 {
 		return exceptions, nil
 	}
 
 	exceptions, err = e.ruleExceptions(ctx, namespace, rule, config, metadata)
 	if err != nil {
-		return nil, xerrors.Errorf("rule exceptions: %w", err)
+		return nil, fmt.Errorf("rule exceptions: %w", err)
 	} else if len(exceptions) > 0 {
 		return exceptions, nil
 	}
@@ -434,7 +434,7 @@ func (e *Engine) namespaceExceptions(ctx context.Context, namespace string, conf
 	exceptionQuery := fmt.Sprintf("data.namespace.exceptions.exception[_] == %q", namespace)
 	exceptionQueryResult, err := e.query(ctx, config, exceptionQuery)
 	if err != nil {
-		return nil, xerrors.Errorf("query namespace exceptions: %w", err)
+		return nil, fmt.Errorf("query namespace exceptions: %w", err)
 	}
 
 	var exceptions []types.MisconfResult
@@ -463,7 +463,7 @@ func (e *Engine) ruleExceptions(ctx context.Context, namespace, rule string, con
 	exceptionQuery := fmt.Sprintf("data.%s.exception[_][_] == %q", namespace, removeRulePrefix(rule))
 	exceptionQueryResult, err := e.query(ctx, config, exceptionQuery)
 	if err != nil {
-		return nil, xerrors.Errorf("query rule exceptions: %w", err)
+		return nil, fmt.Errorf("query rule exceptions: %w", err)
 	}
 
 	var exceptions []types.MisconfResult
@@ -526,7 +526,7 @@ func (e *Engine) query(ctx context.Context, input interface{}, query string) (qu
 	regoInstance := rego.New(options...)
 	resultSet, err := regoInstance.Eval(ctx)
 	if err != nil {
-		return queryResult{}, xerrors.Errorf("evaluating policy: %w", err)
+		return queryResult{}, fmt.Errorf("evaluating policy: %w", err)
 	}
 
 	// After the evaluation of the policy, the results of the trace (stdout) will be populated
@@ -566,7 +566,7 @@ func (e *Engine) query(ctx context.Context, input interface{}, query string) (qu
 				case map[string]interface{}:
 					msg, filePath, err := parseResult(val)
 					if err != nil {
-						return queryResult{}, xerrors.Errorf("failed to parse query result: %w", err)
+						return queryResult{}, fmt.Errorf("failed to parse query result: %w", err)
 					}
 
 					results = append(results, queryValue{
@@ -594,7 +594,7 @@ func (e *Engine) queryMetadata(ctx context.Context, namespace string) (types.Pol
 	}
 	resultSet, err := rego.New(options...).Eval(ctx)
 	if err != nil {
-		return types.PolicyMetadata{}, xerrors.Errorf("evaluating '__rego_metadata__': %w", err)
+		return types.PolicyMetadata{}, fmt.Errorf("evaluating '__rego_metadata__': %w", err)
 	}
 
 	// Set default values
@@ -611,7 +611,7 @@ func (e *Engine) queryMetadata(ctx context.Context, namespace string) (types.Pol
 
 	result, ok := resultSet[0].Bindings["x"].(map[string]interface{})
 	if !ok {
-		return types.PolicyMetadata{}, xerrors.New("'__rego_metadata__' must be map")
+		return types.PolicyMetadata{}, errors.New("'__rego_metadata__' must be map")
 	}
 
 	// TODO: we need to convert string to slice until AVD supports an array of urls
@@ -622,7 +622,7 @@ func (e *Engine) queryMetadata(ctx context.Context, namespace string) (types.Pol
 	}
 
 	if err = mapstructure.Decode(result, &metadata); err != nil {
-		return types.PolicyMetadata{}, xerrors.Errorf("decode error: %w", err)
+		return types.PolicyMetadata{}, fmt.Errorf("decode error: %w", err)
 	}
 
 	// e.g. Low -> LOW
@@ -640,7 +640,7 @@ func (e *Engine) queryInputOption(ctx context.Context, namespace string) (types.
 	}
 	resultSet, err := rego.New(options...).Eval(ctx)
 	if err != nil {
-		return types.PolicyInputOption{}, xerrors.Errorf("evaluating '__rego_input__': %w", err)
+		return types.PolicyInputOption{}, fmt.Errorf("evaluating '__rego_input__': %w", err)
 	}
 
 	if len(resultSet) == 0 {
@@ -649,12 +649,12 @@ func (e *Engine) queryInputOption(ctx context.Context, namespace string) (types.
 
 	result, ok := resultSet[0].Bindings["x"].(map[string]interface{})
 	if !ok {
-		return types.PolicyInputOption{}, xerrors.New("'__rego_input__' must be map")
+		return types.PolicyInputOption{}, errors.New("'__rego_input__' must be map")
 	}
 
 	var inputOption types.PolicyInputOption
 	if err = mapstructure.Decode(result, &inputOption); err != nil {
-		return types.PolicyInputOption{}, xerrors.Errorf("decode error: %w", err)
+		return types.PolicyInputOption{}, fmt.Errorf("decode error: %w", err)
 	}
 
 	return inputOption, nil
@@ -674,12 +674,12 @@ func entrypoints(module *ast.Module) []string {
 func parseResult(r map[string]interface{}) (string, string, error) {
 	// Policies that return metadata (e.g. deny[{"msg": msg}])
 	if _, ok := r["msg"]; !ok {
-		return "", "", xerrors.Errorf("rule missing 'msg' field: %v", r)
+		return "", "", fmt.Errorf("rule missing 'msg' field: %v", r)
 	}
 
 	msg, ok := r["msg"].(string)
 	if !ok {
-		return "", "", xerrors.Errorf("'msg' field must be string: %v", r)
+		return "", "", fmt.Errorf("'msg' field must be string: %v", r)
 	}
 
 	filePath, ok := r["filepath"].(string)

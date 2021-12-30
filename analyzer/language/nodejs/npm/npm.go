@@ -2,10 +2,9 @@ package npm
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"path/filepath"
-
-	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/fanal/analyzer"
 	"github.com/aquasecurity/fanal/analyzer/language"
@@ -27,7 +26,7 @@ type npmLibraryAnalyzer struct{}
 func (a npmLibraryAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisInput) (*analyzer.AnalysisResult, error) {
 	res, err := language.Analyze(types.Npm, input.FilePath, input.Content, npm.Parse)
 	if err != nil {
-		return nil, xerrors.Errorf("unable to parse package-lock.json: %w", err)
+		return nil, fmt.Errorf("unable to parse package-lock.json: %w", err)
 	}
 	return res, nil
 }

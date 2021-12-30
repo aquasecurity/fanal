@@ -3,6 +3,8 @@ package redhatbase
 import (
 	"bufio"
 	"context"
+	"errors"
+	"fmt"
 	"os"
 	"strings"
 
@@ -11,7 +13,6 @@ import (
 	aos "github.com/aquasecurity/fanal/analyzer/os"
 	"github.com/aquasecurity/fanal/types"
 	"github.com/aquasecurity/fanal/utils"
-	"golang.org/x/xerrors"
 )
 
 const rockyAnalyzerVersion = 1
@@ -28,7 +29,7 @@ func (a rockyOSAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisInput
 		line := scanner.Text()
 		result := redhatRe.FindStringSubmatch(strings.TrimSpace(line))
 		if len(result) != 3 {
-			return nil, xerrors.New("rocky: invalid rocky-release")
+			return nil, errors.New("rocky: invalid rocky-release")
 		}
 
 		switch strings.ToLower(result[1]) {
@@ -39,7 +40,7 @@ func (a rockyOSAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisInput
 		}
 	}
 
-	return nil, xerrors.Errorf("rocky: %w", aos.AnalyzeOSError)
+	return nil, fmt.Errorf("rocky: %w", aos.AnalyzeOSError)
 }
 
 func (a rockyOSAnalyzer) Required(filePath string, _ os.FileInfo) bool {
