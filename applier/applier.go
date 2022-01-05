@@ -18,7 +18,10 @@ func NewApplier(c cache.LocalArtifactCache) Applier {
 func (a Applier) ApplyLayers(imageID string, diffIDs []string) (types.ArtifactDetail, error) {
 	var layers []types.BlobInfo
 	for _, diffID := range diffIDs {
-		layer, _ := a.cache.GetBlob(diffID)
+		layer, err := a.cache.GetBlob(diffID)
+		if err != nil {
+			return types.ArtifactDetail{}, err
+		}
 		if layer.SchemaVersion == 0 {
 			return types.ArtifactDetail{}, xerrors.Errorf("layer cache missing: %s", diffID)
 		}
@@ -32,7 +35,10 @@ func (a Applier) ApplyLayers(imageID string, diffIDs []string) (types.ArtifactDe
 		return mergedLayer, analyzer.ErrNoPkgsDetected // send back package and apps info regardless
 	}
 
-	imageInfo, _ := a.cache.GetArtifact(imageID)
+	imageInfo, err := a.cache.GetArtifact(imageID)
+	if err != nil {
+		return mergedLayer, err
+	}
 	mergedLayer.HistoryPackages = imageInfo.HistoryPackages
 
 	return mergedLayer, nil
