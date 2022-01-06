@@ -82,14 +82,22 @@ func (a Artifact) Inspect(ctx context.Context) (types.ArtifactReference, error) 
 	limit := semaphore.NewWeighted(parallel)
 
 	err := a.walker.Walk(a.dir, func(filePath string, info os.FileInfo, opener analyzer.Opener) error {
+		directory := a.dir
+
+		// When the directory is the same as the filePath, a file was given
+		// instead of a directory, rewrite the directory in this case.
+		if a.dir == filePath {
+			directory = filepath.Dir(a.dir)
+		}
+
 		// For exported rootfs (e.g. images/alpine/etc/alpine-release)
-		filePath, err := filepath.Rel(a.dir, filePath)
+		filePath, err := filepath.Rel(directory, filePath)
 		if err != nil {
 			return xerrors.Errorf("filepath rel (%s): %w", filePath, err)
 		}
 
 		opts := analyzer.AnalysisOptions{Offline: a.artifactOption.Offline}
-		if err = a.analyzer.AnalyzeFile(ctx, &wg, limit, result, a.dir, filePath, info, opener, opts); err != nil {
+		if err = a.analyzer.AnalyzeFile(ctx, &wg, limit, result, directory, filePath, info, opener, opts); err != nil {
 			return xerrors.Errorf("analyze file (%s): %w", filePath, err)
 		}
 		return nil
