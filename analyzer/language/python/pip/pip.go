@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 	"path/filepath"
+	"regexp"
 
 	"github.com/aquasecurity/fanal/analyzer"
 	"github.com/aquasecurity/fanal/analyzer/language"
@@ -18,7 +19,7 @@ func init() {
 
 const version = 1
 
-var requiredFile = "requirements.txt"
+var fileRegex = regexp.MustCompile(`^requirements(-.*)?\.txt$`)
 
 type pipLibraryAnalyzer struct{}
 
@@ -32,7 +33,7 @@ func (a pipLibraryAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisIn
 
 func (a pipLibraryAnalyzer) Required(filePath string, _ os.FileInfo) bool {
 	fileName := filepath.Base(filePath)
-	return fileName == requiredFile
+	return fileRegex.MatchString(fileName)
 }
 
 func (a pipLibraryAnalyzer) Type() analyzer.Type {

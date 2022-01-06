@@ -86,8 +86,18 @@ func Test_pipAnalyzer_Required(t *testing.T) {
 			want:     true,
 		},
 		{
+			name:     "happy",
+			filePath: "test/requirements-dev.txt",
+			want:     true,
+		},
+		{
 			name:     "sad",
 			filePath: "a/b/c/d/test.sum",
+			want:     false,
+		},
+		{
+			name:     "sad",
+			filePath: "test/requirementstest.txt",
 			want:     false,
 		},
 	}
