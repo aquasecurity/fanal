@@ -75,14 +75,23 @@ func Test_pipAnalyzer_Analyze(t *testing.T) {
 }
 
 func Test_pipAnalyzer_Required(t *testing.T) {
+	workingDir, _ := os.Getwd()
+
 	tests := []struct {
 		name     string
+		dir      string
 		filePath string
 		want     bool
 	}{
 		{
 			name:     "happy",
 			filePath: "test/requirements.txt",
+			want:     true,
+		},
+		{
+			name:     "happy with pip-compile in/txt pair",
+			dir:      workingDir,
+			filePath: "testdata/prod.txt",
 			want:     true,
 		},
 		{
@@ -94,7 +103,7 @@ func Test_pipAnalyzer_Required(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			a := pipLibraryAnalyzer{}
-			got := a.Required("", tt.filePath, nil)
+			got := a.Required(tt.dir, tt.filePath, nil)
 			assert.Equal(t, tt.want, got)
 		})
 	}
