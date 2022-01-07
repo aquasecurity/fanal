@@ -42,7 +42,7 @@ func (a centOSAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisInput)
 	return nil, xerrors.Errorf("centos: %w", aos.AnalyzeOSError)
 }
 
-func (a centOSAnalyzer) Required(filePath string, _ os.FileInfo) bool {
+func (a centOSAnalyzer) Required(dir string, filePath string, _ os.FileInfo) bool {
 	return utils.StringInSlice(filePath, a.requiredFiles())
 }
 

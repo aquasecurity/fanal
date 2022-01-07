@@ -193,7 +193,7 @@ func (a dpkgAnalyzer) parseDpkgPkg(scanner *bufio.Scanner) (pkg *types.Package) 
 	return pkg
 }
 
-func (a dpkgAnalyzer) Required(filePath string, _ os.FileInfo) bool {
+func (a dpkgAnalyzer) Required(dir string, filePath string, _ os.FileInfo) bool {
 	dir, fileName := filepath.Split(filePath)
 	if a.isListFile(dir, fileName) || filePath == statusFile {
 		return true

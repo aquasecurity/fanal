@@ -104,7 +104,7 @@ func Test_gomodAnalyzer_Required(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			a := gomodAnalyzer{}
-			got := a.Required(tt.filePath, nil)
+			got := a.Required("", tt.filePath, nil)
 			assert.Equal(t, tt.want, got)
 		})
 	}

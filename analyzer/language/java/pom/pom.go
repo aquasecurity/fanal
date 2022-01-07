@@ -27,7 +27,7 @@ func (a pomAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisInput) (*
 	return language.Analyze(types.Pom, input.FilePath, input.Content, p.Parse)
 }
 
-func (a pomAnalyzer) Required(filePath string, _ os.FileInfo) bool {
+func (a pomAnalyzer) Required(dir string, filePath string, _ os.FileInfo) bool {
 	return filepath.Base(filePath) == "pom.xml"
 }
 

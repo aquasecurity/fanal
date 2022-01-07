@@ -52,7 +52,7 @@ func (a photonOSAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisInpu
 	return nil, xerrors.Errorf("photon: %w", aos.AnalyzeOSError)
 }
 
-func (a photonOSAnalyzer) Required(filePath string, _ os.FileInfo) bool {
+func (a photonOSAnalyzer) Required(dir string, filePath string, _ os.FileInfo) bool {
 	return utils.StringInSlice(filePath, requiredFiles)
 }
 

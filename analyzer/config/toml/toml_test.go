@@ -140,7 +140,7 @@ func Test_tomlConfigAnalyzer_Required(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			s := toml.NewConfigAnalyzer(tt.filePattern)
 
-			got := s.Required(tt.filePath, nil)
+			got := s.Required("", tt.filePath, nil)
 			assert.Equal(t, tt.want, got)
 		})
 	}

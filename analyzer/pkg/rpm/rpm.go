@@ -160,7 +160,7 @@ func splitFileName(filename string) (name, ver, rel string, err error) {
 	return name, ver, rel, nil
 }
 
-func (a rpmPkgAnalyzer) Required(filePath string, _ os.FileInfo) bool {
+func (a rpmPkgAnalyzer) Required(dir string, filePath string, _ os.FileInfo) bool {
 	return utils.StringInSlice(filePath, requiredFiles)
 }
 

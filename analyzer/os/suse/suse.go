@@ -59,7 +59,7 @@ func (a suseOSAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisInput)
 	return nil, xerrors.Errorf("suse: %w", aos.AnalyzeOSError)
 }
 
-func (a suseOSAnalyzer) Required(filePath string, _ os.FileInfo) bool {
+func (a suseOSAnalyzer) Required(dir string, filePath string, _ os.FileInfo) bool {
 	return utils.StringInSlice(filePath, requiredFiles)
 }
 

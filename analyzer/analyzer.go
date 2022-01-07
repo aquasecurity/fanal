@@ -45,7 +45,7 @@ type analyzer interface {
 	Type() Type
 	Version() int
 	Analyze(ctx context.Context, input AnalysisInput) (*AnalysisResult, error)
-	Required(filePath string, info os.FileInfo) bool
+	Required(dir string, filePath string, info os.FileInfo) bool
 }
 
 type configAnalyzer interface {
@@ -198,7 +198,7 @@ func (a Analyzer) AnalyzeFile(ctx context.Context, wg *sync.WaitGroup, limit *se
 	}
 	for _, d := range a.drivers {
 		// filepath extracted from tar file doesn't have the prefix "/"
-		if !d.Required(strings.TrimLeft(filePath, "/"), info) {
+		if !d.Required(dir, strings.TrimLeft(filePath, "/"), info) {
 			continue
 		}
 		rc, err := opener()

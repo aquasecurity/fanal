@@ -73,7 +73,7 @@ func (a ConfigAnalyzer) analyze(target analyzer.AnalysisInput) (interface{}, err
 	return nil, errs
 }
 
-func (a ConfigAnalyzer) Required(filePath string, _ os.FileInfo) bool {
+func (a ConfigAnalyzer) Required(dir string, filePath string, _ os.FileInfo) bool {
 	if a.filePattern != nil && a.filePattern.MatchString(filePath) {
 		return true
 	}

@@ -67,7 +67,7 @@ func (a redhatOSAnalyzer) parseRelease(r io.Reader) (types.OS, error) {
 	return types.OS{}, xerrors.Errorf("redhatbase: %w", aos.AnalyzeOSError)
 }
 
-func (a redhatOSAnalyzer) Required(filePath string, _ os.FileInfo) bool {
+func (a redhatOSAnalyzer) Required(dir string, filePath string, _ os.FileInfo) bool {
 	return utils.StringInSlice(filePath, a.requiredFiles())
 }
 

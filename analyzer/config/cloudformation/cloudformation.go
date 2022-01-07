@@ -49,7 +49,7 @@ func (a ConfigAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisInput)
 	return &analyzer.AnalysisResult{}, nil
 }
 
-func (a ConfigAnalyzer) Required(filePath string, _ os.FileInfo) bool {
+func (a ConfigAnalyzer) Required(dir string, filePath string, _ os.FileInfo) bool {
 	for _, extension := range requiredExts {
 		if filepath.Ext(filePath) == extension {
 			return true

@@ -42,7 +42,7 @@ func (a almaOSAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisInput)
 	return nil, xerrors.Errorf("alma: %w", aos.AnalyzeOSError)
 }
 
-func (a almaOSAnalyzer) Required(filePath string, _ os.FileInfo) bool {
+func (a almaOSAnalyzer) Required(dir string, filePath string, _ os.FileInfo) bool {
 	return utils.StringInSlice(filePath, a.requiredFiles())
 }
 

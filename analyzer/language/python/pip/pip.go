@@ -3,7 +3,9 @@ package pip
 import (
 	"context"
 	"os"
+	"path"
 	"path/filepath"
+	"strings"
 
 	"github.com/aquasecurity/fanal/analyzer"
 	"github.com/aquasecurity/fanal/analyzer/language"
@@ -30,9 +32,24 @@ func (a pipLibraryAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisIn
 	return res, nil
 }
 
-func (a pipLibraryAnalyzer) Required(filePath string, _ os.FileInfo) bool {
+func (a pipLibraryAnalyzer) Required(dir string, filePath string, osInfo os.FileInfo) bool {
 	fileName := filepath.Base(filePath)
-	return fileName == requiredFile
+	if fileName == requiredFile {
+		return true
+	}
+
+	// Test for .txt/.in file combinations, which indicate pip-compile files.
+	if dir != "" && strings.HasSuffix(fileName, ".txt") {
+		// Create new filepath that has the same path but ends with .in
+		inFilePath := strings.TrimSuffix(filePath, ".txt") + ".in"
+
+		// Check whether in file exists.
+		if _, err := os.Stat(path.Join(dir, inFilePath)); err == nil {
+			return true
+		}
+	}
+
+	return false
 }
 
 func (a pipLibraryAnalyzer) Type() analyzer.Type {

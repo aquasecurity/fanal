@@ -45,7 +45,7 @@ func (a nugetLibraryAnalyzer) Analyze(_ context.Context, input analyzer.Analysis
 	return res, nil
 }
 
-func (a nugetLibraryAnalyzer) Required(filePath string, _ os.FileInfo) bool {
+func (a nugetLibraryAnalyzer) Required(dir string, filePath string, _ os.FileInfo) bool {
 	fileName := filepath.Base(filePath)
 	return utils.StringInSlice(fileName, requiredFiles)
 }

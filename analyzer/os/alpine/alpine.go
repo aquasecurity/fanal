@@ -34,7 +34,7 @@ func (a alpineOSAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisInpu
 	return nil, xerrors.Errorf("alpine: %w", aos.AnalyzeOSError)
 }
 
-func (a alpineOSAnalyzer) Required(filePath string, _ os.FileInfo) bool {
+func (a alpineOSAnalyzer) Required(dir string, filePath string, _ os.FileInfo) bool {
 	return utils.StringInSlice(filePath, requiredFiles)
 }
 

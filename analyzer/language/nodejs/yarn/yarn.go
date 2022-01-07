@@ -32,7 +32,7 @@ func (a yarnLibraryAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisI
 	return res, nil
 }
 
-func (a yarnLibraryAnalyzer) Required(filePath string, _ os.FileInfo) bool {
+func (a yarnLibraryAnalyzer) Required(dir string, filePath string, _ os.FileInfo) bool {
 	fileName := filepath.Base(filePath)
 	return utils.StringInSlice(fileName, requiredFiles)
 }

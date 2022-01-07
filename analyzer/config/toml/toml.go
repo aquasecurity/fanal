@@ -44,7 +44,7 @@ func (a ConfigAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisInput)
 	}, nil
 }
 
-func (a ConfigAnalyzer) Required(filePath string, _ os.FileInfo) bool {
+func (a ConfigAnalyzer) Required(dir string, filePath string, _ os.FileInfo) bool {
 	if a.filePattern != nil && a.filePattern.MatchString(filePath) {
 		return true
 	}

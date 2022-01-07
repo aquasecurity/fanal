@@ -47,7 +47,7 @@ func (a nodePkgLibraryAnalyzer) Analyze(_ context.Context, input analyzer.Analys
 	}, nil
 }
 
-func (a nodePkgLibraryAnalyzer) Required(filePath string, _ os.FileInfo) bool {
+func (a nodePkgLibraryAnalyzer) Required(dir string, filePath string, _ os.FileInfo) bool {
 	return requiredFile == filepath.Base(filePath)
 }
 

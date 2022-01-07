@@ -49,7 +49,7 @@ func (s ConfigAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisInput)
 
 // Required does a case-insensitive check for filePath and returns true if
 // filePath equals/startsWith/hasExtension requiredFile
-func (s ConfigAnalyzer) Required(filePath string, _ os.FileInfo) bool {
+func (s ConfigAnalyzer) Required(dir string, filePath string, _ os.FileInfo) bool {
 	if s.filePattern != nil && s.filePattern.MatchString(filePath) {
 		return true
 	}

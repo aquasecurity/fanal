@@ -48,7 +48,7 @@ func (a gemspecLibraryAnalyzer) Analyze(_ context.Context, input analyzer.Analys
 
 }
 
-func (a gemspecLibraryAnalyzer) Required(filePath string, _ os.FileInfo) bool {
+func (a gemspecLibraryAnalyzer) Required(dir string, filePath string, _ os.FileInfo) bool {
 	return fileRegex.MatchString(filepath.ToSlash(filePath))
 }
 
