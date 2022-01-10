@@ -22,7 +22,7 @@ type Artifact struct {
 	local artifact.Artifact
 }
 
-func NewArtifact(rawurl string, insecureSkipTls bool, c cache.ArtifactCache, artifactOpt artifact.Option, scannerOpt config.ScannerOption) (
+func NewArtifact(rawurl string, c cache.ArtifactCache, artifactOpt artifact.Option, scannerOpt config.ScannerOption) (
 	artifact.Artifact, func(), error) {
 	cleanup := func() {}
 
@@ -41,7 +41,7 @@ func NewArtifact(rawurl string, insecureSkipTls bool, c cache.ArtifactCache, art
 		Auth:            gitAuth(),
 		Progress:        os.Stdout,
 		Depth:           1,
-		InsecureSkipTLS: insecureSkipTls,
+		InsecureSkipTLS: artifactOpt.InsecureSkipTLS,
 	}
 
 	// suppress clone output if quiet

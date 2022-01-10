@@ -83,7 +83,7 @@ func TestNewArtifact(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_, cleanup, err := NewArtifact(tt.args.rawurl, false, tt.args.c, artifact.Option{Quiet: tt.args.quiet}, config.ScannerOption{})
+			_, cleanup, err := NewArtifact(tt.args.rawurl, tt.args.c, artifact.Option{Quiet: tt.args.quiet}, config.ScannerOption{})
 			assert.Equal(t, tt.wantErr, err != nil)
 			defer cleanup()
 		})
@@ -120,7 +120,7 @@ func TestArtifact_Inspect(t *testing.T) {
 			fsCache, err := cache.NewFSCache(t.TempDir())
 			require.NoError(t, err)
 
-			art, cleanup, err := NewArtifact(tt.rawurl, false, fsCache, artifact.Option{}, config.ScannerOption{})
+			art, cleanup, err := NewArtifact(tt.rawurl, fsCache, artifact.Option{}, config.ScannerOption{})
 			require.NoError(t, err)
 			defer cleanup()
 
