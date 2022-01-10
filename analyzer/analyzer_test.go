@@ -490,7 +490,6 @@ func TestAnalyzer_AnalyzerVersions(t *testing.T) {
 			name:     "disable analyzers",
 			disabled: []analyzer.Type{analyzer.TypeAlpine, analyzer.TypeUbuntu},
 			want: map[string]int{
-				"alpine":     0,
 				"amazon":     1,
 				"apk":        1,
 				"bundler":    1,
@@ -517,7 +516,6 @@ func TestAnalyzer_AnalyzerVersions(t *testing.T) {
 				"redhat":     1,
 				"rpm":        1,
 				"suse":       1,
-				"ubuntu":     0,
 				"yarn":       1,
 				"python-pkg": 1,
 				"gemspec":    1,
@@ -552,8 +550,7 @@ func TestAnalyzer_ImageConfigAnalyzerVersions(t *testing.T) {
 			name:     "disable analyzers",
 			disabled: []analyzer.Type{analyzer.TypeAlpine, analyzer.TypeApkCommand},
 			want: map[string]int{
-				"apk-command": 0,
-				"test":        1,
+				"test": 1,
 			},
 		},
 	}
