@@ -468,10 +468,8 @@ func TestAnalyzer_AnalyzerVersions(t *testing.T) {
 			name:     "disable analyzers",
 			disabled: []analyzer.Type{analyzer.TypeAlpine, analyzer.TypeUbuntu},
 			want: map[string]int{
-				"alpine":  0,
 				"apk":     1,
 				"bundler": 1,
-				"ubuntu":  0,
 			},
 		},
 	}
