@@ -2,7 +2,7 @@ package jar
 
 import (
 	"context"
-	"io/ioutil"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -28,14 +28,14 @@ func Test_javaLibraryAnalyzer_Analyze(t *testing.T) {
 						Type:     types.Jar,
 						FilePath: "testdata/test.war",
 						Libraries: []types.Package{
-							{Name: "org.glassfish:javax.el", Version: "3.0.0"},
-							{Name: "com.fasterxml.jackson.core:jackson-databind", Version: "2.9.10.6"},
-							{Name: "com.fasterxml.jackson.core:jackson-annotations", Version: "2.9.10"},
-							{Name: "com.fasterxml.jackson.core:jackson-core", Version: "2.9.10"},
-							{Name: "org.slf4j:slf4j-api", Version: "1.7.30"},
-							{Name: "com.cronutils:cron-utils", Version: "9.1.2"},
-							{Name: "org.apache.commons:commons-lang3", Version: "3.11"},
-							{Name: "com.example:web-app", Version: "1.0-SNAPSHOT"},
+							{Name: "org.glassfish:javax.el", FilePath: "testdata/test.war", Version: "3.0.0"},
+							{Name: "com.fasterxml.jackson.core:jackson-databind", FilePath: "testdata/test.war", Version: "2.9.10.6"},
+							{Name: "com.fasterxml.jackson.core:jackson-annotations", FilePath: "testdata/test.war", Version: "2.9.10"},
+							{Name: "com.fasterxml.jackson.core:jackson-core", FilePath: "testdata/test.war", Version: "2.9.10"},
+							{Name: "org.slf4j:slf4j-api", FilePath: "testdata/test.war", Version: "1.7.30"},
+							{Name: "com.cronutils:cron-utils", FilePath: "testdata/test.war", Version: "9.1.2"},
+							{Name: "org.apache.commons:commons-lang3", FilePath: "testdata/test.war", Version: "3.11"},
+							{Name: "com.example:web-app", FilePath: "testdata/test.war", Version: "1.0-SNAPSHOT"},
 						},
 					},
 				},
@@ -49,14 +49,19 @@ func Test_javaLibraryAnalyzer_Analyze(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			b, err := ioutil.ReadFile(tt.inputFile)
+			f, err := os.Open(tt.inputFile)
+			require.NoError(t, err)
+			defer f.Close()
+
+			stat, err := f.Stat()
 			require.NoError(t, err)
 
 			a := javaLibraryAnalyzer{}
 			ctx := context.Background()
-			got, err := a.Analyze(ctx, analyzer.AnalysisTarget{
+			got, err := a.Analyze(ctx, analyzer.AnalysisInput{
 				FilePath: tt.inputFile,
-				Content:  b,
+				Info:     stat,
+				Content:  f,
 			})
 
 			if tt.wantErr != "" {

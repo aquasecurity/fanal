@@ -8,30 +8,29 @@ require (
 	github.com/alicebob/miniredis/v2 v2.16.0
 	github.com/aquasecurity/cfsec v0.2.2
 	github.com/aquasecurity/defsec v0.0.37
-	github.com/aquasecurity/go-dep-parser v0.0.0-20211110174639-8257534ffed3
+	github.com/aquasecurity/go-dep-parser v0.0.0-20211224170007-df43bca6b6ff
 	github.com/aquasecurity/testdocker v0.0.0-20210911155206-e1e85f5a1516
-	github.com/aquasecurity/tfsec v0.61.4-0.20211130135821-0a1997e494fa
+	github.com/aquasecurity/tfsec v0.63.1
 	github.com/aws/aws-sdk-go v1.42.0
-	github.com/docker/docker v20.10.10+incompatible
+	github.com/docker/docker v20.10.11+incompatible
 	github.com/docker/go-connections v0.4.0
 	github.com/go-git/go-git/v5 v5.4.2
 	github.com/go-redis/redis/v8 v8.11.4
 	github.com/golang-jwt/jwt v3.2.2+incompatible
-	github.com/google/go-containerregistry v0.6.0
+	github.com/google/go-containerregistry v0.7.1-0.20211214010025-a65b7844a475
 	github.com/hashicorp/errwrap v1.1.0 // indirect
-	github.com/hashicorp/go-hclog v0.15.0 // indirect
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/hashicorp/hcl v1.0.0
 	github.com/knqyf263/go-apk-version v0.0.0-20200609155635-041fdbb8563f
 	github.com/knqyf263/go-deb-version v0.0.0-20190517075300-09fca494f03d
-	github.com/knqyf263/go-rpmdb v0.0.0-20210911072402-73bd0ce46c49
+	github.com/knqyf263/go-rpmdb v0.0.0-20211216113947-1369b2ee40b7
 	github.com/knqyf263/nested v0.0.1
 	github.com/kylelemons/godebug v1.1.0
 	github.com/mitchellh/mapstructure v1.4.2
-	github.com/moby/buildkit v0.8.1
+	github.com/moby/buildkit v0.9.3
 	github.com/open-policy-agent/opa v0.34.0
 	github.com/opencontainers/go-digest v1.0.0
-	github.com/opencontainers/image-spec v1.0.2-0.20190823105129-775207bd45b6
+	github.com/opencontainers/image-spec v1.0.2-0.20211117181255-693428a734f5
 	github.com/saracen/walker v0.0.0-20191201085201-324a081bae7e
 	github.com/sosedoff/gitkit v0.3.0
 	github.com/stretchr/testify v1.7.0

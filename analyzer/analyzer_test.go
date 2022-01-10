@@ -18,6 +18,7 @@ import (
 	aos "github.com/aquasecurity/fanal/analyzer/os"
 	_ "github.com/aquasecurity/fanal/hook/all"
 	"github.com/aquasecurity/fanal/types"
+	dio "github.com/aquasecurity/go-dep-parser/pkg/io"
 )
 
 type mockConfigAnalyzer struct{}
@@ -349,7 +350,7 @@ func TestAnalyzeFile(t *testing.T) {
 				filePath:     "/lib/apk/db/installed",
 				testFilePath: "testdata/error",
 			},
-			wantErr: "unable to open a file (/lib/apk/db/installed)",
+			wantErr: "unable to open /lib/apk/db/installed",
 		},
 	}
 	for _, tt := range tests {
@@ -364,12 +365,15 @@ func TestAnalyzeFile(t *testing.T) {
 			require.NoError(t, err)
 
 			ctx := context.Background()
-			err = a.AnalyzeFile(ctx, &wg, limit, got, "", tt.args.filePath, info, func() ([]byte, error) {
-				if tt.args.testFilePath == "testdata/error" {
-					return nil, xerrors.New("error")
-				}
-				return os.ReadFile(tt.args.testFilePath)
-			})
+			err = a.AnalyzeFile(ctx, &wg, limit, got, "", tt.args.filePath, info,
+				func() (dio.ReadSeekCloserAt, error) {
+					if tt.args.testFilePath == "testdata/error" {
+						return nil, xerrors.New("error")
+					}
+					return os.Open(tt.args.testFilePath)
+				},
+				analyzer.AnalysisOptions{},
+			)
 
 			wg.Wait()
 			if tt.wantErr != "" {
@@ -472,6 +476,7 @@ func TestAnalyzer_AnalyzerVersions(t *testing.T) {
 				"pip":        1,
 				"pipenv":     1,
 				"poetry":     1,
+				"pom":        1,
 				"redhat":     1,
 				"rpm":        1,
 				"suse":       1,
@@ -508,6 +513,7 @@ func TestAnalyzer_AnalyzerVersions(t *testing.T) {
 				"pip":        1,
 				"pipenv":     1,
 				"poetry":     1,
+				"pom":        1,
 				"redhat":     1,
 				"rpm":        1,
 				"suse":       1,
