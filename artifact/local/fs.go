@@ -86,7 +86,7 @@ func (a Artifact) Inspect(ctx context.Context) (types.ArtifactReference, error) 
 
 		// When the directory is the same as the filePath, a file was given
 		// instead of a directory, rewrite the directory in this case.
-		if a.dir == filePath {
+		if filepath.Clean(a.dir) == filePath {
 			directory = filepath.Dir(a.dir)
 		}
 
