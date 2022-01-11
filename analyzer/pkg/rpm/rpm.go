@@ -30,6 +30,8 @@ var requiredFiles = []string{
 }
 var errUnexpectedNameFormat = xerrors.New("unexpected name format")
 
+var defaultOsVendors = []string{"Amazon Linux", "Amazon.com", "CentOS", "Fedora Project", "Oracle America", "Red Hat, Inc.", "AlmaLinux", "CloudLinux"}
+
 type rpmPkgAnalyzer struct{}
 
 func (a rpmPkgAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisInput) (*analyzer.AnalysisResult, error) {
@@ -104,9 +106,13 @@ func (a rpmPkgAnalyzer) parsePkgInfo(rc io.Reader) ([]types.Package, []string, e
 			}
 		}
 
-		files, err := pkg.InstalledFiles()
-		if err != nil {
-			return nil, nil, xerrors.Errorf("unable to get installed files: %w", err)
+		//check if the package is preinstalled on the system
+		files := []string{}
+		if utils.StringInSlice(pkg.Vendor, defaultOsVendors) {
+			files, err = pkg.InstalledFiles()
+			if err != nil {
+				return nil, nil, xerrors.Errorf("unable to get installed files: %w", err)
+			}
 		}
 
 		p := types.Package{
