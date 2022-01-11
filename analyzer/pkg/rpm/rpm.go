@@ -30,7 +30,18 @@ var requiredFiles = []string{
 }
 var errUnexpectedNameFormat = xerrors.New("unexpected name format")
 
-var osVendors = []string{"Amazon Linux", "Amazon.com", "CentOS", "Fedora Project", "Oracle America", "Red Hat, Inc.", "AlmaLinux", "CloudLinux"}
+var osVendors = []string{
+	"Amazon Linux",     // Amazon Linux 1
+	"Amazon.com",       // Amazon Linux 2
+	"CentOS",           // CentOS
+	"Fedora Project",   // Fedora
+	"Oracle America",   // Oracle Linux
+	"Red Hat, Inc.",    // Red Hat
+	"AlmaLinux",        // AlmaLinux
+	"CloudLinux",       // AlmaLinux
+	"VMware",           // Photon
+	"openSUSE Project", // OpenSUSE
+}
 
 type rpmPkgAnalyzer struct{}
 
@@ -108,7 +119,7 @@ func (a rpmPkgAnalyzer) parsePkgInfo(rc io.Reader) ([]types.Package, []string, e
 
 		//check if the package is preinstalled on the system
 		var files []string
-		if utils.StringInSlice(pkg.Vendor, defaultOsVendors) {
+		if utils.StringInSlice(pkg.Vendor, osVendors) {
 			files, err = pkg.InstalledFiles()
 			if err != nil {
 				return nil, nil, xerrors.Errorf("unable to get installed files: %w", err)
