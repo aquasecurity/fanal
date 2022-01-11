@@ -51,6 +51,7 @@ func NewArtifact(rootPath string, c cache.ArtifactCache, artifactOpt artifact.Op
 	}
 
 	return Artifact{
+		rootPath:    filepath.Clean(rootPath),
 		cache:       c,
 		walker:      walker.NewDir(buildAbsPaths(rootPath, artifactOpt.SkipFiles), buildAbsPaths(rootPath, artifactOpt.SkipDirs)),
 		analyzer:    analyzer.NewAnalyzer(artifactOpt.DisabledAnalyzers),
@@ -84,7 +85,7 @@ func (a Artifact) Inspect(ctx context.Context) (types.ArtifactReference, error) 
 
 		// When the directory is the same as the filePath, a file was given
 		// instead of a directory, rewrite the directory in this case.
-		if filepath.Clean(a.dir) == filePath {
+		if a.rootPath == filePath {
 			directory = filepath.Dir(a.rootPath)
 		}
 
