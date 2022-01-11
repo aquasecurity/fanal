@@ -30,7 +30,7 @@ var requiredFiles = []string{
 }
 var errUnexpectedNameFormat = xerrors.New("unexpected name format")
 
-var defaultOsVendors = []string{"Amazon Linux", "Amazon.com", "CentOS", "Fedora Project", "Oracle America", "Red Hat, Inc.", "AlmaLinux", "CloudLinux"}
+var osVendors = []string{"Amazon Linux", "Amazon.com", "CentOS", "Fedora Project", "Oracle America", "Red Hat, Inc.", "AlmaLinux", "CloudLinux"}
 
 type rpmPkgAnalyzer struct{}
 
