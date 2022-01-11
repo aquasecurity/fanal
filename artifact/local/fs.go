@@ -31,7 +31,7 @@ type Artifact struct {
 	rootPath    string
 	cache       cache.ArtifactCache
 	walker      walker.FS
-	analyzer    analyzer.Analyzer
+	analyzer    analyzer.AnalyzerGroup
 	hookManager hook.Manager
 	scanner     scanner.Scanner
 
@@ -54,7 +54,7 @@ func NewArtifact(rootPath string, c cache.ArtifactCache, artifactOpt artifact.Op
 		rootPath:    filepath.Clean(rootPath),
 		cache:       c,
 		walker:      walker.NewFS(buildAbsPaths(rootPath, artifactOpt.SkipFiles), buildAbsPaths(rootPath, artifactOpt.SkipDirs)),
-		analyzer:    analyzer.NewAnalyzer(artifactOpt.DisabledAnalyzers),
+		analyzer:    analyzer.NewAnalyzerGroup(artifactOpt.AnalyzerGroup, artifactOpt.DisabledAnalyzers),
 		hookManager: hook.NewManager(artifactOpt.DisabledHooks),
 		scanner:     s,
 
@@ -64,7 +64,7 @@ func NewArtifact(rootPath string, c cache.ArtifactCache, artifactOpt artifact.Op
 }
 
 func buildAbsPaths(base string, paths []string) []string {
-	absPaths := []string{}
+	var absPaths []string
 	for _, path := range paths {
 		if filepath.IsAbs(path) {
 			absPaths = append(absPaths, path)

@@ -5,13 +5,13 @@ go 1.16
 require (
 	github.com/BurntSushi/toml v0.4.1
 	github.com/GoogleCloudPlatform/docker-credential-gcr v1.5.0
-	github.com/alicebob/miniredis/v2 v2.16.0
+	github.com/alicebob/miniredis/v2 v2.17.0
 	github.com/aquasecurity/cfsec v0.2.2
 	github.com/aquasecurity/defsec v0.0.37
 	github.com/aquasecurity/go-dep-parser v0.0.0-20211224170007-df43bca6b6ff
 	github.com/aquasecurity/testdocker v0.0.0-20210911155206-e1e85f5a1516
 	github.com/aquasecurity/tfsec v0.63.1
-	github.com/aws/aws-sdk-go v1.42.0
+	github.com/aws/aws-sdk-go v1.42.30
 	github.com/docker/docker v20.10.11+incompatible
 	github.com/docker/go-connections v0.4.0
 	github.com/go-git/go-git/v5 v5.4.2
@@ -26,9 +26,9 @@ require (
 	github.com/knqyf263/go-rpmdb v0.0.0-20211216113947-1369b2ee40b7
 	github.com/knqyf263/nested v0.0.1
 	github.com/kylelemons/godebug v1.1.0
-	github.com/mitchellh/mapstructure v1.4.2
+	github.com/mitchellh/mapstructure v1.4.3
 	github.com/moby/buildkit v0.9.3
-	github.com/open-policy-agent/opa v0.34.0
+	github.com/open-policy-agent/opa v0.36.0
 	github.com/opencontainers/go-digest v1.0.0
 	github.com/opencontainers/image-spec v1.0.2-0.20211117181255-693428a734f5
 	github.com/saracen/walker v0.0.0-20191201085201-324a081bae7e
