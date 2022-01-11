@@ -117,7 +117,7 @@ func (a rpmPkgAnalyzer) parsePkgInfo(rc io.Reader) ([]types.Package, []string, e
 			}
 		}
 
-		//check if the package is preinstalled on the system
+		// check if the package is vendor-provided
 		var files []string
 		if utils.StringInSlice(pkg.Vendor, osVendors) {
 			files, err = pkg.InstalledFiles()
