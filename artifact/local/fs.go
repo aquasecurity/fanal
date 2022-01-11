@@ -30,7 +30,7 @@ const (
 type Artifact struct {
 	rootPath    string
 	cache       cache.ArtifactCache
-	walker      walker.Dir
+	walker      walker.FS
 	analyzer    analyzer.Analyzer
 	hookManager hook.Manager
 	scanner     scanner.Scanner
@@ -53,7 +53,7 @@ func NewArtifact(rootPath string, c cache.ArtifactCache, artifactOpt artifact.Op
 	return Artifact{
 		rootPath:    filepath.Clean(rootPath),
 		cache:       c,
-		walker:      walker.NewDir(buildAbsPaths(rootPath, artifactOpt.SkipFiles), buildAbsPaths(rootPath, artifactOpt.SkipDirs)),
+		walker:      walker.NewFS(buildAbsPaths(rootPath, artifactOpt.SkipFiles), buildAbsPaths(rootPath, artifactOpt.SkipDirs)),
 		analyzer:    analyzer.NewAnalyzer(artifactOpt.DisabledAnalyzers),
 		hookManager: hook.NewManager(artifactOpt.DisabledHooks),
 		scanner:     s,

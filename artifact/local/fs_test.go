@@ -198,7 +198,7 @@ func TestArtifact_Inspect(t *testing.T) {
 				Returns: cache.ArtifactCachePutBlobReturns{},
 			},
 			want: types.ArtifactReference{
-				Name: "./testdata/requirements.txt",
+				Name: "testdata/requirements.txt",
 				Type: types.ArtifactFilesystem,
 				ID:   "sha256:66ba8d6fd07f032638ec8ee517f85b3aad8c6b263c9b1f784237511558002851",
 				BlobIDs: []string{
