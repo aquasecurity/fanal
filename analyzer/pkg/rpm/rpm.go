@@ -39,7 +39,7 @@ var osVendors = []string{
 	"Red Hat",  // Red Hat
 	"AlmaLinux",      // AlmaLinux
 	"CloudLinux",     // AlmaLinux
-	"VMware, Inc.",   // Photon OS
+	"VMware",   // Photon OS
 	"SUSE",           // openSUSE
 }
 
