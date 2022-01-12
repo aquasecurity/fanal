@@ -118,7 +118,8 @@ func (a rpmPkgAnalyzer) parsePkgInfo(rc io.Reader) ([]types.Package, []string, e
 			}
 		}
 
-		// check if the package is vendor-provided
+		// Check if the package is vendor-provided.
+		// If the package is not provided by vendor, the installed files should not be skipped.
 		var files []string
 		if packageProvidedByVendor(pkg.Vendor) {
 			files, err = pkg.InstalledFiles()
