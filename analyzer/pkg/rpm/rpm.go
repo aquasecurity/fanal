@@ -36,11 +36,12 @@ var osVendors = []string{
 	"CentOS",         // CentOS
 	"Fedora Project", // Fedora
 	"Oracle America", // Oracle Linux
-	"Red Hat",  // Red Hat
+	"Red Hat",        // Red Hat
 	"AlmaLinux",      // AlmaLinux
 	"CloudLinux",     // AlmaLinux
-	"VMware",   // Photon OS
-	"SUSE",           // openSUSE
+	"VMware",         // Photon OS
+	"SUSE",           // SUSE Linux Enterprise
+	"openSUSE",       // openSUSE
 }
 
 type rpmPkgAnalyzer struct{}
