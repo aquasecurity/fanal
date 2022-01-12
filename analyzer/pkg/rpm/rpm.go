@@ -36,7 +36,7 @@ var osVendors = []string{
 	"CentOS",         // CentOS
 	"Fedora Project", // Fedora
 	"Oracle America", // Oracle Linux
-	"Red Hat, Inc.",  // Red Hat
+	"Red Hat",  // Red Hat
 	"AlmaLinux",      // AlmaLinux
 	"CloudLinux",     // AlmaLinux
 	"VMware, Inc.",   // Photon OS
