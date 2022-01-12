@@ -191,7 +191,7 @@ func (a rpmPkgAnalyzer) Version() int {
 
 func packageProvidedByVendor(pkgVendor string) bool {
 	for _, vendor := range osVendors {
-		if strings.Contains(pkgVendor, vendor) {
+		if strings.HasPrefix(pkgVendor, vendor) {
 			return true
 		}
 	}
