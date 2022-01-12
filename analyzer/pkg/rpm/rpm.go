@@ -40,7 +40,7 @@ var osVendors = []string{
 	"AlmaLinux",      // AlmaLinux
 	"CloudLinux",     // AlmaLinux
 	"VMware, Inc.",   // Photon OS
-	"SUSE",           // OpenSUSE
+	"SUSE",           // openSUSE
 }
 
 type rpmPkgAnalyzer struct{}
