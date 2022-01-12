@@ -5,7 +5,6 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
-	"strings"
 
 	"golang.org/x/xerrors"
 
@@ -16,7 +15,14 @@ import (
 
 const version = 1
 
-var requiredFile = "Dockerfile"
+/*
+  This regex allows for the following filename formats:
+  - Dockerfile (default)
+  - Dockerfile.build (with Dockerfile as filename and environment as extension)
+  - build.dockerfile (with environment as filename and dockerfile as extension)
+  - Dockerfile-build (environment appended with dash to Dockerfile)
+*/
+var fileRegex = regexp.MustCompile(`(?i)^(.*[\.])?Dockerfile([-\.].*)?$`)
 
 type ConfigAnalyzer struct {
 	parser      *dockerfile.Parser
@@ -54,16 +60,8 @@ func (s ConfigAnalyzer) Required(filePath string, _ os.FileInfo) bool {
 		return true
 	}
 
-	base := filepath.Base(filePath)
-	ext := filepath.Ext(base)
-	if strings.EqualFold(base, requiredFile+ext) {
-		return true
-	}
-	if strings.EqualFold(ext, "."+requiredFile) {
-		return true
-	}
-
-	return false
+	fileName := filepath.Base(filePath)
+	return fileRegex.MatchString(fileName)
 }
 
 func (s ConfigAnalyzer) Type() analyzer.Type {

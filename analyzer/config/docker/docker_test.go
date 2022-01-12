@@ -208,6 +208,11 @@ func Test_dockerConfigAnalyzer_Required(t *testing.T) {
 			want:     true,
 		},
 		{
+			name:     "dockerfile with suffix",
+			filePath: "Dockerfile-build",
+			want:     true,
+		},
+		{
 			name:     "Dockerfile in dir",
 			filePath: "docker/Dockerfile",
 			want:     true,
