@@ -3,6 +3,7 @@ package token
 import (
 	"context"
 
+	"github.com/aquasecurity/fanal/image/token/azure"
 	"github.com/aquasecurity/fanal/image/token/ecr"
 	"github.com/aquasecurity/fanal/image/token/google"
 	"github.com/google/go-containerregistry/pkg/authn"
@@ -17,6 +18,7 @@ var (
 func init() {
 	RegisterRegistry(&google.Registry{})
 	RegisterRegistry(&ecr.ECR{})
+	RegisterRegistry(&azure.Registry{})
 }
 
 type Registry interface {
