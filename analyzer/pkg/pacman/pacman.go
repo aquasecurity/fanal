@@ -2,7 +2,7 @@ package pacman
 
 import (
 	"bufio"
-	"bytes"
+	"context"
 	"log"
 	"os"
 	"path/filepath"
@@ -26,9 +26,9 @@ const installDir = "var/lib/pacman/local/"
 
 type pacmanAnalyzer struct{}
 
-func (a pacmanAnalyzer) Analyze(target analyzer.AnalysisTarget) (*analyzer.AnalysisResult, error) {
-	scanner := bufio.NewScanner(bytes.NewBuffer(target.Content))
-	dir, fileName := filepath.Split(target.FilePath)
+func (a pacmanAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisInput) (*analyzer.AnalysisResult, error) {
+	scanner := bufio.NewScanner(input.Content)
+	dir, fileName := filepath.Split(input.FilePath)
 	if !strings.HasPrefix(dir, installDir) {
 		return nil, nil
 	}
@@ -39,7 +39,7 @@ func (a pacmanAnalyzer) Analyze(target analyzer.AnalysisTarget) (*analyzer.Analy
 		}
 		return &analyzer.AnalysisResult{
 			PackageInfos: []types.PackageInfo{
-				{FilePath: target.FilePath, Packages: []types.Package{pkg}},
+				{FilePath: input.FilePath, Packages: []types.Package{pkg}},
 			},
 		}, nil
 	}

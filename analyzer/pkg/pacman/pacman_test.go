@@ -1,6 +1,7 @@
 package pacman
 
 import (
+	"context"
 	"os"
 	"testing"
 
@@ -204,13 +205,16 @@ func Test_pacmanAnalyzer_Analyze(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			b, err := os.ReadFile(tt.testFile)
+			f, err := os.Open(tt.testFile)
 			require.NoError(t, err)
+			defer f.Close()
+
+			ctx := context.Background()
 
 			a := pacmanAnalyzer{}
-			got, err := a.Analyze(analyzer.AnalysisTarget{
+			got, err := a.Analyze(ctx, analyzer.AnalysisInput{
 				FilePath: tt.filepath,
-				Content:  b,
+				Content:  f,
 			})
 			require.NoError(t, err)
 

@@ -2,7 +2,7 @@ package archlinux
 
 import (
 	"bufio"
-	"bytes"
+	"context"
 	"os"
 	"strings"
 
@@ -26,8 +26,8 @@ var requiredFiles = []string{
 
 type archlinuxOSAnalyzer struct{}
 
-func (a archlinuxOSAnalyzer) Analyze(target analyzer.AnalysisTarget) (*analyzer.AnalysisResult, error) {
-	scanner := bufio.NewScanner(bytes.NewBuffer(target.Content))
+func (a archlinuxOSAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisInput) (*analyzer.AnalysisResult, error) {
+	scanner := bufio.NewScanner(input.Content)
 	for scanner.Scan() {
 		line := scanner.Text()
 		if strings.HasPrefix(line, "NAME=\"Arch Linux") {

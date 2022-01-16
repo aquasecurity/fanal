@@ -1,6 +1,7 @@
 package archlinux
 
 import (
+	"context"
 	"os"
 	"testing"
 
@@ -34,12 +35,15 @@ func Test_archlinuxOSAnalyzer_Analyze(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			a := archlinuxOSAnalyzer{}
-			b, err := os.ReadFile(tt.inputFile)
+			f, err := os.Open(tt.inputFile)
 			require.NoError(t, err)
+			defer f.Close()
 
-			got, err := a.Analyze(analyzer.AnalysisTarget{
+			ctx := context.Background()
+
+			got, err := a.Analyze(ctx, analyzer.AnalysisInput{
 				FilePath: "etc/os-release",
-				Content:  b,
+				Content:  f,
 			})
 			if tt.wantErr != "" {
 				require.Error(t, err)
