@@ -20,7 +20,7 @@ func Test_javaLibraryAnalyzer_Analyze(t *testing.T) {
 		wantErr   string
 	}{
 		{
-			name:      "happy path to *.war",
+			name:      "happy path (WAR file)",
 			inputFile: "testdata/test.war",
 			want: &analyzer.AnalysisResult{
 				Applications: []types.Application{
@@ -42,7 +42,7 @@ func Test_javaLibraryAnalyzer_Analyze(t *testing.T) {
 			},
 		},
 		{
-			name:      "happy path to *.par",
+			name:      "happy path (PAR file)",
 			inputFile: "testdata/test.par",
 			want: &analyzer.AnalysisResult{
 				Applications: []types.Application{
