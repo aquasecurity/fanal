@@ -24,7 +24,7 @@ func (r *Registry) CheckOptions(domain string, d types.DockerOption) error {
 }
 
 func (r *Registry) GetCredential(ctx context.Context) (username, password string, err error) {
-	credStore, err := NewACRCredStore()
+	credStore, err := NewACRCredStore(ctx)
 	if err != nil {
 		return "", "", err
 	}

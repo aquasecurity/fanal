@@ -3,6 +3,7 @@ package azure
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/Azure/azure-sdk-for-go/profiles/preview/preview/containerregistry/runtime/containerregistry"
 	"github.com/Azure/go-autorest/autorest"
@@ -11,15 +12,34 @@ import (
 )
 
 type ACRCredStore struct {
-	settings auth.EnvironmentSettings
+	settings        auth.EnvironmentSettings
+	exchangeScheme  string
+	ctx             context.Context
+	refreshTimeout  time.Duration
+	exchangeTimeout time.Duration
 }
 
-func NewACRCredStore() (*ACRCredStore, error) {
+func NewACRCredStore(ctx context.Context) (*ACRCredStore, error) {
 	settings, err := auth.GetSettingsFromEnvironment()
 	if err != nil {
 		return nil, err
 	}
-	return &ACRCredStore{settings: settings}, nil
+
+	return &ACRCredStore{
+		settings:        settings,
+		exchangeScheme:  "https",
+		ctx:             ctx,
+		refreshTimeout:  45 * time.Second,
+		exchangeTimeout: 15 * time.Second,
+	}, nil
+}
+
+func (a *ACRCredStore) SetActiveDirectoryEndpoint(uri string) {
+	a.settings.Environment.ActiveDirectoryEndpoint = uri
+}
+
+func (a *ACRCredStore) SetExchangeScheme(scheme string) {
+	a.exchangeScheme = scheme
 }
 
 func (a *ACRCredStore) getServicePrincipalToken() (*adal.ServicePrincipalToken, error) {
@@ -49,17 +69,22 @@ func (a *ACRCredStore) getServicePrincipalToken() (*adal.ServicePrincipalToken, 
 }
 
 func (a *ACRCredStore) getRegistryRefreshToken(registry string, sp *adal.ServicePrincipalToken) (*string, error) {
-	err := sp.Refresh()
+	ctx, cancel := context.WithTimeout(a.ctx, a.refreshTimeout)
+	defer cancel()
+
+	err := sp.RefreshWithContext(ctx)
 	if err != nil {
 		return nil, err
 	}
 	token := sp.Token()
-	repoClient := containerregistry.NewRefreshTokensClient(fmt.Sprintf("https://%s", registry))
+	repoClient := containerregistry.NewRefreshTokensClient(fmt.Sprintf("%s://%s", a.exchangeScheme, registry))
 	repoClient.Authorizer = autorest.NewBearerAuthorizer(sp)
 
 	tenantID := a.settings.Values[auth.TenantID]
+	ctx, cancel = context.WithTimeout(a.ctx, a.exchangeTimeout)
+	defer cancel()
 
-	result, err := repoClient.GetFromExchange(context.Background(), "access_token", registry, tenantID, "", token.AccessToken)
+	result, err := repoClient.GetFromExchange(ctx, "access_token", registry, tenantID, "", token.AccessToken)
 	if err != nil {
 		return nil, err
 	}
