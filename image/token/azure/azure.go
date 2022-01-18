@@ -7,8 +7,6 @@ import (
 	"github.com/aquasecurity/fanal/types"
 
 	"golang.org/x/xerrors"
-
-	"github.com/chrismellard/docker-credential-acr-env/pkg/credhelper"
 )
 
 type Registry struct {
@@ -26,7 +24,10 @@ func (r *Registry) CheckOptions(domain string, d types.DockerOption) error {
 }
 
 func (r *Registry) GetCredential(ctx context.Context) (username, password string, err error) {
-	acrHelper := credhelper.NewACRCredentialsHelper()
-	_, token, err := acrHelper.Get(r.domain)
-	return "00000000-0000-0000-0000-000000000000", token, err
+	credStore, err := NewACRCredStore()
+	if err != nil {
+		return "", "", err
+	}
+	token, err := credStore.Get(r.domain)
+	return "00000000-0000-0000-0000-000000000000", *token, err
 }
