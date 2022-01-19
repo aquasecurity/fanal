@@ -73,6 +73,7 @@ func Test_systemFileFilterHook_Hook(t *testing.T) {
 					},
 				},
 				SystemFiles: []string{
+					"/",
 					"/usr/bin/pydoc",
 					"/usr/bin/python",
 					"/usr/bin/python2",
