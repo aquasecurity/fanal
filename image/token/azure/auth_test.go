@@ -1,4 +1,4 @@
-package azure
+package azure_test
 
 import (
 	"context"
@@ -6,17 +6,19 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"strconv"
 	"strings"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
+	"github.com/aquasecurity/fanal/image/token/azure"
 )
 
 const (
-	// asMSIEndpointEnv is the environment variable used to store the endpoint on App Service and Functions
+	// msiEndpointEnv is the environment variable used to store the endpoint on App Service and Functions
 	msiEndpointEnv = "MSI_ENDPOINT"
 
 	// the format for expires_on in UTC without AM/PM
@@ -46,71 +48,59 @@ func tokenHandle(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", "application/json")
 
 	expiresOn := time.Now().UTC().Add(time.Hour)
-	w.Write([]byte(newTokenJSON("3600", expiresOn, "test")))
+	fmt.Fprint(w, newTokenJSON("3600", expiresOn, "test"))
 }
+
 func TestAzureTokenMSI(t *testing.T) {
 	mux := http.NewServeMux()
-	server := httptest.NewServer(mux)
-	t.Cleanup(server.Close)
-
 	mux.HandleFunc("/metadata/identity/oauth2/token", tokenHandle)
 	mux.HandleFunc("/oauth2/exchange", tokenHandle)
 
-	os.Setenv(msiEndpointEnv, fmt.Sprintf("%s/metadata/identity/oauth2/token", server.URL))
-	defer os.Unsetenv(msiEndpointEnv)
+	server := httptest.NewServer(mux)
+	t.Cleanup(server.Close)
 
-	aa, err := NewACRCredStore(context.TODO())
-	aa.exchangeScheme = "http"
+	t.Setenv(msiEndpointEnv, fmt.Sprintf("%s/metadata/identity/oauth2/token", server.URL))
 
-	assert.Empty(t, err)
-	assert.NotEmpty(t, aa)
+	aa, err := azure.NewACRCredStore()
+	require.NoError(t, err)
 
-	token, err := aa.Get(strings.Replace(server.URL, "http://", "", -1))
+	aa.SetExchangeScheme("http")
 
-	assert.Empty(t, err)
+	token, err := aa.Get(context.Background(), strings.Replace(server.URL, "http://", "", -1))
+
+	require.NoError(t, err)
 	assert.Equal(t, *token, "FANAL123")
 }
 
 func TestAzureTokenCredentials(t *testing.T) {
 	mux := http.NewServeMux()
-	server := httptest.NewServer(mux)
-	t.Cleanup(server.Close)
-
 	mux.HandleFunc("/oauth2/exchange", tokenHandle)
 	mux.HandleFunc("/oauth2/token", tokenHandle)
 
-	os.Setenv("AZURE_CLIENT_SECRET", "Test")
-	os.Setenv("AZURE_CLIENT_ID", "Test")
-	defer func() {
-		os.Unsetenv("AZURE_CLIENT_ID")
-		os.Unsetenv("AZURE_CLIENT_SECRET")
-	}()
+	server := httptest.NewServer(mux)
+	t.Cleanup(server.Close)
 
-	aa, err := NewACRCredStore(context.TODO())
+	t.Setenv("AZURE_CLIENT_SECRET", "Test")
+	t.Setenv("AZURE_CLIENT_ID", "Test")
+
+	aa, err := azure.NewACRCredStore()
+	require.Empty(t, err)
 
 	aa.SetExchangeScheme("http")
 	aa.SetActiveDirectoryEndpoint(server.URL)
 
-	assert.Empty(t, err)
-	assert.NotEmpty(t, aa)
+	token, err := aa.Get(context.Background(), strings.Replace(server.URL, "http://", "", -1))
 
-	token, err := aa.Get(strings.Replace(server.URL, "http://", "", -1))
-
-	if assert.Empty(t, err) {
-		assert.Equal(t, *token, "FANAL123")
-	}
+	require.NoError(t, err)
+	assert.Equal(t, *token, "FANAL123")
 }
 
 func TestAzureTokenCredentialsError(t *testing.T) {
-	os.Setenv("AZURE_CLIENT_SECRET", "Test")
+	t.Setenv("AZURE_CLIENT_SECRET", "Test")
 
-	defer func() {
-		os.Unsetenv("AZURE_CLIENT_ID")
-		os.Unsetenv("AZURE_CLIENT_SECRET")
-	}()
+	aa, err := azure.NewACRCredStore()
+	require.NoError(t, err)
 
-	aa, err := NewACRCredStore(context.TODO())
-	assert.Empty(t, err)
-	_, err = aa.Get("")
+	_, err = aa.Get(context.Background(), "")
 	assert.Error(t, err)
 }

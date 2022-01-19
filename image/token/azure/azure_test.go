@@ -1,53 +1,39 @@
-package azure
+package azure_test
 
 import (
-	"reflect"
 	"testing"
 
-	"golang.org/x/xerrors"
+	"github.com/stretchr/testify/assert"
 
+	"github.com/aquasecurity/fanal/image/token/azure"
 	"github.com/aquasecurity/fanal/types"
 )
 
-func TestCheckOptions(t *testing.T) {
-	var tests = map[string]struct {
+func TestRegistry_CheckOptions(t *testing.T) {
+	tests := []struct {
+		name    string
 		domain  string
-		opt     types.DockerOption
-		azure   *Registry
-		wantErr error
+		wantErr string
 	}{
-		"InvalidURL": {
+		{
+			name:   "happy path",
+			domain: "test.azurecr.io",
+		},
+		{
+			name:    "invalidURL",
 			domain:  "alpine:3.9",
-			opt:     types.DockerOption{},
-			wantErr: types.InvalidURLPattern,
-		},
-		"NoOption": {
-			domain: "test.azurecr.io",
-			opt:    types.DockerOption{},
-			azure:  &Registry{domain: "test.azurecr.io"},
-		},
-		"CredOption": {
-			domain: "test.azurecr.io",
-			opt:    types.DockerOption{GcpCredPath: "/path/to/file.json"},
-			azure:  &Registry{domain: "test.azurecr.io"},
+			wantErr: "Azure registry: invalid url pattern",
 		},
 	}
-
-	for testname, v := range tests {
-		g := &Registry{}
-		err := g.CheckOptions(v.domain, v.opt)
-		if v.wantErr != nil {
-			if err == nil {
-				t.Errorf("%s : expected error but no error", testname)
-				continue
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			r := azure.Registry{}
+			err := r.CheckOptions(tt.domain, types.DockerOption{})
+			if tt.wantErr != "" {
+				assert.EqualError(t, err, tt.wantErr)
+			} else {
+				assert.NoError(t, err)
 			}
-			if !xerrors.Is(err, v.wantErr) {
-				t.Errorf("[%s]\nexpected error based on %v\nactual : %v", testname, v.wantErr, err)
-			}
-			continue
-		}
-		if !reflect.DeepEqual(v.azure, g) {
-			t.Errorf("[%s]\nexpected : %v\nactual : %v", testname, v.azure, g)
-		}
+		})
 	}
 }

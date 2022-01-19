@@ -4,9 +4,9 @@ import (
 	"context"
 	"strings"
 
-	"github.com/aquasecurity/fanal/types"
-
 	"golang.org/x/xerrors"
+
+	"github.com/aquasecurity/fanal/types"
 )
 
 type Registry struct {
@@ -15,7 +15,7 @@ type Registry struct {
 
 const azureURL = "azurecr.io"
 
-func (r *Registry) CheckOptions(domain string, d types.DockerOption) error {
+func (r *Registry) CheckOptions(domain string, _ types.DockerOption) error {
 	if !strings.HasSuffix(domain, azureURL) {
 		return xerrors.Errorf("Azure registry: %w", types.InvalidURLPattern)
 	}
@@ -23,11 +23,14 @@ func (r *Registry) CheckOptions(domain string, d types.DockerOption) error {
 	return nil
 }
 
-func (r *Registry) GetCredential(ctx context.Context) (username, password string, err error) {
-	credStore, err := NewACRCredStore(ctx)
+func (r *Registry) GetCredential(ctx context.Context) (string, string, error) {
+	credStore, err := NewACRCredStore()
 	if err != nil {
-		return "", "", err
+		return "", "", xerrors.Errorf("ACR credential error: %w", err)
 	}
-	token, err := credStore.Get(r.domain)
+	token, err := credStore.Get(ctx, r.domain)
+	if err != nil {
+		return "", "", xerrors.Errorf("unable to get a token: %w", err)
+	}
 	return "00000000-0000-0000-0000-000000000000", *token, err
 }
