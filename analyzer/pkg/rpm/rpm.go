@@ -23,8 +23,10 @@ func init() {
 const version = 1
 
 var requiredFiles = []string{
+	"usr/lib/sysimage/rpm/rpmdb.sqlite",
 	"usr/lib/sysimage/rpm/Packages.db",
 	"usr/lib/sysimage/rpm/Packages",
+	"var/lib/rpm/rpmdb.sqlite",
 	"var/lib/rpm/Packages.db",
 	"var/lib/rpm/Packages",
 }
@@ -97,7 +99,7 @@ func (a rpmPkgAnalyzer) parsePkgInfo(rc io.Reader) ([]types.Package, []string, e
 	//   old version: rpm -qa --qf "%{NAME} %{EPOCH} %{VERSION} %{RELEASE} %{SOURCERPM} %{ARCH}\n"
 	pkgList, err := db.ListPackages()
 	if err != nil {
-		return nil, nil, xerrors.Errorf("failed to list packages", err)
+		return nil, nil, xerrors.Errorf("failed to list packages: %w", err)
 	}
 
 	var pkgs []types.Package
