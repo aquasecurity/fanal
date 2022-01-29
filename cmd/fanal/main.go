@@ -54,6 +54,10 @@ func run() (err error) {
 						Name:  "skip-dirs",
 						Usage: "skip dirs",
 					},
+					&cli.BoolFlag{
+						Name:  "skip-cache",
+						Usage: "skip cache",
+					},
 				},
 				Action: globalOption(imageAction),
 			},
@@ -145,6 +149,7 @@ func imageAction(c *cli.Context, fsCache cache.Cache) error {
 	artifactOpt := artifact.Option{
 		SkipFiles: c.StringSlice("skip-files"),
 		SkipDirs:  c.StringSlice("skip-dirs"),
+		SkipCache: c.Bool("skip-cache"),
 	}
 	scannerOpt := config.ScannerOption{
 		PolicyPaths: c.StringSlice("policy"),
