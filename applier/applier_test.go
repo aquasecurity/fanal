@@ -161,7 +161,8 @@ func TestApplier_ApplyLayers(t *testing.T) {
 				},
 				Applications: []types.Application{
 					{
-						Type: "composer", FilePath: "php-app/composer.lock",
+						Type:     "composer",
+						FilePath: "php-app/composer.lock",
 						Libraries: []types.Package{
 							{
 								Name:    "guzzlehttp/guzzle",
@@ -449,7 +450,8 @@ func TestApplier_ApplyLayers(t *testing.T) {
 				},
 				Applications: []types.Application{
 					{
-						Type: "composer", FilePath: "php-app/composer.lock",
+						Type:     "composer",
+						FilePath: "php-app/composer.lock",
 						Libraries: []types.Package{
 							{
 								Name:    "guzzlehttp/guzzle",
@@ -640,7 +642,8 @@ func TestApplier_ApplyLayers(t *testing.T) {
 				},
 				Applications: []types.Application{
 					{
-						Type: "composer", FilePath: "php-app/composer.lock",
+						Type:     "composer",
+						FilePath: "php-app/composer.lock",
 						Libraries: []types.Package{
 							{
 								Name:    "guzzlehttp/guzzle",
@@ -661,7 +664,8 @@ func TestApplier_ApplyLayers(t *testing.T) {
 						},
 					},
 					{
-						Type: "composerCustomAnalyzer", FilePath: "php-app/composer.lock",
+						Type:     "composerCustomAnalyzer",
+						FilePath: "php-app/composer.lock",
 						Libraries: []types.Package{
 							{
 								Name:    "guzzlehttp/guzzle",
