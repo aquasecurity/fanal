@@ -551,6 +551,13 @@ func TestApplier_ApplyLayers(t *testing.T) {
 										data: "Common Package type-B var/lib/dpkg/status.d/tzdata",
 									},
 								},
+								{
+									Type:     "type-C",
+									FilePath: "var/lib/dpkg/status.d/tzdata",
+									Data: dummyData{
+										data: "Common Package type-C, overidden in next layer",
+									},
+								},
 							},
 						},
 					},
@@ -607,6 +614,13 @@ func TestApplier_ApplyLayers(t *testing.T) {
 									FilePath: "php-app/composer.lock",
 									Data: dummyData{
 										data: "Common Application type-B php-app/composer.lock",
+									},
+								},
+								{
+									Type:     "type-C",
+									FilePath: "var/lib/dpkg/status.d/tzdata",
+									Data: dummyData{
+										data: "Type C application which replaces earlier detected resource",
 									},
 								},
 							},
@@ -689,6 +703,17 @@ func TestApplier_ApplyLayers(t *testing.T) {
 						},
 						Data: dummyData{
 							data: "Common Package type-B var/lib/dpkg/status.d/tzdata",
+						},
+					},
+					{
+						Type:     "type-C",
+						FilePath: "var/lib/dpkg/status.d/tzdata",
+						Layer: types.Layer{
+							Digest: "sha256:dffd9992ca398466a663c87c92cfea2a2db0ae0cf33fcb99da60eec52addbfc5",
+							DiffID: "sha256:aad63a9339440e7c3e1fff2b988991b9bfb81280042fa7f39a5e327023056819",
+						},
+						Data: dummyData{
+							data: "Type C application which replaces earlier detected resource",
 						},
 					},
 					{
