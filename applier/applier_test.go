@@ -547,13 +547,6 @@ func TestApplier_ApplyLayers(t *testing.T) {
 									},
 								},
 								{
-									Type:     "type-B",
-									FilePath: "var/lib/dpkg/status.d/tzdata",
-									Data: dummyData{
-										data: "Common Package type-B var/lib/dpkg/status.d/tzdata",
-									},
-								},
-								{
 									Type:     "type-C",
 									FilePath: "var/lib/dpkg/status.d/tzdata",
 									Data: dummyData{
@@ -588,20 +581,6 @@ func TestApplier_ApplyLayers(t *testing.T) {
 										},
 									},
 								},
-								{
-									Type:     "composerCustomAnalyzer",
-									FilePath: "php-app/composer.lock",
-									Libraries: []types.Package{
-										{
-											Name:    "guzzlehttp/guzzle",
-											Version: "6.2.0",
-										},
-										{
-											Name:    "symfony/process",
-											Version: "v4.2.7",
-										},
-									},
-								},
 							},
 							CustomResources: []types.CustomResource{
 								{
@@ -609,13 +588,6 @@ func TestApplier_ApplyLayers(t *testing.T) {
 									FilePath: "php-app/composer.lock",
 									Data: dummyData{
 										data: "Common Application type-A php-app/composer.lock",
-									},
-								},
-								{
-									Type:     "type-B",
-									FilePath: "php-app/composer.lock",
-									Data: dummyData{
-										data: "Common Application type-B php-app/composer.lock",
 									},
 								},
 								{
@@ -663,28 +635,6 @@ func TestApplier_ApplyLayers(t *testing.T) {
 							},
 						},
 					},
-					{
-						Type:     "composerCustomAnalyzer",
-						FilePath: "php-app/composer.lock",
-						Libraries: []types.Package{
-							{
-								Name:    "guzzlehttp/guzzle",
-								Version: "6.2.0",
-								Layer: types.Layer{
-									Digest: "sha256:dffd9992ca398466a663c87c92cfea2a2db0ae0cf33fcb99da60eec52addbfc5",
-									DiffID: "sha256:aad63a9339440e7c3e1fff2b988991b9bfb81280042fa7f39a5e327023056819",
-								},
-							},
-							{
-								Name:    "symfony/process",
-								Version: "v4.2.7",
-								Layer: types.Layer{
-									Digest: "sha256:dffd9992ca398466a663c87c92cfea2a2db0ae0cf33fcb99da60eec52addbfc5",
-									DiffID: "sha256:aad63a9339440e7c3e1fff2b988991b9bfb81280042fa7f39a5e327023056819",
-								},
-							},
-						},
-					},
 				},
 				CustomResources: []types.CustomResource{
 					{
@@ -696,17 +646,6 @@ func TestApplier_ApplyLayers(t *testing.T) {
 						},
 						Data: dummyData{
 							data: "Common Package type-A var/lib/dpkg/status.d/tzdata",
-						},
-					},
-					{
-						Type:     "type-B",
-						FilePath: "var/lib/dpkg/status.d/tzdata",
-						Layer: types.Layer{
-							Digest: "sha256:932da51564135c98a49a34a193d6cd363d8fa4184d957fde16c9d8527b3f3b02",
-							DiffID: "sha256:a187dde48cd289ac374ad8539930628314bc581a481cdb41409c9289419ddb72",
-						},
-						Data: dummyData{
-							data: "Common Package type-B var/lib/dpkg/status.d/tzdata",
 						},
 					},
 					{
@@ -729,17 +668,6 @@ func TestApplier_ApplyLayers(t *testing.T) {
 						},
 						Data: dummyData{
 							data: "Common Application type-A php-app/composer.lock",
-						},
-					},
-					{
-						Type:     "type-B",
-						FilePath: "php-app/composer.lock",
-						Layer: types.Layer{
-							Digest: "sha256:dffd9992ca398466a663c87c92cfea2a2db0ae0cf33fcb99da60eec52addbfc5",
-							DiffID: "sha256:aad63a9339440e7c3e1fff2b988991b9bfb81280042fa7f39a5e327023056819",
-						},
-						Data: dummyData{
-							data: "Common Application type-B php-app/composer.lock",
 						},
 					},
 				},
