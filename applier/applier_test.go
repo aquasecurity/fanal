@@ -639,6 +639,17 @@ func TestApplier_ApplyLayers(t *testing.T) {
 				CustomResources: []types.CustomResource{
 					{
 						Type:     "type-A",
+						FilePath: "php-app/composer.lock",
+						Layer: types.Layer{
+							Digest: "sha256:dffd9992ca398466a663c87c92cfea2a2db0ae0cf33fcb99da60eec52addbfc5",
+							DiffID: "sha256:aad63a9339440e7c3e1fff2b988991b9bfb81280042fa7f39a5e327023056819",
+						},
+						Data: dummyData{
+							data: "Common Application type-A php-app/composer.lock",
+						},
+					},
+					{
+						Type:     "type-A",
 						FilePath: "var/lib/dpkg/status.d/tzdata",
 						Layer: types.Layer{
 							Digest: "sha256:932da51564135c98a49a34a193d6cd363d8fa4184d957fde16c9d8527b3f3b02",
@@ -657,17 +668,6 @@ func TestApplier_ApplyLayers(t *testing.T) {
 						},
 						Data: dummyData{
 							data: "Type B application which replaces earlier detected resource",
-						},
-					},
-					{
-						Type:     "type-A",
-						FilePath: "php-app/composer.lock",
-						Layer: types.Layer{
-							Digest: "sha256:dffd9992ca398466a663c87c92cfea2a2db0ae0cf33fcb99da60eec52addbfc5",
-							DiffID: "sha256:aad63a9339440e7c3e1fff2b988991b9bfb81280042fa7f39a5e327023056819",
-						},
-						Data: dummyData{
-							data: "Common Application type-A php-app/composer.lock",
 						},
 					},
 				},
@@ -699,6 +699,16 @@ func TestApplier_ApplyLayers(t *testing.T) {
 					return app.Libraries[i].Name < app.Libraries[j].Name
 				})
 			}
+
+			sort.Slice(got.CustomResources, func(i, j int) bool {
+				if got.CustomResources[i].FilePath < got.CustomResources[j].FilePath {
+					return true
+				} else if got.CustomResources[i].FilePath == got.CustomResources[j].FilePath {
+					return got.CustomResources[i].Type < got.CustomResources[j].Type
+				}
+				return false
+			})
+
 			assert.Equal(t, tt.want, got)
 			c.AssertExpectations(t)
 		})
