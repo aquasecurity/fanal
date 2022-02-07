@@ -701,12 +701,10 @@ func TestApplier_ApplyLayers(t *testing.T) {
 			}
 
 			sort.Slice(got.CustomResources, func(i, j int) bool {
-				if got.CustomResources[i].FilePath < got.CustomResources[j].FilePath {
-					return true
-				} else if got.CustomResources[i].FilePath == got.CustomResources[j].FilePath {
+				if got.CustomResources[i].FilePath == got.CustomResources[j].FilePath {
 					return got.CustomResources[i].Type < got.CustomResources[j].Type
 				}
-				return false
+				return got.CustomResources[i].FilePath < got.CustomResources[j].FilePath
 			})
 
 			assert.Equal(t, tt.want, got)
