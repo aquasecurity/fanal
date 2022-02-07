@@ -23,9 +23,8 @@ import (
 )
 
 const (
-	containerdNamespace = "default"
-	tagTemplate = "%s:%s"
-	digestTemplate = "%s@%s"
+	tagTemplate         = "%s:%s"
+	digestTemplate      = "%s@%s"
 )
 
 type ImageReference struct {
@@ -43,13 +42,13 @@ type ContainerdInterface interface {
 	GetOCIImageBytes(context.Context) ([]byte, error)
 }
 
-type containerdClient struct {
-	client *containerd.Client
+type imageInstance struct {
+	client  *containerd.Client
 	refName string
-	img     containerd.Image 
-} 
+	img     containerd.Image
+}
 
-func (cc *containerdClient) GetImageConfig(ctx context.Context) (ocispec.Descriptor, error) {
+func (cc *imageInstance) GetImageConfig(ctx context.Context) (ocispec.Descriptor, error) {
 	img, err := cc.client.GetImage(ctx, cc.refName)
 	if err != nil {
 		return ocispec.Descriptor{}, xerrors.Errorf("GetImageConfig:: failed to get Image by: %v, err: %v", cc.refName, err)
@@ -57,12 +56,12 @@ func (cc *containerdClient) GetImageConfig(ctx context.Context) (ocispec.Descrip
 	return img.Config(ctx)
 }
 
-func (cc *containerdClient) Close() error {
+func (cc *imageInstance) Close() error {
 	cc.client.Close()
 	return nil
 }
 
-func (cc *containerdClient) ImageWriter(ctx context.Context, ref []string) (io.ReadCloser, error) {
+func (cc *imageInstance) ImageWriter(ctx context.Context, ref []string) (io.ReadCloser, error) {
 	if len(ref) == 0 {
 		return nil, xerrors.Errorf("imageWriter: failed to get iamge name: %v", ref)
 	}
@@ -76,15 +75,15 @@ func (cc *containerdClient) ImageWriter(ctx context.Context, ref []string) (io.R
 	return pr, nil
 }
 
-func (cc *containerdClient) ContentStore(ctx context.Context) (content.Store, error) {
+func (cc *imageInstance) ContentStore(ctx context.Context) (content.Store, error) {
 	return cc.img.ContentStore(), nil
-} 
+}
 
-func (cc *containerdClient) GetImageName(ctx context.Context) (string, error) {
+func (cc *imageInstance) GetImageName(ctx context.Context) (string, error) {
 	return cc.img.Name(), nil
 }
 
-func (cc *containerdClient) GetOCIImageBytes(ctx context.Context) ([]byte, error) {
+func (cc *imageInstance) GetOCIImageBytes(ctx context.Context) ([]byte, error) {
 	cfg, err := cc.img.Config(ctx)
 	if err != nil {
 		return nil, xerrors.Errorf("GetOCIImageBytes:: failed to get img config, err: %v", err)
@@ -99,14 +98,14 @@ func (cc *containerdClient) GetOCIImageBytes(ctx context.Context) ([]byte, error
 func NewContainerd(socket, refName string, ctx context.Context) (ContainerdInterface, error) {
 	cli, err := containerd.New(socket)
 	if err != nil {
-		return &containerdClient{}, err
+		return &imageInstance{}, err
 	}
 	i, err := cli.GetImage(ctx, refName)
 	if err != nil {
-		return &containerdClient{}, err
+		return &imageInstance{}, err
 	}
-	
-	return &containerdClient{client: cli, refName: refName, img: i}, nil
+
+	return &imageInstance{client: cli, refName: refName, img: i}, nil
 }
 
 // ContainerdImage implements v1.Image by extending
@@ -265,9 +264,9 @@ func Parse(ctx context.Context, imgRef string, conf ocispec.Descriptor) (ImageRe
 
 	if conf.Digest != "" {
 		return ImageReference{
-			Named: name,
+			Named:  name,
 			Digest: conf.Digest.String(),
-			Tag: tag,
+			Tag:    tag,
 		}, nil
 	}
 

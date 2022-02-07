@@ -6,13 +6,13 @@ import (
 	"github.com/google/go-containerregistry/pkg/name"
 	"golang.org/x/xerrors"
 
-	"github.com/containerd/containerd/namespaces"
 	"github.com/aquasecurity/fanal/image/daemon"
 	"github.com/aquasecurity/fanal/types"
+	"github.com/containerd/containerd/namespaces"
 )
 
 const (
-	defaultContainerdSocket = "/run/containerd/containerd.sock"
+	defaultContainerdSocket    = "/run/containerd/containerd.sock"
 	defaultContainerdNamespace = "default"
 )
 
