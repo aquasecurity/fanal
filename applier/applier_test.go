@@ -547,10 +547,10 @@ func TestApplier_ApplyLayers(t *testing.T) {
 									},
 								},
 								{
-									Type:     "type-C",
+									Type:     "type-B",
 									FilePath: "var/lib/dpkg/status.d/tzdata",
 									Data: dummyData{
-										data: "Common Package type-C, overidden in next layer",
+										data: "Common Package type-B, overidden in next layer",
 									},
 								},
 							},
@@ -591,10 +591,10 @@ func TestApplier_ApplyLayers(t *testing.T) {
 									},
 								},
 								{
-									Type:     "type-C",
+									Type:     "type-B",
 									FilePath: "var/lib/dpkg/status.d/tzdata",
 									Data: dummyData{
-										data: "Type C application which replaces earlier detected resource",
+										data: "Type B application which replaces earlier detected resource",
 									},
 								},
 							},
@@ -649,14 +649,14 @@ func TestApplier_ApplyLayers(t *testing.T) {
 						},
 					},
 					{
-						Type:     "type-C",
+						Type:     "type-B",
 						FilePath: "var/lib/dpkg/status.d/tzdata",
 						Layer: types.Layer{
 							Digest: "sha256:dffd9992ca398466a663c87c92cfea2a2db0ae0cf33fcb99da60eec52addbfc5",
 							DiffID: "sha256:aad63a9339440e7c3e1fff2b988991b9bfb81280042fa7f39a5e327023056819",
 						},
 						Data: dummyData{
-							data: "Type C application which replaces earlier detected resource",
+							data: "Type B application which replaces earlier detected resource",
 						},
 					},
 					{
