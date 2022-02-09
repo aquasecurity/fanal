@@ -20,7 +20,7 @@ func init() {
 	analyzer.RegisterAnalyzer(&rpmPkgAnalyzer{})
 }
 
-const version = 1
+const version = 2
 
 var requiredFiles = []string{
 	"usr/lib/sysimage/rpm/rpmdb.sqlite",
