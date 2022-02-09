@@ -8,6 +8,7 @@ const (
 	// ======
 	TypeAlpine     Type = "alpine"
 	TypeAmazon     Type = "amazon"
+	TypeCBLMariner Type = "cbl-mariner"
 	TypeDebian     Type = "debian"
 	TypePhoton     Type = "photon"
 	TypeCentOS     Type = "centos"
@@ -75,6 +76,12 @@ const (
 	TypeHCL            Type = "hcl"
 	TypeTerraform      Type = "terraform"
 	TypeCloudFormation Type = "cloudFormation"
+
+	// =======
+	// Red Hat
+	// =======
+	TypeRedHatContentManifestType = "redhat-content-manifest"
+	TypeRedHatDockerfileType      = "redhat-dockerfile"
 )
 
 var (
