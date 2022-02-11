@@ -10,8 +10,8 @@ require (
 	github.com/BurntSushi/toml v1.0.0
 	github.com/GoogleCloudPlatform/docker-credential-gcr v1.5.0
 	github.com/alicebob/miniredis/v2 v2.18.0
-	github.com/aquasecurity/cfsec v0.2.2
-	github.com/aquasecurity/defsec v0.0.37
+	github.com/aquasecurity/cfsec v0.3.2
+	github.com/aquasecurity/defsec v0.2.8
 	github.com/aquasecurity/go-dep-parser v0.0.0-20211224170007-df43bca6b6ff
 	github.com/aquasecurity/testdocker v0.0.0-20210911155206-e1e85f5a1516
 	github.com/aquasecurity/tfsec v0.63.1
@@ -117,7 +117,7 @@ require (
 	github.com/morikuni/aec v1.0.0 // indirect
 	github.com/olekukonko/tablewriter v0.0.5 // indirect
 	github.com/opencontainers/runc v1.0.2 // indirect
-	github.com/owenrumney/squealer v0.2.28 // indirect
+	github.com/owenrumney/squealer v0.3.1 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rcrowley/go-metrics v0.0.0-20200313005456-10cdbea86bc0 // indirect
