@@ -40,7 +40,7 @@ require (
 	github.com/saracen/walker v0.0.0-20191201085201-324a081bae7e
 	github.com/sosedoff/gitkit v0.3.0
 	github.com/stretchr/testify v1.7.0
-	github.com/testcontainers/testcontainers-go v0.11.1
+	github.com/testcontainers/testcontainers-go v0.12.0
 	github.com/tmccombs/hcl2json v0.3.3
 	github.com/urfave/cli/v2 v2.3.0
 	go.etcd.io/bbolt v1.3.6

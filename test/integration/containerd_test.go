@@ -38,7 +38,7 @@ func TestGetLocalContainerdImage(t *testing.T) {
 		Name:       "containerd",
 		Image:      "docker.io/geyingqi/dockercontainerd:alpine",
 		Entrypoint: []string{"/bin/sh", "-c", "mkdir -p /etc/containerd/ && /usr/local/bin/containerd config default > /etc/containerd/config.toml && /usr/local/bin/containerd -c /etc/containerd/config.toml"},
-		Networks:   []string{"host"},
+		// Networks:   []string{"host"},
 		BindMounts: map[string]string{
 			targetPath: "/run/containerd",
 		},
