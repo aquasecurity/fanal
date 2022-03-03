@@ -53,7 +53,7 @@ func NewArtifact(img types.Image, c cache.ArtifactCache, artifactOpt artifact.Op
 	return Artifact{
 		image:       img,
 		cache:       c,
-		walker:      walker.NewLayerTar(artifactOpt.SkipFiles, artifactOpt.SkipDirs),
+		walker:      walker.NewLayerTar(artifactOpt.SkipFiles, artifactOpt.SkipDirs, artifactOpt.DisableDefaultSkipDirs),
 		analyzer:    analyzer.NewAnalyzerGroup(artifactOpt.AnalyzerGroup, artifactOpt.DisabledAnalyzers),
 		hookManager: hook.NewManager(artifactOpt.DisabledHooks),
 		scanner:     s,

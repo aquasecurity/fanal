@@ -19,11 +19,12 @@ const ThresholdSize = int64(200) << 20
 type WalkFunc func(filePath string, info os.FileInfo, opener analyzer.Opener) error
 
 type walker struct {
-	skipFiles []string
-	skipDirs  []string
+	skipFiles              []string
+	skipDirs               []string
+	disableDefaultSkipDirs bool
 }
 
-func newWalker(skipFiles, skipDirs []string) walker {
+func newWalker(skipFiles, skipDirs []string, disableDefaultSkipDirs bool) walker {
 	var cleanSkipFiles, cleanSkipDirs []string
 	for _, skipFile := range skipFiles {
 		skipFile = filepath.Clean(filepath.ToSlash(skipFile))
@@ -55,15 +56,17 @@ func (w *walker) shouldSkipDir(dir string) bool {
 	dir = filepath.ToSlash(dir)
 	dir = strings.TrimLeft(dir, "/")
 
-	// Skip application dirs (relative path)
-	base := filepath.Base(dir)
-	if utils.StringInSlice(base, appDirs) {
-		return true
-	}
+	if !w.disableDefaultSkipDirs {
+		// Skip application dirs (relative path)
+		base := filepath.Base(dir)
+		if utils.StringInSlice(base, appDirs) {
+			return true
+		}
 
-	// Skip system dirs and specified dirs (absolute path)
-	if utils.StringInSlice(dir, w.skipDirs) {
-		return true
+		// Skip system dirs and specified dirs (absolute path)
+		if utils.StringInSlice(dir, w.skipDirs) {
+			return true
+		}
 	}
 
 	return false

@@ -16,8 +16,9 @@ import (
 
 func TestLayerTar_Walk(t *testing.T) {
 	type fields struct {
-		skipFiles []string
-		skipDirs  []string
+		skipFiles              []string
+		skipDirs               []string
+		disableDefaultSkipDirs bool
 	}
 	tests := []struct {
 		name        string
@@ -81,7 +82,7 @@ func TestLayerTar_Walk(t *testing.T) {
 			f, err := os.Open("testdata/test.tar")
 			require.NoError(t, err)
 
-			w := walker.NewLayerTar(tt.fields.skipFiles, tt.fields.skipDirs)
+			w := walker.NewLayerTar(tt.fields.skipFiles, tt.fields.skipDirs, tt.fields.disableDefaultSkipDirs)
 
 			gotOpqDirs, gotWhFiles, err := w.Walk(f, tt.analyzeFn)
 			if tt.wantErr != "" {
