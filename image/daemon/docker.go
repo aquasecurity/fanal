@@ -24,19 +24,15 @@ func DockerImage(ref name.Reference) (Image, func(), error) {
 		}
 	}()
 
-	imageID := ref.Name() // Image ID uses "<Image_name>:<Tag>" pattern
+	imageID := ref.String()
 	inspect, _, err := c.ImageInspectWithRaw(context.Background(), imageID)
 	if err != nil {
-		imageID = ref.String() // Image ID uses "<Image_ID>" pattern
-		inspect, _, err = c.ImageInspectWithRaw(context.Background(), imageID)
-		if err != nil {
-			return nil, cleanup, xerrors.Errorf("unable to inspect the image (%s): %w", ref.Name(), err)
-		}
+		return nil, cleanup, xerrors.Errorf("unable to inspect the image (%s): %w", imageID, err)
 	}
 
 	history, err := c.ImageHistory(context.Background(), imageID)
 	if err != nil {
-		return nil, cleanup, xerrors.Errorf("unable to get history (%s): %w", ref.Name(), err)
+		return nil, cleanup, xerrors.Errorf("unable to get history (%s): %w", imageID, err)
 	}
 
 	f, err := os.CreateTemp("", "fanal-*")

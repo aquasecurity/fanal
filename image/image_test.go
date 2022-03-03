@@ -21,9 +21,9 @@ import (
 
 func setupEngineAndRegistry() (*httptest.Server, *httptest.Server) {
 	imagePaths := map[string]string{
-		"index.docker.io/library/alpine:3.10": "../test/testdata/alpine-310.tar.gz",
-		"index.docker.io/library/alpine:3.11": "../test/testdata/alpine-311.tar.gz",
-		"a187dde48cd2":                        "../test/testdata/alpine-311.tar.gz",
+		"alpine:3.10":  "../test/testdata/alpine-310.tar.gz",
+		"alpine:3.11":  "../test/testdata/alpine-311.tar.gz",
+		"a187dde48cd2": "../test/testdata/alpine-311.tar.gz",
 	}
 	opt := engine.Option{
 		APIVersion: "1.38",
