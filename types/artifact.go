@@ -30,6 +30,7 @@ type Package struct {
 
 	Modularitylabel string     `json:",omitempty"` // only for Red Hat based distributions
 	BuildInfo       *BuildInfo `json:",omitempty"` // only for Red Hat
+	Vendor          string     `json:",omitempty"` // only for Red Hat based distributions
 
 	License string `json:",omitempty"`
 	Layer   Layer  `json:",omitempty"`

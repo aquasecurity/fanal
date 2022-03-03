@@ -150,6 +150,7 @@ func (a rpmPkgAnalyzer) parsePkgInfo(rc io.Reader) ([]types.Package, []string, e
 			SrcVersion:      srcVer,
 			SrcRelease:      srcRel,
 			Modularitylabel: pkg.Modularitylabel,
+			Vendor:          pkg.Vendor,
 			License:         pkg.License,
 		}
 		pkgs = append(pkgs, p)
