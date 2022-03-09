@@ -8,6 +8,7 @@ const (
 	// ======
 	TypeAlpine     Type = "alpine"
 	TypeAmazon     Type = "amazon"
+	TypeArch       Type = "arch"
 	TypeCBLMariner Type = "cbl-mariner"
 	TypeDebian     Type = "debian"
 	TypePhoton     Type = "photon"
@@ -21,9 +22,10 @@ const (
 	TypeUbuntu     Type = "ubuntu"
 
 	// OS Package
-	TypeApk  Type = "apk"
-	TypeDpkg Type = "dpkg"
-	TypeRpm  Type = "rpm"
+	TypeApk    Type = "apk"
+	TypeDpkg   Type = "dpkg"
+	TypePacman Type = "pacman"
+	TypeRpm    Type = "rpm"
 
 	// ============================
 	// Programming Language Package

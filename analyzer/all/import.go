@@ -21,6 +21,7 @@ import (
 	_ "github.com/aquasecurity/fanal/analyzer/language/rust/cargo"
 	_ "github.com/aquasecurity/fanal/analyzer/os/alpine"
 	_ "github.com/aquasecurity/fanal/analyzer/os/amazonlinux"
+	_ "github.com/aquasecurity/fanal/analyzer/os/archlinux"
 	_ "github.com/aquasecurity/fanal/analyzer/os/debian"
 	_ "github.com/aquasecurity/fanal/analyzer/os/mariner"
 	_ "github.com/aquasecurity/fanal/analyzer/os/photon"
@@ -29,5 +30,6 @@ import (
 	_ "github.com/aquasecurity/fanal/analyzer/os/ubuntu"
 	_ "github.com/aquasecurity/fanal/analyzer/pkg/apk"
 	_ "github.com/aquasecurity/fanal/analyzer/pkg/dpkg"
+	_ "github.com/aquasecurity/fanal/analyzer/pkg/pacman"
 	_ "github.com/aquasecurity/fanal/analyzer/pkg/rpm"
 )

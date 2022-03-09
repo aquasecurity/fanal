@@ -9,6 +9,7 @@ require (
 	github.com/Azure/go-autorest/autorest/azure/auth v0.5.11
 	github.com/BurntSushi/toml v1.0.0
 	github.com/GoogleCloudPlatform/docker-credential-gcr v1.5.0
+	github.com/MaineK00n/go-pacman-version v0.0.0-20210916231937-19e87b7d7184
 	github.com/alicebob/miniredis/v2 v2.18.0
 	github.com/aquasecurity/defsec v0.17.1
 	github.com/aquasecurity/go-dep-parser v0.0.0-20220302151315-ff6d77c26988
