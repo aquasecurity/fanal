@@ -24,9 +24,9 @@ type LayerTar struct {
 	walker
 }
 
-func NewLayerTar(skipFiles, skipDirs []string, disableDefaultSkipDirs bool) LayerTar {
+func NewLayerTar(skipFiles, skipDirs []string) LayerTar {
 	return LayerTar{
-		walker: newWalker(skipFiles, skipDirs, disableDefaultSkipDirs),
+		walker: newWalker(skipFiles, skipDirs),
 	}
 }
 

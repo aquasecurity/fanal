@@ -10,8 +10,8 @@ import (
 )
 
 var (
-	appDirs    = []string{".git", "vendor"}
-	systemDirs = []string{"proc", "sys", "dev"}
+	AppDirs    = []string{".git", "vendor"}
+	SystemDirs = []string{"proc", "sys", "dev"}
 )
 
 const ThresholdSize = int64(200) << 20
@@ -19,12 +19,11 @@ const ThresholdSize = int64(200) << 20
 type WalkFunc func(filePath string, info os.FileInfo, opener analyzer.Opener) error
 
 type walker struct {
-	skipFiles              []string
-	skipDirs               []string
-	disableDefaultSkipDirs bool
+	skipFiles []string
+	skipDirs  []string
 }
 
-func newWalker(skipFiles, skipDirs []string, disableDefaultSkipDirs bool) walker {
+func newWalker(skipFiles, skipDirs []string) walker {
 	var cleanSkipFiles, cleanSkipDirs []string
 	for _, skipFile := range skipFiles {
 		skipFile = filepath.Clean(filepath.ToSlash(skipFile))
@@ -32,7 +31,7 @@ func newWalker(skipFiles, skipDirs []string, disableDefaultSkipDirs bool) walker
 		cleanSkipFiles = append(cleanSkipFiles, skipFile)
 	}
 
-	for _, skipDir := range append(skipDirs, systemDirs...) {
+	for _, skipDir := range append(skipDirs, SystemDirs...) {
 		skipDir = filepath.Clean(filepath.ToSlash(skipDir))
 		skipDir = strings.TrimLeft(skipDir, "/")
 		cleanSkipDirs = append(cleanSkipDirs, skipDir)
@@ -56,17 +55,15 @@ func (w *walker) shouldSkipDir(dir string) bool {
 	dir = filepath.ToSlash(dir)
 	dir = strings.TrimLeft(dir, "/")
 
-	if !w.disableDefaultSkipDirs {
-		// Skip application dirs (relative path)
-		base := filepath.Base(dir)
-		if utils.StringInSlice(base, appDirs) {
-			return true
-		}
+	// Skip application dirs (relative path)
+	base := filepath.Base(dir)
+	if utils.StringInSlice(base, AppDirs) {
+		return true
+	}
 
-		// Skip system dirs and specified dirs (absolute path)
-		if utils.StringInSlice(dir, w.skipDirs) {
-			return true
-		}
+	// Skip system dirs and specified dirs (absolute path)
+	if utils.StringInSlice(dir, w.skipDirs) {
+		return true
 	}
 
 	return false

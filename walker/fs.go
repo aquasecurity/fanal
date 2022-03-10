@@ -14,9 +14,9 @@ type FS struct {
 	walker
 }
 
-func NewFS(skipFiles, skipDirs []string, disableDefaultSkipDirs bool) FS {
+func NewFS(skipFiles, skipDirs []string) FS {
 	return FS{
-		walker: newWalker(skipFiles, skipDirs, disableDefaultSkipDirs),
+		walker: newWalker(skipFiles, skipDirs),
 	}
 }
 

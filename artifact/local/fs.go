@@ -53,7 +53,7 @@ func NewArtifact(rootPath string, c cache.ArtifactCache, artifactOpt artifact.Op
 	return Artifact{
 		rootPath:    filepath.Clean(rootPath),
 		cache:       c,
-		walker:      walker.NewFS(buildAbsPaths(rootPath, artifactOpt.SkipFiles), buildAbsPaths(rootPath, artifactOpt.SkipDirs), artifactOpt.DisableDefaultSkipDirs),
+		walker:      walker.NewFS(buildAbsPaths(rootPath, artifactOpt.SkipFiles), buildAbsPaths(rootPath, artifactOpt.SkipDirs)),
 		analyzer:    analyzer.NewAnalyzerGroup(artifactOpt.AnalyzerGroup, artifactOpt.DisabledAnalyzers),
 		hookManager: hook.NewManager(artifactOpt.DisabledHooks),
 		scanner:     s,

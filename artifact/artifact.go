@@ -10,15 +10,14 @@ import (
 )
 
 type Option struct {
-	AnalyzerGroup          analyzer.Group // It is empty in OSS
-	DisabledAnalyzers      []analyzer.Type
-	DisabledHooks          []hook.Type
-	SkipFiles              []string
-	SkipDirs               []string
-	NoProgress             bool
-	Offline                bool
-	InsecureSkipTLS        bool
-	DisableDefaultSkipDirs bool
+	AnalyzerGroup     analyzer.Group // It is empty in OSS
+	DisabledAnalyzers []analyzer.Type
+	DisabledHooks     []hook.Type
+	SkipFiles         []string
+	SkipDirs          []string
+	NoProgress        bool
+	Offline           bool
+	InsecureSkipTLS   bool
 }
 
 func (o *Option) Sort() {
