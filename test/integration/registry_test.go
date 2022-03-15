@@ -59,6 +59,8 @@ func TestTLSRegistry(t *testing.T) {
 			"/certs": filepath.Join(baseDir, "data", "registry", "certs"),
 			"/auth":  filepath.Join(baseDir, "data", "registry", "auth"),
 		},
+		SkipReaper: true,
+		AutoRemove: true,
 		WaitingFor: wait.ForLog("listening on [::]:5443"),
 	}
 

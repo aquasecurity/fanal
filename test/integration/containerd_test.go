@@ -43,7 +43,8 @@ func TestGetLocalContainerdImage(t *testing.T) {
 		BindMounts: map[string]string{
 			"/run": hostPath,
 		},
-		Privileged: true,
+		SkipReaper: true,
+		AutoRemove: true,
 		WaitingFor: wait.ForLog("Start streaming server"),
 	}
 	containerdC, err := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
