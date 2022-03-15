@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"regexp"
 	"time"
 
 	"github.com/containerd/containerd"
@@ -23,8 +24,15 @@ import (
 )
 
 const (
-	tagTemplate         = "%s:%s"
-	digestTemplate      = "%s@%s"
+	tagTemplate    = "%s:%s"
+	digestTemplate = "%s@%s"
+)
+
+var (
+	regDigest = regexp.MustCompile(`@[A-Za-z][A-Za-z0-9]*(?:[-_+.][A-Za-z][A-Za-z0-9]*)*[:][[:xdigit:]]{32,}`)
+	regTag    = regexp.MustCompile(`:\w[\w.-]*$`)
+
+	regRef = regexp.MustCompile(`(?im)^(?P<name>(?:(?P<domain>(?:(?:localhost|[\w-]+(?:\.[\w-]+)+)(?::\d+)?)|[\w]+:\d+)/)?(?P<image>[a-z0-9_.-]+(?:/[a-z0-9_.-]+)*))(?::(?P<tag>[\w][\w.-]{0,127}))?(?:@(?P<digest>[A-Za-z][A-Za-z0-9]*(?:[+.-_][A-Za-z][A-Za-z0-9]*)*:[0-9a-fA-F]{32,}))?$`)
 )
 
 type ImageReference struct {
@@ -286,9 +294,7 @@ func getRepoInfo(ctx context.Context, ci ContainerdInterface) (repoDigests, repo
 	if err != nil {
 		return
 	}
-	fmt.Printf("imageInspect name: %+v; \n", refName)
 	reference, _ := Parse(ctx, refName, cfg)
-	fmt.Printf("imageInspect referenece: %+v; \n", reference)
 	if reference.Tag != "" {
 		repoTags = append(repoTags, fmt.Sprintf(tagTemplate, reference.Named, reference.Tag))
 	}
