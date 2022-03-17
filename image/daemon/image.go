@@ -10,6 +10,7 @@ import (
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	dimage "github.com/docker/docker/api/types/image"
+	"github.com/google/go-containerregistry/pkg/name"
 	v1 "github.com/google/go-containerregistry/pkg/v1"
 	"github.com/google/go-containerregistry/pkg/v1/tarball"
 	"golang.org/x/xerrors"
@@ -41,7 +42,12 @@ func imageOpener(ref string, f *os.File, imageSave imageSave) opener {
 		}
 		defer f.Close()
 
-		img, err := tarball.ImageFromPath(f.Name(), nil)
+		tag, err := name.NewTag(ref)
+		if err != nil {
+			return nil, xerrors.Errorf("unable to get the tag: %w", err)
+		}
+
+		img, err := tarball.ImageFromPath(f.Name(), &tag)
 		if err != nil {
 			return nil, xerrors.Errorf("failed to initialize the struct from the temporary file: %w", err)
 		}
