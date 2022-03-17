@@ -24,7 +24,10 @@ func DockerImage(ref name.Reference) (Image, func(), error) {
 		}
 	}()
 
-	imageID := ref.Name() // <image_name>:<tag> pattern like "alpine:3.15"
+	// <image_name>:<tag> pattern like "alpine:3.15"
+	// or
+	// <image_name>@<digest> pattern like "alpine@sha256:21a3deaa0d32a8057914f36584b5288d2e5ecc984380bc0118285c70fa8c9300"
+	imageID := ref.Name()
 	inspect, _, err := c.ImageInspectWithRaw(context.Background(), imageID)
 	if err != nil {
 		imageID = ref.String() // <image_id> pattern like `5ac716b05a9c`
