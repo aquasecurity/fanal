@@ -2,7 +2,6 @@ package daemon
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"os"
 	"sync"
@@ -42,7 +41,6 @@ func imageOpener(ctx context.Context, ref string, f *os.File, imageSave imageSav
 		}
 		defer f.Close()
 
-		fmt.Printf("imageFromPath: %v", f.Name())
 		img, err := tarball.ImageFromPath(f.Name(), nil)
 		if err != nil {
 			return nil, xerrors.Errorf("failed to initialize the struct from the temporary file: %w", err)

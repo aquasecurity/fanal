@@ -45,7 +45,6 @@ type ContainerdInterface interface {
 	GetImageConfig(context.Context) (ocispec.Descriptor, error)
 	GetImageName(context.Context) (string, error)
 	ImageWriter(context.Context, []string) (io.ReadCloser, error)
-	ContentStore(context.Context) (content.Store, error)
 	Close() error
 	GetOCIImageBytes(context.Context) ([]byte, error)
 }
@@ -83,10 +82,6 @@ func (cc *imageInstance) ImageWriter(ctx context.Context, ref []string) (io.Read
 	return pr, nil
 }
 
-func (cc *imageInstance) ContentStore(ctx context.Context) (content.Store, error) {
-	return cc.img.ContentStore(), nil
-}
-
 func (cc *imageInstance) GetImageName(ctx context.Context) (string, error) {
 	return cc.img.Name(), nil
 }
@@ -120,11 +115,7 @@ func NewContainerd(socket, refName string, ctx context.Context) (ContainerdInter
 func ContainerdImage(ci ContainerdInterface, ref name.Reference, ctx context.Context) (Image, func(), error) {
 	cleanup := func() {}
 	inspect, err := imageInspect(ctx, ci)
-	defer func() {
-		if err != nil {
-			ci.Close()
-		}
-	}()
+
 	if err != nil {
 		return nil, cleanup, err
 	}
@@ -152,7 +143,8 @@ func imageInspect(ctx context.Context, ci ContainerdInterface) (inspect api.Imag
 	if err != nil {
 		return api.ImageInspect{}, err
 	}
-	ociImage, err := containerToOci(ctx, ci)
+
+	ociImage, err := containerToOci(ctx, descriptor, ci)
 	if err != nil {
 		return api.ImageInspect{}, err
 	}
@@ -160,6 +152,7 @@ func imageInspect(ctx context.Context, ci ContainerdInterface) (inspect api.Imag
 	if ociImage.Created != nil {
 		createAt = ociImage.Created.Format(time.RFC3339Nano)
 	}
+
 	repoDigests, repoTags := getRepoInfo(ctx, ci)
 	var architecture string
 	if descriptor.Platform != nil {
@@ -211,13 +204,8 @@ func getImageInfoConfigFromOciImage(img ocispec.Image) *container.Config {
 	}
 }
 
-func containerToOci(ctx context.Context, ci ContainerdInterface) (ocispec.Image, error) {
+func containerToOci(ctx context.Context, cfg ocispec.Descriptor, ci ContainerdInterface) (ocispec.Image, error) {
 	var ociImage ocispec.Image
-
-	cfg, err := ci.GetImageConfig(ctx)
-	if err != nil {
-		return ocispec.Image{}, err
-	}
 
 	switch cfg.MediaType {
 	case ocispec.MediaTypeImageConfig, images.MediaTypeDockerSchema2Config, "application/octet-stream":
