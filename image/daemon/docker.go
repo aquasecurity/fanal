@@ -30,7 +30,7 @@ func DockerImage(ref name.Reference) (Image, func(), error) {
 		imageID = ref.String() // <image_id> pattern like `5ac716b05a9c`
 		inspect, _, err = c.ImageInspectWithRaw(context.Background(), imageID)
 		if err != nil {
-			return nil, cleanup, xerrors.Errorf("unable to inspect the image (%s): %w", ref.String(), err)
+			return nil, cleanup, xerrors.Errorf("unable to inspect the image (%s): %w", imageID, err)
 		}
 	}
 
