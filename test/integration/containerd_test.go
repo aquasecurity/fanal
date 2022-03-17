@@ -69,15 +69,12 @@ func TestGetLocalContainerdImage(t *testing.T) {
 		_, err = cli.Pull(ctx, imgRef)
 		require.NoError(t, err)
 
-		cd, err := daemon.NewContainerd(targetPath+"/containerd.sock", imgRef, ctx)
-		require.NoError(t, err)
-
 		ref, err := name.ParseReference(imgRef, nameOpts...)
 		require.NoError(t, err)
 		t.Logf("Identifier: %s, Name: %s\n", ref.Identifier(), ref.Name())
 
 		//Identifier: latest, Name: index.docker.io/library/redis:latest
-		img, _, err := daemon.ContainerdImage(cd, ref, ctx)
+		img, _, err := daemon.ContainerdImage(targetPath+"/containerd.sock", ref, ctx)
 		require.NoError(t, err)
 		require.NotNil(t, img)
 

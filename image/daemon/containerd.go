@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"regexp"
 	"time"
 
 	"github.com/containerd/containerd"
@@ -23,18 +22,6 @@ import (
 	ocispec "github.com/opencontainers/image-spec/specs-go/v1"
 )
 
-const (
-	tagTemplate    = "%s:%s"
-	digestTemplate = "%s@%s"
-)
-
-var (
-	regDigest = regexp.MustCompile(`@[A-Za-z][A-Za-z0-9]*(?:[-_+.][A-Za-z][A-Za-z0-9]*)*[:][[:xdigit:]]{32,}`)
-	regTag    = regexp.MustCompile(`:\w[\w.-]*$`)
-
-	regRef = regexp.MustCompile(`(?im)^(?P<name>(?:(?P<domain>(?:(?:localhost|[\w-]+(?:\.[\w-]+)+)(?::\d+)?)|[\w]+:\d+)/)?(?P<image>[a-z0-9_.-]+(?:/[a-z0-9_.-]+)*))(?::(?P<tag>[\w][\w.-]{0,127}))?(?:@(?P<digest>[A-Za-z][A-Za-z0-9]*(?:[+.-_][A-Za-z][A-Za-z0-9]*)*:[0-9a-fA-F]{32,}))?$`)
-)
-
 type ImageReference struct {
 	Named  string
 	Tag    string
@@ -43,7 +30,6 @@ type ImageReference struct {
 
 type ContainerdInterface interface {
 	GetImageConfig(context.Context) (ocispec.Descriptor, error)
-	GetImageName(context.Context) (string, error)
 	ImageWriter(context.Context, []string) (io.ReadCloser, error)
 	Close() error
 	GetOCIImageBytes(context.Context) ([]byte, error)
@@ -82,10 +68,6 @@ func (cc *imageInstance) ImageWriter(ctx context.Context, ref []string) (io.Read
 	return pr, nil
 }
 
-func (cc *imageInstance) GetImageName(ctx context.Context) (string, error) {
-	return cc.img.Name(), nil
-}
-
 func (cc *imageInstance) GetOCIImageBytes(ctx context.Context) ([]byte, error) {
 	cfg, err := cc.img.Config(ctx)
 	if err != nil {
@@ -98,37 +80,38 @@ func (cc *imageInstance) GetOCIImageBytes(ctx context.Context) ([]byte, error) {
 	return data, nil
 }
 
-func NewContainerd(socket, refName string, ctx context.Context) (ContainerdInterface, error) {
-	cli, err := containerd.New(socket)
-	if err != nil {
-		return &imageInstance{}, err
-	}
-	i, err := cli.GetImage(ctx, refName)
-	if err != nil {
-		return &imageInstance{}, err
-	}
-
-	return &imageInstance{client: cli, refName: refName, img: i}, nil
-}
-
 // ContainerdImage implements v1.Image by extending
-func ContainerdImage(ci ContainerdInterface, ref name.Reference, ctx context.Context) (Image, func(), error) {
+func ContainerdImage(containerdSocket string, ref name.Reference, ctx context.Context) (Image, func(), error) {
 	cleanup := func() {}
-	inspect, err := imageInspect(ctx, ci)
+	cli, err := containerd.New(containerdSocket)
+
+	if err != nil {
+		return nil, cleanup, xerrors.Errorf("tryContainerdDaemon: failed to initialize a docker client: %w", err)
+	}
+
+	i, err := cli.GetImage(ctx, ref.Name())
 
 	if err != nil {
 		return nil, cleanup, err
 	}
 
-	f, err := os.CreateTemp("", "fanal-*")
+	ci := &imageInstance{client: cli, refName: ref.Name(), img: i}
+
+	inspect, err := imageInspect(ctx, ref, ci)
+
 	if err != nil {
-		return nil, cleanup, xerrors.Errorf("ContainerImage: failed to create a temporary file")
+		return nil, cleanup, err
 	}
 
+	var f *os.File
 	cleanup = func() {
 		ci.Close()
 		f.Close()
 		_ = os.Remove(f.Name())
+	}
+	f, err = os.CreateTemp("", "fanal-*")
+	if err != nil {
+		return nil, cleanup, xerrors.Errorf("ContainerImage: failed to create a temporary file")
 	}
 
 	return &image{
@@ -138,7 +121,7 @@ func ContainerdImage(ci ContainerdInterface, ref name.Reference, ctx context.Con
 }
 
 // imageInspect returns ImageInspect struct
-func imageInspect(ctx context.Context, ci ContainerdInterface) (inspect api.ImageInspect, err error) {
+func imageInspect(ctx context.Context, ref name.Reference, ci ContainerdInterface) (inspect api.ImageInspect, err error) {
 	descriptor, err := ci.GetImageConfig(ctx)
 	if err != nil {
 		return api.ImageInspect{}, err
@@ -153,7 +136,6 @@ func imageInspect(ctx context.Context, ci ContainerdInterface) (inspect api.Imag
 		createAt = ociImage.Created.Format(time.RFC3339Nano)
 	}
 
-	repoDigests, repoTags := getRepoInfo(ctx, ci)
 	var architecture string
 	if descriptor.Platform != nil {
 		architecture = descriptor.Platform.Architecture
@@ -167,8 +149,8 @@ func imageInspect(ctx context.Context, ci ContainerdInterface) (inspect api.Imag
 		Created:      createAt,
 		ID:           string(descriptor.Digest),
 		Os:           ociImage.OS,
-		RepoDigests:  repoDigests,
-		RepoTags:     repoTags,
+		RepoDigests:  []string{fmt.Sprintf("%s@%s", ref.Context().String(), string(descriptor.Digest))},
+		RepoTags:     []string{ref.Name()},
 		RootFS: api.RootFS{
 			Type:   ociImage.RootFS.Type,
 			Layers: digestToString(ociImage.RootFS.DiffIDs),
@@ -185,7 +167,7 @@ func digestToString(digests []digest.Digest) []string {
 	return strs
 }
 
-// getImageInfoConfigFromOciImage returns config of ImageConfig from oci image.
+// getImageInfoConfigFromOciImage creates an instance of container.Config based on ocispec.ImageConfig
 func getImageInfoConfigFromOciImage(img ocispec.Image) *container.Config {
 	volumes := make(map[string]struct{})
 	for k, obj := range img.Config.Volumes {
@@ -221,73 +203,4 @@ func containerToOci(ctx context.Context, cfg ocispec.Descriptor, ci ContainerdIn
 		return ocispec.Image{}, xerrors.Errorf("containerToOci: invalid image config media type: %v", cfg.MediaType)
 	}
 	return ociImage, nil
-}
-
-// splitReference splits reference into name, tag and digest in string format.
-func splitReference(ref string) (name string, tag string, digStr string) {
-	name = ref
-
-	if loc := regDigest.FindStringIndex(name); loc != nil {
-		name, digStr = name[:loc[0]], name[loc[0]+1:]
-	}
-
-	if loc := regTag.FindStringIndex(name); loc != nil {
-		name, tag = name[:loc[0]], name[loc[0]+1:]
-	}
-	return
-}
-
-// Parse parses ref into.
-func Parse(ctx context.Context, imgRef string, conf ocispec.Descriptor) (ImageReference, error) {
-	if ok := regRef.MatchString(imgRef); !ok {
-		return ImageReference{}, xerrors.Errorf("Parse: invalid reference: %s", imgRef)
-	}
-
-	name, tag, digStr := splitReference(imgRef)
-
-	if digStr != "" {
-		dig, err := digest.Parse(digStr)
-		if err != nil {
-			return ImageReference{}, err
-		}
-
-		return ImageReference{
-			Named:  name,
-			Digest: dig.String(),
-			Tag:    tag,
-		}, nil
-	}
-
-	if conf.Digest != "" {
-		return ImageReference{
-			Named:  name,
-			Digest: conf.Digest.String(),
-			Tag:    tag,
-		}, nil
-	}
-
-	return ImageReference{
-		Named: name,
-		Tag:   tag,
-	}, nil
-}
-
-func getRepoInfo(ctx context.Context, ci ContainerdInterface) (repoDigests, repoTags []string) {
-
-	refName, err := ci.GetImageName(ctx)
-	if err != nil {
-		return
-	}
-	cfg, err := ci.GetImageConfig(ctx)
-	if err != nil {
-		return
-	}
-	reference, _ := Parse(ctx, refName, cfg)
-	if reference.Tag != "" {
-		repoTags = append(repoTags, fmt.Sprintf(tagTemplate, reference.Named, reference.Tag))
-	}
-	if reference.Digest != "" {
-		repoDigests = append(repoDigests, fmt.Sprintf(digestTemplate, reference.Named, reference.Digest))
-	}
-	return
 }

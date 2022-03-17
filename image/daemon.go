@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/google/go-containerregistry/pkg/name"
-	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/fanal/image/daemon"
 	"github.com/aquasecurity/fanal/types"
@@ -40,16 +39,14 @@ func tryPodmanDaemon(ref string) (types.Image, func(), error) {
 }
 
 func tryContainerdDaemon(imageName string, ref name.Reference) (types.Image, func(), error) {
-	ctx := context.Background()
-	ctx = namespaces.WithNamespace(ctx, defaultContainerdNamespace)
-	ci, err := daemon.NewContainerd(defaultContainerdSocket, ref.Name(), ctx)
+	ctx := namespaces.WithNamespace(context.Background(), defaultContainerdNamespace)
+
+	img, cleanup, err := daemon.ContainerdImage(defaultContainerdSocket, ref, ctx)
+
 	if err != nil {
-		return nil, nil, xerrors.Errorf("tryContainerdDaemon: failed to initialize a docker client: %w", err)
+		return nil, cleanup, err
 	}
-	img, cleanup, err := daemon.ContainerdImage(ci, ref, ctx)
-	if err != nil {
-		return nil, nil, err
-	}
+
 	return daemonImage{
 		Image: img,
 		name:  imageName,

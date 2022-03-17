@@ -1,19 +1,13 @@
 package daemon
 
 import (
-	"context"
-	"encoding/json"
-	"io"
-	"strings"
 	"testing"
 
-	"github.com/golang/mock/gomock"
-	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/opencontainers/go-digest"
-	ocispec "github.com/opencontainers/image-spec/specs-go/v1"
 	"github.com/stretchr/testify/assert"
 )
 
+/*
 func TestContainerdImage(t *testing.T) {
 	mockCtl := gomock.NewController(t)
 	defer mockCtl.Finish()
@@ -81,7 +75,7 @@ func TestContainerdImage(t *testing.T) {
 	assert.NoError(t, err)
 	_, _, err = ContainerdImage(mockedC, ref, ctx)
 	assert.NoError(t, err)
-}
+} */
 
 func TestDigestToString(t *testing.T) {
 	test1Str := "test1"
@@ -103,34 +97,5 @@ func TestDigestToString(t *testing.T) {
 	for _, test := range tests {
 		r := digestToString(test.digests)
 		assert.Equal(t, r, test.wantedStrs)
-	}
-}
-
-func TestSplitReference(t *testing.T) {
-	tests := []struct {
-		ref    string
-		name   string
-		tag    string
-		digStr string
-	}{
-		{
-			ref:    "nginx@sha256:2e87d9ff130deb0c2d63600390c3f2370e71e71841573990d54579bc35046203",
-			name:   "nginx",
-			digStr: "sha256:2e87d9ff130deb0c2d63600390c3f2370e71e71841573990d54579bc35046203",
-			tag:    "",
-		},
-		{
-			ref:    "nginx:latest",
-			name:   "nginx",
-			tag:    "latest",
-			digStr: "",
-		},
-	}
-
-	for _, test := range tests {
-		name, tag, digStr := splitReference(test.ref)
-		assert.Equal(t, test.name, name)
-		assert.Equal(t, test.tag, tag)
-		assert.Equal(t, test.digStr, digStr)
 	}
 }
