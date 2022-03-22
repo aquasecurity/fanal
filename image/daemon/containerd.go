@@ -22,62 +22,21 @@ import (
 	ocispec "github.com/opencontainers/image-spec/specs-go/v1"
 )
 
-type ImageReference struct {
-	Named  string
-	Tag    string
-	Digest string
-}
+func imageWriter(client *containerd.Client, img containerd.Image) imageSave {
 
-type ContainerdInterface interface {
-	GetImageConfig(context.Context) (ocispec.Descriptor, error)
-	ImageWriter(context.Context, []string) (io.ReadCloser, error)
-	Close() error
-	GetOCIImageBytes(context.Context) ([]byte, error)
-}
-
-type imageInstance struct {
-	client  *containerd.Client
-	refName string
-	img     containerd.Image
-}
-
-func (cc *imageInstance) GetImageConfig(ctx context.Context) (ocispec.Descriptor, error) {
-	img, err := cc.client.GetImage(ctx, cc.refName)
-	if err != nil {
-		return ocispec.Descriptor{}, xerrors.Errorf("GetImageConfig:: failed to get Image by: %v, err: %v", cc.refName, err)
+	return func(ctx context.Context, ref []string) (io.ReadCloser, error) {
+		if len(ref) == 0 {
+			return nil, xerrors.Errorf("imageWriter: failed to get iamge name: %v", ref)
+		}
+		imgOpts := archive.WithImage(client.ImageService(), ref[0])
+		manifestOpts := archive.WithManifest(img.Target())
+		platOpts := archive.WithPlatform(platforms.Default())
+		pr, pw := io.Pipe()
+		go func() {
+			pw.CloseWithError(archive.Export(ctx, client.ContentStore(), pw, imgOpts, manifestOpts, platOpts))
+		}()
+		return pr, nil
 	}
-	return img.Config(ctx)
-}
-
-func (cc *imageInstance) Close() error {
-	cc.client.Close()
-	return nil
-}
-
-func (cc *imageInstance) ImageWriter(ctx context.Context, ref []string) (io.ReadCloser, error) {
-	if len(ref) == 0 {
-		return nil, xerrors.Errorf("imageWriter: failed to get iamge name: %v", ref)
-	}
-	imgOpts := archive.WithImage(cc.client.ImageService(), ref[0])
-	manifestOpts := archive.WithManifest(cc.img.Target())
-	platOpts := archive.WithPlatform(platforms.Default())
-	pr, pw := io.Pipe()
-	go func() {
-		pw.CloseWithError(archive.Export(ctx, cc.client.ContentStore(), pw, imgOpts, manifestOpts, platOpts))
-	}()
-	return pr, nil
-}
-
-func (cc *imageInstance) GetOCIImageBytes(ctx context.Context) ([]byte, error) {
-	cfg, err := cc.img.Config(ctx)
-	if err != nil {
-		return nil, xerrors.Errorf("GetOCIImageBytes:: failed to get img config, err: %v", err)
-	}
-	data, err := content.ReadBlob(ctx, cc.img.ContentStore(), cfg)
-	if err != nil {
-		return nil, xerrors.Errorf("GetOCIImageBytes:: failed to read blob: %v", err)
-	}
-	return data, nil
 }
 
 // ContainerdImage implements v1.Image by extending
@@ -95,9 +54,7 @@ func ContainerdImage(containerdSocket string, ref name.Reference, ctx context.Co
 		return nil, cleanup, err
 	}
 
-	ci := &imageInstance{client: cli, refName: ref.Name(), img: i}
-
-	inspect, err := imageInspect(ctx, ref, ci)
+	inspect, err := imageInspect(ctx, i, ref)
 
 	if err != nil {
 		return nil, cleanup, err
@@ -105,7 +62,7 @@ func ContainerdImage(containerdSocket string, ref name.Reference, ctx context.Co
 
 	var f *os.File
 	cleanup = func() {
-		ci.Close()
+		cli.Close()
 		f.Close()
 		_ = os.Remove(f.Name())
 	}
@@ -115,19 +72,19 @@ func ContainerdImage(containerdSocket string, ref name.Reference, ctx context.Co
 	}
 
 	return &image{
-		opener:  imageOpener(ctx, ref.Name(), f, ci.ImageWriter),
+		opener:  imageOpener(ctx, ref.Name(), f, imageWriter(cli, i)),
 		inspect: inspect,
 	}, cleanup, nil
 }
 
 // imageInspect returns ImageInspect struct
-func imageInspect(ctx context.Context, ref name.Reference, ci ContainerdInterface) (inspect api.ImageInspect, err error) {
-	descriptor, err := ci.GetImageConfig(ctx)
+func imageInspect(ctx context.Context, img containerd.Image, ref name.Reference) (inspect api.ImageInspect, err error) {
+	descriptor, err := img.Config(ctx)
 	if err != nil {
 		return api.ImageInspect{}, err
 	}
 
-	ociImage, err := containerToOci(ctx, descriptor, ci)
+	ociImage, err := containerdToOci(ctx, img, descriptor)
 	if err != nil {
 		return api.ImageInspect{}, err
 	}
@@ -159,15 +116,7 @@ func imageInspect(ctx context.Context, ref name.Reference, ci ContainerdInterfac
 	}, nil
 }
 
-func digestToString(digests []digest.Digest) []string {
-	strs := make([]string, 0, len(digests))
-	for _, d := range digests {
-		strs = append(strs, d.String())
-	}
-	return strs
-}
-
-// getImageInfoConfigFromOciImage creates an instance of container.Config based on ocispec.ImageConfig
+// ocispec.Image -> *container.Config
 func getImageInfoConfigFromOciImage(img ocispec.Image) *container.Config {
 	volumes := make(map[string]struct{})
 	for k, obj := range img.Config.Volumes {
@@ -186,14 +135,15 @@ func getImageInfoConfigFromOciImage(img ocispec.Image) *container.Config {
 	}
 }
 
-func containerToOci(ctx context.Context, cfg ocispec.Descriptor, ci ContainerdInterface) (ocispec.Image, error) {
+// containerd.Image -> ocispec.Image
+func containerdToOci(ctx context.Context, img containerd.Image, cfg ocispec.Descriptor) (ocispec.Image, error) {
 	var ociImage ocispec.Image
 
 	switch cfg.MediaType {
 	case ocispec.MediaTypeImageConfig, images.MediaTypeDockerSchema2Config, "application/octet-stream":
-		data, err := ci.GetOCIImageBytes(ctx)
+		data, err := content.ReadBlob(ctx, img.ContentStore(), cfg)
 		if err != nil {
-			return ocispec.Image{}, err
+			return ocispec.Image{}, xerrors.Errorf("GetOCIImageBytes:: failed to read blob: %v", err)
 		}
 		err = json.Unmarshal(data, &ociImage)
 		if err != nil {
@@ -203,4 +153,12 @@ func containerToOci(ctx context.Context, cfg ocispec.Descriptor, ci ContainerdIn
 		return ocispec.Image{}, xerrors.Errorf("containerToOci: invalid image config media type: %v", cfg.MediaType)
 	}
 	return ociImage, nil
+}
+
+func digestToString(digests []digest.Digest) []string {
+	strs := make([]string, 0, len(digests))
+	for _, d := range digests {
+		strs = append(strs, d.String())
+	}
+	return strs
 }
