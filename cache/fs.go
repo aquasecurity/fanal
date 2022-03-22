@@ -116,7 +116,7 @@ func (fs FSCache) GetArtifact(artifactID string) (types.ArtifactInfo, error) {
 // DeleteBlob removes blob by Id
 func (fs FSCache) DeleteBlob(blobID string) error {
 	err := fs.db.Update(func(tx *bolt.Tx) error {
-		err := tx.Bucket([]byte(artifactBucket)).DeleteBucket([]byte(blobID))
+		err := tx.Bucket([]byte(blobBucket)).Delete([]byte(blobID))
 		if err != nil {
 			return xerrors.Errorf("unable to delete blob from cache (%s): %w", blobID, err)
 		}
