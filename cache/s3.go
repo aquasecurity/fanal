@@ -40,7 +40,9 @@ func (c S3Cache) PutArtifact(artifactID string, artifactConfig types.ArtifactInf
 }
 
 func (c S3Cache) DeleteBlob(blobID string) error {
-	err := c.DeleteBlob(blobID)
+	key := fmt.Sprintf("%s/%s/%s", blobBucket, c.prefix, blobID)
+	input := &s3.DeleteBucketInput{Bucket: aws.String(key)}
+	_, err := c.s3Client.DeleteBucket(input)
 	if err != nil {
 		return xerrors.Errorf("unable to delete blob (%s) from cache: %w", blobID, err)
 	}
