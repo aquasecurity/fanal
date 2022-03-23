@@ -30,5 +30,5 @@ func (o *Option) Sort() {
 
 type Artifact interface {
 	Inspect(ctx context.Context) (reference types.ArtifactReference, err error)
-	Clean(artifact types.ArtifactReference) error
+	Clean(reference types.ArtifactReference) error
 }
