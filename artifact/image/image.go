@@ -120,7 +120,7 @@ func (a Artifact) Inspect(ctx context.Context) (types.ArtifactReference, error) 
 	}, nil
 }
 
-func (_ Artifact) Clean(_ types.ArtifactReference) error {
+func (Artifact) Clean(_ types.ArtifactReference) error {
 	return nil
 }
 
