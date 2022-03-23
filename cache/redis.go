@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/go-redis/redis/v8"
+	"github.com/hashicorp/go-multierror"
 	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/fanal/types"
@@ -50,11 +51,15 @@ func (c RedisCache) PutBlob(blobID string, blobInfo types.BlobInfo) error {
 	}
 	return nil
 }
-func (c RedisCache) DeleteBlob(blobIDs []string) {
+func (c RedisCache) DeleteBlobs(blobIDs []string) error {
+	var errs error
 	for _, blobID := range blobIDs {
 		key := fmt.Sprintf("%s::%s::%s", redisPrefix, artifactBucket, blobID)
-		c.client.Del(context.TODO(), key)
+		if err := c.client.Del(context.TODO(), key).Err(); err != nil {
+			errs = multierror.Append(errs, err)
+		}
 	}
+	return errs
 }
 
 func (c RedisCache) GetArtifact(artifactID string) (types.ArtifactInfo, error) {
