@@ -50,13 +50,11 @@ func (c RedisCache) PutBlob(blobID string, blobInfo types.BlobInfo) error {
 	}
 	return nil
 }
-func (c RedisCache) DeleteBlob(blobID string) error {
-	key := fmt.Sprintf("%s::%s::%s", redisPrefix, artifactBucket, blobID)
-	err := c.client.Del(context.TODO(), key).Err()
-	if err != nil {
-		return xerrors.Errorf("failed to delete blob (%s) from Redis value: %w", blobID, err)
+func (c RedisCache) DeleteBlob(blobIDs []string) {
+	for _, blobID := range blobIDs {
+		key := fmt.Sprintf("%s::%s::%s", redisPrefix, artifactBucket, blobID)
+		c.client.Del(context.TODO(), key)
 	}
-	return nil
 }
 
 func (c RedisCache) GetArtifact(artifactID string) (types.ArtifactInfo, error) {

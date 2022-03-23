@@ -120,8 +120,7 @@ func (a Artifact) Inspect(ctx context.Context) (types.ArtifactReference, error) 
 	}, nil
 }
 
-func (Artifact) Clean(_ types.ArtifactReference) error {
-	return nil
+func (Artifact) Clean(_ types.ArtifactReference) {
 }
 
 func (a Artifact) calcCacheKeys(imageID string, diffIDs []string) (string, []string, map[string]string, error) {

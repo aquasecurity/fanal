@@ -29,8 +29,8 @@ type ArtifactCache interface {
 	// PutBlob stores blob information such as layer information in local cache
 	PutBlob(blobID string, blobInfo types.BlobInfo) (err error)
 
-	// DeleteBlob removes blob by Id
-	DeleteBlob(blobID string) error
+	// DeleteBlob removes blobs by IDs
+	DeleteBlob(blobIDs []string)
 }
 
 // LocalArtifactCache always uses local cache

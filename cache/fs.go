@@ -114,18 +114,14 @@ func (fs FSCache) GetArtifact(artifactID string) (types.ArtifactInfo, error) {
 }
 
 // DeleteBlob removes blob by Id
-func (fs FSCache) DeleteBlob(blobID string) error {
-	err := fs.db.Update(func(tx *bolt.Tx) error {
-		err := tx.Bucket([]byte(blobBucket)).Delete([]byte(blobID))
-		if err != nil {
-			return xerrors.Errorf("unable to delete blob from cache (%s): %w", blobID, err)
+func (fs FSCache) DeleteBlob(blobIDs []string) {
+	fs.db.Update(func(tx *bolt.Tx) error {
+		bucket := tx.Bucket([]byte(blobBucket))
+		for _, blobID := range blobIDs {
+			bucket.Delete([]byte(blobID))
 		}
 		return nil
 	})
-	if err != nil {
-		return xerrors.Errorf("DB delete blob error: %w", err)
-	}
-	return nil
 }
 
 // PutArtifact stores artifact information such as image metadata in local cache

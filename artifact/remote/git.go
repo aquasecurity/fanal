@@ -81,8 +81,7 @@ func (a Artifact) Inspect(ctx context.Context) (types.ArtifactReference, error) 
 	return ref, nil
 }
 
-func (Artifact) Clean(_ types.ArtifactReference) error {
-	return nil
+func (Artifact) Clean(_ types.ArtifactReference) {
 }
 
 func newURL(rawurl string) (*url.URL, error) {
