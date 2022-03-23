@@ -165,3 +165,7 @@ func (a Artifact) Inspect(ctx context.Context) (types.ArtifactReference, error) 
 		BlobIDs: []string{cacheKey},
 	}, nil
 }
+
+func (a Artifact) Clean(artifact types.ArtifactReference) error {
+	return a.cache.DeleteBlob(artifact.ID)
+}
