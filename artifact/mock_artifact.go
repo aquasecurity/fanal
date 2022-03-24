@@ -46,16 +46,7 @@ func (_m *MockArtifact) ApplyCleanExpectations(expectations []ArtifactCleanExpec
 
 // Clean provides a mock function with given fields: reference
 func (_m *MockArtifact) Clean(reference types.ArtifactReference) error {
-	ret := _m.Called(reference)
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(types.ArtifactReference) error); ok {
-		r0 = rf(reference)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
+	return nil
 }
 
 type ArtifactInspectArgs struct {

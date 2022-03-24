@@ -552,12 +552,11 @@ func TestRedisCache_DeleteBlobs(t *testing.T) {
 
 			err = c.DeleteBlobs(tt.args.blobIDs)
 			if tt.wantErr != "" {
-				require.NotNil(t, err)
+				require.Error(t, err)
 				assert.Contains(t, err.Error(), tt.wantErr)
 				return
-			} else {
-				assert.NoError(t, err)
 			}
+			assert.NoError(t, err)
 		})
 	}
 }
