@@ -115,10 +115,10 @@ func (fs FSCache) GetArtifact(artifactID string) (types.ArtifactInfo, error) {
 	return info, nil
 }
 
-// DeleteBlob removes blob by Id
+// DeleteBlobs removes blobs by IDs
 func (fs FSCache) DeleteBlobs(blobIDs []string) error {
 	var errs error
-	fs.db.Update(func(tx *bolt.Tx) error {
+	err := fs.db.Update(func(tx *bolt.Tx) error {
 		bucket := tx.Bucket([]byte(blobBucket))
 		for _, blobID := range blobIDs {
 			if err := bucket.Delete([]byte(blobID)); err != nil {
@@ -127,6 +127,9 @@ func (fs FSCache) DeleteBlobs(blobIDs []string) error {
 		}
 		return nil
 	})
+	if err != nil {
+		return xerrors.Errorf("DB delete error: %w", err)
+	}
 	return errs
 }
 
