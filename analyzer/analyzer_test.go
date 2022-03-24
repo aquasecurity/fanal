@@ -234,6 +234,29 @@ func TestAnalysisResult_Merge(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "ubuntu must be replaced with ubuntu esm",
+			fields: fields{
+				OS: &types.OS{
+					Family: aos.Ubuntu, // this must be overwritten
+					Name:   "16.04",
+				},
+			},
+			args: args{
+				new: &analyzer.AnalysisResult{
+					OS: &types.OS{
+						Family: aos.Ubuntu,
+						Name:   "16.04-ESM",
+					},
+				},
+			},
+			want: analyzer.AnalysisResult{
+				OS: &types.OS{
+					Family: aos.Ubuntu,
+					Name:   "16.04-ESM",
+				},
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

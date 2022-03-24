@@ -131,6 +131,15 @@ func (r *AnalysisResult) Merge(new *AnalysisResult) {
 	defer r.m.Unlock()
 
 	if new.OS != nil {
+		if r.OS != nil {
+			// Ubuntu has ESM program: https://ubuntu.com/security/esm
+			// OS version and esm status are stored in different files.
+			// We must update OS version after parsing ESM config file.
+			if r.OS.Family == aos.Ubuntu && new.OS.Family == aos.Ubuntu {
+				r.OS = new.OS
+			}
+		}
+
 		// OLE also has /etc/redhat-release and it detects OLE as RHEL by mistake.
 		// In that case, OS must be overwritten with the content of /etc/oracle-release.
 		// There is the same problem between Debian and Ubuntu.
