@@ -167,5 +167,5 @@ func (a Artifact) Inspect(ctx context.Context) (types.ArtifactReference, error) 
 }
 
 func (a Artifact) Clean(reference types.ArtifactReference) error {
-	return a.cache.DeleteBlobs([]string{reference.ID})
+	return a.cache.DeleteBlobs(reference.BlobIDs)
 }
