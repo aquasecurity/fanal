@@ -113,10 +113,8 @@ func esmEnabled(config string) bool {
 	}
 
 	for _, s := range st.Services { // Find ESM Service
-		if s.Name == esmServiceName {
-			if s.Status == esmStatusEnabled {
-				return true
-			}
+		if s.Name == esmServiceName && s.Status == esmStatusEnabled {
+			return true
 		}
 	}
 	return false

@@ -15,63 +15,58 @@ import (
 
 func Test_ubuntuOSAnalyzer_Analyze(t *testing.T) {
 	tests := []struct {
-		name            string
-		firstInputFile  string
-		secondInputFile string // info about ESM is stored in different file
-		want            *analyzer.AnalysisResult
-		wantErr         string
+		name       string
+		inputFiles []string // info about ESM is stored in different file
+		want       *analyzer.AnalysisResult
+		wantErr    string
 	}{
 		{
-			name:           "happy path. Only lsb-release file received.",
-			firstInputFile: "testdata/lsb-release",
+			name:       "happy path. Only lsb-release file received.",
+			inputFiles: []string{"testdata/lsb-release"},
 			want: &analyzer.AnalysisResult{
 				OS: &types.OS{Family: "ubuntu", Name: "18.04"},
 			},
 		},
 		{
-			name:           "happy path. Received only status.json file with esm enabled.",
-			firstInputFile: "testdata/esm_enable_status.json",
-			want:           nil,
+			name:       "happy path. Received only status.json file with esm enabled.",
+			inputFiles: []string{"testdata/esm_enable_status.json"},
+			want:       nil,
 		},
 		{
-			name:           "happy path. Received only status.json file with esm disabled.",
-			firstInputFile: "testdata/esm_enable_status.json",
-			want:           nil,
+			name:       "happy path. Received only status.json file with esm disabled.",
+			inputFiles: []string{"testdata/esm_enable_status.json"},
+			want:       nil,
 		},
 		{
-			name:            "happy path. Received lsb-release then status.json with esm enabled.",
-			firstInputFile:  "testdata/lsb-release",
-			secondInputFile: "testdata/esm_enable_status.json",
+			name:       "happy path. Received lsb-release then status.json with esm enabled.",
+			inputFiles: []string{"testdata/lsb-release", "testdata/esm_enable_status.json"},
 			want: &analyzer.AnalysisResult{
 				OS: &types.OS{Family: "ubuntu", Name: "18.04-ESM"},
 			},
 		},
 		{
-			name:            "happy path. Received lsb-release then status.json with esm disabled.",
-			firstInputFile:  "testdata/lsb-release",
-			secondInputFile: "testdata/esm_disable_status.json",
-			want:            nil,
+			name:       "happy path. Received lsb-release then status.json with esm disabled.",
+			inputFiles: []string{"testdata/lsb-release", "testdata/esm_disable_status.json"},
+			want:       nil,
 		},
 		{
-			name:            "happy path. Received status.json with esm enabled then lsb-release",
-			firstInputFile:  "testdata/esm_enable_status.json",
-			secondInputFile: "testdata/lsb-release",
+			name:       "happy path. Received status.json with esm enabled then lsb-release",
+			inputFiles: []string{"testdata/esm_enable_status.json", "testdata/lsb-release"},
 			want: &analyzer.AnalysisResult{
 				OS: &types.OS{Family: "ubuntu", Name: "18.04-ESM"},
 			},
 		},
 		{
-			name:            "happy path. Received status.json with esm disabled then lsb-release",
-			firstInputFile:  "testdata/esm_disable_status.json",
-			secondInputFile: "testdata/lsb-release",
+			name:       "happy path. Received status.json with esm disabled then lsb-release",
+			inputFiles: []string{"testdata/esm_disable_status.json", "testdata/lsb-release"},
 			want: &analyzer.AnalysisResult{
 				OS: &types.OS{Family: "ubuntu", Name: "18.04"},
 			},
 		},
 		{
-			name:           "sad path",
-			firstInputFile: "testdata/invalid",
-			wantErr:        "ubuntu: unable to analyze OS information",
+			name:       "sad path",
+			inputFiles: []string{"testdata/invalid"},
+			wantErr:    "ubuntu: unable to analyze OS information",
 		},
 	}
 	for _, tt := range tests {
@@ -79,23 +74,19 @@ func Test_ubuntuOSAnalyzer_Analyze(t *testing.T) {
 			savedOsVersion := osVersion
 			defer func() { osVersion = savedOsVersion }()
 			a := ubuntuOSAnalyzer{}
-			f, err := os.Open(tt.firstInputFile)
-			require.NoError(t, err)
-			defer f.Close()
-
 			ctx := context.Background()
-			got, err := a.Analyze(ctx, analyzer.AnalysisInput{
-				FilePath: createFilePathFromTestFile(tt.firstInputFile),
-				Content:  f,
-			})
 
-			if tt.secondInputFile != "" {
-				f, err := os.Open(tt.secondInputFile)
+			var got *analyzer.AnalysisResult
+			var err error
+
+			for _, inputFile := range tt.inputFiles {
+				var f *os.File
+				f, err = os.Open(inputFile)
 				require.NoError(t, err)
 				defer f.Close()
 
 				got, err = a.Analyze(ctx, analyzer.AnalysisInput{
-					FilePath: createFilePathFromTestFile(tt.secondInputFile),
+					FilePath: createFilePathFromTestFile(inputFile),
 					Content:  f,
 				})
 			}
