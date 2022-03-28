@@ -74,7 +74,7 @@ func TestGetLocalContainerdImage(t *testing.T) {
 		t.Logf("Identifier: %s, Name: %s\n", ref.Identifier(), ref.Name())
 
 		//Identifier: latest, Name: index.docker.io/library/redis:latest
-		img, _, err := daemon.ContainerdImage(targetPath+"/containerd.sock", ref, ctx)
+		img, _, err := daemon.ContainerdImage(targetPath+"/containerd.sock", imgRef, ref, ctx)
 		require.NoError(t, err)
 		require.NotNil(t, img)
 
