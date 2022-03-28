@@ -40,7 +40,7 @@ func imageWriter(client *containerd.Client, img containerd.Image) imageSave {
 }
 
 // ContainerdImage implements v1.Image by extending
-func ContainerdImage(containerdSocket string, ref name.Reference, ctx context.Context) (Image, func(), error) {
+func ContainerdImage(containerdSocket, imageName string, ref name.Reference, ctx context.Context) (Image, func(), error) {
 	cleanup := func() {}
 	cli, err := containerd.New(containerdSocket)
 
@@ -48,7 +48,7 @@ func ContainerdImage(containerdSocket string, ref name.Reference, ctx context.Co
 		return nil, cleanup, xerrors.Errorf("tryContainerdDaemon: failed to initialize a docker client: %w", err)
 	}
 
-	i, err := cli.GetImage(ctx, ref.Name())
+	i, err := cli.GetImage(ctx, imageName)
 
 	if err != nil {
 		return nil, cleanup, err
@@ -72,7 +72,7 @@ func ContainerdImage(containerdSocket string, ref name.Reference, ctx context.Co
 	}
 
 	return &image{
-		opener:  imageOpener(ctx, ref.Name(), f, imageWriter(cli, i)),
+		opener:  imageOpener(ctx, imageName, f, imageWriter(cli, i)),
 		inspect: inspect,
 	}, cleanup, nil
 }
@@ -106,8 +106,8 @@ func imageInspect(ctx context.Context, img containerd.Image, ref name.Reference)
 		Created:      createAt,
 		ID:           string(descriptor.Digest),
 		Os:           ociImage.OS,
-		RepoDigests:  []string{fmt.Sprintf("%s@%s", ref.Context().String(), string(descriptor.Digest))},
-		RepoTags:     []string{ref.Name()},
+		RepoDigests:  []string{fmt.Sprintf("%s@%s", ref.Context().RepositoryStr(), string(descriptor.Digest))},
+		RepoTags:     []string{fmt.Sprintf("%s:%s", ref.Context().RepositoryStr(), ref.Identifier())},
 		RootFS: api.RootFS{
 			Type:   ociImage.RootFS.Type,
 			Layers: digestToString(ociImage.RootFS.DiffIDs),

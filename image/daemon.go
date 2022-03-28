@@ -41,7 +41,7 @@ func tryPodmanDaemon(ref string) (types.Image, func(), error) {
 func tryContainerdDaemon(imageName string, ref name.Reference) (types.Image, func(), error) {
 	ctx := namespaces.WithNamespace(context.Background(), defaultContainerdNamespace)
 
-	img, cleanup, err := daemon.ContainerdImage(defaultContainerdSocket, ref, ctx)
+	img, cleanup, err := daemon.ContainerdImage(defaultContainerdSocket, imageName, ref, ctx)
 
 	if err != nil {
 		return nil, cleanup, err
