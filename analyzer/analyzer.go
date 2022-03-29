@@ -131,12 +131,6 @@ func (r *AnalysisResult) Merge(new *AnalysisResult) {
 	defer r.m.Unlock()
 
 	if new.OS != nil {
-		// OLE also has /etc/redhat-release and it detects OLE as RHEL by mistake.
-		// In that case, OS must be overwritten with the content of /etc/oracle-release.
-		// There is the same problem between Debian and Ubuntu.
-		//if r.OS == nil || r.OS.Family == aos.RedHat || r.OS.Family == aos.Debian {
-		//	r.OS = new.OS
-		//}
 		r.OS = MergeOsVersion(r.OS, new.OS)
 	}
 
