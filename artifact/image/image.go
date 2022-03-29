@@ -150,10 +150,11 @@ func (a Artifact) inspect(ctx context.Context, missingImage string, layerKeys []
 	errCh := make(chan error)
 
 	var osFound types.OS
+	inspectLayerCtx := context.WithValue(ctx, "osVersion", &analyzer.VersionOS{})
 	for _, k := range layerKeys {
 		go func(ctx context.Context, layerKey string) {
 			diffID := layerKeyMap[layerKey]
-			layerInfo, err := a.inspectLayer(ctx, diffID)
+			layerInfo, err := a.inspectLayer(inspectLayerCtx, diffID)
 			if err != nil {
 				errCh <- xerrors.Errorf("failed to analyze layer: %s : %w", diffID, err)
 				return

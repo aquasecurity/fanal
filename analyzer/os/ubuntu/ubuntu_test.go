@@ -17,12 +17,14 @@ func Test_ubuntuOSAnalyzer_Analyze(t *testing.T) {
 	tests := []struct {
 		name       string
 		inputFiles []string // info about ESM is stored in different file
+		contextKey string
 		want       *analyzer.AnalysisResult
 		wantErr    string
 	}{
 		{
 			name:       "happy path. Only lsb-release file received.",
 			inputFiles: []string{"testdata/lsb-release"},
+			contextKey: "osVersion",
 			want: &analyzer.AnalysisResult{
 				OS: &types.OS{Family: "ubuntu", Name: "18.04"},
 			},
@@ -30,16 +32,19 @@ func Test_ubuntuOSAnalyzer_Analyze(t *testing.T) {
 		{
 			name:       "happy path. Received only status.json file with esm enabled.",
 			inputFiles: []string{"testdata/esm_enable_status.json"},
+			contextKey: "osVersion",
 			want:       nil,
 		},
 		{
 			name:       "happy path. Received only status.json file with esm disabled.",
 			inputFiles: []string{"testdata/esm_enable_status.json"},
+			contextKey: "osVersion",
 			want:       nil,
 		},
 		{
 			name:       "happy path. Received lsb-release then status.json with esm enabled.",
 			inputFiles: []string{"testdata/lsb-release", "testdata/esm_enable_status.json"},
+			contextKey: "osVersion",
 			want: &analyzer.AnalysisResult{
 				OS: &types.OS{Family: "ubuntu", Name: "18.04-ESM"},
 			},
@@ -47,11 +52,13 @@ func Test_ubuntuOSAnalyzer_Analyze(t *testing.T) {
 		{
 			name:       "happy path. Received lsb-release then status.json with esm disabled.",
 			inputFiles: []string{"testdata/lsb-release", "testdata/esm_disable_status.json"},
+			contextKey: "osVersion",
 			want:       nil,
 		},
 		{
 			name:       "happy path. Received status.json with esm enabled then lsb-release",
 			inputFiles: []string{"testdata/esm_enable_status.json", "testdata/lsb-release"},
+			contextKey: "osVersion",
 			want: &analyzer.AnalysisResult{
 				OS: &types.OS{Family: "ubuntu", Name: "18.04-ESM"},
 			},
@@ -59,22 +66,28 @@ func Test_ubuntuOSAnalyzer_Analyze(t *testing.T) {
 		{
 			name:       "happy path. Received status.json with esm disabled then lsb-release",
 			inputFiles: []string{"testdata/esm_disable_status.json", "testdata/lsb-release"},
+			contextKey: "osVersion",
 			want: &analyzer.AnalysisResult{
 				OS: &types.OS{Family: "ubuntu", Name: "18.04"},
 			},
 		},
 		{
-			name:       "sad path",
+			name:       "sad path. lsb-release file is wrong",
 			inputFiles: []string{"testdata/invalid"},
+			contextKey: "osVersion",
 			wantErr:    "ubuntu: unable to analyze OS information",
+		},
+		{
+			name:       "sad path. Context key is wrong",
+			inputFiles: []string{"testdata/invalid"},
+			contextKey: "badContextKey",
+			wantErr:    "ubuntu: unable to analyze OS information, context == nil",
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			savedOsVersion := osVersion
-			defer func() { osVersion = savedOsVersion }()
 			a := ubuntuOSAnalyzer{}
-			ctx := context.Background()
+			ctx := context.WithValue(context.Background(), tt.contextKey, &analyzer.VersionOS{})
 
 			var got *analyzer.AnalysisResult
 			var err error

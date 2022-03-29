@@ -41,6 +41,10 @@ type AnalysisOptions struct {
 	Offline bool
 }
 
+type VersionOS struct { // Used in context to build osVersion from different files
+	Version string
+}
+
 type analyzer interface {
 	Type() Type
 	Version() int

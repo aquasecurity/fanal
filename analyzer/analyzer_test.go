@@ -392,7 +392,7 @@ func TestAnalyzeFile(t *testing.T) {
 			info, err := os.Stat(tt.args.testFilePath)
 			require.NoError(t, err)
 
-			ctx := context.Background()
+			ctx := context.WithValue(context.Background(), "osVersion", &analyzer.VersionOS{})
 			err = a.AnalyzeFile(ctx, &wg, limit, got, "", tt.args.filePath, info,
 				func() (dio.ReadSeekCloserAt, error) {
 					if tt.args.testFilePath == "testdata/error" {

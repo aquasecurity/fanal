@@ -30,7 +30,6 @@ const (
 )
 
 var (
-	osVersion     = ""
 	requiredFiles = []string{
 		ubuntuConfFilePath,
 		esmConfFilePath,
@@ -39,7 +38,14 @@ var (
 
 type ubuntuOSAnalyzer struct{}
 
-func (a ubuntuOSAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisInput) (*analyzer.AnalysisResult, error) {
+func (a ubuntuOSAnalyzer) Analyze(ctx context.Context, input analyzer.AnalysisInput) (*analyzer.AnalysisResult, error) {
+	// context is used to get version number/ESM status from different files/layers
+	contextData := ctx.Value("osVersion")
+	if contextData == nil {
+		return nil, xerrors.Errorf("ubuntu: %w, context == nil", aos.AnalyzeOSError)
+	}
+	osVersion := contextData.(*analyzer.VersionOS)
+
 	isUbuntu := false
 	scanner := bufio.NewScanner(input.Content)
 	for scanner.Scan() {
@@ -51,30 +57,30 @@ func (a ubuntuOSAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisInpu
 
 		if isUbuntu && strings.HasPrefix(line, "DISTRIB_RELEASE=") {
 			version := strings.TrimSpace(line[16:])
-			if osVersion == esmVersionSuffix {
+			if osVersion.Version == esmVersionSuffix {
 				version = fmt.Sprintf("%s-%s", version, esmVersionSuffix)
 			}
-			osVersion = version
+			osVersion.Version = version
 			return &analyzer.AnalysisResult{
 				OS: &types.OS{
 					Family: aos.Ubuntu,
-					Name:   osVersion,
+					Name:   osVersion.Version,
 				},
 			}, nil
 		}
 
 		if input.FilePath == esmConfFilePath { // Check esm config file
 			if esmEnabled(line) {
-				if osVersion != "" {
-					osVersion = fmt.Sprintf("%s-%s", osVersion, esmVersionSuffix)
+				if osVersion.Version != "" {
+					osVersion.Version = fmt.Sprintf("%s-%s", osVersion.Version, esmVersionSuffix)
 					return &analyzer.AnalysisResult{
 						OS: &types.OS{
 							Family: aos.Ubuntu,
-							Name:   osVersion,
+							Name:   osVersion.Version,
 						},
 					}, nil
 				} else {
-					osVersion = esmVersionSuffix
+					osVersion.Version = esmVersionSuffix
 				}
 			}
 			return nil, nil

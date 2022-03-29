@@ -79,6 +79,7 @@ func (a Artifact) Inspect(ctx context.Context) (types.ArtifactReference, error) 
 	var wg sync.WaitGroup
 	result := new(analyzer.AnalysisResult)
 	limit := semaphore.NewWeighted(parallel)
+	analyzeFileCtx := context.WithValue(ctx, "osVersion", &analyzer.VersionOS{})
 
 	err := a.walker.Walk(a.rootPath, func(filePath string, info os.FileInfo, opener analyzer.Opener) error {
 		directory := a.rootPath
@@ -96,7 +97,7 @@ func (a Artifact) Inspect(ctx context.Context) (types.ArtifactReference, error) 
 		}
 
 		opts := analyzer.AnalysisOptions{Offline: a.artifactOption.Offline}
-		if err = a.analyzer.AnalyzeFile(ctx, &wg, limit, result, directory, filePath, info, opener, opts); err != nil {
+		if err = a.analyzer.AnalyzeFile(analyzeFileCtx, &wg, limit, result, directory, filePath, info, opener, opts); err != nil {
 			return xerrors.Errorf("analyze file (%s): %w", filePath, err)
 		}
 		return nil
