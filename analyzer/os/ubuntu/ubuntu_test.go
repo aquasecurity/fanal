@@ -3,6 +3,7 @@ package ubuntu
 import (
 	"context"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/aquasecurity/fanal/types"
@@ -20,11 +21,23 @@ func Test_ubuntuOSAnalyzer_Analyze(t *testing.T) {
 		wantErr   string
 	}{
 		{
-			name:      "happy path",
+			name:      "happy path. Parse lsb-release file",
 			inputFile: "testdata/lsb-release",
 			want: &analyzer.AnalysisResult{
 				OS: &types.OS{Family: "ubuntu", Name: "18.04"},
 			},
+		},
+		{
+			name:      "happy path. Parse status.json file(ESM enabled)",
+			inputFile: "testdata/esm_enabled_status.json",
+			want: &analyzer.AnalysisResult{
+				OS: &types.OS{Family: "ubuntu", Name: "ESM"},
+			},
+		},
+		{
+			name:      "happy path. Parse status.json file(ESM disabled)",
+			inputFile: "testdata/esm_disabled_status.json",
+			want:      nil,
 		},
 		{
 			name:      "sad path",
@@ -41,7 +54,7 @@ func Test_ubuntuOSAnalyzer_Analyze(t *testing.T) {
 
 			ctx := context.Background()
 			got, err := a.Analyze(ctx, analyzer.AnalysisInput{
-				FilePath: "etc/lsb-release",
+				FilePath: createFilePathFromTestFile(tt.inputFile),
 				Content:  f,
 			})
 			if tt.wantErr != "" {
@@ -79,5 +92,13 @@ func Test_ubuntuOSAnalyzer_Required(t *testing.T) {
 			got := a.Required(tt.filePath, nil)
 			assert.Equal(t, tt.want, got)
 		})
+	}
+}
+
+func createFilePathFromTestFile(testFile string) string {
+	if strings.HasSuffix(testFile, "status.json") {
+		return esmConfFilePath
+	} else {
+		return ubuntuConfFilePath
 	}
 }

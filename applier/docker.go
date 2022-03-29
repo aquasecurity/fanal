@@ -2,6 +2,7 @@ package applier
 
 import (
 	"fmt"
+	"github.com/aquasecurity/fanal/analyzer"
 	"strings"
 	"time"
 
@@ -97,7 +98,7 @@ func ApplyLayers(layers []types.BlobInfo) types.ArtifactDetail {
 		}
 
 		if layer.OS != nil {
-			mergedLayer.OS = layer.OS
+			mergedLayer.OS = analyzer.MergeOsVersion(mergedLayer.OS, layer.OS)
 		}
 
 		for _, pkgInfo := range layer.PackageInfos {

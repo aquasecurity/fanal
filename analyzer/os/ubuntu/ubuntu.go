@@ -3,6 +3,7 @@ package ubuntu
 import (
 	"bufio"
 	"context"
+	"encoding/json"
 	"os"
 	"strings"
 
@@ -18,9 +19,19 @@ func init() {
 	analyzer.RegisterAnalyzer(&ubuntuOSAnalyzer{})
 }
 
-const version = 1
+const (
+	version            = 1
+	ubuntuConfFilePath = "etc/lsb-release"
+	esmConfFilePath    = "var/lib/ubuntu-advantage/status.json"
+	esmServiceName     = "esm-infra"
+	esmStatusEnabled   = "enabled"
+	esmVersionSuffix   = "ESM"
+)
 
-var requiredFiles = []string{"etc/lsb-release"}
+var requiredFiles = []string{
+	ubuntuConfFilePath,
+	esmConfFilePath,
+}
 
 type ubuntuOSAnalyzer struct{}
 
@@ -42,6 +53,19 @@ func (a ubuntuOSAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisInpu
 				},
 			}, nil
 		}
+
+		if input.FilePath == esmConfFilePath { // Check esm config file
+			if esmEnabled(line) {
+				return &analyzer.AnalysisResult{
+					OS: &types.OS{
+						Family: aos.Ubuntu,
+						Name:   esmVersionSuffix,
+					},
+				}, nil
+			} else {
+				return nil, nil
+			}
+		}
 	}
 	return nil, xerrors.Errorf("ubuntu: %w", aos.AnalyzeOSError)
 }
@@ -56,4 +80,29 @@ func (a ubuntuOSAnalyzer) Type() analyzer.Type {
 
 func (a ubuntuOSAnalyzer) Version() int {
 	return version
+}
+
+type status struct {
+	Services []service `json:"services"`
+}
+
+type service struct {
+	Name   string `json:"name"`
+	Status string `json:"status"`
+}
+
+func esmEnabled(config string) bool {
+	st := status{}
+
+	err := json.Unmarshal([]byte(config), &st)
+	if err != nil {
+		return false
+	}
+
+	for _, s := range st.Services { // Find ESM Service
+		if s.Name == esmServiceName && s.Status == esmStatusEnabled {
+			return true
+		}
+	}
+	return false
 }
