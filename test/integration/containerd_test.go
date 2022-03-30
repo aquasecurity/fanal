@@ -4,8 +4,10 @@
 package integration
 
 import (
+	"compress/gzip"
 	"context"
 	"os"
+	"path"
 	"path/filepath"
 	"testing"
 
@@ -18,13 +20,23 @@ import (
 	"github.com/testcontainers/testcontainers-go/wait"
 )
 
-const (
-	redisImageName  = "index.docker.io/library/redis:latest"
-	mysqlImageName  = "index.docker.io/library/mysql:latest"
-	pythonImageName = "index.docker.io/library/python:3.4-alpine"
-)
-
 func TestGetLocalContainerdImage(t *testing.T) {
+	tests := []struct {
+		name       string
+		imageName  string
+		tarArchive string
+	}{
+		{
+			name:       "alpine",
+			imageName:  "docker.io/library/alpine:3.10",
+			tarArchive: "alpine-310.tar.gz",
+		},
+		{
+			name:       "python",
+			imageName:  "docker.io/library/python:3.4-alpine",
+			tarArchive: "python_3.4-alpine.tar.gz",
+		},
+	}
 	ctx := context.Background()
 
 	ctx = namespaces.WithNamespace(ctx, "default")
@@ -65,18 +77,23 @@ func TestGetLocalContainerdImage(t *testing.T) {
 	var nameOpts []name.Option
 	nameOpts = append(nameOpts, name.Insecure)
 
-	for _, imgRef := range []string{redisImageName, mysqlImageName, pythonImageName} {
-		_, err = cli.Pull(ctx, imgRef)
-		require.NoError(t, err)
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			archive, err := os.Open(path.Join("testdata/fixtures", test.tarArchive))
+			require.NoError(t, err)
+			uncompressedArchive, err := gzip.NewReader(archive)
+			require.NoError(t, err)
+			defer archive.Close()
+			_, err = cli.Import(ctx, uncompressedArchive)
+			require.NoError(t, err)
 
-		ref, err := name.ParseReference(imgRef, nameOpts...)
-		require.NoError(t, err)
-		t.Logf("Identifier: %s, Name: %s\n", ref.Identifier(), ref.Name())
+			ref, err := name.ParseReference(test.imageName, nameOpts...)
+			require.NoError(t, err)
+			t.Logf("Identifier: %s, Name: %s\n", ref.Identifier(), ref.Name())
 
-		//Identifier: latest, Name: index.docker.io/library/redis:latest
-		img, _, err := daemon.ContainerdImage(targetPath+"/containerd.sock", imgRef, ref, ctx)
-		require.NoError(t, err)
-		require.NotNil(t, img)
-
+			img, _, err := daemon.ContainerdImage(targetPath+"/containerd.sock", test.imageName, ref, ctx)
+			require.NoError(t, err)
+			require.NotNil(t, img)
+		})
 	}
 }
