@@ -32,9 +32,9 @@ func TestGetLocalContainerdImage(t *testing.T) {
 			tarArchive: "alpine-310.tar.gz",
 		},
 		{
-			name:       "python",
-			imageName:  "docker.io/library/python:3.4-alpine",
-			tarArchive: "python_3.4-alpine.tar.gz",
+			name:       "alpine 3.15.0",
+			imageName:  "public.ecr.aws/docker/library/alpine:3.15.0",
+			tarArchive: "alpine-3.15.0.tar.gz",
 		},
 	}
 	ctx := context.Background()
