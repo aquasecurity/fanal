@@ -123,6 +123,7 @@ func (a Artifact) Inspect(ctx context.Context) (types.ArtifactReference, error) 
 		PackageInfos:      result.PackageInfos,
 		Applications:      result.Applications,
 		Misconfigurations: misconfs,
+		Secrets:           result.Secrets,
 		SystemFiles:       result.SystemInstalledFiles,
 	}
 

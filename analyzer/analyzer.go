@@ -81,6 +81,7 @@ type AnalysisResult struct {
 	PackageInfos         []types.PackageInfo
 	Applications         []types.Application
 	Configs              []types.Config
+	Secrets              []types.Secret
 	SystemInstalledFiles []string // A list of files installed by OS package manager
 
 	// For Red Hat
@@ -92,8 +93,8 @@ type AnalysisResult struct {
 }
 
 func (r *AnalysisResult) isEmpty() bool {
-	return r.OS == nil && len(r.PackageInfos) == 0 && len(r.Applications) == 0 &&
-		len(r.Configs) == 0 && len(r.SystemInstalledFiles) == 0 && r.BuildInfo == nil && len(r.CustomResources) == 0
+	return r.OS == nil && len(r.PackageInfos) == 0 && len(r.Applications) == 0 && len(r.Configs) == 0 &&
+		len(r.Secrets) == 0 && len(r.SystemInstalledFiles) == 0 && r.BuildInfo == nil && len(r.CustomResources) == 0
 }
 
 func (r *AnalysisResult) Sort() {
@@ -117,6 +118,19 @@ func (r *AnalysisResult) Sort() {
 				return app.Libraries[i].Name < app.Libraries[j].Name
 			}
 			return app.Libraries[i].Version < app.Libraries[j].Version
+		})
+	}
+
+	// Secrets
+	sort.Slice(r.Secrets, func(i, j int) bool {
+		return r.Secrets[i].FilePath < r.Secrets[j].FilePath
+	})
+	for _, sec := range r.Secrets {
+		sort.Slice(sec.Findings, func(i, j int) bool {
+			if sec.Findings[i].RuleID != sec.Findings[j].RuleID {
+				return sec.Findings[i].RuleID < sec.Findings[j].RuleID
+			}
+			return sec.Findings[i].StartLine < sec.Findings[j].StartLine
 		})
 	}
 }
@@ -148,7 +162,7 @@ func (r *AnalysisResult) Merge(new *AnalysisResult) {
 	}
 
 	r.Configs = append(r.Configs, new.Configs...)
-
+	r.Secrets = append(r.Secrets, new.Secrets...)
 	r.SystemInstalledFiles = append(r.SystemInstalledFiles, new.SystemInstalledFiles...)
 
 	if new.BuildInfo != nil {
