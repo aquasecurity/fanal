@@ -15,12 +15,19 @@ type Scanner struct {
 }
 
 type Rule struct {
-	ID       string
-	Type     types.SecretRuleType
-	Severity string
-	Title    string
-	Regex    *regexp.Regexp
-	Path     *regexp.Regexp
+	ID        string
+	Type      types.SecretRuleType
+	Severity  string
+	Title     string
+	Regex     *regexp.Regexp
+	Path      *regexp.Regexp
+	AllowList AllowList
+}
+
+type AllowList struct {
+	Title   string
+	Regexes []*regexp.Regexp
+	Paths   []*regexp.Regexp
 }
 
 func NewScanner(rulePath string) Scanner {
@@ -45,10 +52,52 @@ func (s Scanner) Scan(args ScanArgs) types.Secret {
 			continue
 		}
 
+		if rule.AllowList.Paths != nil && len(rule.AllowList.Paths) > 0 {
+			for _, path := range rule.AllowList.Paths {
+				if path.MatchString(args.FilePath) {
+					continue
+				}
+			}
+		}
+
 		// Detect secrets
-		locations := rule.Regex.FindAllIndex(args.Content, -1)
-		if len(locations) == 0 {
+		optionalLocations := rule.Regex.FindAllIndex(args.Content, -1)
+		if len(optionalLocations) == 0 {
 			continue
+		}
+
+		// Find allowed locations
+		allowedLocations := make([][]int, 0)
+		if rule.AllowList.Regexes != nil && len(rule.AllowList.Regexes) > 0 {
+			for _, regex := range rule.AllowList.Regexes {
+				allowedLocations = append(allowedLocations, regex.FindAllIndex(args.Content, -1)...)
+			}
+		}
+
+		locations := make([][]int, 0)
+		// Find locations that are not in allowed locations
+		if len(allowedLocations) > 0 {
+			for _, currLocation := range optionalLocations {
+				found := false
+				if currLocation[1] < allowedLocations[0][0] {
+					locations = append(locations, currLocation)
+					continue
+				}
+				for _, allowedLocation := range allowedLocations {
+					if allowedLocation[0] > currLocation[1] {
+						break
+					}
+					if currLocation[0] >= allowedLocation[0] && currLocation[1] <= allowedLocation[1] {
+						found = true
+						break
+					}
+				}
+				if !found {
+					locations = append(locations, currLocation)
+				}
+			}
+		} else {
+			locations = optionalLocations
 		}
 
 		for _, loc := range locations {
