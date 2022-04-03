@@ -34,31 +34,18 @@ var builtinRules = []Rule{
 		Severity: "CRITICAL",
 		Regex:    regexp.MustCompile(`gho_[0-9a-zA-Z]{36}`),
 	},
-	{
-		ID:       "generic-secret",
-		Type:     RuleTypeGenericSecret,
-		Title:    "Generic Secret",
-		Severity: "HIGH",
-		Regex:    regexp.MustCompile(`(?i)(?:dbpasswd|dbhost|token|secret|password|pwd)\w*["']?\]?\s*[=:]\s*['"]([\w@0-9a-zA-Z-_\/+!{}\/=. ]{5,160})['"]`),
-		AllowList: AllowList{
-			Title: "False positives",
-			Paths: []*regexp.Regexp{regexp.MustCompile(`(.*?)(\.env|gradle\.properties)$`)},
-			Regexes: []*regexp.Regexp{
-				regexp.MustCompile(`(?i)\w*(?:prefix|suffix|default|field|key)\w*\s*[=:]`),
-				regexp.MustCompile(`(?i)\w*(prefix|suffix|field|default|key|$\{.*?\})\w*[\]"']*\s+[=:]`),
-				regexp.MustCompile(`(?i)=[\s*\w\S]*[\[\(][[\s\S\w]*[\]\)]`),
-				regexp.MustCompile(`(?i)=\s*(\w*[\.\/]\w*)+`),
-				regexp.MustCompile(`(?i)[=:]\s*['"](\w*[\.\/]\w*)+['"]`),
-				regexp.MustCompile(`(?i)[=:]\s*\S*(sample|example|false|true|some)`),
-				regexp.MustCompile(`(?i)ENC[[]`),
-				regexp.MustCompile(`xox[baprs]-([0-9a-zA-Z]{10,48})`),
-				regexp.MustCompile(`(?i)(.{0,20})?['"][0-9a-f]{32}-us[0-9]{1,2}['"]`),
-				regexp.MustCompile(`(A3T[A-Z0-9]|AKIA|AGPA|AIDA|AROA|AIPA|ANPA|ANVA|ASIA)[A-Z0-9]{16}`),
-				regexp.MustCompile(`AIza[0-9A-Za-z\\-_]{35}`),
-				regexp.MustCompile(`[:=]\s*\w*?(\.\w*)+`),
-				regexp.MustCompile(`[:=]\s*\w*?([\[\(]['"]?\w*['"]?[\]\)])+`),
-				regexp.MustCompile(`(?i)^\s*\[.*\]\s*[=:]`),
-			},
-		},
+}
+
+var builtinGlobalAllowList = AllowList{
+	Title: "global allow list",
+	Regexes: []*regexp.Regexp{
+		regexp.MustCompile(`219-09-9999`),
+		regexp.MustCompile(`078-05-1120`),
+		regexp.MustCompile(`(9[0-9]{2}|666)-\d{2}-\d{4}`),
+	},
+	Paths: []*regexp.Regexp{
+		regexp.MustCompile(`gitleaks.toml`),
+		regexp.MustCompile(`(.*?)(jpg|gif|doc|pdf|bin|svg|socket)$`),
+		regexp.MustCompile(`(go.mod|go.sum)$`),
 	},
 }

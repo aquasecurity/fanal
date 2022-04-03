@@ -36,7 +36,8 @@ func NewScanner(rulePath string) Scanner {
 		// TODO: Load custom rules here
 	}
 	return Scanner{
-		Rules: builtinRules, // TODO: Merge built-in rules and custom rules here
+		Rules:     builtinRules, // TODO: Merge built-in rules and custom rules here
+		AllowList: builtinGlobalAllowList,
 	}
 }
 
