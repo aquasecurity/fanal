@@ -11,7 +11,8 @@ import (
 var lineSep = []byte{'\n'}
 
 type Scanner struct {
-	Rules []Rule
+	Rules     []Rule
+	AllowList AllowList
 }
 
 type Rule struct {
@@ -46,6 +47,18 @@ type ScanArgs struct {
 
 func (s Scanner) Scan(args ScanArgs) types.Secret {
 	var findings []types.SecretFinding
+
+	if s.AllowList.Paths != nil && len(s.AllowList.Paths) > 0 {
+		for _, path := range s.AllowList.Paths {
+			if path.MatchString(args.FilePath) {
+				return types.Secret{
+					FilePath: args.FilePath,
+					Findings: findings,
+				}
+			}
+		}
+	}
+
 	for _, rule := range s.Rules {
 		// Check if the file path should be scanned by this rule
 		if rule.Path != nil && !rule.Path.MatchString(args.FilePath) {
@@ -69,6 +82,9 @@ func (s Scanner) Scan(args ScanArgs) types.Secret {
 		// Find allowed locations
 		allowedLocations := make([][]int, 0)
 		if rule.AllowList.Regexes != nil && len(rule.AllowList.Regexes) > 0 {
+			if s.AllowList.Regexes != nil && len(s.AllowList.Regexes) > 0 {
+				rule.AllowList.Regexes = append(rule.AllowList.Regexes, s.AllowList.Regexes...)
+			}
 			for _, regex := range rule.AllowList.Regexes {
 				allowedLocations = append(allowedLocations, regex.FindAllIndex(args.Content, -1)...)
 			}
