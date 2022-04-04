@@ -36,8 +36,7 @@ func NewScanner(rulePath string) Scanner {
 		// TODO: Load custom rules here
 	}
 	return Scanner{
-		Rules:     builtinRules, // TODO: Merge built-in rules and custom rules here
-		AllowList: builtinGlobalAllowList,
+		Rules: builtinRules, // TODO: Merge built-in rules and custom rules here
 	}
 }
 
@@ -49,14 +48,9 @@ type ScanArgs struct {
 func (s Scanner) Scan(args ScanArgs) types.Secret {
 	var findings []types.SecretFinding
 
-	if s.AllowList.Paths != nil && len(s.AllowList.Paths) > 0 {
-		for _, path := range s.AllowList.Paths {
-			if path.MatchString(args.FilePath) {
-				return types.Secret{
-					FilePath: args.FilePath,
-					Findings: findings,
-				}
-			}
+	for _, path := range s.AllowList.Paths {
+		if path.MatchString(args.FilePath) {
+			return types.Secret{}
 		}
 	}
 
@@ -66,12 +60,15 @@ func (s Scanner) Scan(args ScanArgs) types.Secret {
 			continue
 		}
 
-		if rule.AllowList.Paths != nil && len(rule.AllowList.Paths) > 0 {
-			for _, path := range rule.AllowList.Paths {
-				if path.MatchString(args.FilePath) {
-					continue
-				}
+		skipRule := false
+		for _, path := range rule.AllowList.Paths {
+			if path.MatchString(args.FilePath) {
+				skipRule = true
+				break
 			}
+		}
+		if skipRule {
+			continue
 		}
 
 		// Detect secrets
@@ -82,13 +79,11 @@ func (s Scanner) Scan(args ScanArgs) types.Secret {
 
 		// Find allowed locations
 		allowedLocations := make([][]int, 0)
-		if rule.AllowList.Regexes != nil && len(rule.AllowList.Regexes) > 0 {
-			if s.AllowList.Regexes != nil && len(s.AllowList.Regexes) > 0 {
-				rule.AllowList.Regexes = append(rule.AllowList.Regexes, s.AllowList.Regexes...)
-			}
-			for _, regex := range rule.AllowList.Regexes {
-				allowedLocations = append(allowedLocations, regex.FindAllIndex(args.Content, -1)...)
-			}
+		if len(s.AllowList.Regexes) > 0 {
+			rule.AllowList.Regexes = append(rule.AllowList.Regexes, s.AllowList.Regexes...)
+		}
+		for _, regex := range rule.AllowList.Regexes {
+			allowedLocations = append(allowedLocations, regex.FindAllIndex(args.Content, -1)...)
 		}
 
 		locations := make([][]int, 0)

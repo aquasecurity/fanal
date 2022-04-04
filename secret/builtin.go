@@ -43,9 +43,4 @@ var builtinGlobalAllowList = AllowList{
 		regexp.MustCompile(`078-05-1120`),
 		regexp.MustCompile(`(9[0-9]{2}|666)-\d{2}-\d{4}`),
 	},
-	Paths: []*regexp.Regexp{
-		regexp.MustCompile(`gitleaks.toml`),
-		regexp.MustCompile(`(.*?)(jpg|gif|doc|pdf|bin|svg|socket)$`),
-		regexp.MustCompile(`(go.mod|go.sum)$`),
-	},
 }
