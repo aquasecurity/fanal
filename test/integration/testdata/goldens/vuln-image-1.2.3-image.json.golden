@@ -1,0 +1,116 @@
+{
+    "Name": "docker.io/knqyf263/vuln-image:1.2.3",
+    "Type": "container_image",
+    "ID": "sha256:b06ecf3e78f6336bd84914f224326dd95646178ca08a56e98aeba817fa0e5f2b",
+    "BlobIDs": [
+        "sha256:949dcd7b0ca95e3cbfef9ec9b865814d2254543a3333cb9eb38dfb6590a425f7",
+        "sha256:3fb21bba4c95c1dd160404a5f8974a5bad29048bb6802de7503d1df1de113897",
+        "sha256:c23c6e3fadb4a4130cba48bf7e5e9ae4549d7d9c9f59aca3b41bc6ab0b2f4dd1",
+        "sha256:bf1963ed87b7d287fb30e8afa64fd96b55f274bffbb1021894881cdfc5c19369",
+        "sha256:778c0ebb703fb79ce9703bbf43c0033b8547a71158e4bd40b82263beb693a1e9",
+        "sha256:48a97f9172f53777006192caf647eeaec595b033a55df0a354a2ad1c473377b5",
+        "sha256:b9f2fd7448a8bc2aa570d6b484eafd1d3a204abfd87be85325b69101eaaced09",
+        "sha256:456c1c45b56971eccdbd6cb81f541ee2dfdebebe9d575444c5bf0e2a33a1453e",
+        "sha256:a0da7573e3ba685273bf52122a84c94512444b054f2abc7a0ed29b20a8043087",
+        "sha256:d8dbe7e0eea7d25f8f2be4564a5791d77458cb50b4a57062226d855053462c6c",
+        "sha256:f8fe2a9886114a8b083fd15d63f9d455cb4c09947486641e12d95d687b66c999",
+        "sha256:344c2faa57ed3e8d2e5c644aaaf9fb59fe1857ece0cb059c8531e8e73d8cc513",
+        "sha256:875f66e34b5e1b5140d68e121d2235bef51bb23e224e2d4c50df9c09a31f848e",
+        "sha256:743a2eb4e77cbc7cce72e4f4f6708d7674c8021bc1cc53b3a0c5b824c16b61f3",
+        "sha256:5342b22d49ce0cbde430c167136860728d17529ec7dfc74e8f70225b1be8669f",
+        "sha256:a37b443c3b2ed0ba42a6cb4f6172ffc3ece54f22ef9f75dc8098126fcac78a25",
+        "sha256:0f525c1b62aa483c06408a653ddf33b298b713feef44200b7c6e5eeb5f910913",
+        "sha256:7349422acfb8096268d5ddb4302845b72d162c412f8746bd5c0c78dc3970429d",
+        "sha256:547f0cc7544462b6fc9613180c1dd89b2546b7ee16976001a9c679b22a33bc2a",
+        "sha256:94b7147454bfdfb30b346fde6f64d54438c21cc6cf6445ef23029c264e424479"
+    ],
+    "ImageMetadata": {
+        "ID": "sha256:c17083664da903e13e9092fa3a3a1aeee2431aa2728298e3dbcec72f26369c41",
+        "DiffIDs": [
+            "sha256:ebf12965380b39889c99a9c02e82ba465f887b45975b6e389d42e9e6a3857888",
+            "sha256:0ea33a93585cf1917ba522b2304634c3073654062d5282c1346322967790ef33",
+            "sha256:9922bc15eeefe1637b803ef2106f178152ce19a391f24aec838cbe2e48e73303",
+            "sha256:dc00fbef458ad3204bbb548e2d766813f593d857b845a940a0de76aed94c94d1",
+            "sha256:5cb2a5009179b1e78ecfef81a19756328bb266456cf9a9dbbcf9af8b83b735f0",
+            "sha256:9bdb2c849099a99c8ab35f6fd7469c623635e8f4479a0a5a3df61e22bae509f6",
+            "sha256:6408527580eade39c2692dbb6b0f6a9321448d06ea1c2eef06bb7f37da9c5013",
+            "sha256:83abef706f5ae199af65d1c13d737d0eb36219f0d18e36c6d8ff06159df39a63",
+            "sha256:c03283c257abd289a30b4f5e9e1345da0e9bfdc6ca398ee7e8fac6d2c1456227",
+            "sha256:2da3602d664dd3f71fae83cbc566d4e80b432c6ee8bb4efd94c8e85122f503d4",
+            "sha256:82c59ac8ee582542648e634ca5aff9a464c68ff8a054f105a58689fb52209e34",
+            "sha256:2f4a5c9187c249834ebc28783bd3c65bdcbacaa8baa6620ddaa27846dd3ef708",
+            "sha256:6ca56f561e677ae06c3bc87a70792642d671a4416becb9a101577c1a6e090e36",
+            "sha256:154ad0735c360b212b167f424d33a62305770a1fcfb6363882f5c436cfbd9812",
+            "sha256:b2a1a2d80bf0c747a4f6b0ca6af5eef23f043fcdb1ed4f3a3e750aef2dc68079",
+            "sha256:4d116f47cb2cc77a88d609b9805f2b011a5d42339b67300166654b3922685ac9",
+            "sha256:9b1326af1cf81505fd8e596b7f622b679ae5d290e46b25214ba26e4f7c661d60",
+            "sha256:a66245f885f2a210071e415f0f8ac4f21f5e4eab6c0435b4082e5c3637c411cb",
+            "sha256:ba17950e91742d6ac7055ea3a053fe764486658ca1ce8188f1e427b1fe2bc4da",
+            "sha256:6ef42db7800507577383edf1937cb203b9b85f619feed6046594208748ceb52c"
+        ],
+        "RepoTags": [
+            "knqyf263/vuln-image:1.2.3"
+        ],
+        "RepoDigests": [
+            "knqyf263/vuln-image@sha256:c17083664da903e13e9092fa3a3a1aeee2431aa2728298e3dbcec72f26369c41"
+        ],
+        "ConfigFile": {
+            "architecture": "amd64",
+            "created": "2019-08-07T07:25:58.6516498Z",
+            "os": "linux",
+            "rootfs": {
+                "type": "layers",
+                "diff_ids": [
+                    "sha256:ebf12965380b39889c99a9c02e82ba465f887b45975b6e389d42e9e6a3857888",
+                    "sha256:0ea33a93585cf1917ba522b2304634c3073654062d5282c1346322967790ef33",
+                    "sha256:9922bc15eeefe1637b803ef2106f178152ce19a391f24aec838cbe2e48e73303",
+                    "sha256:dc00fbef458ad3204bbb548e2d766813f593d857b845a940a0de76aed94c94d1",
+                    "sha256:5cb2a5009179b1e78ecfef81a19756328bb266456cf9a9dbbcf9af8b83b735f0",
+                    "sha256:9bdb2c849099a99c8ab35f6fd7469c623635e8f4479a0a5a3df61e22bae509f6",
+                    "sha256:6408527580eade39c2692dbb6b0f6a9321448d06ea1c2eef06bb7f37da9c5013",
+                    "sha256:83abef706f5ae199af65d1c13d737d0eb36219f0d18e36c6d8ff06159df39a63",
+                    "sha256:c03283c257abd289a30b4f5e9e1345da0e9bfdc6ca398ee7e8fac6d2c1456227",
+                    "sha256:2da3602d664dd3f71fae83cbc566d4e80b432c6ee8bb4efd94c8e85122f503d4",
+                    "sha256:82c59ac8ee582542648e634ca5aff9a464c68ff8a054f105a58689fb52209e34",
+                    "sha256:2f4a5c9187c249834ebc28783bd3c65bdcbacaa8baa6620ddaa27846dd3ef708",
+                    "sha256:6ca56f561e677ae06c3bc87a70792642d671a4416becb9a101577c1a6e090e36",
+                    "sha256:154ad0735c360b212b167f424d33a62305770a1fcfb6363882f5c436cfbd9812",
+                    "sha256:b2a1a2d80bf0c747a4f6b0ca6af5eef23f043fcdb1ed4f3a3e750aef2dc68079",
+                    "sha256:4d116f47cb2cc77a88d609b9805f2b011a5d42339b67300166654b3922685ac9",
+                    "sha256:9b1326af1cf81505fd8e596b7f622b679ae5d290e46b25214ba26e4f7c661d60",
+                    "sha256:a66245f885f2a210071e415f0f8ac4f21f5e4eab6c0435b4082e5c3637c411cb",
+                    "sha256:ba17950e91742d6ac7055ea3a053fe764486658ca1ce8188f1e427b1fe2bc4da",
+                    "sha256:6ef42db7800507577383edf1937cb203b9b85f619feed6046594208748ceb52c"
+                ]
+            },
+            "config": {
+                "Cmd": [
+                    "composer"
+                ],
+                "Entrypoint": [
+                    "/bin/sh",
+                    "/docker-entrypoint.sh"
+                ],
+                "Env": [
+                    "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+                    "PHPIZE_DEPS=autoconf \t\tdpkg-dev dpkg \t\tfile \t\tg++ \t\tgcc \t\tlibc-dev \t\tmake \t\tpkgconf \t\tre2c",
+                    "PHP_INI_DIR=/usr/local/etc/php",
+                    "PHP_CFLAGS=-fstack-protector-strong -fpic -fpie -O2",
+                    "PHP_CPPFLAGS=-fstack-protector-strong -fpic -fpie -O2",
+                    "PHP_LDFLAGS=-Wl,-O1 -Wl,--hash-style=both -pie",
+                    "GPG_KEYS=1729F83938DA44E27BA0F4D3DBDB397470D12172 B1B44D8F021E4E2D6021E995DC9FF8D3EE5AF27F",
+                    "PHP_VERSION=7.2.11",
+                    "PHP_URL=https://secure.php.net/get/php-7.2.11.tar.xz/from/this/mirror",
+                    "PHP_ASC_URL=https://secure.php.net/get/php-7.2.11.tar.xz.asc/from/this/mirror",
+                    "PHP_SHA256=da1a705c0bc46410e330fc6baa967666c8cd2985378fb9707c01a8e33b01d985",
+                    "PHP_MD5=",
+                    "COMPOSER_ALLOW_SUPERUSER=1",
+                    "COMPOSER_HOME=/tmp",
+                    "COMPOSER_VERSION=1.7.2"
+                ],
+                "Volumes": {},
+                "WorkingDir": "/app"
+            }
+        }
+    }
+}

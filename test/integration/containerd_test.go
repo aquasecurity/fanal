@@ -6,12 +6,20 @@ package integration
 import (
 	"compress/gzip"
 	"context"
+	"encoding/json"
+	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
 	"testing"
 
+	"github.com/aquasecurity/fanal/analyzer/config"
+	"github.com/aquasecurity/fanal/artifact"
+	aimage "github.com/aquasecurity/fanal/artifact/image"
+	"github.com/aquasecurity/fanal/cache"
+	"github.com/aquasecurity/fanal/image"
 	"github.com/aquasecurity/fanal/image/daemon"
+	"github.com/aquasecurity/fanal/types"
 	"github.com/containerd/containerd"
 	"github.com/containerd/containerd/namespaces"
 	"github.com/google/go-containerregistry/pkg/name"
@@ -20,34 +28,57 @@ import (
 	"github.com/testcontainers/testcontainers-go/wait"
 )
 
-func TestGetLocalContainerdImage(t *testing.T) {
-	tests := []struct {
-		name       string
-		imageName  string
-		tarArchive string
-	}{
-		{
-			name:       "alpine",
-			imageName:  "docker.io/library/alpine:3.10",
-			tarArchive: "alpine-310.tar.gz",
-		},
-		{
-			name:       "alpine 3.15.0",
-			imageName:  "public.ecr.aws/docker/library/alpine:3.15.0",
-			tarArchive: "alpine-3.15.0.tar.gz",
-		},
+type daemonImage struct {
+	daemon.Image
+	name string
+}
+
+func (d daemonImage) Name() string {
+	return d.name
+}
+
+func (d daemonImage) ID() (string, error) {
+	return image.ID(d)
+}
+
+func (d daemonImage) LayerIDs() ([]string, error) {
+	return image.LayerIDs(d)
+}
+func loadArtifactReference(fname string) (*types.ArtifactReference, error) {
+	b, err := ioutil.ReadFile(fname)
+	if err != nil {
+		return nil, err
 	}
-	ctx := context.Background()
+	r := &types.ArtifactReference{}
 
-	ctx = namespaces.WithNamespace(ctx, "default")
-	normalPath, err := filepath.Abs(".")
-	require.NoError(t, err)
-	hostPath := filepath.Join(normalPath, "data", "test")
-	targetPath := filepath.Join(hostPath, "containerd")
-	defer os.RemoveAll(hostPath)
+	err = json.Unmarshal(b, r)
+	if err != nil {
+		return nil, err
+	}
+
+	return r, nil
+}
+
+func configureTestDataPaths() (normalPath, targetPath, socketPath string, err error) {
+	normalPath, err = filepath.Abs(".")
+	if err != nil {
+		return "", "", "", err
+	}
+	normalPath = filepath.Join(normalPath, "data", "test")
+	targetPath = filepath.Join(normalPath, "containerd")
+
 	err = os.MkdirAll(targetPath, os.ModePerm)
-	require.NoError(t, err)
 
+	if err != nil {
+		return "", "", "", err
+	}
+
+	socketPath = filepath.Join(targetPath, "containerd.sock")
+
+	return normalPath, targetPath, socketPath, nil
+}
+
+func startContainerd(ctx context.Context, hostPath string) (testcontainers.Container, error) {
 	req := testcontainers.ContainerRequest{
 		Name:       "containerd",
 		Image:      "docker.io/geyingqi/dockercontainerd:alpine",
@@ -63,19 +94,63 @@ func TestGetLocalContainerdImage(t *testing.T) {
 		ContainerRequest: req,
 		Started:          true,
 	})
-	require.NoError(t, err)
+
+	if err != nil {
+		return nil, err
+	}
 
 	_, err = containerdC.Exec(ctx, []string{"chmod", "666", "/run/containerd/containerd.sock"})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return containerdC, nil
+}
+
+func TestGetLocalContainerdImage(t *testing.T) {
+	tests := []struct {
+		name       string
+		imageName  string
+		tarArchive string
+		golden     string
+	}{
+		{
+			name:       "alpine 3.1.0",
+			imageName:  "docker.io/library/alpine:3.10",
+			tarArchive: "alpine-310.tar.gz",
+			golden:     "testdata/goldens/alpine-3.10-image.json.golden",
+		},
+		{
+			name:       "vulnimage",
+			imageName:  "docker.io/knqyf263/vuln-image:1.2.3",
+			tarArchive: "vulnimage.tar.gz",
+			golden:     "testdata/goldens/vuln-image-1.2.3-image.json.golden",
+		},
+	}
+	ctx := namespaces.WithNamespace(context.Background(), "default")
+
+	testDataPath, targetPath, socketPath, err := configureTestDataPaths()
+	require.NoError(t, err)
+	defer os.RemoveAll(testDataPath)
+
+	containerdC, err := startContainerd(ctx, testDataPath)
 	require.NoError(t, err)
 
 	defer containerdC.Terminate(ctx)
 
-	cli, err := containerd.New(targetPath + "/containerd.sock")
+	cli, err := containerd.New(socketPath)
 	require.NoError(t, err)
 	defer cli.Close()
 
-	var nameOpts []name.Option
-	nameOpts = append(nameOpts, name.Insecure)
+	c, err := cache.NewFSCache(targetPath)
+
+	require.NoError(t, err)
+
+	defer func() {
+		c.Clear()
+		c.Close()
+	}()
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
@@ -87,13 +162,102 @@ func TestGetLocalContainerdImage(t *testing.T) {
 			_, err = cli.Import(ctx, uncompressedArchive)
 			require.NoError(t, err)
 
-			ref, err := name.ParseReference(test.imageName, nameOpts...)
+			ref, err := name.ParseReference(test.imageName, name.Insecure)
 			require.NoError(t, err)
-			t.Logf("Identifier: %s, Name: %s\n", ref.Identifier(), ref.Name())
 
-			img, _, err := daemon.ContainerdImage(targetPath+"/containerd.sock", test.imageName, ref, ctx)
+			img, _, err := daemon.ContainerdImage(socketPath, test.imageName, ref, ctx)
 			require.NoError(t, err)
 			require.NotNil(t, img)
+
+			dImg := daemonImage{
+				Image: img,
+				name:  test.imageName,
+			}
+
+			art, err := aimage.NewArtifact(dImg, c, artifact.Option{}, config.ScannerOption{})
+			require.NoError(t, err)
+			require.NotNil(t, art)
+
+			artRef, err := art.Inspect(context.Background())
+			require.NoError(t, err)
+			require.NotNil(t, artRef)
+
+			expected, err := loadArtifactReference(test.golden)
+			require.NoError(t, err)
+			require.Equal(t, expected, &artRef)
+
 		})
 	}
+}
+func TestPullLocalContainerdImage(t *testing.T) {
+	tests := []struct {
+		name     string
+		imageRef string
+		golden   string
+	}{
+		{
+			name:     "alpine-3.10.2",
+			imageRef: "docker.io/library/alpine:3.10.2",
+			golden:   "testdata/goldens/docker-alpine-3.10.2-image.json.golden",
+		},
+	}
+	ctx := namespaces.WithNamespace(context.Background(), "default")
+
+	testDataPath, targetPath, socketPath, err := configureTestDataPaths()
+	require.NoError(t, err)
+	defer os.RemoveAll(testDataPath)
+
+	containerdC, err := startContainerd(ctx, testDataPath)
+	require.NoError(t, err)
+
+	defer containerdC.Terminate(ctx)
+
+	cli, err := containerd.New(socketPath)
+	require.NoError(t, err)
+	defer cli.Close()
+
+	c, err := cache.NewFSCache(targetPath)
+
+	require.NoError(t, err)
+
+	defer func() {
+		c.Clear()
+		c.Close()
+	}()
+
+	for _, test := range tests {
+		_, err = cli.Pull(ctx, test.imageRef)
+		require.NoError(t, err)
+
+		ref, err := name.ParseReference(test.imageRef, name.Insecure)
+		require.NoError(t, err)
+
+		img, _, err := daemon.ContainerdImage(socketPath, test.imageRef, ref, ctx)
+		require.NoError(t, err)
+		require.NotNil(t, img)
+
+		dImg := daemonImage{
+			Image: img,
+			name:  test.imageRef,
+		}
+
+		art, err := aimage.NewArtifact(dImg, c, artifact.Option{}, config.ScannerOption{})
+		require.NoError(t, err)
+		require.NotNil(t, art)
+
+		artRef, err := art.Inspect(context.Background())
+		require.NoError(t, err)
+		require.NotNil(t, artRef)
+
+		b, err := json.Marshal(artRef)
+		require.NoError(t, err)
+
+		t.Log(string(b))
+
+		expected, err := loadArtifactReference(test.golden)
+		require.NoError(t, err)
+		require.Equal(t, expected, &artRef)
+
+	}
+
 }
