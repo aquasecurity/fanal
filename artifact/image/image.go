@@ -96,7 +96,7 @@ func (a Artifact) Inspect(ctx context.Context) (types.ArtifactReference, error) 
 
 	missingImageKey := imageKey
 	if missingImage {
-		log.Logger.Debugf("Missing image ID: %s", imageID)
+		log.Logger.Debugf("Missing image ID in cache: %s", imageID)
 	} else {
 		missingImageKey = ""
 	}
@@ -118,6 +118,10 @@ func (a Artifact) Inspect(ctx context.Context) (types.ArtifactReference, error) 
 			ConfigFile:  *configFile,
 		},
 	}, nil
+}
+
+func (Artifact) Clean(_ types.ArtifactReference) error {
+	return nil
 }
 
 func (a Artifact) calcCacheKeys(imageID string, diffIDs []string) (string, []string, map[string]string, error) {
@@ -176,7 +180,6 @@ func (a Artifact) inspect(ctx context.Context, missingImage string, layerKeys []
 	}
 
 	if missingImage != "" {
-		log.Logger.Debugf("Missing image cache: %s", missingImage)
 		if err := a.inspectConfig(missingImage, osFound); err != nil {
 			return xerrors.Errorf("unable to analyze config: %w", err)
 		}
@@ -187,7 +190,7 @@ func (a Artifact) inspect(ctx context.Context, missingImage string, layerKeys []
 }
 
 func (a Artifact) inspectLayer(ctx context.Context, diffID string) (types.BlobInfo, error) {
-	log.Logger.Debugf("Missing diff ID: %s", diffID)
+	log.Logger.Debugf("Missing diff ID in cache: %s", diffID)
 
 	layerDigest, r, err := a.uncompressedLayer(diffID)
 	if err != nil {
