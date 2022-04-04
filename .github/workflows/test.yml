@@ -21,9 +21,8 @@ jobs:
         uses: golangci/golangci-lint-action@v3.1.0
         with:
           version: v1.43
-          args : --verbose
+          args : --verbose --enable=gofmt
           skip-go-installation: true
-          gofmt: true
   unittest:
     name: Unit Test
     runs-on: ubuntu-latest
