@@ -89,7 +89,7 @@ func (a packagingAnalyzer) analyzeEggZip(r io.ReaderAt, size int64) (io.ReadClos
 		return a.open(file)
 	}
 
-	return nil, nil
+	return nil, xerrors.Errorf("archive doesn't contain files with information about the package.")
 }
 
 func (a packagingAnalyzer) open(file *zip.File) (io.ReadCloser, error) {

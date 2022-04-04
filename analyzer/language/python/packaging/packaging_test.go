@@ -97,6 +97,11 @@ func Test_packagingAnalyzer_Analyze(t *testing.T) {
 				},
 			},
 		},
+		{
+			name:      "egg zip doesn't contain files with package info",
+			inputFile: "testdata/empty.egg",
+			wantErr:   "archive doesn't contain files with information about the package.",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
