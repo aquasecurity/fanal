@@ -23,6 +23,7 @@ jobs:
           version: v1.43
           args : --verbose
           skip-go-installation: true
+          gofmt: true
   unittest:
     name: Unit Test
     runs-on: ubuntu-latest
