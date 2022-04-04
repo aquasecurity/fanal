@@ -1,20 +1,19 @@
 module github.com/aquasecurity/fanal
 
-go 1.17
+go 1.18
 
 require (
 	github.com/Azure/azure-sdk-for-go v62.0.0+incompatible
-	github.com/Azure/go-autorest/autorest v0.11.24
+	github.com/Azure/go-autorest/autorest v0.11.25
 	github.com/Azure/go-autorest/autorest/adal v0.9.18
 	github.com/Azure/go-autorest/autorest/azure/auth v0.5.11
 	github.com/BurntSushi/toml v1.0.0
 	github.com/GoogleCloudPlatform/docker-credential-gcr v2.0.5+incompatible
 	github.com/alicebob/miniredis/v2 v2.18.0
-	github.com/aquasecurity/defsec v0.17.1
 	github.com/aquasecurity/go-dep-parser v0.0.0-20220404084355-b8c54558919c
 	github.com/aquasecurity/testdocker v0.0.0-20210911155206-e1e85f5a1516
 	github.com/aquasecurity/tfsec v1.8.0
-	github.com/aws/aws-sdk-go v1.43.8
+	github.com/aws/aws-sdk-go v1.43.31
 	github.com/docker/docker v20.10.12+incompatible
 	github.com/docker/go-connections v0.4.0
 	github.com/go-git/go-git/v5 v5.4.2
@@ -30,7 +29,7 @@ require (
 	github.com/kylelemons/godebug v1.1.0
 	github.com/mitchellh/mapstructure v1.4.3
 	github.com/moby/buildkit v0.9.3
-	github.com/open-policy-agent/opa v0.37.2
+	github.com/open-policy-agent/opa v0.38.1
 	github.com/opencontainers/go-digest v1.0.0
 	github.com/opencontainers/image-spec v1.0.2-0.20211117181255-693428a734f5
 	github.com/saracen/walker v0.0.0-20191201085201-324a081bae7e
@@ -42,13 +41,15 @@ require (
 	go.etcd.io/bbolt v1.3.6
 	go.uber.org/zap v1.21.0
 	golang.org/x/crypto v0.0.0-20220208233918-bba287dce954 // indirect
-	golang.org/x/mod v0.5.1
+	golang.org/x/mod v0.6.0-dev.0.20211013180041-c96bc1413d57
 	golang.org/x/net v0.0.0-20220127200216-cd36cc0744dd // indirect
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
 	golang.org/x/sys v0.0.0-20220114195835-da31bd327af9 // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1
 	sigs.k8s.io/yaml v1.3.0
 )
+
+require github.com/aquasecurity/defsec v0.17.1
 
 require (
 	cloud.google.com/go v0.99.0 // indirect
@@ -119,7 +120,7 @@ require (
 	github.com/morikuni/aec v1.0.0 // indirect
 	github.com/olekukonko/tablewriter v0.0.5 // indirect
 	github.com/opencontainers/runc v1.0.2 // indirect
-	github.com/owenrumney/squealer v0.3.1 // indirect
+	github.com/owenrumney/squealer v0.3.2 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rcrowley/go-metrics v0.0.0-20200313005456-10cdbea86bc0 // indirect
@@ -143,7 +144,7 @@ require (
 	golang.org/x/oauth2 v0.0.0-20211104180415-d3ed0bb246c8 // indirect
 	golang.org/x/text v0.3.7 // indirect
 	golang.org/x/time v0.0.0-20210220033141-f8bda1e9f3ba // indirect
-	golang.org/x/tools v0.1.7 // indirect
+	golang.org/x/tools v0.1.8-0.20211029000441-d6a9af8af023 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto v0.0.0-20211208223120-3a66f561d7aa // indirect
 	google.golang.org/grpc v1.44.0 // indirect
