@@ -43,7 +43,6 @@ func Test_gobinaryLibraryAnalyzer_Analyze(t *testing.T) {
 		{
 			name:      "broken elf",
 			inputFile: "testdata/broken_elf",
-			wantErr:   "unexpected EOF",
 		},
 	}
 	for _, tt := range tests {
