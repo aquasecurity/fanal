@@ -35,12 +35,3 @@ var builtinRules = []Rule{
 		Regex:    regexp.MustCompile(`gho_[0-9a-zA-Z]{36}`),
 	},
 }
-
-var builtinGlobalAllowList = AllowList{
-	Title: "global allow list",
-	Regexes: []*regexp.Regexp{
-		regexp.MustCompile(`219-09-9999`),
-		regexp.MustCompile(`078-05-1120`),
-		regexp.MustCompile(`(9[0-9]{2}|666)-\d{2}-\d{4}`),
-	},
-}
