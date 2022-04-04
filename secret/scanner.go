@@ -14,7 +14,6 @@ type Scanner struct {
 	Rules     []Rule
 	AllowList AllowList
 }
-
 type Rule struct {
 	ID        string
 	Type      types.SecretRuleType
@@ -23,6 +22,15 @@ type Rule struct {
 	Regex     *regexp.Regexp
 	Path      *regexp.Regexp
 	AllowList AllowList
+}
+
+type RuleResult struct {
+	RuleID        string
+	Type          types.SecretRuleType
+	Severity      string
+	Title         string
+	StartPosition int
+	EndPosition   int
 }
 
 type AllowList struct {
@@ -47,6 +55,7 @@ type ScanArgs struct {
 
 func (s Scanner) Scan(args ScanArgs) types.Secret {
 	var findings []types.SecretFinding
+	var allRulesResults []RuleResult
 
 	for _, path := range s.AllowList.Paths {
 		if path.MatchString(args.FilePath) {
@@ -55,6 +64,7 @@ func (s Scanner) Scan(args ScanArgs) types.Secret {
 	}
 
 	for _, rule := range s.Rules {
+		var ruleResults []RuleResult
 		// Check if the file path should be scanned by this rule
 		if rule.Path != nil && !rule.Path.MatchString(args.FilePath) {
 			continue
@@ -77,59 +87,85 @@ func (s Scanner) Scan(args ScanArgs) types.Secret {
 			continue
 		}
 
-		// Find allowed locations
-		allowedLocations := make([][]int, 0)
-		if len(s.AllowList.Regexes) > 0 {
-			rule.AllowList.Regexes = append(rule.AllowList.Regexes, s.AllowList.Regexes...)
+		// parse locations to rule results
+		for _, loc := range optionalLocations {
+			ruleResults = append(ruleResults, RuleResult{
+				RuleID:        rule.ID,
+				Type:          rule.Type,
+				Severity:      strings.ToUpper(rule.Severity),
+				Title:         rule.Title,
+				StartPosition: loc[0],
+				EndPosition:   loc[1],
+			})
 		}
+
+		// Find rule allowed locations
+		allowedLocations := make([][]int, 0)
 		for _, regex := range rule.AllowList.Regexes {
 			allowedLocations = append(allowedLocations, regex.FindAllIndex(args.Content, -1)...)
 		}
 
-		locations := make([][]int, 0)
-		// Find locations that are not in allowed locations
-		if len(allowedLocations) > 0 {
-			for _, currLocation := range optionalLocations {
-				found := false
-				if currLocation[1] < allowedLocations[0][0] {
-					locations = append(locations, currLocation)
-					continue
-				}
-				for _, allowedLocation := range allowedLocations {
-					if allowedLocation[0] > currLocation[1] {
-						break
-					}
-					if currLocation[0] >= allowedLocation[0] && currLocation[1] <= allowedLocation[1] {
-						found = true
-						break
-					}
-				}
-				if !found {
-					locations = append(locations, currLocation)
-				}
-			}
-		} else {
-			locations = optionalLocations
+		// remove results that are not in allowed locations
+		ruleResults = removeAllowedSecrets(ruleResults, allowedLocations)
+
+		allRulesResults = append(allRulesResults, ruleResults...)
+	}
+
+	if len(allRulesResults) > 0 && len(s.AllowList.Regexes) > 0 {
+		globalAllowedLocations := make([][]int, 0)
+		for _, regex := range s.AllowList.Regexes {
+			globalAllowedLocations = append(globalAllowedLocations, regex.FindAllIndex(args.Content, -1)...)
 		}
 
-		for _, loc := range locations {
-			start, end := loc[0], loc[1]
-			startLine, endLine, match := findLocation(start, end, args.Content)
-			findings = append(findings, types.SecretFinding{
-				RuleID:    rule.ID,
-				Type:      rule.Type,
-				Severity:  strings.ToUpper(rule.Severity),
-				Title:     rule.Title,
-				StartLine: startLine,
-				EndLine:   endLine,
-				Match:     match,
-			})
-		}
+		// Filter out allowed results
+		allRulesResults = removeAllowedSecrets(allRulesResults, globalAllowedLocations)
+	}
+
+	// parse to findings
+	for _, result := range allRulesResults {
+		startLine, endLine, match := findLocation(result.StartPosition, result.EndPosition, args.Content)
+		findings = append(findings, types.SecretFinding{
+			RuleID:    result.RuleID,
+			Type:      result.Type,
+			Severity:  result.Severity,
+			Title:     result.Title,
+			StartLine: startLine,
+			EndLine:   endLine,
+			Match:     match,
+		})
 	}
 
 	return types.Secret{
 		FilePath: args.FilePath,
 		Findings: findings,
+	}
+}
+
+func removeAllowedSecrets(allRuleResults []RuleResult, allowedLocations [][]int) []RuleResult {
+	if len(allowedLocations) > 0 {
+		results := make([]RuleResult, 0)
+		for _, result := range results {
+			found := false
+			if result.EndPosition < allowedLocations[0][0] {
+				results = append(results, result)
+				continue
+			}
+			for _, allowedLocation := range allowedLocations {
+				if allowedLocation[0] > result.EndPosition {
+					break
+				}
+				if result.StartPosition >= allowedLocation[0] && result.EndPosition <= allowedLocation[1] {
+					found = true
+					break
+				}
+			}
+			if !found {
+				results = append(results, result)
+			}
+		}
+		return results
+	} else {
+		return allRuleResults
 	}
 }
 
