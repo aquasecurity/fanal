@@ -44,12 +44,12 @@ func (d daemonImage) ID() (string, error) {
 func (d daemonImage) LayerIDs() ([]string, error) {
 	return image.LayerIDs(d)
 }
-func loadArtifactReference(fname string) (*types.ArtifactReference, error) {
+func loadImageMetaData(fname string) (*types.ImageMetadata, error) {
 	b, err := ioutil.ReadFile(fname)
 	if err != nil {
 		return nil, err
 	}
-	r := &types.ArtifactReference{}
+	r := &types.ImageMetadata{}
 
 	err = json.Unmarshal(b, r)
 	if err != nil {
@@ -143,17 +143,16 @@ func TestGetLocalContainerdImage(t *testing.T) {
 	require.NoError(t, err)
 	defer cli.Close()
 
-	c, err := cache.NewFSCache(targetPath)
-
-	require.NoError(t, err)
-
-	defer func() {
-		c.Clear()
-		c.Close()
-	}()
-
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
+			c, err := cache.NewFSCache(targetPath)
+			require.NoError(t, err)
+
+			defer func() {
+				c.Clear()
+				c.Close()
+			}()
+
 			archive, err := os.Open(path.Join("testdata/fixtures", test.tarArchive))
 			require.NoError(t, err)
 			uncompressedArchive, err := gzip.NewReader(archive)
@@ -182,13 +181,14 @@ func TestGetLocalContainerdImage(t *testing.T) {
 			require.NoError(t, err)
 			require.NotNil(t, artRef)
 
-			expected, err := loadArtifactReference(test.golden)
+			expected, err := loadImageMetaData(test.golden)
 			require.NoError(t, err)
-			require.Equal(t, expected, &artRef)
+			require.Equal(t, expected, &artRef.ImageMetadata)
 
 		})
 	}
 }
+
 func TestPullLocalContainerdImage(t *testing.T) {
 	tests := []struct {
 		name     string
@@ -216,16 +216,16 @@ func TestPullLocalContainerdImage(t *testing.T) {
 	require.NoError(t, err)
 	defer cli.Close()
 
-	c, err := cache.NewFSCache(targetPath)
-
-	require.NoError(t, err)
-
-	defer func() {
-		c.Clear()
-		c.Close()
-	}()
-
 	for _, test := range tests {
+		c, err := cache.NewFSCache(targetPath)
+
+		require.NoError(t, err)
+
+		defer func() {
+			c.Clear()
+			c.Close()
+		}()
+
 		_, err = cli.Pull(ctx, test.imageRef)
 		require.NoError(t, err)
 
@@ -254,9 +254,9 @@ func TestPullLocalContainerdImage(t *testing.T) {
 
 		t.Log(string(b))
 
-		expected, err := loadArtifactReference(test.golden)
+		expected, err := loadImageMetaData(test.golden)
 		require.NoError(t, err)
-		require.Equal(t, expected, &artRef)
+		require.Equal(t, expected, &artRef.ImageMetadata)
 
 	}
 
