@@ -41,11 +41,6 @@ func (w LayerTar) Walk(layer io.Reader, analyzeFn WalkFunc) ([]string, []string,
 			return nil, nil, xerrors.Errorf("failed to extract the archive: %w", err)
 		}
 
-		fi := hdr.FileInfo()
-		if !fi.Mode().IsRegular() {
-			continue
-		}
-
 		filePath := hdr.Name
 		filePath = strings.TrimLeft(filepath.Clean(filePath), "/")
 		fileDir, fileName := filepath.Split(filePath)
@@ -82,7 +77,7 @@ func (w LayerTar) Walk(layer io.Reader, analyzeFn WalkFunc) ([]string, []string,
 		}
 
 		// A symbolic/hard link or regular file will reach here.
-		if err = w.processFile(filePath, tr, fi, analyzeFn); err != nil {
+		if err = w.processFile(filePath, tr, hdr.FileInfo(), analyzeFn); err != nil {
 			return nil, nil, xerrors.Errorf("failed to process the file: %w", err)
 		}
 	}
