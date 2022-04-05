@@ -3,6 +3,7 @@ package daemon
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -42,6 +43,11 @@ func imageWriter(client *containerd.Client, img containerd.Image) imageSave {
 // ContainerdImage implements v1.Image by extending
 func ContainerdImage(containerdSocket, imageName string, ref name.Reference, ctx context.Context) (Image, func(), error) {
 	cleanup := func() {}
+
+	if _, err := os.Stat(containerdSocket); errors.Is(err, os.ErrNotExist) {
+		return nil, cleanup, xerrors.Errorf("Socket doesn't exist: %s", containerdSocket)
+	}
+
 	cli, err := containerd.New(containerdSocket)
 
 	if err != nil {
