@@ -94,7 +94,7 @@ func (s Scanner) ScanConfigs(ctx context.Context, files []types.Config) ([]types
 	misconfs = append(misconfs, results...)
 
 	// Scan CloudFormation files by CFSec
-	results, err = s.scanCloudFormation(cfFiles)
+	results, err = s.scanCloudFormation(ctx, cfFiles)
 	if err != nil {
 		return nil, xerrors.Errorf("scan cloudformation error: %w", err)
 	}
@@ -130,7 +130,7 @@ func (s Scanner) scanConfigsByRego(ctx context.Context, files []types.Config) ([
 	return misconfs, nil
 }
 
-func (s Scanner) scanCloudFormation(files []types.Config) ([]types.Misconfiguration, error) {
+func (s Scanner) scanCloudFormation(ctx context.Context, files []types.Config) ([]types.Misconfiguration, error) {
 	if len(files) == 0 {
 		return nil, nil
 	}
@@ -148,7 +148,7 @@ func (s Scanner) scanCloudFormation(files []types.Config) ([]types.Misconfigurat
 		}
 	}
 
-	results, err := s.cfScanner.Scan()
+	results, err := s.cfScanner.Scan(ctx)
 	if err != nil {
 		return nil, xerrors.Errorf("cloudformation scan error: %w", err)
 	}
