@@ -150,16 +150,16 @@ func removeAllowedSecrets(allRuleResults []RuleResult, allowedLocations [][]int)
 
 	results := make([]RuleResult, 0)
 	for _, result := range allRuleResults {
-		if !isResultInAllowedLocation(result, allowedLocations) {
+		if !isResultAllowed(result, allowedLocations) {
 			results = append(results, result)
 		}
 	}
 	return results
 }
 
-func isResultInAllowedLocation(result RuleResult, allowedLocations [][]int) bool {
+func isResultAllowed(result RuleResult, allowedLocations [][]int) bool {
 	for _, allowedLocation := range allowedLocations {
-		if result.StartPosition >= allowedLocation[0] && result.EndPosition <= allowedLocation[1] {
+		if result.StartPosition >= allowedLocation[0] && result.EndPosition <= allowedLocation[1] || result.StartPosition <= allowedLocation[0] && result.EndPosition >= allowedLocation[1] {
 			return true
 		}
 	}
