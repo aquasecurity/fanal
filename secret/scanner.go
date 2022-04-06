@@ -70,14 +70,7 @@ func (s Scanner) Scan(args ScanArgs) types.Secret {
 			continue
 		}
 
-		skipRule := false
-		for _, path := range rule.AllowList.Paths {
-			if path.MatchString(args.FilePath) {
-				skipRule = true
-				break
-			}
-		}
-		if skipRule {
+		if shouldSkipPass(args.FilePath, rule.AllowList.Paths) {
 			continue
 		}
 
@@ -100,7 +93,7 @@ func (s Scanner) Scan(args ScanArgs) types.Secret {
 		}
 
 		// Find rule allowed locations
-		allowedLocations := make([][]int, 0)
+		var allowedLocations [][]int
 		for _, regex := range rule.AllowList.Regexes {
 			allowedLocations = append(allowedLocations, regex.FindAllIndex(args.Content, -1)...)
 		}
@@ -141,32 +134,36 @@ func (s Scanner) Scan(args ScanArgs) types.Secret {
 	}
 }
 
-func removeAllowedSecrets(allRuleResults []RuleResult, allowedLocations [][]int) []RuleResult {
-	if len(allowedLocations) > 0 {
-		results := make([]RuleResult, 0)
-		for _, result := range results {
-			found := false
-			if result.EndPosition < allowedLocations[0][0] {
-				results = append(results, result)
-				continue
-			}
-			for _, allowedLocation := range allowedLocations {
-				if allowedLocation[0] > result.EndPosition {
-					break
-				}
-				if result.StartPosition >= allowedLocation[0] && result.EndPosition <= allowedLocation[1] {
-					found = true
-					break
-				}
-			}
-			if !found {
-				results = append(results, result)
-			}
+func shouldSkipPass(filePath string, allowPaths []*regexp.Regexp) bool {
+	for _, path := range allowPaths {
+		if path.MatchString(filePath) {
+			return true
 		}
-		return results
-	} else {
+	}
+	return false
+}
+
+func removeAllowedSecrets(allRuleResults []RuleResult, allowedLocations [][]int) []RuleResult {
+	if len(allowedLocations) == 0 {
 		return allRuleResults
 	}
+
+	results := make([]RuleResult, 0)
+	for _, result := range allRuleResults {
+		if !isResultInAllowedLocation(result, allowedLocations) {
+			results = append(results, result)
+		}
+	}
+	return results
+}
+
+func isResultInAllowedLocation(result RuleResult, allowedLocations [][]int) bool {
+	for _, allowedLocation := range allowedLocations {
+		if result.StartPosition >= allowedLocation[0] && result.EndPosition <= allowedLocation[1] {
+			return true
+		}
+	}
+	return false
 }
 
 func findLocation(start, end int, content []byte) (int, int, string) {
