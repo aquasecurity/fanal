@@ -196,9 +196,9 @@ func TestPullLocalContainerdImage(t *testing.T) {
 		golden   string
 	}{
 		{
-			name:     "alpine-3.10.2",
-			imageRef: "docker.io/library/alpine:3.10.2",
-			golden:   "testdata/goldens/docker-alpine-3.10.2-image.json.golden",
+			name:     "alpine-3.15 in aqua registry",
+			imageRef: "ghcr.io/aquasecurity/trivy-test-images/alpine:3.15",
+			golden:   "testdata/goldens/test-alpine-3.15.0-image.json.golden",
 		},
 	}
 	ctx := namespaces.WithNamespace(context.Background(), "default")

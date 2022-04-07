@@ -1,22 +1,22 @@
 {
-    "ID": "sha256:961769676411f082461f9ef46626dd7a2d1e2b2a38e6a44364bcbecf51e66dd4",
+    "ID": "sha256:0ac33e5f5afa79e084075e8698a22d574816eea8d7b7d480586835657c3e1c8b",
     "DiffIDs": [
-        "sha256:03901b4a2ea88eeaad62dbe59b072b28b6efa00491962b8741081c5df50c65e0"
+        "sha256:4fc242d58285699eca05db3cc7c7122a2b8e014d9481f323bd9277baacfa0628"
     ],
     "RepoTags": [
-        "library/alpine:3.10.2"
+        "aquasecurity/trivy-test-images/alpine:3.15"
     ],
     "RepoDigests": [
-        "library/alpine@sha256:961769676411f082461f9ef46626dd7a2d1e2b2a38e6a44364bcbecf51e66dd4"
+        "aquasecurity/trivy-test-images/alpine@sha256:0ac33e5f5afa79e084075e8698a22d574816eea8d7b7d480586835657c3e1c8b"
     ],
     "ConfigFile": {
         "architecture": "amd64",
-        "created": "2019-08-20T20:19:55.211423266Z",
+        "created": "2022-04-05T00:19:59.912662499Z",
         "os": "linux",
         "rootfs": {
             "type": "layers",
             "diff_ids": [
-                "sha256:03901b4a2ea88eeaad62dbe59b072b28b6efa00491962b8741081c5df50c65e0"
+                "sha256:4fc242d58285699eca05db3cc7c7122a2b8e014d9481f323bd9277baacfa0628"
             ]
         },
         "config": {
