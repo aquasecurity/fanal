@@ -11,17 +11,19 @@ import (
 var lineSep = []byte{'\n'}
 
 type Scanner struct {
-	Rules     []Rule
-	AllowList AllowList
+	Rules         []Rule
+	AllowList     AllowList
+	ExcludeBlocks ExcludeBlocks
 }
 type Rule struct {
-	ID        string
-	Type      types.SecretRuleType
-	Severity  string
-	Title     string
-	Regex     *regexp.Regexp
-	Path      *regexp.Regexp
-	AllowList AllowList
+	ID            string
+	Type          types.SecretRuleType
+	Severity      string
+	Title         string
+	Regex         *regexp.Regexp
+	Path          *regexp.Regexp
+	AllowList     AllowList
+	ExcludeBlocks ExcludeBlocks
 }
 
 type RuleResult struct {
@@ -31,12 +33,18 @@ type RuleResult struct {
 	Title         string
 	StartPosition int
 	EndPosition   int
+	Match         string
 }
 
 type AllowList struct {
 	Title   string
 	Regexes []*regexp.Regexp
 	Paths   []*regexp.Regexp
+}
+
+type ExcludeBlocks struct {
+	Title   string
+	Regexes []*regexp.Regexp
 }
 
 func NewScanner(rulePath string) Scanner {
@@ -57,10 +65,8 @@ func (s Scanner) Scan(args ScanArgs) types.Secret {
 	var findings []types.SecretFinding
 	var allRulesResults []RuleResult
 
-	for _, path := range s.AllowList.Paths {
-		if path.MatchString(args.FilePath) {
-			return types.Secret{}
-		}
+	if isMatchingString(args.FilePath, s.AllowList.Paths) {
+		return types.Secret{}
 	}
 
 	for _, rule := range s.Rules {
@@ -70,7 +76,7 @@ func (s Scanner) Scan(args ScanArgs) types.Secret {
 			continue
 		}
 
-		if shouldSkipPass(args.FilePath, rule.AllowList.Paths) {
+		if isMatchingString(args.FilePath, rule.AllowList.Paths) {
 			continue
 		}
 
@@ -80,43 +86,48 @@ func (s Scanner) Scan(args ScanArgs) types.Secret {
 			continue
 		}
 
-		// parse locations to rule results
+		// Parse to result and skip if the result is allowed
 		for _, loc := range optionalLocations {
-			ruleResults = append(ruleResults, RuleResult{
+			result := RuleResult{
 				RuleID:        rule.ID,
 				Type:          rule.Type,
 				Severity:      strings.ToUpper(rule.Severity),
 				Title:         rule.Title,
 				StartPosition: loc[0],
 				EndPosition:   loc[1],
-			})
+				Match:         string(args.Content[loc[0]:loc[1]]),
+			}
+			if !isMatchingString(result.Match, append(rule.AllowList.Regexes, s.AllowList.Regexes...)) {
+				ruleResults = append(ruleResults, result)
+			}
 		}
 
-		// Find rule allowed locations
-		var allowedLocations [][]int
-		for _, regex := range rule.AllowList.Regexes {
-			allowedLocations = append(allowedLocations, regex.FindAllIndex(args.Content, -1)...)
+		// Find rule excluded blocks
+		var allowedBlocksLocations [][]int
+		for _, regex := range rule.ExcludeBlocks.Regexes {
+			allowedBlocksLocations = append(allowedBlocksLocations, regex.FindAllIndex(args.Content, -1)...)
 		}
 
-		// remove results that are not in allowed locations
-		ruleResults = removeAllowedSecrets(ruleResults, allowedLocations)
+		// Remove results that are in allowed blocks
+		ruleResults = removeAllowedSecrets(ruleResults, allowedBlocksLocations)
 
 		allRulesResults = append(allRulesResults, ruleResults...)
 	}
 
-	if len(allRulesResults) > 0 && len(s.AllowList.Regexes) > 0 {
-		globalAllowedLocations := make([][]int, 0)
-		for _, regex := range s.AllowList.Regexes {
-			globalAllowedLocations = append(globalAllowedLocations, regex.FindAllIndex(args.Content, -1)...)
+	// Find global excluded blocks
+	if len(allRulesResults) > 0 && len(s.ExcludeBlocks.Regexes) > 0 {
+		globalAllowedBlocksLocations := make([][]int, 0)
+		for _, regex := range s.ExcludeBlocks.Regexes {
+			globalAllowedBlocksLocations = append(globalAllowedBlocksLocations, regex.FindAllIndex(args.Content, -1)...)
 		}
 
 		// Filter out allowed results
-		allRulesResults = removeAllowedSecrets(allRulesResults, globalAllowedLocations)
+		allRulesResults = removeAllowedSecrets(allRulesResults, globalAllowedBlocksLocations)
 	}
 
-	// parse to findings
+	// Parse to findings
 	for _, result := range allRulesResults {
-		startLine, endLine, match := findLocation(result.StartPosition, result.EndPosition, args.Content)
+		startLine, endLine, matchLine := findLocation(result.StartPosition, result.EndPosition, args.Content)
 		findings = append(findings, types.SecretFinding{
 			RuleID:    result.RuleID,
 			Type:      result.Type,
@@ -124,7 +135,7 @@ func (s Scanner) Scan(args ScanArgs) types.Secret {
 			Title:     result.Title,
 			StartLine: startLine,
 			EndLine:   endLine,
-			Match:     match,
+			Match:     matchLine,
 		})
 	}
 
@@ -134,9 +145,9 @@ func (s Scanner) Scan(args ScanArgs) types.Secret {
 	}
 }
 
-func shouldSkipPass(filePath string, allowPaths []*regexp.Regexp) bool {
-	for _, path := range allowPaths {
-		if path.MatchString(filePath) {
+func isMatchingString(content string, regexes []*regexp.Regexp) bool {
+	for _, regex := range regexes {
+		if regex.MatchString(content) {
 			return true
 		}
 	}
@@ -159,7 +170,7 @@ func removeAllowedSecrets(allRuleResults []RuleResult, allowedLocations [][]int)
 
 func isResultAllowed(result RuleResult, allowedLocations [][]int) bool {
 	for _, allowedLocation := range allowedLocations {
-		if result.StartPosition >= allowedLocation[0] && result.EndPosition <= allowedLocation[1] || result.StartPosition <= allowedLocation[0] && result.EndPosition >= allowedLocation[1] {
+		if result.StartPosition >= allowedLocation[0] && result.EndPosition <= allowedLocation[1] {
 			return true
 		}
 	}
