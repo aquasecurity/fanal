@@ -70,18 +70,18 @@ func TestAnalyze(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			parse := func(r io.Reader) ([]godeptypes.Library, error) {
+			parse := func(r io.Reader) ([]godeptypes.Library, []godeptypes.Dependency, error) {
 				b, err := io.ReadAll(r)
 				require.NoError(t, err)
 
 				switch string(b) {
 				case "happy":
-					return []godeptypes.Library{{Name: "test", Version: "1.2.3"}}, nil
+					return []godeptypes.Library{{Name: "test", Version: "1.2.3"}}, nil, nil
 				case "sad":
-					return nil, xerrors.New("unexpected error")
+					return nil, nil, xerrors.New("unexpected error")
 				}
 
-				return nil, nil
+				return nil, nil, nil
 			}
 
 			got, err := language.Analyze(tt.args.analyzerType, tt.args.filePath, tt.args.content, parse)
