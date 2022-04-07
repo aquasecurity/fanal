@@ -130,7 +130,7 @@ spec:
 				Content:  tt.content,
 			})
 			require.NoError(t, err)
-			assert.Len(t, got.Configs, tt.want)
+			assert.Len(t, got.Misconfigurations, tt.want)
 		})
 	}
 }

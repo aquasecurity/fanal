@@ -57,7 +57,7 @@ func (a ConfigAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisInput)
 	}
 
 	return &analyzer.AnalysisResult{
-		Configs: configs,
+		Misconfigurations: configs,
 	}, nil
 }
 

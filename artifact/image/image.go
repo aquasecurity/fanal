@@ -197,12 +197,22 @@ func (a Artifact) inspectLayer(ctx context.Context, diffID string) (types.BlobIn
 		return types.BlobInfo{}, xerrors.Errorf("unable to get uncompressed layer %s: %w", diffID, err)
 	}
 
+	// Prepare variables
 	var wg sync.WaitGroup
+	opts := analyzer.AnalysisOptions{Offline: a.artifactOption.Offline}
 	result := new(analyzer.AnalysisResult)
 	limit := semaphore.NewWeighted(parallel)
+	memfs := analyzer.NewMemoryFS()
 
+	// Walk a tar layer
 	opqDirs, whFiles, err := a.walker.Walk(r, func(filePath string, info os.FileInfo, opener analyzer.Opener) error {
-		opts := analyzer.AnalysisOptions{Offline: a.artifactOption.Offline}
+		// Capture only necessary files and add them to memory fs
+		// so that the memory fs can be used by lazy analyzers later.
+		if err = a.analyzer.BuildMemoryFs(memfs, filePath, info, opener); err != nil {
+			return xerrors.Errorf("memory fs build error: %w", err)
+		}
+
+		// Streaming analyzers, which require a single file, analyze each file.
 		if err = a.analyzer.AnalyzeFile(ctx, &wg, limit, result, "", filePath, info, opener, opts); err != nil {
 			return xerrors.Errorf("failed to analyze %s: %w", filePath, err)
 		}
@@ -214,6 +224,12 @@ func (a Artifact) inspectLayer(ctx context.Context, diffID string) (types.BlobIn
 
 	// Wait for all the goroutine to finish.
 	wg.Wait()
+
+	// Analyze memory filesystem built during layer walking.
+	// This is useful for analyzers which require multiple files.
+	if err = a.analyzer.AnalyzeFs(ctx, memfs, result, opts); err != nil {
+		return types.BlobInfo{}, xerrors.Errorf("failed to analyze memory fs: %w", err)
+	}
 
 	// Sort the analysis result for consistent results
 	result.Sort()

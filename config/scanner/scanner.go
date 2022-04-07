@@ -31,7 +31,7 @@ type Scanner struct {
 	cfScanner *cfExternal.Scanner
 }
 
-func New(rootDir string, namespaces, policyPaths, dataPaths []string, trace bool) (Scanner, error) {
+func New(rootDir string, namespaces, policyPaths, dataPaths []string, trace bool) (*Scanner, error) {
 
 	tfOptions := []tfExternal.Option{
 		tfExternal.OptionIncludePassed(true),
@@ -46,7 +46,7 @@ func New(rootDir string, namespaces, policyPaths, dataPaths []string, trace bool
 		cfOptions = append(cfOptions, cfExternal.OptionWithDebug(log.Writer()))
 	}
 
-	scanner := Scanner{
+	scanner := &Scanner{
 		rootDir:    rootDir,
 		namespaces: namespaces,
 		tfscanner:  tfExternal.New(tfOptions...),
@@ -56,7 +56,7 @@ func New(rootDir string, namespaces, policyPaths, dataPaths []string, trace bool
 	if len(namespaces) > 0 && len(policyPaths) > 0 {
 		engine, err := policy.Load(policyPaths, dataPaths, trace)
 		if err != nil {
-			return Scanner{}, xerrors.Errorf("policy load error: %w", err)
+			return nil, xerrors.Errorf("policy load error: %w", err)
 		}
 		scanner.engine = engine
 	}

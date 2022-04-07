@@ -23,7 +23,7 @@ func NewConfigAnalyzer() ConfigAnalyzer {
 // Analyze returns a name of Terraform file
 func (a ConfigAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisInput) (*analyzer.AnalysisResult, error) {
 	return &analyzer.AnalysisResult{
-		Configs: []types.Config{
+		Misconfigurations: []types.Config{
 			{
 				Type:     types.Terraform,
 				FilePath: filepath.Join(input.Dir, input.FilePath), // tfsec requires a path from working dir

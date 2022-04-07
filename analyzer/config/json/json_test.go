@@ -34,18 +34,20 @@ func Test_jsonConfigAnalyzer_Analyze(t *testing.T) {
 			},
 			inputFile: "testdata/deployment.json",
 			want: &analyzer.AnalysisResult{
-				Configs: []types.Config{
-					{
-						Type:     "json",
-						FilePath: "testdata/deployment.json",
-						Content: map[string]interface{}{
-							"apiVersion": "apps/v1",
-							"kind":       "Deployment",
-							"metadata": map[string]interface{}{
-								"name": "hello-kubernetes",
-							},
-							"spec": map[string]interface{}{
-								"replicas": float64(3),
+				Files: map[types.HandlerType][]types.File{
+					types.MisconfPostHandler: {
+						{
+							Type: "json",
+							Path: "testdata/deployment.json",
+							Content: map[string]interface{}{
+								"apiVersion": "apps/v1",
+								"kind":       "Deployment",
+								"metadata": map[string]interface{}{
+									"name": "hello-kubernetes",
+								},
+								"spec": map[string]interface{}{
+									"replicas": float64(3),
+								},
 							},
 						},
 					},
@@ -60,18 +62,20 @@ func Test_jsonConfigAnalyzer_Analyze(t *testing.T) {
 			},
 			inputFile: "testdata/deployment_deny.json",
 			want: &analyzer.AnalysisResult{
-				Configs: []types.Config{
-					{
-						Type:     "json",
-						FilePath: "testdata/deployment_deny.json",
-						Content: map[string]interface{}{
-							"apiVersion": "apps/v1",
-							"kind":       "Deployment",
-							"metadata": map[string]interface{}{
-								"name": "hello-kubernetes",
-							},
-							"spec": map[string]interface{}{
-								"replicas": float64(4),
+				Files: map[types.HandlerType][]types.File{
+					types.MisconfPostHandler: {
+						{
+							Type: "json",
+							Path: "testdata/deployment_deny.json",
+							Content: map[string]interface{}{
+								"apiVersion": "apps/v1",
+								"kind":       "Deployment",
+								"metadata": map[string]interface{}{
+									"name": "hello-kubernetes",
+								},
+								"spec": map[string]interface{}{
+									"replicas": float64(4),
+								},
 							},
 						},
 					},
@@ -86,28 +90,30 @@ func Test_jsonConfigAnalyzer_Analyze(t *testing.T) {
 			},
 			inputFile: "testdata/array.json",
 			want: &analyzer.AnalysisResult{
-				Configs: []types.Config{
-					{
-						Type:     "json",
-						FilePath: "testdata/array.json",
-						Content: []interface{}{map[string]interface{}{
-							"apiVersion": "apps/v1",
-							"kind":       "Deployment",
-							"metadata": map[string]interface{}{
-								"name": "hello-kubernetes",
-							},
-							"spec": map[string]interface{}{
-								"replicas": float64(4),
-							},
-						},
-							map[string]interface{}{
-								"apiVersion": "apps/v2",
+				Files: map[types.HandlerType][]types.File{
+					types.MisconfPostHandler: {
+						{
+							Type: "json",
+							Path: "testdata/array.json",
+							Content: []interface{}{map[string]interface{}{
+								"apiVersion": "apps/v1",
 								"kind":       "Deployment",
 								"metadata": map[string]interface{}{
 									"name": "hello-kubernetes",
 								},
 								"spec": map[string]interface{}{
-									"replicas": float64(5),
+									"replicas": float64(4),
+								},
+							},
+								map[string]interface{}{
+									"apiVersion": "apps/v2",
+									"kind":       "Deployment",
+									"metadata": map[string]interface{}{
+										"name": "hello-kubernetes",
+									},
+									"spec": map[string]interface{}{
+										"replicas": float64(5),
+									},
 								},
 							},
 						},

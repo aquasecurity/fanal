@@ -34,7 +34,7 @@ func Test_yamlConfigAnalyzer_Analyze(t *testing.T) {
 			},
 			inputFile: "testdata/deployment.yaml",
 			want: &analyzer.AnalysisResult{
-				Configs: []types.Config{
+				Misconfigurations: []types.Config{
 					{
 						Type:     "yaml",
 						FilePath: "testdata/deployment.yaml",
@@ -62,7 +62,7 @@ func Test_yamlConfigAnalyzer_Analyze(t *testing.T) {
 			want: &analyzer.AnalysisResult{
 				OS:           (*types.OS)(nil),
 				PackageInfos: []types.PackageInfo(nil),
-				Applications: []types.Application(nil), Configs: []types.Config{
+				Applications: []types.Application(nil), Misconfigurations: []types.Config{
 					{
 						Type:     "yaml",
 						FilePath: "testdata/deployment_deny.yaml",
@@ -91,7 +91,7 @@ func Test_yamlConfigAnalyzer_Analyze(t *testing.T) {
 				OS:           (*types.OS)(nil),
 				PackageInfos: []types.PackageInfo(nil),
 				Applications: []types.Application(nil),
-				Configs: []types.Config{
+				Misconfigurations: []types.Config{
 					{
 						Type:     "yaml",
 						FilePath: "testdata/anchor.yaml",
@@ -129,7 +129,7 @@ func Test_yamlConfigAnalyzer_Analyze(t *testing.T) {
 				OS:           (*types.OS)(nil),
 				PackageInfos: []types.PackageInfo(nil),
 				Applications: []types.Application(nil),
-				Configs: []types.Config{
+				Misconfigurations: []types.Config{
 					{
 						Type:     "yaml",
 						FilePath: "testdata/multiple.yaml",
@@ -177,7 +177,7 @@ func Test_yamlConfigAnalyzer_Analyze(t *testing.T) {
 				OS:           (*types.OS)(nil),
 				PackageInfos: []types.PackageInfo(nil),
 				Applications: []types.Application(nil),
-				Configs: []types.Config{
+				Misconfigurations: []types.Config{
 					{
 						Type:     "yaml",
 						FilePath: "testdata/incompatible_json.yaml",

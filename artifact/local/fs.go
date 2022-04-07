@@ -41,7 +41,7 @@ type Artifact struct {
 
 func NewArtifact(rootPath string, c cache.ArtifactCache, artifactOpt artifact.Option, scannerOpt config.ScannerOption) (artifact.Artifact, error) {
 	// Register config analyzers
-	if err := config.RegisterConfigAnalyzers(scannerOpt.FilePatterns); err != nil {
+	if err := config.RegisterConfigAnalyzers(rootPath, scannerOpt); err != nil {
 		return nil, xerrors.Errorf("config analyzer error: %w", err)
 	}
 
@@ -112,7 +112,7 @@ func (a Artifact) Inspect(ctx context.Context) (types.ArtifactReference, error) 
 	result.Sort()
 
 	// Scan config files
-	misconfs, err := a.scanner.ScanConfigs(ctx, result.Configs)
+	misconfs, err := a.scanner.ScanConfigs(ctx, result.Misconfigurations)
 	if err != nil {
 		return types.ArtifactReference{}, xerrors.Errorf("config scan error: %w", err)
 	}

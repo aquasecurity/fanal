@@ -25,7 +25,7 @@ func TestConfigAnalyzer_Analyze(t *testing.T) {
 				FilePath: "main.tf",
 			},
 			want: &analyzer.AnalysisResult{
-				Configs: []types.Config{
+				Misconfigurations: []types.Config{
 					{
 						Type:     types.Terraform,
 						FilePath: "path/to/main.tf",

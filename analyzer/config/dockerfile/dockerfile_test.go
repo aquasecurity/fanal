@@ -1,4 +1,4 @@
-package docker_test
+package dockerfile_test
 
 import (
 	"context"
@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/aquasecurity/fanal/analyzer"
-	"github.com/aquasecurity/fanal/analyzer/config/docker"
+	"github.com/aquasecurity/fanal/analyzer/config/dockerfile"
 	"github.com/aquasecurity/fanal/types"
 )
 
@@ -25,7 +25,7 @@ func Test_dockerConfigAnalyzer_Analyze(t *testing.T) {
 			name:      "happy path",
 			inputFile: "testdata/Dockerfile.deployment",
 			want: &analyzer.AnalysisResult{
-				Configs: []types.Config{
+				Misconfigurations: []types.Config{
 					{
 						Type:     types.Dockerfile,
 						FilePath: "testdata/Dockerfile.deployment",
@@ -78,7 +78,7 @@ func Test_dockerConfigAnalyzer_Analyze(t *testing.T) {
 			name:      "happy path with multi-stage",
 			inputFile: "testdata/Dockerfile.multistage",
 			want: &analyzer.AnalysisResult{
-				Configs: []types.Config{
+				Misconfigurations: []types.Config{
 					{
 						Type:     types.Dockerfile,
 						FilePath: "testdata/Dockerfile.multistage",
@@ -162,7 +162,7 @@ func Test_dockerConfigAnalyzer_Analyze(t *testing.T) {
 			require.NoError(t, err)
 			defer f.Close()
 
-			a := docker.NewConfigAnalyzer(nil)
+			a := dockerfile.NewConfigAnalyzer(nil)
 			ctx := context.Background()
 			got, err := a.Analyze(ctx, analyzer.AnalysisInput{
 				FilePath: tt.inputFile,
@@ -246,7 +246,7 @@ func Test_dockerConfigAnalyzer_Required(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := docker.NewConfigAnalyzer(tt.filePattern)
+			s := dockerfile.NewConfigAnalyzer(tt.filePattern)
 			got := s.Required(tt.filePath, nil)
 			assert.Equal(t, tt.want, got)
 		})
@@ -254,7 +254,7 @@ func Test_dockerConfigAnalyzer_Required(t *testing.T) {
 }
 
 func Test_dockerConfigAnalyzer_Type(t *testing.T) {
-	s := docker.NewConfigAnalyzer(nil)
+	s := dockerfile.NewConfigAnalyzer(nil)
 	want := analyzer.TypeDockerfile
 	got := s.Type()
 	assert.Equal(t, want, got)

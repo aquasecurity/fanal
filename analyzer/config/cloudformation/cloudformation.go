@@ -38,7 +38,7 @@ func (a ConfigAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisInput)
 
 	if looksLikeCloudFormation(content) {
 		return &analyzer.AnalysisResult{
-			Configs: []types.Config{
+			Misconfigurations: []types.Config{
 				{
 					Type:     types.CloudFormation,
 					FilePath: filepath.Join(input.Dir, input.FilePath),

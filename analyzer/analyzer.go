@@ -2,16 +2,18 @@ package analyzer
 
 import (
 	"context"
+	"log"
 	"os"
 	"sort"
 	"strings"
 	"sync"
 
+	"golang.org/x/exp/slices"
 	"golang.org/x/sync/semaphore"
+
 	"golang.org/x/xerrors"
 
 	aos "github.com/aquasecurity/fanal/analyzer/os"
-	"github.com/aquasecurity/fanal/log"
 	"github.com/aquasecurity/fanal/types"
 	dio "github.com/aquasecurity/go-dep-parser/pkg/io"
 )
@@ -41,6 +43,7 @@ type AnalysisOptions struct {
 	Offline bool
 }
 
+// analyzer is called per file. It is recommended because of performance and memory usage.
 type analyzer interface {
 	Type() Type
 	Version() int
@@ -59,12 +62,6 @@ type Group string
 
 const GroupBuiltin Group = "builtin"
 
-// CustomGroup returns a group name for custom analyzers
-// This is mainly intended to be used in Aqua products.
-type CustomGroup interface {
-	Group() Group
-}
-
 func RegisterAnalyzer(analyzer analyzer) {
 	analyzers[analyzer.Type()] = analyzer
 }
@@ -73,15 +70,27 @@ func RegisterConfigAnalyzer(analyzer configAnalyzer) {
 	configAnalyzers[analyzer.Type()] = analyzer
 }
 
+// CustomGroup returns a group name for custom analyzers
+// This is mainly intended to be used in Aqua products.
+type CustomGroup interface {
+	Group() Group
+}
+
 type Opener func() (dio.ReadSeekCloserAt, error)
+
+type AnalyzerGroup struct {
+	analyzers       []analyzer
+	configAnalyzers []configAnalyzer
+}
 
 type AnalysisResult struct {
 	m                    sync.Mutex
 	OS                   *types.OS
 	PackageInfos         []types.PackageInfo
 	Applications         []types.Application
-	Configs              []types.Config
 	SystemInstalledFiles []string // A list of files installed by OS package manager
+
+	Files map[types.HandlerType][]types.File
 
 	// For Red Hat
 	BuildInfo *types.BuildInfo
@@ -91,9 +100,15 @@ type AnalysisResult struct {
 	CustomResources []types.CustomResource
 }
 
+func NewAnalysisResult() *AnalysisResult {
+	result := new(AnalysisResult)
+	result.Files = map[types.HandlerType][]types.File{}
+	return result
+}
+
 func (r *AnalysisResult) isEmpty() bool {
 	return r.OS == nil && len(r.PackageInfos) == 0 && len(r.Applications) == 0 &&
-		len(r.Configs) == 0 && len(r.SystemInstalledFiles) == 0 && r.BuildInfo == nil && len(r.CustomResources) == 0
+		len(r.Files) == 0 && len(r.SystemInstalledFiles) == 0 && r.BuildInfo == nil && len(r.CustomResources) == 0
 }
 
 func (r *AnalysisResult) Sort() {
@@ -117,6 +132,12 @@ func (r *AnalysisResult) Sort() {
 				return app.Libraries[i].Name < app.Libraries[j].Name
 			}
 			return app.Libraries[i].Version < app.Libraries[j].Version
+		})
+	}
+
+	for _, files := range r.Files {
+		sort.Slice(files, func(i, j int) bool {
+			return files[i].Path < files[j].Path
 		})
 	}
 }
@@ -147,7 +168,13 @@ func (r *AnalysisResult) Merge(new *AnalysisResult) {
 		r.Applications = append(r.Applications, new.Applications...)
 	}
 
-	r.Configs = append(r.Configs, new.Configs...)
+	for t, files := range new.Files {
+		if v, ok := r.Files[t]; ok {
+			r.Files[t] = append(v, files...)
+		} else {
+			r.Files[t] = files
+		}
+	}
 
 	r.SystemInstalledFiles = append(r.SystemInstalledFiles, new.SystemInstalledFiles...)
 
@@ -170,9 +197,20 @@ func (r *AnalysisResult) Merge(new *AnalysisResult) {
 	r.CustomResources = append(r.CustomResources, new.CustomResources...)
 }
 
-type AnalyzerGroup struct {
-	analyzers       []analyzer
-	configAnalyzers []configAnalyzer
+func belongToGroup(groupName Group, analyzerType Type, disabledAnalyzers []Type, analyzer any) bool {
+	if slices.Contains(disabledAnalyzers, analyzerType) {
+		return false
+	}
+
+	analyzerGroupName := GroupBuiltin
+	if cg, ok := analyzer.(CustomGroup); ok {
+		analyzerGroupName = cg.Group()
+	}
+	if analyzerGroupName != groupName {
+		return false
+	}
+
+	return true
 }
 
 func NewAnalyzerGroup(groupName Group, disabledAnalyzers []Type) AnalyzerGroup {
@@ -182,23 +220,14 @@ func NewAnalyzerGroup(groupName Group, disabledAnalyzers []Type) AnalyzerGroup {
 
 	var group AnalyzerGroup
 	for analyzerType, a := range analyzers {
-		if isDisabled(analyzerType, disabledAnalyzers) {
+		if !belongToGroup(groupName, analyzerType, disabledAnalyzers, a) {
 			continue
 		}
-
-		analyzerGroupName := GroupBuiltin
-		if cg, ok := a.(CustomGroup); ok {
-			analyzerGroupName = cg.Group()
-		}
-		if analyzerGroupName != groupName {
-			continue
-		}
-
 		group.analyzers = append(group.analyzers, a)
 	}
 
 	for analyzerType, a := range configAnalyzers {
-		if isDisabled(analyzerType, disabledAnalyzers) {
+		if slices.Contains(disabledAnalyzers, analyzerType) {
 			continue
 		}
 		group.configAnalyzers = append(group.configAnalyzers, a)
@@ -210,8 +239,8 @@ func NewAnalyzerGroup(groupName Group, disabledAnalyzers []Type) AnalyzerGroup {
 // AnalyzerVersions returns analyzer version identifier used for cache keys.
 func (ag AnalyzerGroup) AnalyzerVersions() map[string]int {
 	versions := map[string]int{}
-	for _, aa := range ag.analyzers {
-		versions[string(aa.Type())] = aa.Version()
+	for _, a := range ag.analyzers {
+		versions[string(a.Type())] = a.Version()
 	}
 	return versions
 }
@@ -230,6 +259,7 @@ func (ag AnalyzerGroup) AnalyzeFile(ctx context.Context, wg *sync.WaitGroup, lim
 	if info.IsDir() {
 		return nil
 	}
+
 	for _, a := range ag.analyzers {
 		// filepath extracted from tar file doesn't have the prefix "/"
 		if !a.Required(strings.TrimLeft(filePath, "/"), info) {
@@ -281,13 +311,4 @@ func (ag AnalyzerGroup) AnalyzeImageConfig(targetOS types.OS, configBlob []byte)
 		return pkgs
 	}
 	return nil
-}
-
-func isDisabled(t Type, disabled []Type) bool {
-	for _, d := range disabled {
-		if t == d {
-			return true
-		}
-	}
-	return false
 }
