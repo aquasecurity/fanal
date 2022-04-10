@@ -5,14 +5,13 @@ import (
 	"sort"
 
 	"github.com/aquasecurity/fanal/analyzer"
-	"github.com/aquasecurity/fanal/hook"
 	"github.com/aquasecurity/fanal/types"
 )
 
 type Option struct {
 	AnalyzerGroup     analyzer.Group // It is empty in OSS
 	DisabledAnalyzers []analyzer.Type
-	DisabledHooks     []hook.Type
+	DisabledHandlers  []types.HandlerType
 	SkipFiles         []string
 	SkipDirs          []string
 	NoProgress        bool

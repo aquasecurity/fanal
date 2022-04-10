@@ -43,7 +43,6 @@ type AnalysisOptions struct {
 	Offline bool
 }
 
-// analyzer is called per file. It is recommended because of performance and memory usage.
 type analyzer interface {
 	Type() Type
 	Version() int

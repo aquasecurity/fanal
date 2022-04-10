@@ -34,10 +34,10 @@ func Test_yamlConfigAnalyzer_Analyze(t *testing.T) {
 			},
 			inputFile: "testdata/deployment.yaml",
 			want: &analyzer.AnalysisResult{
-				Misconfigurations: []types.Config{
+				Files: []types.File{
 					{
-						Type:     "yaml",
-						FilePath: "testdata/deployment.yaml",
+						Type: "yaml",
+						Path: "testdata/deployment.yaml",
 						Content: map[string]interface{}{
 							"apiVersion": "apps/v1",
 							"kind":       "Deployment",
@@ -62,10 +62,10 @@ func Test_yamlConfigAnalyzer_Analyze(t *testing.T) {
 			want: &analyzer.AnalysisResult{
 				OS:           (*types.OS)(nil),
 				PackageInfos: []types.PackageInfo(nil),
-				Applications: []types.Application(nil), Misconfigurations: []types.Config{
+				Applications: []types.Application(nil), Files: []types.File{
 					{
-						Type:     "yaml",
-						FilePath: "testdata/deployment_deny.yaml",
+						Type: "yaml",
+						Path: "testdata/deployment_deny.yaml",
 						Content: map[string]interface{}{
 							"apiVersion": "apps/v1",
 							"kind":       "Deployment",
@@ -91,10 +91,10 @@ func Test_yamlConfigAnalyzer_Analyze(t *testing.T) {
 				OS:           (*types.OS)(nil),
 				PackageInfos: []types.PackageInfo(nil),
 				Applications: []types.Application(nil),
-				Misconfigurations: []types.Config{
+				Files: []types.File{
 					{
-						Type:     "yaml",
-						FilePath: "testdata/anchor.yaml",
+						Type: "yaml",
+						Path: "testdata/anchor.yaml",
 						Content: map[string]interface{}{
 							"default": map[string]interface{}{
 								"line": "single line",
@@ -129,10 +129,10 @@ func Test_yamlConfigAnalyzer_Analyze(t *testing.T) {
 				OS:           (*types.OS)(nil),
 				PackageInfos: []types.PackageInfo(nil),
 				Applications: []types.Application(nil),
-				Misconfigurations: []types.Config{
+				Files: []types.File{
 					{
-						Type:     "yaml",
-						FilePath: "testdata/multiple.yaml",
+						Type: "yaml",
+						Path: "testdata/multiple.yaml",
 						Content: map[string]interface{}{
 							"apiVersion": "apps/v1",
 							"kind":       "Deployment",
@@ -145,8 +145,8 @@ func Test_yamlConfigAnalyzer_Analyze(t *testing.T) {
 						},
 					},
 					{
-						Type:     "yaml",
-						FilePath: "testdata/multiple.yaml",
+						Type: "yaml",
+						Path: "testdata/multiple.yaml",
 						Content: map[string]interface{}{
 							"apiVersion": "v1",
 							"kind":       "Service",
@@ -177,10 +177,10 @@ func Test_yamlConfigAnalyzer_Analyze(t *testing.T) {
 				OS:           (*types.OS)(nil),
 				PackageInfos: []types.PackageInfo(nil),
 				Applications: []types.Application(nil),
-				Misconfigurations: []types.Config{
+				Files: []types.File{
 					{
-						Type:     "yaml",
-						FilePath: "testdata/incompatible_json.yaml",
+						Type: "yaml",
+						Path: "testdata/incompatible_json.yaml",
 						Content: map[string]interface{}{
 							"replacements": map[string]interface{}{
 								"amd64": "64bit",
