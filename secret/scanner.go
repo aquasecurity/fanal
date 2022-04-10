@@ -47,12 +47,17 @@ type ExcludeBlocks struct {
 	Regexes []*regexp.Regexp
 }
 
-func NewScanner(rulePath string) Scanner {
+func NewScanner(rulePath string, rules []Rule, allowlist AllowList, excludeBlocks ExcludeBlocks) Scanner { // TODO: remove rules, allowlist, excludeBlocks when rulePath implemented
 	if rulePath != "" {
 		// TODO: Load custom rules here
 	}
+	if len(rules) == 0 {
+		rules = builtinRules
+	}
 	return Scanner{
-		Rules: builtinRules, // TODO: Merge built-in rules and custom rules here
+		Rules:         rules, // TODO: Merge built-in rules and custom rules here
+		AllowList:     allowlist,
+		ExcludeBlocks: excludeBlocks,
 	}
 }
 
@@ -137,6 +142,10 @@ func (s Scanner) Scan(args ScanArgs) types.Secret {
 			EndLine:   endLine,
 			Match:     matchLine,
 		})
+	}
+
+	if len(findings) == 0 {
+		return types.Secret{}
 	}
 
 	return types.Secret{
