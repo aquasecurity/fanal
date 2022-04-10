@@ -228,8 +228,8 @@ func Test_systemFileFilterHook_Hook(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			h := systemFileFilterHook{}
-			err := h.Hook(tt.blob)
+			h := systemFileFilteringPostHandler{}
+			err := h.Handle(tt.blob)
 			require.NoError(t, err)
 			assert.Equal(t, tt.want, tt.blob)
 		})

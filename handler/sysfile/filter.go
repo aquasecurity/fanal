@@ -1,15 +1,22 @@
 package nodejs
 
 import (
+	"context"
 	"strings"
 
-	"github.com/aquasecurity/fanal/hook"
+	"github.com/aquasecurity/fanal/analyzer/config"
+	"github.com/aquasecurity/fanal/artifact"
+
+	"golang.org/x/exp/slices"
+
+	"github.com/aquasecurity/fanal/analyzer"
+
+	"github.com/aquasecurity/fanal/handler"
 	"github.com/aquasecurity/fanal/types"
-	"github.com/aquasecurity/fanal/utils"
 )
 
 func init() {
-	hook.RegisterHook(systemFileFilterHook{})
+	handler.RegisterPostHandlerInit(types.SystemFileFilteringPostHandler, newSystemFileFilteringPostHandler)
 }
 
 const version = 1
@@ -35,12 +42,16 @@ var (
 	}
 )
 
-type systemFileFilterHook struct{}
+type systemFileFilteringPostHandler struct{}
 
-// Hook removes files installed by OS package manager such as yum.
-func (h systemFileFilterHook) Hook(blob *types.BlobInfo) error {
+func newSystemFileFilteringPostHandler(artifact.Option, config.ScannerOption) (handler.PostHandler, error) {
+	return systemFileFilteringPostHandler{}, nil
+}
+
+// Handle removes files installed by OS package manager such as yum.
+func (h systemFileFilteringPostHandler) Handle(_ context.Context, result *analyzer.AnalysisResult, blob *types.BlobInfo) error {
 	var systemFiles []string
-	for _, file := range append(blob.SystemFiles, defaultSystemFiles...) {
+	for _, file := range append(result.SystemInstalledFiles, defaultSystemFiles...) {
 		// Trim leading slashes to be the same format as the path in container images.
 		systemFile := strings.TrimPrefix(file, "/")
 		// We should check the root filepath ("/") and ignore it.
@@ -54,7 +65,7 @@ func (h systemFileFilterHook) Hook(blob *types.BlobInfo) error {
 	for _, app := range blob.Applications {
 		// If the lang-specific package was installed by OS package manager, it should not be taken.
 		// Otherwise, the package version will be wrong, then it will lead to false positive.
-		if utils.StringInSlice(app.FilePath, systemFiles) && utils.StringInSlice(app.Type, affectedTypes) {
+		if slices.Contains(systemFiles, app.FilePath) && slices.Contains(affectedTypes, app.Type) {
 			continue
 		}
 
@@ -62,7 +73,7 @@ func (h systemFileFilterHook) Hook(blob *types.BlobInfo) error {
 		for _, lib := range app.Libraries {
 			// If the lang-specific package was installed by OS package manager, it should not be taken.
 			// Otherwise, the package version will be wrong, then it will lead to false positive.
-			if utils.StringInSlice(lib.FilePath, systemFiles) {
+			if slices.Contains(systemFiles, lib.FilePath) {
 				continue
 			}
 			pkgs = append(pkgs, lib)
@@ -76,7 +87,7 @@ func (h systemFileFilterHook) Hook(blob *types.BlobInfo) error {
 	// Iterate and delete unnecessary customResource
 	i := 0
 	for _, res := range blob.CustomResources {
-		if utils.StringInSlice(res.FilePath, systemFiles) {
+		if slices.Contains(systemFiles, res.FilePath) {
 			continue
 		}
 		blob.CustomResources[i] = res
@@ -87,16 +98,17 @@ func (h systemFileFilterHook) Hook(blob *types.BlobInfo) error {
 	// Overwrite Applications
 	blob.Applications = apps
 
-	// Remove system files since this field is necessary only in this hook.
-	blob.SystemFiles = nil
-
 	return nil
 }
 
-func (h systemFileFilterHook) Version() int {
+func (h systemFileFilteringPostHandler) Version() int {
 	return version
 }
 
-func (h systemFileFilterHook) Type() hook.Type {
-	return hook.SystemFileFilter
+func (h systemFileFilteringPostHandler) Type() types.HandlerType {
+	return types.SystemFileFilteringPostHandler
+}
+
+func (h systemFileFilteringPostHandler) Priority() int {
+	return types.SystemFileFilteringPostHandlerPriority
 }
