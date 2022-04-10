@@ -17,8 +17,7 @@ import (
 	"github.com/aquasecurity/fanal/analyzer/config"
 	"github.com/aquasecurity/fanal/artifact"
 	"github.com/aquasecurity/fanal/cache"
-	"github.com/aquasecurity/fanal/config/scanner"
-	"github.com/aquasecurity/fanal/hook"
+	"github.com/aquasecurity/fanal/handler"
 	"github.com/aquasecurity/fanal/types"
 	"github.com/aquasecurity/fanal/walker"
 )
@@ -28,12 +27,11 @@ const (
 )
 
 type Artifact struct {
-	rootPath    string
-	cache       cache.ArtifactCache
-	walker      walker.FS
-	analyzer    analyzer.AnalyzerGroup
-	hookManager hook.Manager
-	scanner     scanner.Scanner
+	rootPath       string
+	cache          cache.ArtifactCache
+	walker         walker.FS
+	analyzer       analyzer.AnalyzerGroup
+	handlerManager handler.Manager
 
 	artifactOption      artifact.Option
 	configScannerOption config.ScannerOption
@@ -41,22 +39,21 @@ type Artifact struct {
 
 func NewArtifact(rootPath string, c cache.ArtifactCache, artifactOpt artifact.Option, scannerOpt config.ScannerOption) (artifact.Artifact, error) {
 	// Register config analyzers
-	if err := config.RegisterConfigAnalyzers(rootPath, scannerOpt); err != nil {
+	if err := config.RegisterConfigAnalyzers(scannerOpt.FilePatterns); err != nil {
 		return nil, xerrors.Errorf("config analyzer error: %w", err)
 	}
 
-	s, err := scanner.New(rootPath, scannerOpt.Namespaces, scannerOpt.PolicyPaths, scannerOpt.DataPaths, scannerOpt.Trace)
+	handlerManager, err := handler.NewManager(artifactOpt, scannerOpt)
 	if err != nil {
-		return nil, xerrors.Errorf("scanner error: %w", err)
+		return nil, xerrors.Errorf("handler initialize error: %w", err)
 	}
 
 	return Artifact{
-		rootPath:    filepath.Clean(rootPath),
-		cache:       c,
-		walker:      walker.NewFS(buildAbsPaths(rootPath, artifactOpt.SkipFiles), buildAbsPaths(rootPath, artifactOpt.SkipDirs)),
-		analyzer:    analyzer.NewAnalyzerGroup(artifactOpt.AnalyzerGroup, artifactOpt.DisabledAnalyzers),
-		hookManager: hook.NewManager(artifactOpt.DisabledHooks),
-		scanner:     s,
+		rootPath:       filepath.Clean(rootPath),
+		cache:          c,
+		walker:         walker.NewFS(buildAbsPaths(rootPath, artifactOpt.SkipFiles), buildAbsPaths(rootPath, artifactOpt.SkipDirs)),
+		analyzer:       analyzer.NewAnalyzerGroup(artifactOpt.AnalyzerGroup, artifactOpt.DisabledAnalyzers),
+		handlerManager: handlerManager,
 
 		artifactOption:      artifactOpt,
 		configScannerOption: scannerOpt,
@@ -77,7 +74,7 @@ func buildAbsPaths(base string, paths []string) []string {
 
 func (a Artifact) Inspect(ctx context.Context) (types.ArtifactReference, error) {
 	var wg sync.WaitGroup
-	result := new(analyzer.AnalysisResult)
+	result := analyzer.NewAnalysisResult()
 	limit := semaphore.NewWeighted(parallel)
 
 	err := a.walker.Walk(a.rootPath, func(filePath string, info os.FileInfo, opener analyzer.Opener) error {
@@ -111,42 +108,24 @@ func (a Artifact) Inspect(ctx context.Context) (types.ArtifactReference, error) 
 	// Sort the analysis result for consistent results
 	result.Sort()
 
-	// Scan config files
-	misconfs, err := a.scanner.ScanConfigs(ctx, result.Misconfigurations)
-	if err != nil {
-		return types.ArtifactReference{}, xerrors.Errorf("config scan error: %w", err)
-	}
-
 	blobInfo := types.BlobInfo{
-		SchemaVersion:     types.BlobJSONSchemaVersion,
-		OS:                result.OS,
-		PackageInfos:      result.PackageInfos,
-		Applications:      result.Applications,
-		Misconfigurations: misconfs,
-		SystemFiles:       result.SystemInstalledFiles,
+		SchemaVersion: types.BlobJSONSchemaVersion,
+		OS:            result.OS,
+		PackageInfos:  result.PackageInfos,
+		Applications:  result.Applications,
 	}
 
-	if err = a.hookManager.CallHooks(&blobInfo); err != nil {
+	if err = a.handlerManager.PostHandle(ctx, result, &blobInfo); err != nil {
 		return types.ArtifactReference{}, xerrors.Errorf("failed to call hooks: %w", err)
 	}
 
-	// calculate hash of JSON and use it as pseudo artifactID and blobID
-	h := sha256.New()
-	if err = json.NewEncoder(h).Encode(blobInfo); err != nil {
-		return types.ArtifactReference{}, xerrors.Errorf("json error: %w", err)
-	}
-
-	d := digest.NewDigest(digest.SHA256, h)
-	diffID := d.String()
-	blobInfo.DiffID = diffID
-	cacheKey, err := cache.CalcKey(diffID, a.analyzer.AnalyzerVersions(), a.hookManager.Versions(),
-		a.artifactOption, a.configScannerOption)
+	cacheKey, err := a.calcCacheKey(blobInfo)
 	if err != nil {
-		return types.ArtifactReference{}, xerrors.Errorf("cache key: %w", err)
+		return types.ArtifactReference{}, xerrors.Errorf("failed to calculate a cache key: %w", err)
 	}
 
 	if err = a.cache.PutBlob(cacheKey, blobInfo); err != nil {
-		return types.ArtifactReference{}, xerrors.Errorf("failed to store blob (%s) in cache: %w", diffID, err)
+		return types.ArtifactReference{}, xerrors.Errorf("failed to store blob (%s) in cache: %w", cacheKey, err)
 	}
 
 	// get hostname
@@ -168,4 +147,21 @@ func (a Artifact) Inspect(ctx context.Context) (types.ArtifactReference, error) 
 
 func (a Artifact) Clean(reference types.ArtifactReference) error {
 	return a.cache.DeleteBlobs(reference.BlobIDs)
+}
+
+func (a Artifact) calcCacheKey(blobInfo types.BlobInfo) (string, error) {
+	// calculate hash of JSON and use it as pseudo artifactID and blobID
+	h := sha256.New()
+	if err := json.NewEncoder(h).Encode(blobInfo); err != nil {
+		return "", xerrors.Errorf("json error: %w", err)
+	}
+
+	d := digest.NewDigest(digest.SHA256, h)
+	cacheKey, err := cache.CalcKey(d.String(), a.analyzer.AnalyzerVersions(), a.handlerManager.Versions(),
+		a.artifactOption, a.configScannerOption)
+	if err != nil {
+		return "", xerrors.Errorf("cache key: %w", err)
+	}
+
+	return cacheKey, nil
 }

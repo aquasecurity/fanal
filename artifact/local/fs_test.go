@@ -12,13 +12,12 @@ import (
 	"github.com/aquasecurity/fanal/analyzer/config"
 	"github.com/aquasecurity/fanal/artifact"
 	"github.com/aquasecurity/fanal/cache"
-	"github.com/aquasecurity/fanal/hook"
 	"github.com/aquasecurity/fanal/types"
 
 	_ "github.com/aquasecurity/fanal/analyzer/language/python/pip"
 	_ "github.com/aquasecurity/fanal/analyzer/os/alpine"
 	_ "github.com/aquasecurity/fanal/analyzer/pkg/apk"
-	_ "github.com/aquasecurity/fanal/hook/all"
+	_ "github.com/aquasecurity/fanal/handler/all"
 )
 
 func TestArtifact_Inspect(t *testing.T) {
@@ -31,7 +30,7 @@ func TestArtifact_Inspect(t *testing.T) {
 		artifactOpt        artifact.Option
 		scannerOpt         config.ScannerOption
 		disabledAnalyzers  []analyzer.Type
-		disabledHooks      []hook.Type
+		disabledHandlers   []types.HandlerType
 		putBlobExpectation cache.ArtifactCachePutBlobExpectation
 		want               types.ArtifactReference
 		wantErr            string

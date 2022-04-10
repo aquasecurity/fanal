@@ -71,10 +71,10 @@ type Application struct {
 	Libraries []Package
 }
 
-type Config struct {
-	Type     string
-	FilePath string
-	Content  interface{}
+type File struct {
+	Type    string
+	Path    string
+	Content []byte
 }
 
 // ArtifactType represents a type of artifact
@@ -131,10 +131,6 @@ type BlobInfo struct {
 	// This information will be embedded into packages when applying layers.
 	// ref. https://redhat-connect.gitbook.io/partner-guide-for-adopting-red-hat-oval-v2/determining-common-platform-enumeration-cpe
 	BuildInfo *BuildInfo `json:",omitempty"`
-
-	// SystemFiles represents installed files by OS package manager
-	// This field is used only in hooks and removed after that.
-	SystemFiles []string `json:",omitempty"`
 
 	// CustomResources hold analysis results from custom analyzers.
 	// It is for extensibility and not used in OSS.

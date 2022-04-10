@@ -16,8 +16,7 @@ import (
 	"github.com/aquasecurity/fanal/analyzer/config"
 	"github.com/aquasecurity/fanal/artifact"
 	"github.com/aquasecurity/fanal/cache"
-	"github.com/aquasecurity/fanal/config/scanner"
-	"github.com/aquasecurity/fanal/hook"
+	"github.com/aquasecurity/fanal/handler"
 	"github.com/aquasecurity/fanal/log"
 	"github.com/aquasecurity/fanal/types"
 	"github.com/aquasecurity/fanal/walker"
@@ -28,12 +27,11 @@ const (
 )
 
 type Artifact struct {
-	image       types.Image
-	cache       cache.ArtifactCache
-	walker      walker.LayerTar
-	analyzer    analyzer.AnalyzerGroup
-	hookManager hook.Manager
-	scanner     scanner.Scanner
+	image          types.Image
+	cache          cache.ArtifactCache
+	walker         walker.LayerTar
+	analyzer       analyzer.AnalyzerGroup
+	handlerManager handler.Manager
 
 	artifactOption      artifact.Option
 	configScannerOption config.ScannerOption
@@ -45,18 +43,18 @@ func NewArtifact(img types.Image, c cache.ArtifactCache, artifactOpt artifact.Op
 		return nil, xerrors.Errorf("config scanner error: %w", err)
 	}
 
-	s, err := scanner.New("", scannerOpt.Namespaces, scannerOpt.PolicyPaths, scannerOpt.DataPaths, scannerOpt.Trace)
+	// Initialize Hooks
+	handlerManager, err := handler.NewManager(artifactOpt, scannerOpt)
 	if err != nil {
-		return nil, xerrors.Errorf("scanner error: %w", err)
+		return nil, xerrors.Errorf("handler init error: %w", err)
 	}
 
 	return Artifact{
-		image:       img,
-		cache:       c,
-		walker:      walker.NewLayerTar(artifactOpt.SkipFiles, artifactOpt.SkipDirs),
-		analyzer:    analyzer.NewAnalyzerGroup(artifactOpt.AnalyzerGroup, artifactOpt.DisabledAnalyzers),
-		hookManager: hook.NewManager(artifactOpt.DisabledHooks),
-		scanner:     s,
+		image:          img,
+		cache:          c,
+		walker:         walker.NewLayerTar(artifactOpt.SkipFiles, artifactOpt.SkipDirs),
+		analyzer:       analyzer.NewAnalyzerGroup(artifactOpt.AnalyzerGroup, artifactOpt.DisabledAnalyzers),
+		handlerManager: handlerManager,
 
 		artifactOption:      artifactOpt,
 		configScannerOption: scannerOpt,
@@ -132,7 +130,7 @@ func (a Artifact) calcCacheKeys(imageID string, diffIDs []string) (string, []str
 	}
 
 	layerKeyMap := map[string]string{}
-	hookVersions := a.hookManager.Versions()
+	hookVersions := a.handlerManager.Versions()
 	var layerKeys []string
 	for _, diffID := range diffIDs {
 		blobKey, err := cache.CalcKey(diffID, a.analyzer.AnalyzerVersions(), hookVersions, a.artifactOption, a.configScannerOption)
@@ -200,19 +198,11 @@ func (a Artifact) inspectLayer(ctx context.Context, diffID string) (types.BlobIn
 	// Prepare variables
 	var wg sync.WaitGroup
 	opts := analyzer.AnalysisOptions{Offline: a.artifactOption.Offline}
-	result := new(analyzer.AnalysisResult)
+	result := analyzer.NewAnalysisResult()
 	limit := semaphore.NewWeighted(parallel)
-	memfs := analyzer.NewMemoryFS()
 
 	// Walk a tar layer
 	opqDirs, whFiles, err := a.walker.Walk(r, func(filePath string, info os.FileInfo, opener analyzer.Opener) error {
-		// Capture only necessary files and add them to memory fs
-		// so that the memory fs can be used by lazy analyzers later.
-		if err = a.analyzer.BuildMemoryFs(memfs, filePath, info, opener); err != nil {
-			return xerrors.Errorf("memory fs build error: %w", err)
-		}
-
-		// Streaming analyzers, which require a single file, analyze each file.
 		if err = a.analyzer.AnalyzeFile(ctx, &wg, limit, result, "", filePath, info, opener, opts); err != nil {
 			return xerrors.Errorf("failed to analyze %s: %w", filePath, err)
 		}
@@ -225,12 +215,6 @@ func (a Artifact) inspectLayer(ctx context.Context, diffID string) (types.BlobIn
 	// Wait for all the goroutine to finish.
 	wg.Wait()
 
-	// Analyze memory filesystem built during layer walking.
-	// This is useful for analyzers which require multiple files.
-	if err = a.analyzer.AnalyzeFs(ctx, memfs, result, opts); err != nil {
-		return types.BlobInfo{}, xerrors.Errorf("failed to analyze memory fs: %w", err)
-	}
-
 	// Sort the analysis result for consistent results
 	result.Sort()
 
@@ -241,7 +225,6 @@ func (a Artifact) inspectLayer(ctx context.Context, diffID string) (types.BlobIn
 		OS:              result.OS,
 		PackageInfos:    result.PackageInfos,
 		Applications:    result.Applications,
-		SystemFiles:     result.SystemInstalledFiles,
 		OpaqueDirs:      opqDirs,
 		WhiteoutFiles:   whFiles,
 		CustomResources: result.CustomResources,
@@ -250,9 +233,9 @@ func (a Artifact) inspectLayer(ctx context.Context, diffID string) (types.BlobIn
 		BuildInfo: result.BuildInfo,
 	}
 
-	// Call hooks to modify blob info
-	if err = a.hookManager.CallHooks(&blobInfo); err != nil {
-		return types.BlobInfo{}, xerrors.Errorf("failed to call hooks: %w", err)
+	// Call post handlers to modify blob info
+	if err = a.handlerManager.PostHandle(ctx, result, &blobInfo); err != nil {
+		return types.BlobInfo{}, xerrors.Errorf("post handler error: %w", err)
 	}
 
 	return blobInfo, nil
