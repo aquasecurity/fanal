@@ -1,7 +1,7 @@
 package secret_test
 
 import (
-	"io/ioutil"
+	"os"
 	"regexp"
 	"testing"
 
@@ -242,7 +242,7 @@ func TestSecretScanner(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			s := secret.NewScanner("", tt.fields.Rules, tt.fields.AllowList, tt.fields.ExcludeBlocks)
-			content, err := ioutil.ReadFile(tt.inputFilePath)
+			content, err := os.ReadFile(tt.inputFilePath)
 			require.NoError(t, err)
 			got := s.Scan(secret.ScanArgs{tt.inputFilePath, content})
 			assert.Equal(t, tt.want, got)
