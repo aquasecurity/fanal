@@ -5,6 +5,7 @@ import (
 	"github.com/aquasecurity/fanal/types"
 	"github.com/stretchr/testify/assert"
 	"os"
+	"strings"
 	"testing"
 )
 
@@ -76,7 +77,7 @@ func TestDpkgAnalyzer_parseCopyrightFile(t *testing.T) {
 				t.Error("unable to read test file")
 			}
 
-			license, _ := parseCopyrightFile(f, test.copyrightFilePath)
+			license, _ := parseCopyrightFile(f, strings.TrimPrefix(test.copyrightFilePath, "testdata/copyrightFiles/"))
 			assert.Equal(t, test.wantLicense, license)
 		})
 	}
