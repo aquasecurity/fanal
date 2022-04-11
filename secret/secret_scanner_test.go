@@ -15,8 +15,8 @@ import (
 func TestSecretScanner(t *testing.T) {
 	type fields struct {
 		Rules         []secret.Rule
-		AllowList     secret.AllowList
-		ExcludeBlocks secret.ExcludeBlocks
+		AllowList     secret.AllowRule
+		ExcludeBlocks secret.ExcludeBlock
 	}
 
 	var basicRule = secret.Rule{
@@ -75,7 +75,7 @@ func TestSecretScanner(t *testing.T) {
 						Severity: basicRule.Severity,
 						Title:    basicRule.Title,
 						Regex:    basicRule.Regex,
-						AllowList: secret.AllowList{
+						AllowRule: secret.AllowRule{
 							Title: "Allowlist",
 							Paths: []*regexp.Regexp{
 								regexp.MustCompile(`test`),
@@ -97,7 +97,7 @@ func TestSecretScanner(t *testing.T) {
 						Severity: basicRule.Severity,
 						Title:    basicRule.Title,
 						Regex:    basicRule.Regex,
-						AllowList: secret.AllowList{
+						AllowRule: secret.AllowRule{
 							Title: "Allowlist",
 							Regexes: []*regexp.Regexp{
 								regexp.MustCompile(`some`),
@@ -132,7 +132,7 @@ func TestSecretScanner(t *testing.T) {
 						Severity: basicRule.Severity,
 						Title:    basicRule.Title,
 						Regex:    basicRule.Regex,
-						ExcludeBlocks: secret.ExcludeBlocks{
+						ExcludeBlock: secret.ExcludeBlock{
 							Title: "Exclude blocks",
 							Regexes: []*regexp.Regexp{
 								regexp.MustCompile(`--- ignore block start ---(.|\s)*--- ignore block stop ---`),
@@ -163,7 +163,7 @@ func TestSecretScanner(t *testing.T) {
 				Rules: []secret.Rule{
 					basicRule,
 				},
-				AllowList: secret.AllowList{
+				AllowList: secret.AllowRule{
 					Title: "Allowlist",
 					Paths: []*regexp.Regexp{
 						regexp.MustCompile(`test`),
@@ -179,7 +179,7 @@ func TestSecretScanner(t *testing.T) {
 				Rules: []secret.Rule{
 					basicRule,
 				},
-				AllowList: secret.AllowList{
+				AllowList: secret.AllowRule{
 					Title: "Allowlist",
 					Regexes: []*regexp.Regexp{
 						regexp.MustCompile(`some`),
@@ -214,7 +214,7 @@ func TestSecretScanner(t *testing.T) {
 						Regex:    basicRule.Regex,
 					},
 				},
-				ExcludeBlocks: secret.ExcludeBlocks{
+				ExcludeBlocks: secret.ExcludeBlock{
 					Title: "Exclude blocks",
 					Regexes: []*regexp.Regexp{
 						regexp.MustCompile(`--- ignore block start ---(.|\s)*--- ignore block stop ---`),

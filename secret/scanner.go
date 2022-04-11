@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"regexp"
 	"strings"
+	"sync"
 
 	"github.com/aquasecurity/fanal/types"
 )
@@ -11,43 +12,121 @@ import (
 var lineSep = []byte{'\n'}
 
 type Scanner struct {
-	Rules         []Rule
-	AllowList     AllowList
-	ExcludeBlocks ExcludeBlocks
+	Rules        []Rule
+	AllowRule    AllowRule
+	ExcludeBlock ExcludeBlock
 }
 type Rule struct {
-	ID            string
-	Type          types.SecretRuleType
-	Severity      string
-	Title         string
-	Regex         *regexp.Regexp
-	Path          *regexp.Regexp
-	AllowList     AllowList
-	ExcludeBlocks ExcludeBlocks
+	ID           string
+	Type         types.SecretRuleType
+	Severity     string
+	Title        string
+	Regex        *regexp.Regexp
+	Path         *regexp.Regexp
+	AllowRule    AllowRule
+	ExcludeBlock ExcludeBlock
 }
 
-type RuleResult struct {
-	RuleID        string
-	Type          types.SecretRuleType
-	Severity      string
-	Title         string
-	StartPosition int
-	EndPosition   int
-	Match         string
+func (r Rule) MatchPath(path string) bool {
+	if r.Path == nil {
+		return true
+	}
+	return matchString(path, r.Path)
 }
 
-type AllowList struct {
+func (r Rule) AllowPath(path string) bool {
+	return r.AllowRule.AllowPath(path)
+}
+
+func (r Rule) Allow(match string) bool {
+	return r.AllowRule.Allow(match)
+}
+
+type AllowRule struct {
 	Title   string
 	Regexes []*regexp.Regexp
 	Paths   []*regexp.Regexp
 }
 
-type ExcludeBlocks struct {
+func (a AllowRule) AllowPath(path string) bool {
+	return matchString(path, a.Paths...)
+}
+
+func (a AllowRule) Allow(match string) bool {
+	return matchString(match, a.Regexes...)
+}
+
+func matchString(s string, regexps ...*regexp.Regexp) bool {
+	for _, r := range regexps {
+		if r != nil && r.MatchString(s) {
+			return true
+		}
+	}
+	return false
+}
+
+type ExcludeBlock struct {
 	Title   string
 	Regexes []*regexp.Regexp
 }
 
-func NewScanner(rulePath string, rules []Rule, allowlist AllowList, excludeBlocks ExcludeBlocks) Scanner { // TODO: remove rules, allowlist, excludeBlocks when rulePath implemented
+type Location struct {
+	Start int
+	End   int
+}
+
+func newLocation(start, end int) Location {
+	return Location{
+		Start: start,
+		End:   end,
+	}
+}
+
+func (l Location) Match(loc Location) bool {
+	return l.Start <= loc.Start && loc.End <= l.End
+}
+
+type Blocks struct {
+	content []byte
+	regexes []*regexp.Regexp
+	locs    []Location
+	once    *sync.Once
+}
+
+func newBlocks(content []byte, regexes []*regexp.Regexp) Blocks {
+	return Blocks{
+		content: content,
+		regexes: regexes,
+		once:    new(sync.Once),
+	}
+}
+
+func (b *Blocks) Match(block Location) bool {
+	b.once.Do(b.find)
+	for _, loc := range b.locs {
+		if loc.Match(block) {
+			return true
+		}
+	}
+	return false
+}
+
+func (b *Blocks) find() {
+	for _, regex := range b.regexes {
+		results := regex.FindAllIndex(b.content, -1)
+		if len(results) == 0 {
+			continue
+		}
+		for _, r := range results {
+			b.locs = append(b.locs, Location{
+				Start: r[0],
+				End:   r[1],
+			})
+		}
+	}
+}
+
+func NewScanner(rulePath string, rules []Rule, allowRule AllowRule, excludeBlocks ExcludeBlock) Scanner { // TODO: remove rules, allowlist, excludeBlocks when rulePath implemented
 	if rulePath != "" {
 		// TODO: Load custom rules here
 	}
@@ -55,9 +134,9 @@ func NewScanner(rulePath string, rules []Rule, allowlist AllowList, excludeBlock
 		rules = builtinRules
 	}
 	return Scanner{
-		Rules:         rules, // TODO: Merge built-in rules and custom rules here
-		AllowList:     allowlist,
-		ExcludeBlocks: excludeBlocks,
+		Rules:        rules, // TODO: Merge built-in rules and custom rules here
+		AllowRule:    allowRule,
+		ExcludeBlock: excludeBlocks,
 	}
 }
 
@@ -66,82 +145,58 @@ type ScanArgs struct {
 	Content  []byte
 }
 
-func (s Scanner) Scan(args ScanArgs) types.Secret {
-	var findings []types.SecretFinding
-	var allRulesResults []RuleResult
+// Allow checks if the match is allowed
+func (s Scanner) Allow(match string) bool {
+	return s.AllowRule.Allow(match)
+}
 
-	if isMatchingString(args.FilePath, s.AllowList.Paths) {
+// AllowPath checks if the path is allowed
+func (s Scanner) AllowPath(path string) bool {
+	return s.AllowRule.AllowPath(path)
+}
+
+func (s Scanner) Scan(args ScanArgs) types.Secret {
+	// Global allowed paths
+	if s.AllowPath(args.FilePath) {
 		return types.Secret{}
 	}
 
+	var findings []types.SecretFinding
+	globalExcludedBlocks := newBlocks(args.Content, s.ExcludeBlock.Regexes)
 	for _, rule := range s.Rules {
-		var ruleResults []RuleResult
 		// Check if the file path should be scanned by this rule
-		if rule.Path != nil && !rule.Path.MatchString(args.FilePath) {
+		if !rule.MatchPath(args.FilePath) {
 			continue
 		}
 
-		if isMatchingString(args.FilePath, rule.AllowList.Paths) {
+		// Check if the file path should be allowed
+		if rule.AllowPath(args.FilePath) {
 			continue
 		}
 
 		// Detect secrets
-		optionalLocations := rule.Regex.FindAllIndex(args.Content, -1)
-		if len(optionalLocations) == 0 {
+		indices := rule.Regex.FindAllIndex(args.Content, -1)
+		if len(indices) == 0 {
 			continue
 		}
 
-		// Parse to result and skip if the result is allowed
-		for _, loc := range optionalLocations {
-			result := RuleResult{
-				RuleID:        rule.ID,
-				Type:          rule.Type,
-				Severity:      strings.ToUpper(rule.Severity),
-				Title:         rule.Title,
-				StartPosition: loc[0],
-				EndPosition:   loc[1],
-				Match:         string(args.Content[loc[0]:loc[1]]),
+		localExcludedBlocks := newBlocks(args.Content, rule.ExcludeBlock.Regexes)
+		for _, index := range indices {
+			loc := newLocation(index[0], index[1])
+			match := string(args.Content[loc.Start:loc.End])
+
+			// Apply global and local allow rules.
+			if s.Allow(match) || rule.Allow(match) {
+				continue
 			}
-			if !isMatchingString(result.Match, append(rule.AllowList.Regexes, s.AllowList.Regexes...)) {
-				ruleResults = append(ruleResults, result)
+
+			// Skip the secret if it is within excluded blocks.
+			if globalExcludedBlocks.Match(loc) || localExcludedBlocks.Match(loc) {
+				continue
 			}
+
+			findings = append(findings, toFinding(rule, loc, args.Content))
 		}
-
-		// Find rule excluded blocks
-		var allowedBlocksLocations [][]int
-		for _, regex := range rule.ExcludeBlocks.Regexes {
-			allowedBlocksLocations = append(allowedBlocksLocations, regex.FindAllIndex(args.Content, -1)...)
-		}
-
-		// Remove results that are in allowed blocks
-		ruleResults = removeAllowedSecrets(ruleResults, allowedBlocksLocations)
-
-		allRulesResults = append(allRulesResults, ruleResults...)
-	}
-
-	// Find global excluded blocks
-	if len(allRulesResults) > 0 && len(s.ExcludeBlocks.Regexes) > 0 {
-		globalAllowedBlocksLocations := make([][]int, 0)
-		for _, regex := range s.ExcludeBlocks.Regexes {
-			globalAllowedBlocksLocations = append(globalAllowedBlocksLocations, regex.FindAllIndex(args.Content, -1)...)
-		}
-
-		// Filter out allowed results
-		allRulesResults = removeAllowedSecrets(allRulesResults, globalAllowedBlocksLocations)
-	}
-
-	// Parse to findings
-	for _, result := range allRulesResults {
-		startLine, endLine, matchLine := findLocation(result.StartPosition, result.EndPosition, args.Content)
-		findings = append(findings, types.SecretFinding{
-			RuleID:    result.RuleID,
-			Type:      result.Type,
-			Severity:  result.Severity,
-			Title:     result.Title,
-			StartLine: startLine,
-			EndLine:   endLine,
-			Match:     matchLine,
-		})
 	}
 
 	if len(findings) == 0 {
@@ -154,36 +209,17 @@ func (s Scanner) Scan(args ScanArgs) types.Secret {
 	}
 }
 
-func isMatchingString(content string, regexes []*regexp.Regexp) bool {
-	for _, regex := range regexes {
-		if regex.MatchString(content) {
-			return true
-		}
+func toFinding(rule Rule, loc Location, content []byte) types.SecretFinding {
+	startLine, endLine, matchLine := findLocation(loc.Start, loc.End, content)
+	return types.SecretFinding{
+		RuleID:    rule.ID,
+		Type:      rule.Type,
+		Severity:  rule.Severity,
+		Title:     rule.Title,
+		StartLine: startLine,
+		EndLine:   endLine,
+		Match:     matchLine,
 	}
-	return false
-}
-
-func removeAllowedSecrets(allRuleResults []RuleResult, allowedLocations [][]int) []RuleResult {
-	if len(allowedLocations) == 0 {
-		return allRuleResults
-	}
-
-	results := make([]RuleResult, 0)
-	for _, result := range allRuleResults {
-		if !isResultAllowed(result, allowedLocations) {
-			results = append(results, result)
-		}
-	}
-	return results
-}
-
-func isResultAllowed(result RuleResult, allowedLocations [][]int) bool {
-	for _, allowedLocation := range allowedLocations {
-		if result.StartPosition >= allowedLocation[0] && result.EndPosition <= allowedLocation[1] {
-			return true
-		}
-	}
-	return false
 }
 
 func findLocation(start, end int, content []byte) (int, int, string) {
