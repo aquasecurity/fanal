@@ -2,7 +2,6 @@ package analyzer
 
 import (
 	"context"
-	"log"
 	"os"
 	"sort"
 	"strings"
@@ -10,10 +9,10 @@ import (
 
 	"golang.org/x/exp/slices"
 	"golang.org/x/sync/semaphore"
-
 	"golang.org/x/xerrors"
 
 	aos "github.com/aquasecurity/fanal/analyzer/os"
+	"github.com/aquasecurity/fanal/log"
 	"github.com/aquasecurity/fanal/types"
 	dio "github.com/aquasecurity/go-dep-parser/pkg/io"
 )

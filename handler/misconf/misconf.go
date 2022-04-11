@@ -52,22 +52,57 @@ type misconfPostHandler struct {
 	scanners map[string]scanners.Scanner
 }
 
-func newMisconfPostHandler(_ artifact.Option, _ config.ScannerOption) (handler.PostHandler, error) {
+func newMisconfPostHandler(_ artifact.Option, opt config.ScannerOption) (handler.PostHandler, error) {
+	var tfOptions []tfscanner.Option
+	cfOptions := []cfscanner.Option{
+		// The given memoryfs contains only CloudFormation files. DefSec doesn't need to check if each file is required.
+		cfscanner.OptionWithParser(cfparser.New(cfparser.OptionWithSkipRequired(true))),
+	}
+	dfOptions := []dfscanner.Option{
+		// The given memoryfs contains only Dockerfile. DefSec doesn't need to check if each file is required.
+		dfscanner.OptionWithParser(dfparser.New(dfparser.OptionWithSkipRequired(true))),
+	}
+	k8sOptions := []k8sscanner.Option{
+		// The given memoryfs contains only Kubernetes manifests. DefSec doesn't need to check if each file is required.
+		k8sscanner.OptionWithParser(k8sparser.New(k8sparser.OptionWithSkipRequired(true))),
+	}
+
+	if opt.Trace {
+		// TODO(liam): trace outputs should be passed to MisconfResult.Traces
+		// cf. https://github.com/aquasecurity/fanal/blob/034fb19b8e06afd680d1e6c835fec7e8e9367bfc/types/misconf.go#L26
+		tfOptions = append(tfOptions, tfscanner.OptionWithTrace(os.Stderr))
+		cfOptions = append(cfOptions, cfscanner.OptionWithTrace(os.Stderr))
+		dfOptions = append(dfOptions, dfscanner.OptionWithTrace(os.Stderr))
+		k8sOptions = append(k8sOptions, k8sscanner.OptionWithTrace(os.Stderr))
+	}
+
+	if len(opt.PolicyPaths) > 0 {
+		tfOptions = append(tfOptions, tfscanner.OptionWithPolicyDirs(opt.PolicyPaths...))
+		cfOptions = append(cfOptions, cfscanner.OptionWithPolicyDirs(opt.PolicyPaths...))
+		dfOptions = append(dfOptions, dfscanner.OptionWithPolicyDirs(opt.PolicyPaths...))
+		k8sOptions = append(k8sOptions, k8sscanner.OptionWithPolicyDirs(opt.PolicyPaths...))
+	}
+
+	if len(opt.DataPaths) > 0 {
+		tfOptions = append(tfOptions, tfscanner.OptionWithDataDirs(opt.DataPaths...))
+		cfOptions = append(cfOptions, cfscanner.OptionWithDataDirs(opt.DataPaths...))
+		dfOptions = append(dfOptions, dfscanner.OptionWithDataDirs(opt.DataPaths...))
+		k8sOptions = append(k8sOptions, k8sscanner.OptionWithDataDirs(opt.DataPaths...))
+	}
+
+	if len(opt.Namespaces) > 0 {
+		tfOptions = append(tfOptions, tfscanner.OptionWithPolicyNamespaces(opt.Namespaces...))
+		cfOptions = append(cfOptions, cfscanner.OptionWithPolicyNamespaces(opt.Namespaces...))
+		dfOptions = append(dfOptions, dfscanner.OptionWithPolicyNamespaces(opt.Namespaces...))
+		k8sOptions = append(k8sOptions, k8sscanner.OptionWithPolicyNamespaces(opt.Namespaces...))
+	}
+
 	return misconfPostHandler{
 		scanners: map[string]scanners.Scanner{
-			types.Terraform: tfscanner.New(),
-
-			// The given memoryfs contains only CloudFormation files. DefSec doesn't need to check if each file is required.
-			types.CloudFormation: cfscanner.New(cfscanner.OptionWithParser(
-				cfparser.New(cfparser.OptionWithSkipRequired(true)))),
-
-			// The given memoryfs contains only Dockerfile. DefSec doesn't need to check if each file is required.
-			types.Dockerfile: dfscanner.NewScanner(dfscanner.OptionWithParser(
-				dfparser.New(dfparser.OptionWithSkipRequired(true)))),
-
-			// The given memoryfs contains only Kubernetes manifests. DefSec doesn't need to check if each file is required.
-			types.Kubernetes: k8sscanner.NewScanner(k8sscanner.OptionWithParser(
-				k8sparser.New(k8sparser.OptionWithSkipRequired(true)))),
+			types.Terraform:      tfscanner.New(tfOptions...),
+			types.CloudFormation: cfscanner.New(cfOptions...),
+			types.Dockerfile:     dfscanner.NewScanner(dfOptions...),
+			types.Kubernetes:     k8sscanner.NewScanner(k8sOptions...),
 		},
 	}, nil
 }
