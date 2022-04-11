@@ -7,8 +7,9 @@ import (
 )
 
 var (
-	RuleTypeAWS    = types.SecretRuleType("AWS")
-	RuleTypeGitHub = types.SecretRuleType("GitHub")
+	RuleTypeAWS           = types.SecretRuleType("AWS")
+	RuleTypeGitHub        = types.SecretRuleType("GitHub")
+	RuleTypeGenericSecret = types.SecretRuleType("GenericSecret")
 )
 
 var builtinRules = []Rule{

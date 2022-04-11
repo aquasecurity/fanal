@@ -43,7 +43,7 @@ type SecretAnalyzer struct {
 // TODO: it should take custom policies as input
 func NewSecretAnalyzer() SecretAnalyzer {
 	return SecretAnalyzer{
-		scanner: secret.NewScanner(""),
+		scanner: secret.NewScanner("", []secret.Rule{}, secret.AllowRule{}, secret.ExcludeBlock{}),
 	}
 }
 
