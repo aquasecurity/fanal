@@ -462,6 +462,7 @@ func TestAnalyzer_AnalyzerVersions(t *testing.T) {
 				"apk":     1,
 				"bundler": 1,
 				"ubuntu":  1,
+				"dpkg":    2,
 			},
 		},
 		{
@@ -470,6 +471,7 @@ func TestAnalyzer_AnalyzerVersions(t *testing.T) {
 			want: map[string]int{
 				"apk":     1,
 				"bundler": 1,
+				"dpkg":    2,
 			},
 		},
 	}

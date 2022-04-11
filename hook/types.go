@@ -1,5 +1,7 @@
 package hook
 
+import "github.com/aquasecurity/fanal/analyzer/pkg/dpkg"
+
 type Type string
 
 const (
@@ -8,4 +10,6 @@ const (
 	GemSpec   Type = "gemspec"
 
 	SystemFileFilter Type = "system-file-filter"
+
+	DpkgLicenseAdder Type = dpkg.LicenseAdder
 )

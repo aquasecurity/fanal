@@ -119,6 +119,10 @@ func (r *AnalysisResult) Sort() {
 			return app.Libraries[i].Version < app.Libraries[j].Version
 		})
 	}
+
+	sort.Slice(r.CustomResources, func(i, j int) bool {
+		return r.CustomResources[i].FilePath < r.CustomResources[j].FilePath
+	})
 }
 
 func (r *AnalysisResult) Merge(new *AnalysisResult) {

@@ -124,6 +124,7 @@ func (a Artifact) Inspect(ctx context.Context) (types.ArtifactReference, error) 
 		Applications:      result.Applications,
 		Misconfigurations: misconfs,
 		SystemFiles:       result.SystemInstalledFiles,
+		CustomResources:   result.CustomResources,
 	}
 
 	if err = a.hookManager.CallHooks(&blobInfo); err != nil {
