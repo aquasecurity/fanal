@@ -17,10 +17,6 @@ import (
 	dio "github.com/aquasecurity/go-dep-parser/pkg/io"
 )
 
-func init() {
-	analyzer.RegisterAnalyzer(NewSecretAnalyzer())
-}
-
 const version = 1
 
 var (
@@ -41,10 +37,12 @@ type SecretAnalyzer struct {
 }
 
 // TODO: it should take custom policies as input
-func NewSecretAnalyzer() SecretAnalyzer {
-	return SecretAnalyzer{
-		scanner: secret.NewScanner("", []secret.Rule{}, secret.AllowRule{}, secret.ExcludeBlock{}),
+func NewSecretAnalyzer(configPath string) (SecretAnalyzer, error) {
+	s, err := secret.NewScanner(configPath)
+	if err != nil {
+		return SecretAnalyzer{}, xerrors.Errorf("secret scanner error: %w", err)
 	}
+	return SecretAnalyzer{scanner: s}, nil
 }
 
 func (a SecretAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisInput) (*analyzer.AnalysisResult, error) {

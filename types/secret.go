@@ -1,6 +1,6 @@
 package types
 
-type SecretRuleType string
+type SecretRuleCategory string
 
 type Secret struct {
 	FilePath string
@@ -10,7 +10,7 @@ type Secret struct {
 
 type SecretFinding struct {
 	RuleID    string
-	Type      SecretRuleType
+	Category  SecretRuleCategory
 	Severity  string
 	Title     string
 	StartLine int
