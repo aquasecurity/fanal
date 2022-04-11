@@ -16,7 +16,7 @@ func TestDpkgAnalyzer_parseCopyrightFile(t *testing.T) {
 		wantLicense       *analyzer.AnalysisResult
 	}{
 		{
-			name:              "happy path. 'License:' pattern + licenseclassifier",
+			name:              "happy path. There are 'License:' pattern and licenseclassifier",
 			copyrightFilePath: "testdata/copyrightFiles/usr/share/doc/zlib1g/copyright",
 			wantLicense: &analyzer.AnalysisResult{
 				CustomResources: []types.CustomResource{
@@ -29,7 +29,7 @@ func TestDpkgAnalyzer_parseCopyrightFile(t *testing.T) {
 			},
 		},
 		{
-			name:              "happy path. Common license",
+			name:              "happy path. There is Common license",
 			copyrightFilePath: "testdata/copyrightFiles/usr/share/doc/adduser/copyright",
 			wantLicense: &analyzer.AnalysisResult{
 				CustomResources: []types.CustomResource{
