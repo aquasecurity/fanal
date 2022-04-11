@@ -90,8 +90,23 @@ func TestDpkgAnalyzer_isLicenseFile(t *testing.T) {
 	}{
 		{
 			name:     "happy path",
-			filePath: "/usr/share/doc/eject/copyright",
+			filePath: "usr/share/doc/eject/copyright",
 			want:     true,
+		},
+		{
+			name:     "sad path. Wrong path",
+			filePath: "/usr/share/doc/library/eject/copyright",
+			want:     false,
+		},
+		{
+			name:     "sad path. Wrong prefix",
+			filePath: "/usr/share/doc/eject/copyright/file",
+			want:     false,
+		},
+		{
+			name:     "sad path. Wrong suffix",
+			filePath: "/usr/share/doc/eject/copyright",
+			want:     false,
 		},
 	}
 	for _, test := range tests {
@@ -109,8 +124,13 @@ func TestDpkgAnalyzer_getPkgNameFromLicenseFilePath(t *testing.T) {
 	}{
 		{
 			name:     "happy path",
-			filePath: "/usr/share/doc/eject/copyright",
+			filePath: "usr/share/doc/eject/copyright",
 			wantPkg:  "eject",
+		},
+		{
+			name:     "sad path",
+			filePath: "usr/share/doc/library/eject/copyright",
+			wantPkg:  "",
 		},
 	}
 	for _, test := range tests {

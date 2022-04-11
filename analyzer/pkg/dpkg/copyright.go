@@ -17,7 +17,7 @@ const LicenseAdder = "dpkg-license-adder"
 
 var (
 	cl, _                = classifier.DefaultClassifier()
-	copyrightFileRegexp  = regexp.MustCompile(`/?usr/share/doc/([0-9A-Za-z_.-]+)/copyright`)
+	copyrightFileRegexp  = regexp.MustCompile(`^usr/share/doc/([0-9A-Za-z_.-]+)/copyright$`)
 	commonLicensesRegexp = regexp.MustCompile(`/?usr/share/common-licenses/([0-9A-Za-z_.+-]+[0-9A-Za-z+])`)
 )
 
