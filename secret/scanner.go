@@ -239,7 +239,9 @@ type ScanArgs struct {
 func (s Scanner) Scan(args ScanArgs) types.Secret {
 	// Global allowed paths
 	if s.AllowPath(args.FilePath) {
-		return types.Secret{}
+		return types.Secret{
+			FilePath: args.FilePath,
+		}
 	}
 
 	var findings []types.SecretFinding

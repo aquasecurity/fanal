@@ -75,7 +75,7 @@ func TestSecretScanner(t *testing.T) {
 			inputFilePath: "testdata/secret.txt",
 			want: types.Secret{
 				FilePath: "testdata/secret.txt",
-				Findings: []types.SecretFinding{wantFinding1, wantFinding2},
+				Findings: nil,
 			},
 		},
 		{
