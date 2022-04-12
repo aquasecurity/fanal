@@ -96,7 +96,7 @@ func TestTLSRegistry(t *testing.T) {
 				Password:              registryPassword,
 				InsecureSkipTLSVerify: true,
 			},
-			expectedOS: types.OS{Name: "3.10.2", Family: "alpine", Priority: 2},
+			expectedOS: types.OS{Name: "3.10.2", Family: "alpine"},
 			wantErr:    false,
 		},
 		{
@@ -107,7 +107,7 @@ func TestTLSRegistry(t *testing.T) {
 				InsecureSkipTLSVerify: true,
 			},
 			login:      true,
-			expectedOS: types.OS{Name: "3.10.2", Family: "alpine", Priority: 2},
+			expectedOS: types.OS{Name: "3.10.2", Family: "alpine"},
 			wantErr:    false,
 		},
 		{

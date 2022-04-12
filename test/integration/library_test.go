@@ -48,7 +48,7 @@ var testCases = []testCase{
 		imageName:       "alpine:3.10",
 		remoteImageName: "knqyf263/alpine:3.10",
 		imageFile:       "testdata/fixtures/alpine-310.tar.gz",
-		wantOS:          types.OS{Name: "3.10.2", Family: "alpine", Priority: 2},
+		wantOS:          types.OS{Name: "3.10.2", Family: "alpine"},
 	},
 	{
 		name:            "happy path, amazonlinux:2",
@@ -105,7 +105,7 @@ var testCases = []testCase{
 		imageName:           "knqyf263/vuln-image:1.2.3",
 		remoteImageName:     "knqyf263/vuln-image:1.2.3",
 		imageFile:           "testdata/fixtures/vulnimage.tar.gz",
-		wantOS:              types.OS{Name: "3.7.1", Family: "alpine", Priority: 2},
+		wantOS:              types.OS{Name: "3.7.1", Family: "alpine"},
 		wantApplicationFile: "testdata/goldens/vuln-image1.2.3.expectedlibs.golden",
 		wantPkgsFromCmds:    "testdata/goldens/vuln-image1.2.3.expectedpkgsfromcmds.golden",
 	},
