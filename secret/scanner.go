@@ -61,21 +61,28 @@ func (r *Regexp) UnmarshalYAML(value *yaml.Node) error {
 }
 
 type Rule struct {
-	ID           string                   `yaml:"id"`
-	Category     types.SecretRuleCategory `yaml:"category"`
-	Title        string                   `yaml:"title"`
-	Severity     string                   `yaml:"severity"`
-	Regex        *Regexp                  `yaml:"regex"`
-	Path         *Regexp                  `yaml:"path"`
-	AllowRule    AllowRule                `yaml:"allow-rule"`
-	ExcludeBlock ExcludeBlock             `yaml:"exclude-block"`
+	ID              string                   `yaml:"id"`
+	Category        types.SecretRuleCategory `yaml:"category"`
+	Title           string                   `yaml:"title"`
+	Severity        string                   `yaml:"severity"`
+	Regex           *Regexp                  `yaml:"regex"`
+	Path            *Regexp                  `yaml:"path"`
+	AllowRule       AllowRule                `yaml:"allow-rule"`
+	ExcludeBlock    ExcludeBlock             `yaml:"exclude-block"`
+	SecretGroupName string                   `yaml:"secret-group-name"`
 }
 
 func (r *Rule) FindLocations(content []byte) []Location {
 	if r.Regex == nil {
 		return nil
 	}
-	indices := r.Regex.FindAllIndex(content, -1)
+	var indices [][]int
+	if r.SecretGroupName == "" {
+		indices = r.Regex.FindAllIndex(content, -1)
+	} else {
+		indices = r.FindSubmatchIndices(content)
+	}
+
 	var locs []Location
 	for _, index := range indices {
 		locs = append(locs, Location{
@@ -84,6 +91,21 @@ func (r *Rule) FindLocations(content []byte) []Location {
 		})
 	}
 	return locs
+}
+
+func (r *Rule) FindSubmatchIndices(content []byte) [][]int {
+	var indices [][]int
+	matchsLocs := r.Regex.FindAllSubmatchIndex(content, -1)
+	for _, matchLocs := range matchsLocs {
+		for i, name := range r.Regex.SubexpNames() {
+			if name == r.SecretGroupName {
+				startLocIndex := 2 * i
+				endLocIndex := startLocIndex + 1
+				indices = append(indices, []int{matchLocs[startLocIndex], matchLocs[endLocIndex]})
+			}
+		}
+	}
+	return indices
 }
 
 func (r *Rule) MatchPath(path string) bool {
@@ -302,7 +324,7 @@ func findLocation(start, end int, content []byte) (int, int, string) {
 	matchLine := string(content[lineStart:lineEnd])
 
 	// Mask credentials
-	matchLine = strings.ReplaceAll(matchLine, match, "*****")
+	matchLine = strings.TrimSpace(strings.ReplaceAll(matchLine, match, "*****"))
 
 	return startLineNum, endLineNum, matchLine
 }
