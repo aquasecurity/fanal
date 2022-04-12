@@ -3,6 +3,7 @@ package alpine
 import (
 	"bufio"
 	"context"
+	"github.com/Masterminds/semver"
 	"os"
 	"regexp"
 	"strings"
@@ -38,21 +39,39 @@ type alpineOSAnalyzer struct{}
 
 func (a alpineOSAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisInput) (*analyzer.AnalysisResult, error) {
 	scanner := bufio.NewScanner(input.Content)
+	osVersion := ""
+	priority := 0
 	for scanner.Scan() {
 		line := scanner.Text()
 
 		if strings.HasSuffix(input.FilePath, alpineReleaseFile) { // get Alpine version from etc/alpine-release file
-			return &analyzer.AnalysisResult{
-				OS: &types.OS{Family: aos.Alpine, Name: line},
-			}, nil
+			osVersion = line
+			priority = 2 // alpine-release file has more high priority
 		}
 
 		version := apkRepositoriesRegexp.FindStringSubmatch(line) // get Alpine version from etc/apk/repositories file
 		if len(version) == 2 {
-			return &analyzer.AnalysisResult{
-				OS: &types.OS{Family: aos.Alpine, Name: version[1]},
-			}, nil
+			newVersion := version[1]
+			switch {
+			case osVersion == "":
+				osVersion = newVersion
+				priority = 1
+			case osVersion == "edge" || version[1] == "edge":
+				osVersion = "edge"
+			default:
+				semverOld, _ := semver.NewVersion(osVersion)
+				semverNew, _ := semver.NewVersion(newVersion)
+				if semverOld.LessThan(semverNew) {
+					osVersion = newVersion
+				}
+			}
 		}
+	}
+
+	if osVersion != "" {
+		return &analyzer.AnalysisResult{
+			OS: &types.OS{Family: aos.Alpine, Name: osVersion, Priority: priority},
+		}, nil
 	}
 	return nil, xerrors.Errorf("alpine: %w", aos.AnalyzeOSError)
 }

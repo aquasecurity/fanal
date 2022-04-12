@@ -212,6 +212,32 @@ func TestAnalysisResult_Merge(t *testing.T) {
 			},
 		},
 		{
+			name: "alpine(alpine-release) must be replaced with alpine(apk/repositories)",
+			fields: fields{
+				OS: &types.OS{
+					Family:   aos.Alpine, // this must not be overwritten
+					Name:     "edge",
+					Priority: 1,
+				},
+			},
+			args: args{
+				new: &analyzer.AnalysisResult{
+					OS: &types.OS{
+						Family:   aos.Alpine,
+						Name:     "3.15.3",
+						Priority: 2,
+					},
+				},
+			},
+			want: analyzer.AnalysisResult{
+				OS: &types.OS{
+					Family:   aos.Alpine, // this must not be overwritten
+					Name:     "3.15.3",
+					Priority: 2,
+				},
+			},
+		},
+		{
 			name: "alpine must not be replaced with oracle",
 			fields: fields{
 				OS: &types.OS{
@@ -268,8 +294,9 @@ func TestAnalyzeFile(t *testing.T) {
 			},
 			want: &analyzer.AnalysisResult{
 				OS: &types.OS{
-					Family: "alpine",
-					Name:   "3.11.6",
+					Family:   "alpine",
+					Name:     "3.11.6",
+					Priority: 2,
 				},
 			},
 		},

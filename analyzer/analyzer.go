@@ -137,6 +137,13 @@ func (r *AnalysisResult) Merge(new *AnalysisResult) {
 		if r.OS == nil || r.OS.Family == aos.RedHat || r.OS.Family == aos.Debian {
 			r.OS = new.OS
 		}
+
+		// Alpine contains OS version in etc/alpine-release and etc/apk/repositories files.
+		// etc/alpine-release has higher priority for determining OS version
+		// OS must be overwritten with the content of etc/alpine-release
+		if r.OS.Family == aos.Alpine && new.OS.Family == aos.Alpine && new.OS.Priority > r.OS.Priority {
+			r.OS = new.OS
+		}
 	}
 
 	if len(new.PackageInfos) > 0 {

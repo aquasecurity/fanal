@@ -43,13 +43,14 @@ func TestArtifact_Inspect(t *testing.T) {
 			},
 			putBlobExpectation: cache.ArtifactCachePutBlobExpectation{
 				Args: cache.ArtifactCachePutBlobArgs{
-					BlobID: "sha256:566841e0f2bc23a761706c8dae1cd4ddda8ac6a013026a059f21a2cc748b5206",
+					BlobID: "sha256:5478476699d3ecc79cc8f4f18538d33eecfe13b871a4d7c69ba33a278fb39e1f",
 					BlobInfo: types.BlobInfo{
 						SchemaVersion: types.BlobJSONSchemaVersion,
-						DiffID:        "sha256:9eaa33f9952218e93b2b7678e0092c5eb809877c948af5ea19b5148c5857d9fa",
+						DiffID:        "sha256:62a8fb607bf4a226af3cb30ec4e020c4544f750cd34d1f4f8e35ff9bffc7d3f2",
 						OS: &types.OS{
-							Family: "alpine",
-							Name:   "3.11.6",
+							Family:   "alpine",
+							Name:     "3.11.6",
+							Priority: 2,
 						},
 						PackageInfos: []types.PackageInfo{
 							{
@@ -66,9 +67,9 @@ func TestArtifact_Inspect(t *testing.T) {
 			want: types.ArtifactReference{
 				Name: "host",
 				Type: types.ArtifactFilesystem,
-				ID:   "sha256:566841e0f2bc23a761706c8dae1cd4ddda8ac6a013026a059f21a2cc748b5206",
+				ID:   "sha256:5478476699d3ecc79cc8f4f18538d33eecfe13b871a4d7c69ba33a278fb39e1f",
 				BlobIDs: []string{
-					"sha256:566841e0f2bc23a761706c8dae1cd4ddda8ac6a013026a059f21a2cc748b5206",
+					"sha256:5478476699d3ecc79cc8f4f18538d33eecfe13b871a4d7c69ba33a278fb39e1f",
 				},
 			},
 		},
@@ -106,13 +107,14 @@ func TestArtifact_Inspect(t *testing.T) {
 			},
 			putBlobExpectation: cache.ArtifactCachePutBlobExpectation{
 				Args: cache.ArtifactCachePutBlobArgs{
-					BlobID: "sha256:566841e0f2bc23a761706c8dae1cd4ddda8ac6a013026a059f21a2cc748b5206",
+					BlobID: "sha256:5478476699d3ecc79cc8f4f18538d33eecfe13b871a4d7c69ba33a278fb39e1f",
 					BlobInfo: types.BlobInfo{
 						SchemaVersion: types.BlobJSONSchemaVersion,
-						DiffID:        "sha256:9eaa33f9952218e93b2b7678e0092c5eb809877c948af5ea19b5148c5857d9fa",
+						DiffID:        "sha256:62a8fb607bf4a226af3cb30ec4e020c4544f750cd34d1f4f8e35ff9bffc7d3f2",
 						OS: &types.OS{
-							Family: "alpine",
-							Name:   "3.11.6",
+							Family:   "alpine",
+							Name:     "3.11.6",
+							Priority: 2,
 						},
 						PackageInfos: []types.PackageInfo{
 							{

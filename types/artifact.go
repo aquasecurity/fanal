@@ -7,9 +7,10 @@ import (
 )
 
 type OS struct {
-	Family string
-	Name   string
-	Eosl   bool `json:"EOSL,omitempty"`
+	Family   string
+	Name     string
+	Eosl     bool `json:"EOSL,omitempty"`
+	Priority int  // Field is used to select OS version from different files
 }
 
 type Layer struct {

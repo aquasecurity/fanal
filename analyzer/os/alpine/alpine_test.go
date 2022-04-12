@@ -24,27 +24,63 @@ func TestAlpineOSAnalyzer_Analyze(t *testing.T) {
 				Content:  strings.NewReader("3.15.4"),
 			},
 			wantResult: &analyzer.AnalysisResult{
-				OS: &types.OS{Family: aos.Alpine, Name: "3.15.4"},
+				OS: &types.OS{Family: aos.Alpine, Name: "3.15.4", Priority: 2},
 			},
 		},
 		{
-			name: "happy path. Get OS version from 'etc/apk/repositories' file",
+			name: "happy path. 'etc/apk/repositories' contains 1 line with v* version",
 			input: analyzer.AnalysisInput{
 				FilePath: "/etc/apk/repositories",
 				Content:  strings.NewReader("https://dl-cdn.alpinelinux.org/alpine/v3.15/main"),
 			},
 			wantResult: &analyzer.AnalysisResult{
-				OS: &types.OS{Family: aos.Alpine, Name: "3.15"},
+				OS: &types.OS{Family: aos.Alpine, Name: "3.15", Priority: 1},
 			},
 		},
 		{
-			name: "happy path. Get 'edge' OS version from 'etc/apk/repositories' file",
+			name: "happy path. 'etc/apk/repositories' contains 1 line with edge version",
 			input: analyzer.AnalysisInput{
 				FilePath: "/etc/apk/repositories",
-				Content:  strings.NewReader("https://dl-cdn.alpinelinux.org/alpine/edge/mainf6f0e0395026"),
+				Content:  strings.NewReader("https://dl-cdn.alpinelinux.org/alpine/edge/main"),
 			},
 			wantResult: &analyzer.AnalysisResult{
-				OS: &types.OS{Family: aos.Alpine, Name: "edge"},
+				OS: &types.OS{Family: aos.Alpine, Name: "edge", Priority: 1},
+			},
+		},
+		{
+			name: "happy path. 'etc/apk/repositories' contains some line with v* versions",
+			input: analyzer.AnalysisInput{
+				FilePath: "/etc/apk/repositories",
+				Content: strings.NewReader(`https://dl-cdn.alpinelinux.org/alpine/v3.1/main
+https://dl-cdn.alpinelinux.org/alpine/v3.10/main
+`),
+			},
+			wantResult: &analyzer.AnalysisResult{
+				OS: &types.OS{Family: aos.Alpine, Name: "3.10", Priority: 1},
+			},
+		},
+		{
+			name: "happy path. 'etc/apk/repositories' contains some line with v* versions",
+			input: analyzer.AnalysisInput{
+				FilePath: "/etc/apk/repositories",
+				Content: strings.NewReader(`https://dl-cdn.alpinelinux.org/alpine/v3.10/main
+https://dl-cdn.alpinelinux.org/alpine/v3.1/main
+`),
+			},
+			wantResult: &analyzer.AnalysisResult{
+				OS: &types.OS{Family: aos.Alpine, Name: "3.10", Priority: 1},
+			},
+		},
+		{
+			name: "happy path. 'etc/apk/repositories' contains some line with v* and edge versions",
+			input: analyzer.AnalysisInput{
+				FilePath: "/etc/apk/repositories",
+				Content: strings.NewReader(`https://dl-cdn.alpinelinux.org/alpine/edge/main
+https://dl-cdn.alpinelinux.org/alpine/v3.10/main
+`),
+			},
+			wantResult: &analyzer.AnalysisResult{
+				OS: &types.OS{Family: aos.Alpine, Name: "edge", Priority: 1},
 			},
 		},
 		{
