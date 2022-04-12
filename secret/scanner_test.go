@@ -19,7 +19,7 @@ func TestSecretScanner(t *testing.T) {
 		Severity:  "HIGH",
 		StartLine: 2,
 		EndLine:   3,
-		Match:     "generic secret line *****",
+		Match:     "generic secret line secret=\"*****\"",
 	}
 	wantFinding2 := types.SecretFinding{
 		RuleID:    "rule1",
@@ -28,7 +28,25 @@ func TestSecretScanner(t *testing.T) {
 		Severity:  "HIGH",
 		StartLine: 4,
 		EndLine:   5,
-		Match:     "*****",
+		Match:     "secret=\"*****\"",
+	}
+	wantFinding3 := types.SecretFinding{
+		RuleID:    "rule1",
+		Category:  "general",
+		Title:     "Generic Rule",
+		Severity:  "HIGH",
+		StartLine: 5,
+		EndLine:   6,
+		Match:     "credentials: { user: \"*****\" password: \"123456789\" }",
+	}
+	wantFinding4 := types.SecretFinding{
+		RuleID:    "rule1",
+		Category:  "general",
+		Title:     "Generic Rule",
+		Severity:  "HIGH",
+		StartLine: 5,
+		EndLine:   6,
+		Match:     "credentials: { user: \"username\" password: \"*****\" }",
 	}
 	tests := []struct {
 		name          string
@@ -75,7 +93,7 @@ func TestSecretScanner(t *testing.T) {
 			inputFilePath: "testdata/secret.txt",
 			want: types.Secret{
 				FilePath: "testdata/secret.txt",
-				Findings: []types.SecretFinding{wantFinding1, wantFinding2},
+				Findings: nil,
 			},
 		},
 		{
@@ -94,6 +112,15 @@ func TestSecretScanner(t *testing.T) {
 			want: types.Secret{
 				FilePath: "testdata/secret.txt",
 				Findings: []types.SecretFinding{wantFinding2},
+			},
+		},
+		{
+			name:          "multiple secret groups",
+			configPath:    "testdata/multiple-secret-groups.yaml",
+			inputFilePath: "testdata/secret.txt",
+			want: types.Secret{
+				FilePath: "testdata/secret.txt",
+				Findings: []types.SecretFinding{wantFinding3, wantFinding4},
 			},
 		},
 	}
