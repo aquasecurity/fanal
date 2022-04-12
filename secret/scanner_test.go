@@ -19,7 +19,7 @@ func TestSecretScanner(t *testing.T) {
 		Severity:  "HIGH",
 		StartLine: 2,
 		EndLine:   3,
-		Match:     "generic secret line *****",
+		Match:     "generic secret line secret=\"*****\"",
 	}
 	wantFinding2 := types.SecretFinding{
 		RuleID:    "rule1",
@@ -28,7 +28,7 @@ func TestSecretScanner(t *testing.T) {
 		Severity:  "HIGH",
 		StartLine: 4,
 		EndLine:   5,
-		Match:     "*****",
+		Match:     "secret=\"*****\"",
 	}
 	tests := []struct {
 		name          string
