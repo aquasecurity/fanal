@@ -17,7 +17,7 @@ const version = 1
 
 type gomodMergeHook struct{}
 
-// Hook removes files installed by OS package manager such as yum.
+// Hook merges go.mod and go.sum.
 func (h gomodMergeHook) Hook(blob *types.BlobInfo) error {
 	var apps []types.Application
 	for _, app := range blob.Applications {
