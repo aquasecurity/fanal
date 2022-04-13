@@ -11,7 +11,7 @@ require (
 	github.com/GoogleCloudPlatform/docker-credential-gcr v2.0.5+incompatible
 	github.com/alicebob/miniredis/v2 v2.18.0
 	github.com/aquasecurity/defsec v0.28.4
-	github.com/aquasecurity/go-dep-parser v0.0.0-20220406074731-71021a481237
+	github.com/aquasecurity/go-dep-parser v0.0.0-20220412145205-d0501f906d90
 	github.com/aquasecurity/go-version v0.0.0-20210121072130-637058cfe492
 	github.com/aquasecurity/testdocker v0.0.0-20210911155206-e1e85f5a1516
 	github.com/aquasecurity/tfsec v1.8.0
@@ -49,6 +49,7 @@ require (
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
 	golang.org/x/sys v0.0.0-20220114195835-da31bd327af9 // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1
+	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
 	sigs.k8s.io/yaml v1.3.0
 )
 
@@ -161,7 +162,6 @@ require (
 	google.golang.org/protobuf v1.28.0 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
-	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
 	lukechampine.com/uint128 v1.1.1 // indirect
 	modernc.org/cc/v3 v3.35.22 // indirect
 	modernc.org/ccgo/v3 v3.15.1 // indirect
