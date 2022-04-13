@@ -9,7 +9,7 @@ import (
 type OS struct {
 	Family            string
 	Name              string
-	RepositoryVersion string // some OS have different OS version and download repository version
+	RepositoryVersion string `json:",omitempty"` // some OS have different OS version and download repository version
 	Eosl              bool   `json:"EOSL,omitempty"`
 }
 
