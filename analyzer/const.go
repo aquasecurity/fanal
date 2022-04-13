@@ -6,25 +6,27 @@ const (
 	// ======
 	//   OS
 	// ======
-	TypeAlpineRelease Type = "alpine-release"
-	TypeAlpineApk     Type = "alpine-apk-repositories"
-	TypeAmazon        Type = "amazon"
-	TypeCBLMariner    Type = "cbl-mariner"
-	TypeDebian        Type = "debian"
-	TypePhoton        Type = "photon"
-	TypeCentOS        Type = "centos"
-	TypeRocky         Type = "rocky"
-	TypeAlma          Type = "alma"
-	TypeFedora        Type = "fedora"
-	TypeOracle        Type = "oracle"
-	TypeRedHatBase    Type = "redhat"
-	TypeSUSE          Type = "suse"
-	TypeUbuntu        Type = "ubuntu"
+	TypeAlpine     Type = "alpine"
+	TypeAmazon     Type = "amazon"
+	TypeCBLMariner Type = "cbl-mariner"
+	TypeDebian     Type = "debian"
+	TypePhoton     Type = "photon"
+	TypeCentOS     Type = "centos"
+	TypeRocky      Type = "rocky"
+	TypeAlma       Type = "alma"
+	TypeFedora     Type = "fedora"
+	TypeOracle     Type = "oracle"
+	TypeRedHatBase Type = "redhat"
+	TypeSUSE       Type = "suse"
+	TypeUbuntu     Type = "ubuntu"
 
 	// OS Package
 	TypeApk  Type = "apk"
 	TypeDpkg Type = "dpkg"
 	TypeRpm  Type = "rpm"
+
+	// OS Package Repository
+	TypeApkRepo Type = "apk-repo"
 
 	// ============================
 	// Programming Language Package
@@ -87,7 +89,7 @@ const (
 
 var (
 	// TypeOSes has all OS-related analyzers
-	TypeOSes = []Type{TypeAlpineRelease, TypeAlpineApk, TypeAmazon, TypeDebian, TypePhoton, TypeCentOS,
+	TypeOSes = []Type{TypeAlpine, TypeAmazon, TypeDebian, TypePhoton, TypeCentOS,
 		TypeRocky, TypeAlma, TypeFedora, TypeOracle, TypeRedHatBase, TypeSUSE, TypeUbuntu,
 		TypeApk, TypeDpkg, TypeRpm,
 	}

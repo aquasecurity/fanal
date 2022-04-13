@@ -78,6 +78,7 @@ type Opener func() (dio.ReadSeekCloserAt, error)
 type AnalysisResult struct {
 	m                    sync.Mutex
 	OS                   *types.OS
+	Repository           *types.Repository
 	PackageInfos         []types.PackageInfo
 	Applications         []types.Application
 	Configs              []types.Config
@@ -92,7 +93,7 @@ type AnalysisResult struct {
 }
 
 func (r *AnalysisResult) isEmpty() bool {
-	return r.OS == nil && len(r.PackageInfos) == 0 && len(r.Applications) == 0 &&
+	return r.OS == nil && r.Repository == nil && len(r.PackageInfos) == 0 && len(r.Applications) == 0 &&
 		len(r.Configs) == 0 && len(r.SystemInstalledFiles) == 0 && r.BuildInfo == nil && len(r.CustomResources) == 0
 }
 
@@ -131,23 +132,16 @@ func (r *AnalysisResult) Merge(new *AnalysisResult) {
 	defer r.m.Unlock()
 
 	if new.OS != nil {
-		// Alpine contains OS version and repository version
-		// These versions can be different
-		// To OS must add OS version and Repository version
-		if r.OS != nil && r.OS.Family == aos.Alpine && new.OS.Family == aos.Alpine {
-			if r.OS.Name != "" {
-				r.OS.RepositoryVersion = new.OS.RepositoryVersion
-			} else {
-				r.OS.Name = new.OS.Name
-			}
-		}
-
 		// OLE also has /etc/redhat-release and it detects OLE as RHEL by mistake.
 		// In that case, OS must be overwritten with the content of /etc/oracle-release.
 		// There is the same problem between Debian and Ubuntu.
 		if r.OS == nil || r.OS.Family == aos.RedHat || r.OS.Family == aos.Debian {
 			r.OS = new.OS
 		}
+	}
+
+	if new.Repository != nil {
+		r.Repository = new.Repository
 	}
 
 	if len(new.PackageInfos) > 0 {

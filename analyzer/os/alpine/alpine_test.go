@@ -31,7 +31,7 @@ func TestAlpineReleaseOSAnalyzer_Required(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			a := alpineReleaseOSAnalyzer{}
+			a := alpineOSAnalyzer{}
 			res, err := a.Analyze(context.Background(), test.input)
 
 			if test.wantError != "" {

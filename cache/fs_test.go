@@ -132,9 +132,12 @@ func TestFSCache_PutBlob(t *testing.T) {
 				layerInfo: types.BlobInfo{
 					SchemaVersion: 1,
 					OS: &types.OS{
-						Family:            "alpine",
-						Name:              "3.10",
-						RepositoryVersion: "3.10",
+						Family: "alpine",
+						Name:   "3.10",
+					},
+					Repository: &types.Repository{
+						Family:  "alpine",
+						Release: "3.10",
 					},
 				},
 			},
@@ -143,8 +146,11 @@ func TestFSCache_PutBlob(t *testing.T) {
 				  "SchemaVersion": 1,
 				  "OS": {
 				    "Family": "alpine",
-				    "Name": "3.10",
-					"RepositoryVersion": "3.10"
+				    "Name": "3.10"
+				  },
+ 				  "Repository": {
+					"Family": "alpine",
+					"Release": "3.10"
 				  }
 				}`,
 			wantLayerID: "",
@@ -158,9 +164,12 @@ func TestFSCache_PutBlob(t *testing.T) {
 					Digest:        "sha256:dffd9992ca398466a663c87c92cfea2a2db0ae0cf33fcb99da60eec52addbfc5",
 					DiffID:        "sha256:dab15cac9ebd43beceeeda3ce95c574d6714ed3d3969071caead678c065813ec",
 					OS: &types.OS{
-						Family:            "alpine",
-						Name:              "3.10",
-						RepositoryVersion: "3.10",
+						Family: "alpine",
+						Name:   "3.10",
+					},
+					Repository: &types.Repository{
+						Family:  "alpine",
+						Release: "3.10",
 					},
 					PackageInfos: []types.PackageInfo{
 						{
@@ -200,8 +209,11 @@ func TestFSCache_PutBlob(t *testing.T) {
 				  "DiffID": "sha256:dab15cac9ebd43beceeeda3ce95c574d6714ed3d3969071caead678c065813ec",
 				  "OS": {
 				    "Family": "alpine",
-				    "Name": "3.10",
-					"RepositoryVersion": "3.10"
+				    "Name": "3.10"
+				  },
+ 				  "Repository": {
+					"Family": "alpine",
+					"Release": "3.10"
 				  },
 				  "PackageInfos": [
 				    {
