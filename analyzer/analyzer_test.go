@@ -23,7 +23,7 @@ import (
 	_ "github.com/aquasecurity/fanal/analyzer/os/alpine"
 	_ "github.com/aquasecurity/fanal/analyzer/os/ubuntu"
 	_ "github.com/aquasecurity/fanal/analyzer/pkg/apk"
-	_ "github.com/aquasecurity/fanal/analyzer/repo"
+	_ "github.com/aquasecurity/fanal/analyzer/repo/apk"
 	_ "github.com/aquasecurity/fanal/hook/all"
 )
 
