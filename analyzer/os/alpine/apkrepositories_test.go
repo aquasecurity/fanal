@@ -10,23 +10,13 @@ import (
 	"testing"
 )
 
-func TestAlpineOSAnalyzer_Analyze(t *testing.T) {
+func TestAlpineApkOSAnalyzer_Required(t *testing.T) {
 	tests := []struct {
 		name       string
 		input      analyzer.AnalysisInput
 		wantResult *analyzer.AnalysisResult
 		wantError  string
 	}{
-		{
-			name: "happy path. Get OS version from 'etc/alpine-release' file",
-			input: analyzer.AnalysisInput{
-				FilePath: "/etc/alpine-release",
-				Content:  strings.NewReader("3.15.4"),
-			},
-			wantResult: &analyzer.AnalysisResult{
-				OS: &types.OS{Family: aos.Alpine, Name: "3.15.4", Priority: 2},
-			},
-		},
 		{
 			name: "happy path. 'etc/apk/repositories' contains 1 line with v* version",
 			input: analyzer.AnalysisInput{
@@ -95,7 +85,7 @@ https://dl-cdn.alpinelinux.org/alpine/v3.10/main
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			a := alpineOSAnalyzer{}
+			a := alpineApkOSAnalyzer{}
 			res, err := a.Analyze(context.Background(), test.input)
 
 			if test.wantError != "" {

@@ -305,7 +305,7 @@ func TestAnalyzeFile(t *testing.T) {
 			args: args{
 				filePath:          "/etc/alpine-release",
 				testFilePath:      "testdata/etc/alpine-release",
-				disabledAnalyzers: []analyzer.Type{analyzer.TypeAlpine},
+				disabledAnalyzers: []analyzer.Type{analyzer.TypeAlpineRelease},
 			},
 			want: &analyzer.AnalysisResult{},
 		},
@@ -485,15 +485,16 @@ func TestAnalyzer_AnalyzerVersions(t *testing.T) {
 			name:     "happy path",
 			disabled: []analyzer.Type{},
 			want: map[string]int{
-				"alpine":  1,
-				"apk":     1,
-				"bundler": 1,
-				"ubuntu":  1,
+				"alpine-release":          1,
+				"alpine-apk-repositories": 1,
+				"apk":                     1,
+				"bundler":                 1,
+				"ubuntu":                  1,
 			},
 		},
 		{
 			name:     "disable analyzers",
-			disabled: []analyzer.Type{analyzer.TypeAlpine, analyzer.TypeUbuntu},
+			disabled: []analyzer.Type{analyzer.TypeAlpineRelease, analyzer.TypeAlpineApk, analyzer.TypeUbuntu},
 			want: map[string]int{
 				"apk":     1,
 				"bundler": 1,
@@ -526,7 +527,7 @@ func TestAnalyzer_ImageConfigAnalyzerVersions(t *testing.T) {
 		},
 		{
 			name:     "disable analyzers",
-			disabled: []analyzer.Type{analyzer.TypeAlpine, analyzer.TypeApkCommand},
+			disabled: []analyzer.Type{analyzer.TypeAlpineRelease, analyzer.TypeApkCommand},
 			want: map[string]int{
 				"test": 1,
 			},
