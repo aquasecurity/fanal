@@ -50,7 +50,16 @@ func (a packagingAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisInp
 		if err != nil {
 			return nil, xerrors.Errorf("egg analysis error: %w", err)
 		}
-		defer pkginfoInZip.Close()
+		defer func() {
+			if pkginfoInZip != nil {
+				pkginfoInZip.Close()
+			}
+		}()
+
+		if pkginfoInZip == nil { // Egg archive may not contain required files, then we will get nil. Skip this archives
+			return nil, nil
+		}
+
 		r = pkginfoInZip
 	}
 
@@ -89,7 +98,7 @@ func (a packagingAnalyzer) analyzeEggZip(r io.ReaderAt, size int64) (io.ReadClos
 		return a.open(file)
 	}
 
-	return nil, xerrors.Errorf("archive doesn't contain files with information about the package.")
+	return nil, nil
 }
 
 func (a packagingAnalyzer) open(file *zip.File) (io.ReadCloser, error) {
