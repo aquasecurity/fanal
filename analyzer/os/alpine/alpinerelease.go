@@ -26,7 +26,7 @@ func (a alpineReleaseOSAnalyzer) Analyze(_ context.Context, input analyzer.Analy
 	for scanner.Scan() {
 		line := scanner.Text()
 		return &analyzer.AnalysisResult{
-			OS: &types.OS{Family: aos.Alpine, Name: line, Priority: 2}, // alpine-release file has more high priority
+			OS: &types.OS{Family: aos.Alpine, Name: line},
 		}, nil
 	}
 	return nil, xerrors.Errorf("alpine: %w", aos.AnalyzeOSError)

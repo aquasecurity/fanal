@@ -131,17 +131,21 @@ func (r *AnalysisResult) Merge(new *AnalysisResult) {
 	defer r.m.Unlock()
 
 	if new.OS != nil {
+		// Alpine contains OS version and repository version
+		// These versions can be different
+		// To OS must add OS version and Repository version
+		if r.OS != nil && r.OS.Family == aos.Alpine && new.OS.Family == aos.Alpine {
+			if r.OS.Name != "" {
+				r.OS.RepositoryVersion = new.OS.RepositoryVersion
+			} else {
+				r.OS.Name = new.OS.Name
+			}
+		}
+
 		// OLE also has /etc/redhat-release and it detects OLE as RHEL by mistake.
 		// In that case, OS must be overwritten with the content of /etc/oracle-release.
 		// There is the same problem between Debian and Ubuntu.
 		if r.OS == nil || r.OS.Family == aos.RedHat || r.OS.Family == aos.Debian {
-			r.OS = new.OS
-		}
-
-		// Alpine contains OS version in etc/alpine-release and etc/apk/repositories files.
-		// etc/alpine-release has higher priority for determining OS version
-		// OS must be overwritten with the content of etc/alpine-release
-		if r.OS.Family == aos.Alpine && new.OS.Family == aos.Alpine && new.OS.Priority > r.OS.Priority {
 			r.OS = new.OS
 		}
 	}

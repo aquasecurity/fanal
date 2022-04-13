@@ -62,9 +62,9 @@ func TestArtifact_Inspect(t *testing.T) {
 							Digest:        "",
 							DiffID:        "sha256:beee9f30bc1f711043e78d4a2be0668955d4b761d587d6f60c2c8dc081efb203",
 							OS: &types.OS{
-								Family:   "alpine",
-								Name:     "3.11.5",
-								Priority: 2,
+								Family:            "alpine",
+								Name:              "3.11.5",
+								RepositoryVersion: "3.11",
 							},
 							PackageInfos: []types.PackageInfo{{
 								FilePath: "lib/apk/db/installed",
@@ -610,9 +610,9 @@ func TestArtifact_Inspect(t *testing.T) {
 							Digest:        "",
 							DiffID:        "sha256:beee9f30bc1f711043e78d4a2be0668955d4b761d587d6f60c2c8dc081efb203",
 							OS: &types.OS{
-								Family:   "alpine",
-								Name:     "3.11.5",
-								Priority: 2,
+								Family:            "alpine",
+								Name:              "3.11.5",
+								RepositoryVersion: "3.11",
 							},
 							PackageInfos: []types.PackageInfo{{
 								FilePath: "lib/apk/db/installed",
@@ -667,9 +667,9 @@ func TestArtifact_Inspect(t *testing.T) {
 							Digest:        "",
 							DiffID:        "sha256:beee9f30bc1f711043e78d4a2be0668955d4b761d587d6f60c2c8dc081efb203",
 							OS: &types.OS{
-								Family:   "alpine",
-								Name:     "3.11.5",
-								Priority: 2,
+								Family:            "alpine",
+								Name:              "3.11.5",
+								RepositoryVersion: "3.11",
 							},
 							PackageInfos: []types.PackageInfo{{
 								FilePath: "lib/apk/db/installed",

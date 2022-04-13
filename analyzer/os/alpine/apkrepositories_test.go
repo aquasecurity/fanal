@@ -24,7 +24,7 @@ func TestAlpineApkOSAnalyzer_Required(t *testing.T) {
 				Content:  strings.NewReader("https://dl-cdn.alpinelinux.org/alpine/v3.15/main"),
 			},
 			wantResult: &analyzer.AnalysisResult{
-				OS: &types.OS{Family: aos.Alpine, Name: "3.15", Priority: 1},
+				OS: &types.OS{Family: aos.Alpine, RepositoryVersion: "3.15"},
 			},
 		},
 		{
@@ -34,7 +34,7 @@ func TestAlpineApkOSAnalyzer_Required(t *testing.T) {
 				Content:  strings.NewReader("https://dl-cdn.alpinelinux.org/alpine/edge/main"),
 			},
 			wantResult: &analyzer.AnalysisResult{
-				OS: &types.OS{Family: aos.Alpine, Name: "edge", Priority: 1},
+				OS: &types.OS{Family: aos.Alpine, RepositoryVersion: "edge"},
 			},
 		},
 		{
@@ -46,7 +46,7 @@ https://dl-cdn.alpinelinux.org/alpine/v3.10/main
 `),
 			},
 			wantResult: &analyzer.AnalysisResult{
-				OS: &types.OS{Family: aos.Alpine, Name: "3.10", Priority: 1},
+				OS: &types.OS{Family: aos.Alpine, RepositoryVersion: "3.10"},
 			},
 		},
 		{
@@ -58,7 +58,7 @@ https://dl-cdn.alpinelinux.org/alpine/v3.1/main
 `),
 			},
 			wantResult: &analyzer.AnalysisResult{
-				OS: &types.OS{Family: aos.Alpine, Name: "3.10", Priority: 1},
+				OS: &types.OS{Family: aos.Alpine, RepositoryVersion: "3.10"},
 			},
 		},
 		{
@@ -70,7 +70,7 @@ https://dl-cdn.alpinelinux.org/alpine/v3.10/main
 `),
 			},
 			wantResult: &analyzer.AnalysisResult{
-				OS: &types.OS{Family: aos.Alpine, Name: "edge", Priority: 1},
+				OS: &types.OS{Family: aos.Alpine, RepositoryVersion: "edge"},
 			},
 		},
 		{

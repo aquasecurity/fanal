@@ -24,7 +24,7 @@ func TestAlpineReleaseOSAnalyzer_Required(t *testing.T) {
 				Content:  strings.NewReader("3.15.4"),
 			},
 			wantResult: &analyzer.AnalysisResult{
-				OS: &types.OS{Family: aos.Alpine, Name: "3.15.4", Priority: 2},
+				OS: &types.OS{Family: aos.Alpine, Name: "3.15.4"},
 			},
 		},
 	}

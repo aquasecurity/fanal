@@ -26,7 +26,7 @@ type alpineApkOSAnalyzer struct{}
 
 func (a alpineApkOSAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisInput) (*analyzer.AnalysisResult, error) {
 	scanner := bufio.NewScanner(input.Content)
-	osVersion := ""
+	repositoryVersion := ""
 	for scanner.Scan() {
 		line := scanner.Text()
 
@@ -34,23 +34,23 @@ func (a alpineApkOSAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisI
 		if len(version) == 2 {
 			newVersion := version[1]
 			switch {
-			case osVersion == "":
-				osVersion = newVersion
-			case osVersion == "edge" || newVersion == "edge":
-				osVersion = "edge"
+			case repositoryVersion == "":
+				repositoryVersion = newVersion
+			case repositoryVersion == "edge" || newVersion == "edge":
+				repositoryVersion = "edge"
 			default:
-				semverOld, _ := semver.NewVersion(osVersion)
+				semverOld, _ := semver.NewVersion(repositoryVersion)
 				semverNew, _ := semver.NewVersion(newVersion)
 				if semverOld.LessThan(semverNew) {
-					osVersion = newVersion
+					repositoryVersion = newVersion
 				}
 			}
 		}
 	}
 
-	if osVersion != "" {
+	if repositoryVersion != "" {
 		return &analyzer.AnalysisResult{
-			OS: &types.OS{Family: aos.Alpine, Name: osVersion, Priority: 1},
+			OS: &types.OS{Family: aos.Alpine, RepositoryVersion: repositoryVersion},
 		}, nil
 	}
 	return nil, xerrors.Errorf("alpine: %w", aos.AnalyzeOSError)
