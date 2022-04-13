@@ -19,28 +19,24 @@ func init() {
 	analyzer.RegisterAnalyzer(&gomodAnalyzer{})
 }
 
-const (
-	version = 2
-	GoMod   = "go.mod"
-	GoSum   = "go.sum"
-)
+const version = 2
 
-var requiredFiles = []string{GoMod, GoSum}
+var requiredFiles = []string{types.GoMod, types.GoSum}
 
 type gomodAnalyzer struct{}
 
 func (a gomodAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisInput) (*analyzer.AnalysisResult, error) {
 	var parser language.Parser
 	switch filepath.Base(input.FilePath) {
-	case GoMod:
+	case types.GoMod:
 		parser = mod.Parse
-	case GoSum:
+	case types.GoSum:
 		parser = sum.Parse
 	default:
 		return nil, nil
 	}
 
-	res, err := language.Analyze(types.GoMod, input.FilePath, input.Content, parser)
+	res, err := language.Analyze(types.GoModule, input.FilePath, input.Content, parser)
 	if err != nil {
 		return nil, xerrors.Errorf("failed to analyze %s: %w", input.FilePath, err)
 	}
