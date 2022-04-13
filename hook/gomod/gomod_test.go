@@ -32,7 +32,7 @@ func Test_gomodMergeHook_Hook(t *testing.T) {
 						},
 					},
 					{
-						Type:     types.GoMod,
+						Type:     types.GoModule,
 						FilePath: "/app/go.mod",
 						Libraries: []types.Package{
 							{
@@ -51,7 +51,7 @@ func Test_gomodMergeHook_Hook(t *testing.T) {
 						},
 					},
 					{
-						Type:     types.GoMod,
+						Type:     types.GoModule,
 						FilePath: "/app/go.sum",
 						Libraries: []types.Package{
 							{
@@ -75,7 +75,7 @@ func Test_gomodMergeHook_Hook(t *testing.T) {
 						},
 					},
 					{
-						Type:     types.GoMod,
+						Type:     types.GoModule,
 						FilePath: "/app/go.mod",
 						Libraries: []types.Package{
 							{
@@ -101,7 +101,7 @@ func Test_gomodMergeHook_Hook(t *testing.T) {
 			blob: &types.BlobInfo{
 				Applications: []types.Application{
 					{
-						Type:     types.GoMod,
+						Type:     types.GoModule,
 						FilePath: "/app/go.mod",
 						Libraries: []types.Package{
 							{
@@ -115,7 +115,7 @@ func Test_gomodMergeHook_Hook(t *testing.T) {
 						},
 					},
 					{
-						Type:     types.GoMod,
+						Type:     types.GoModule,
 						FilePath: "/app/go.sum",
 						Libraries: []types.Package{
 							{
@@ -133,7 +133,7 @@ func Test_gomodMergeHook_Hook(t *testing.T) {
 			want: &types.BlobInfo{
 				Applications: []types.Application{
 					{
-						Type:     types.GoMod,
+						Type:     types.GoModule,
 						FilePath: "/app/go.mod",
 						Libraries: []types.Package{
 							{

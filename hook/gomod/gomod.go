@@ -21,14 +21,17 @@ type gomodMergeHook struct{}
 func (h gomodMergeHook) Hook(blob *types.BlobInfo) error {
 	var apps []types.Application
 	for _, app := range blob.Applications {
-		dir, file := filepath.Split(app.FilePath)
-		if app.Type == types.GoMod {
+		if app.Type == types.GoModule {
+			dir, file := filepath.Split(app.FilePath)
+
 			// go.sum should be merged to go.mod.
-			if file == "go.sum" {
+			if file == types.GoSum {
 				continue
-			} else if file == "go.mod" && go116OrLess(app) {
+			}
+
+			if file == types.GoMod && lessThanGo117(app) {
 				// e.g. /app/go.mod => /app/go.sum
-				gosumFile := filepath.Join(dir, "go.sum")
+				gosumFile := filepath.Join(dir, types.GoSum)
 				gosum := findGoSum(gosumFile, blob.Applications)
 				mergeGoSum(&app, gosum)
 			}
@@ -52,14 +55,14 @@ func (h gomodMergeHook) Type() hook.Type {
 
 func findGoSum(path string, apps []types.Application) *types.Application {
 	for _, app := range apps {
-		if app.Type == types.GoMod && app.FilePath == path {
+		if app.Type == types.GoModule && app.FilePath == path {
 			return &app
 		}
 	}
 	return nil
 }
 
-func go116OrLess(gomod types.Application) bool {
+func lessThanGo117(gomod types.Application) bool {
 	for _, lib := range gomod.Libraries {
 		// The indirect field is populated only in Go 1.17+
 		if lib.Indirect {
