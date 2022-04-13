@@ -51,8 +51,6 @@ func TestSecretRequire(t *testing.T) {
 			require.NoError(t, err)
 
 			got := a.Required(tt.filePath, fi)
-
-			require.NoError(t, err)
 			assert.Equal(t, tt.want, got)
 		})
 	}
