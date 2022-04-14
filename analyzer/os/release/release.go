@@ -24,6 +24,7 @@ var requiredFiles = []string{"etc/os-release"}
 type osReleaseAnalyzer struct{}
 
 func (a osReleaseAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisInput) (*analyzer.AnalysisResult, error) {
+	var id, versionID string
 	scanner := bufio.NewScanner(input.Content)
 	for scanner.Scan() {
 		line := scanner.Text()
@@ -32,9 +33,8 @@ func (a osReleaseAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisInp
 		if len(ss) != 2 {
 			continue
 		}
-		key, value := ss[0], strings.TrimSpace(ss[1])
+		key, value := strings.TrimSpace(ss[0]), strings.TrimSpace(ss[1])
 
-		var id, versionID string
 		switch key {
 		case "ID":
 			id = strings.Trim(value, `"'`)
