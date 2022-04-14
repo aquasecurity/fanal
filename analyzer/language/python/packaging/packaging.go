@@ -50,15 +50,11 @@ func (a packagingAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisInp
 		if err != nil {
 			return nil, xerrors.Errorf("egg analysis error: %w", err)
 		}
-		defer func() {
-			if pkginfoInZip != nil {
-				pkginfoInZip.Close()
-			}
-		}()
-
 		if pkginfoInZip == nil { // Egg archive may not contain required files, then we will get nil. Skip this archives
 			return nil, nil
 		}
+
+		defer pkginfoInZip.Close()
 
 		r = pkginfoInZip
 	}
