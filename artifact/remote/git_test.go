@@ -9,7 +9,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/aquasecurity/fanal/analyzer/config"
 	"github.com/aquasecurity/fanal/artifact"
 	"github.com/aquasecurity/fanal/cache"
 	"github.com/aquasecurity/fanal/types"
@@ -83,8 +82,7 @@ func TestNewArtifact(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_, cleanup, err := NewArtifact(tt.args.rawurl, tt.args.c,
-				artifact.Option{NoProgress: tt.args.noProgress}, config.ScannerOption{})
+			_, cleanup, err := NewArtifact(tt.args.rawurl, tt.args.c, artifact.Option{NoProgress: tt.args.noProgress})
 			assert.Equal(t, tt.wantErr, err != nil)
 			defer cleanup()
 		})
@@ -121,7 +119,7 @@ func TestArtifact_Inspect(t *testing.T) {
 			fsCache, err := cache.NewFSCache(t.TempDir())
 			require.NoError(t, err)
 
-			art, cleanup, err := NewArtifact(tt.rawurl, fsCache, artifact.Option{}, config.ScannerOption{})
+			art, cleanup, err := NewArtifact(tt.rawurl, fsCache, artifact.Option{})
 			require.NoError(t, err)
 			defer cleanup()
 
