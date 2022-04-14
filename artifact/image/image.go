@@ -369,8 +369,13 @@ func (a Artifact) guessBaseLayers(diffIDs []string, configFile *v1.ConfigFile) [
 			foundNonEmpty = true
 		}
 
+		if !h.EmptyLayer {
+			continue
+		}
+
 		// Detect CMD instruction in base image
-		if h.EmptyLayer && strings.HasPrefix(h.CreatedBy, "/bin/sh -c #(nop)  CMD") {
+		if strings.HasPrefix(h.CreatedBy, "/bin/sh -c #(nop)  CMD") ||
+			strings.HasPrefix(h.CreatedBy, "CMD") { // BuildKit
 			baseImageIndex = i
 			break
 		}
