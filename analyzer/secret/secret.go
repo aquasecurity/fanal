@@ -30,13 +30,25 @@ var (
 	skipExts = []string{".jpg", ".png", ".gif", ".doc", ".pdf", ".bin", ".svg", ".socket"}
 )
 
+type ScannerOption struct {
+	ConfigPath string
+}
+
 // SecretAnalyzer is an analyzer for secrets
 type SecretAnalyzer struct {
 	scanner secret.Scanner
 }
 
-// TODO: it should take custom policies as input
-func NewSecretAnalyzer(configPath string) (SecretAnalyzer, error) {
+func RegisterSecretAnalyzer(opt ScannerOption) error {
+	a, err := newSecretAnalyzer(opt.ConfigPath)
+	if err != nil {
+		return xerrors.Errorf("secret scanner init error: %w", err)
+	}
+	analyzer.RegisterAnalyzer(a)
+	return nil
+}
+
+func newSecretAnalyzer(configPath string) (SecretAnalyzer, error) {
 	s, err := secret.NewScanner(configPath)
 	if err != nil {
 		return SecretAnalyzer{}, xerrors.Errorf("secret scanner error: %w", err)

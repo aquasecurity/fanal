@@ -58,7 +58,7 @@ func NewArtifact(rawurl string, c cache.ArtifactCache, artifactOpt artifact.Opti
 		_ = os.RemoveAll(tmpDir)
 	}
 
-	art, err := local.NewArtifact(tmpDir, c, artifactOpt, scannerOpt)
+	art, err := local.NewArtifact(tmpDir, c, artifactOpt)
 	if err != nil {
 		return nil, cleanup, xerrors.Errorf("fs artifact: %w", err)
 	}

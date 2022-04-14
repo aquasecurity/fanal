@@ -6,14 +6,17 @@ import (
 	"io"
 	"os"
 	"reflect"
+	"strings"
 	"sync"
 
 	v1 "github.com/google/go-containerregistry/pkg/v1"
+	"golang.org/x/exp/slices"
 	"golang.org/x/sync/semaphore"
 	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/fanal/analyzer"
 	"github.com/aquasecurity/fanal/analyzer/config"
+	"github.com/aquasecurity/fanal/analyzer/secret"
 	"github.com/aquasecurity/fanal/artifact"
 	"github.com/aquasecurity/fanal/cache"
 	"github.com/aquasecurity/fanal/config/scanner"
@@ -35,31 +38,35 @@ type Artifact struct {
 	hookManager hook.Manager
 	scanner     scanner.Scanner
 
-	artifactOption      artifact.Option
-	configScannerOption config.ScannerOption
+	artifactOption artifact.Option
 }
 
-func NewArtifact(img types.Image, c cache.ArtifactCache, artifactOpt artifact.Option, scannerOpt config.ScannerOption) (artifact.Artifact, error) {
+func NewArtifact(img types.Image, c cache.ArtifactCache, opt artifact.Option) (artifact.Artifact, error) {
+	misconf := opt.MisconfScannerOption
 	// Register config analyzers
-	if err := config.RegisterConfigAnalyzers(scannerOpt.FilePatterns); err != nil {
+	if err := config.RegisterConfigAnalyzers(misconf.FilePatterns); err != nil {
 		return nil, xerrors.Errorf("config scanner error: %w", err)
 	}
 
-	s, err := scanner.New("", scannerOpt.Namespaces, scannerOpt.PolicyPaths, scannerOpt.DataPaths, scannerOpt.Trace)
+	s, err := scanner.New("", misconf.Namespaces, misconf.PolicyPaths, misconf.DataPaths, misconf.Trace)
 	if err != nil {
-		return nil, xerrors.Errorf("scanner error: %w", err)
+		return nil, xerrors.Errorf("scanner init error: %w", err)
+	}
+
+	// Register secret analyzer
+	if err = secret.RegisterSecretAnalyzer(opt.SecretScannerOption); err != nil {
+		return nil, xerrors.Errorf("secret scanner error: %w", err)
 	}
 
 	return Artifact{
 		image:       img,
 		cache:       c,
-		walker:      walker.NewLayerTar(artifactOpt.SkipFiles, artifactOpt.SkipDirs),
-		analyzer:    analyzer.NewAnalyzerGroup(artifactOpt.AnalyzerGroup, artifactOpt.DisabledAnalyzers),
-		hookManager: hook.NewManager(artifactOpt.DisabledHooks),
+		walker:      walker.NewLayerTar(opt.SkipFiles, opt.SkipDirs),
+		analyzer:    analyzer.NewAnalyzerGroup(opt.AnalyzerGroup, opt.DisabledAnalyzers),
+		hookManager: hook.NewManager(opt.DisabledHooks),
 		scanner:     s,
 
-		artifactOption:      artifactOpt,
-		configScannerOption: scannerOpt,
+		artifactOption: opt,
 	}, nil
 }
 
@@ -126,7 +133,7 @@ func (Artifact) Clean(_ types.ArtifactReference) error {
 
 func (a Artifact) calcCacheKeys(imageID string, diffIDs []string) (string, []string, map[string]string, error) {
 	// Pass an empty config scanner option so that the cache key can be the same, even when policies are updated.
-	imageKey, err := cache.CalcKey(imageID, a.analyzer.ImageConfigAnalyzerVersions(), nil, artifact.Option{}, config.ScannerOption{})
+	imageKey, err := cache.CalcKey(imageID, a.analyzer.ImageConfigAnalyzerVersions(), nil, artifact.Option{})
 	if err != nil {
 		return "", nil, nil, err
 	}
@@ -135,7 +142,7 @@ func (a Artifact) calcCacheKeys(imageID string, diffIDs []string) (string, []str
 	hookVersions := a.hookManager.Versions()
 	var layerKeys []string
 	for _, diffID := range diffIDs {
-		blobKey, err := cache.CalcKey(diffID, a.analyzer.AnalyzerVersions(), hookVersions, a.artifactOption, a.configScannerOption)
+		blobKey, err := cache.CalcKey(diffID, a.analyzer.AnalyzerVersions(), hookVersions, a.artifactOption)
 		if err != nil {
 			return "", nil, nil, err
 		}
