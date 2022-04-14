@@ -202,7 +202,9 @@ func (b *Blocks) find() {
 
 func NewScanner(configPath string) (Scanner, error) {
 	var config global
-	if configPath != "" {
+	if configPath == "" {
+		config.Rules = builtinRules
+	} else {
 		f, err := os.Open(configPath)
 		if err != nil {
 			return Scanner{}, xerrors.Errorf("file open error %s: %w", configPath, err)

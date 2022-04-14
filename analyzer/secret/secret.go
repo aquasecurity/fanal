@@ -2,7 +2,6 @@ package secret
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -51,7 +50,6 @@ func (a SecretAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisInput)
 	if binary || err != nil {
 		return nil, nil
 	}
-	fmt.Println(input.FilePath)
 
 	content, err := io.ReadAll(input.Content)
 	if err != nil {
