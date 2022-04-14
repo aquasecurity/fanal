@@ -7,6 +7,7 @@ import (
 	"strings"
 	"sync"
 
+	"golang.org/x/exp/slices"
 	"golang.org/x/sync/semaphore"
 	"golang.org/x/xerrors"
 
@@ -240,11 +241,16 @@ func (ag AnalyzerGroup) ImageConfigAnalyzerVersions() map[string]int {
 }
 
 func (ag AnalyzerGroup) AnalyzeFile(ctx context.Context, wg *sync.WaitGroup, limit *semaphore.Weighted, result *AnalysisResult,
-	dir, filePath string, info os.FileInfo, opener Opener, opts AnalysisOptions) error {
+	dir, filePath string, info os.FileInfo, opener Opener, disabled []Type, opts AnalysisOptions) error {
 	if info.IsDir() {
 		return nil
 	}
 	for _, a := range ag.analyzers {
+		// Skip disabled analyzers
+		if slices.Contains(disabled, a.Type()) {
+			continue
+		}
+
 		// filepath extracted from tar file doesn't have the prefix "/"
 		if !a.Required(strings.TrimLeft(filePath, "/"), info) {
 			continue

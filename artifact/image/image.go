@@ -90,6 +90,10 @@ func (a Artifact) Inspect(ctx context.Context) (types.ArtifactReference, error) 
 	log.Logger.Debugf("Image ID: %s", imageID)
 	log.Logger.Debugf("Diff IDs: %v", diffIDs)
 
+	// Try to detect base layers.
+	baseDiffIDs := a.guessBaseLayers(diffIDs, configFile)
+	log.Logger.Debugf("Base Layers: %v", baseDiffIDs)
+
 	// Convert image ID and layer IDs to cache keys
 	imageKey, layerKeys, layerKeyMap, err := a.calcCacheKeys(imageID, diffIDs)
 	if err != nil {
@@ -108,7 +112,7 @@ func (a Artifact) Inspect(ctx context.Context) (types.ArtifactReference, error) 
 		missingImageKey = ""
 	}
 
-	if err = a.inspect(ctx, missingImageKey, missingLayers, layerKeyMap); err != nil {
+	if err = a.inspect(ctx, missingImageKey, missingLayers, baseDiffIDs, layerKeyMap); err != nil {
 		return types.ArtifactReference{}, xerrors.Errorf("analyze error: %w", err)
 	}
 
@@ -152,7 +156,7 @@ func (a Artifact) calcCacheKeys(imageID string, diffIDs []string) (string, []str
 	return imageKey, layerKeys, layerKeyMap, nil
 }
 
-func (a Artifact) inspect(ctx context.Context, missingImage string, layerKeys []string, layerKeyMap map[string]string) error {
+func (a Artifact) inspect(ctx context.Context, missingImage string, layerKeys, baseDiffIDs []string, layerKeyMap map[string]string) error {
 	done := make(chan struct{})
 	errCh := make(chan error)
 
@@ -160,7 +164,14 @@ func (a Artifact) inspect(ctx context.Context, missingImage string, layerKeys []
 	for _, k := range layerKeys {
 		go func(ctx context.Context, layerKey string) {
 			diffID := layerKeyMap[layerKey]
-			layerInfo, err := a.inspectLayer(ctx, diffID)
+
+			// If it is a base layer, secret scanning should not be performed.
+			var disabledAnalyers []analyzer.Type
+			if slices.Contains(baseDiffIDs, diffID) {
+				//disabledAnalyers = append(disabledAnalyers, analyzer.TypeSecret)
+			}
+
+			layerInfo, err := a.inspectLayer(ctx, diffID, disabledAnalyers)
 			if err != nil {
 				errCh <- xerrors.Errorf("failed to analyze layer: %s : %w", diffID, err)
 				return
@@ -196,7 +207,7 @@ func (a Artifact) inspect(ctx context.Context, missingImage string, layerKeys []
 
 }
 
-func (a Artifact) inspectLayer(ctx context.Context, diffID string) (types.BlobInfo, error) {
+func (a Artifact) inspectLayer(ctx context.Context, diffID string, disabled []analyzer.Type) (types.BlobInfo, error) {
 	log.Logger.Debugf("Missing diff ID in cache: %s", diffID)
 
 	layerDigest, r, err := a.uncompressedLayer(diffID)
@@ -210,7 +221,7 @@ func (a Artifact) inspectLayer(ctx context.Context, diffID string) (types.BlobIn
 
 	opqDirs, whFiles, err := a.walker.Walk(r, func(filePath string, info os.FileInfo, opener analyzer.Opener) error {
 		opts := analyzer.AnalysisOptions{Offline: a.artifactOption.Offline}
-		if err = a.analyzer.AnalyzeFile(ctx, &wg, limit, result, "", filePath, info, opener, opts); err != nil {
+		if err = a.analyzer.AnalyzeFile(ctx, &wg, limit, result, "", filePath, info, opener, disabled, opts); err != nil {
 			return xerrors.Errorf("failed to analyze %s: %w", filePath, err)
 		}
 		return nil
@@ -312,4 +323,78 @@ func (a Artifact) inspectConfig(imageID string, osFound types.OS) error {
 	}
 
 	return nil
+}
+
+// Guess layers in base image (call base layers).
+//
+// e.g. In the following example, we should detect layers in debian:8.
+//   FROM debian:8
+//   RUN apt-get update
+//   COPY mysecret /
+//   ENTRYPOINT ["entrypoint.sh"]
+//   CMD ["somecmd"]
+//
+// debian:8 may be like
+//   ADD file:5d673d25da3a14ce1f6cf66e4c7fd4f4b85a3759a9d93efb3fd9ff852b5b56e4 in /
+//   CMD ["/bin/sh"]
+//
+// In total, it would be like:
+//   ADD file:5d673d25da3a14ce1f6cf66e4c7fd4f4b85a3759a9d93efb3fd9ff852b5b56e4 in /
+//   CMD ["/bin/sh"]              # empty layer (detected)
+//   RUN apt-get update
+//   COPY mysecret /
+//   ENTRYPOINT ["entrypoint.sh"] # empty layer (skipped)
+//   CMD ["somecmd"]              # empty layer (skipped)
+//
+// This method tries to detect CMD in the second line and assume the first line is a base layer.
+//   1. Iterate histories from the bottom.
+//   2. Skip all the empty layers at the bottom. In the above example, "entrypoint.sh" and "somecmd" will be skipped
+//   3. If it finds CMD, it assumes that it is the end of base layers.
+//   4. It gets all the layers as base layers above the CMD found in #3.
+func (a Artifact) guessBaseLayers(diffIDs []string, configFile *v1.ConfigFile) []string {
+	if configFile == nil {
+		return nil
+	}
+
+	var baseImageIndex int
+	var foundNonEmpty bool
+	for i := len(configFile.History) - 1; i >= 0; i-- {
+		h := configFile.History[i]
+
+		// Skip the last CMD, ENTRYPOINT, etc.
+		if !foundNonEmpty {
+			if h.EmptyLayer {
+				continue
+			}
+			foundNonEmpty = true
+		}
+
+		// Detect CMD instruction in base image
+		if h.EmptyLayer && strings.HasPrefix(h.CreatedBy, "/bin/sh -c #(nop)  CMD") {
+			baseImageIndex = i
+			break
+		}
+	}
+
+	// Diff IDs don't include empty layers, so the index is different from histories
+	var diffIDIndex int
+	var baseDiffIDs []string
+	for i, h := range configFile.History {
+		// It is no longer base layer.
+		if i > baseImageIndex {
+			break
+		}
+		// Empty layers are not included in diff IDs.
+		if h.EmptyLayer {
+			continue
+		}
+
+		if diffIDIndex >= len(diffIDs) {
+			// something wrong...
+			return nil
+		}
+		baseDiffIDs = append(baseDiffIDs, diffIDs[diffIDIndex])
+		diffIDIndex++
+	}
+	return baseDiffIDs
 }
