@@ -48,10 +48,10 @@ func (a osReleaseAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisInp
 		switch id {
 		case "alpine":
 			family = aos.Alpine
-		case "opensuse-leap":
-			family = aos.OpenSUSELeap
 		case "opensuse-tumbleweed":
 			family = aos.OpenSUSETumbleweed
+		case "opensuse-leap", "opensuse": // opensuse for leap:42, opensuse-leap for leap:15
+			family = aos.OpenSUSELeap
 		case "sles":
 			family = aos.SLES
 		case "photon":
