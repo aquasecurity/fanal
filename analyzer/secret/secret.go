@@ -83,7 +83,7 @@ func (a SecretAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisInput)
 }
 
 func isBinary(content dio.ReadSeekerAt) (bool, error) {
-	head := make([]byte, 100)
+	head := make([]byte, 300)
 	if _, err := content.Read(head); err != nil {
 		return false, err
 	}
