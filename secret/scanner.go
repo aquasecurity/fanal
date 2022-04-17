@@ -66,6 +66,7 @@ type Rule struct {
 	Title           string                   `yaml:"title"`
 	Severity        string                   `yaml:"severity"`
 	Regex           *Regexp                  `yaml:"regex"`
+	Keywords        []string                 `yaml:"keywords"`
 	Path            *Regexp                  `yaml:"path"`
 	AllowRule       AllowRule                `yaml:"allow-rule"`
 	ExcludeBlock    ExcludeBlock             `yaml:"exclude-block"`
@@ -113,6 +114,20 @@ func (r *Rule) MatchPath(path string) bool {
 		return true
 	}
 	return matchString(path, r.Path)
+}
+
+func (r *Rule) MatchKeywords(content []byte) bool {
+	if r.Keywords == nil || len(r.Keywords) == 0 {
+		return true
+	}
+
+	for _, kw := range r.Keywords {
+		if bytes.Contains(bytes.ToLower(content), []byte(strings.ToLower(kw))) {
+			return true
+		}
+	}
+
+	return false
 }
 
 func (r *Rule) AllowPath(path string) bool {
@@ -256,6 +271,11 @@ func (s Scanner) Scan(args ScanArgs) types.Secret {
 
 		// Check if the file path should be allowed
 		if rule.AllowPath(args.FilePath) {
+			continue
+		}
+
+		// Check if the file content contains keywords and should be scanned
+		if !rule.MatchKeywords(args.Content) {
 			continue
 		}
 
