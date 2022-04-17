@@ -64,19 +64,19 @@ func TestSecretScanner(t *testing.T) {
 			},
 		},
 		{
-			name:          "exclude when no keyword found",
-			configPath:    "testdata/config-bad-keywords.yaml",
-			inputFilePath: "testdata/secret.txt",
-			want:          types.Secret{},
-		},
-		{
 			name:          "include when keyword found",
-			configPath:    "testdata/config-want-keywords.yaml",
+			configPath:    "testdata/config-happy-keywords.yaml",
 			inputFilePath: "testdata/secret.txt",
 			want: types.Secret{
 				FilePath: "testdata/secret.txt",
 				Findings: []types.SecretFinding{wantFinding1, wantFinding2},
 			},
+		},
+		{
+			name:          "exclude when no keyword found",
+			configPath:    "testdata/config-sad-keywords.yaml",
+			inputFilePath: "testdata/secret.txt",
+			want:          types.Secret{},
 		},
 		{
 			name:          "allow-rule path",
