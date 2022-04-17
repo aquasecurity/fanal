@@ -117,7 +117,7 @@ func (r *Rule) MatchPath(path string) bool {
 }
 
 func (r *Rule) MatchKeywords(content []byte) bool {
-	if r.Keywords == nil || len(r.Keywords) == 0 {
+	if len(r.Keywords) == 0 {
 		return true
 	}
 
