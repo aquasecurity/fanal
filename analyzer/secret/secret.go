@@ -3,6 +3,7 @@ package secret
 import (
 	"context"
 	"io"
+	"math"
 	"os"
 	"path/filepath"
 	"strings"
@@ -59,7 +60,7 @@ func newSecretAnalyzer(configPath string) (SecretAnalyzer, error) {
 
 func (a SecretAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisInput) (*analyzer.AnalysisResult, error) {
 	// Do not scan binaries
-	binary, err := isBinary(input.Content)
+	binary, err := isBinary(input.Content, input.Info.Size())
 	if binary || err != nil {
 		return nil, nil
 	}
@@ -83,8 +84,9 @@ func (a SecretAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisInput)
 	}, nil
 }
 
-func isBinary(content dio.ReadSeekerAt) (bool, error) {
-	head := make([]byte, 300)
+func isBinary(content dio.ReadSeekerAt, fileSize int64) (bool, error) {
+	headSize := int(math.Min(float64(fileSize), 300))
+	head := make([]byte, headSize)
 	if _, err := content.Read(head); err != nil {
 		return false, err
 	}
