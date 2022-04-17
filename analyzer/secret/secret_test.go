@@ -69,10 +69,13 @@ func TestSecretAnalyzer(t *testing.T) {
 			require.NoError(t, err)
 			content, err := os.Open(tt.filePath)
 			require.NoError(t, err)
+			fi, err := content.Stat()
+			require.NoError(t, err)
 
 			got, err := a.Analyze(context.TODO(), analyzer.AnalysisInput{
 				FilePath: tt.filePath,
 				Content:  content,
+				Info:     fi,
 			})
 
 			require.NoError(t, err)
