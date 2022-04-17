@@ -219,6 +219,7 @@ func NewScanner(configPath string) (Scanner, error) {
 	var config global
 	if configPath == "" {
 		config.Rules = builtinRules
+		config.AllowRule = builtinGlobalAllowRule
 	} else {
 		f, err := os.Open(configPath)
 		if err != nil {
@@ -229,7 +230,7 @@ func NewScanner(configPath string) (Scanner, error) {
 		if err = yaml.NewDecoder(f).Decode(&config); err != nil {
 			return Scanner{}, xerrors.Errorf("secrets config decode error: %w", err)
 		}
-
+		// TODO: add merge allow rules
 		config.Rules = mergeRules(config.Rules, builtinRules)
 	}
 	return Scanner{global: &config}, nil

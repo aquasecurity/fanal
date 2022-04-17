@@ -24,12 +24,13 @@ var (
 		"go.mod",
 		"go.sum",
 		"package-lock.json",
+		"yarn.lock",
 		"Pipfile.lock",
 		"Gemfile.lock",
 	}
-	skipDirs = []string{".git", "vendor", "node_modules"}
+	skipDirs = []string{".git", "vendor", "node_modules", "locale"}
 	skipExts = []string{".jpg", ".png", ".gif", ".doc", ".pdf", ".bin", ".svg", ".socket", ".deb", ".rpm",
-		".zip", ".gz", ".gzip", ".tar", ".pyc"}
+		".zip", ".gz", ".gzip", ".tar", ".pyc", ".h", ".md"}
 )
 
 type ScannerOption struct {

@@ -664,3 +664,7 @@ var builtinRules = []Rule{
 		Keywords:        []string{"typeform"},
 	},
 }
+
+var builtinGlobalAllowRule = AllowRule{
+	Paths: []*Regexp{MustCompile(`^usr\/share`), MustCompile(`^usr\/include`)},
+}
