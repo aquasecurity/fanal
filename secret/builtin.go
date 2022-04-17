@@ -407,6 +407,7 @@ var builtinRules = []Rule{
 		Category: CategoryFlutterwave,
 		Title:    "Flutterwave encrypted key",
 		Regex:    MustCompile(`FLWSECK_TEST[a-h0-9]{12}`),
+		Keywords: []string{"FLWSECK_TEST"},
 	},
 	{
 		ID:       "frameio-api-token",
