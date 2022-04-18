@@ -30,7 +30,7 @@ var (
 	}
 	skipDirs = []string{".git", "vendor", "node_modules", "locale"}
 	skipExts = []string{".jpg", ".png", ".gif", ".doc", ".pdf", ".bin", ".svg", ".socket", ".deb", ".rpm",
-		".zip", ".gz", ".gzip", ".tar", ".pyc", ".h", ".md"}
+		".zip", ".gz", ".gzip", ".tar", ".pyc", ".md"}
 )
 
 type ScannerOption struct {
