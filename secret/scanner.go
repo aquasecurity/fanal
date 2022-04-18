@@ -118,7 +118,7 @@ func (r *Rule) FindSubmatchIndices(content []byte) [][]int {
 }
 
 func (r *Rule) MatchPath(path string) bool {
-	return r.Path != nil && r.Path.MatchString(path)
+	return r.Path == nil || r.Path.MatchString(path)
 }
 
 func (r *Rule) MatchKeywords(content []byte) bool {
