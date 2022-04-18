@@ -105,7 +105,7 @@ func TestSecretScanner(t *testing.T) {
 			},
 		},
 		{
-			name:          "should fild ghp secret",
+			name:          "should find ghp builtin secret",
 			configPath:    "",
 			inputFilePath: "testdata/builtin-rule-secret.txt",
 			want: types.Secret{
@@ -114,9 +114,15 @@ func TestSecretScanner(t *testing.T) {
 			},
 		},
 		{
-			name:          "should disable ghp rule",
+			name:          "should disable ghp builtin rule",
 			configPath:    "testdata/config-disable-ghp.yaml",
 			inputFilePath: "testdata/builtin-rule-secret.txt",
+			want:          types.Secret{},
+		},
+		{
+			name:          "should disable custom rule",
+			configPath:    "testdata/config-disable-rule1.yaml",
+			inputFilePath: "testdata/secret.txt",
 			want:          types.Secret{},
 		},
 		{
