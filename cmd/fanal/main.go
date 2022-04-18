@@ -260,5 +260,5 @@ func archiveImageArtifact(imagePath string, c cache.ArtifactCache) (artifact.Art
 }
 
 func remoteArtifact(dir string, c cache.ArtifactCache) (artifact.Artifact, func(), error) {
-	return remote.NewArtifact(dir, c, artifact.Option{}, config.ScannerOption{})
+	return remote.NewArtifact(dir, c, artifact.Option{})
 }

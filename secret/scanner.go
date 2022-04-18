@@ -66,6 +66,7 @@ type Rule struct {
 	Title           string                   `yaml:"title"`
 	Severity        string                   `yaml:"severity"`
 	Regex           *Regexp                  `yaml:"regex"`
+	Keywords        []string                 `yaml:"keywords"`
 	Path            *Regexp                  `yaml:"path"`
 	AllowRule       AllowRule                `yaml:"allow-rule"`
 	ExcludeBlock    ExcludeBlock             `yaml:"exclude-block"`
@@ -113,6 +114,20 @@ func (r *Rule) MatchPath(path string) bool {
 		return true
 	}
 	return matchString(path, r.Path)
+}
+
+func (r *Rule) MatchKeywords(content []byte) bool {
+	if len(r.Keywords) == 0 {
+		return true
+	}
+
+	for _, kw := range r.Keywords {
+		if bytes.Contains(bytes.ToLower(content), []byte(strings.ToLower(kw))) {
+			return true
+		}
+	}
+
+	return false
 }
 
 func (r *Rule) AllowPath(path string) bool {
@@ -204,6 +219,7 @@ func NewScanner(configPath string) (Scanner, error) {
 	var config global
 	if configPath == "" {
 		config.Rules = builtinRules
+		config.AllowRule = builtinGlobalAllowRule
 	} else {
 		f, err := os.Open(configPath)
 		if err != nil {
@@ -214,7 +230,7 @@ func NewScanner(configPath string) (Scanner, error) {
 		if err = yaml.NewDecoder(f).Decode(&config); err != nil {
 			return Scanner{}, xerrors.Errorf("secrets config decode error: %w", err)
 		}
-
+		// TODO: add merge allow rules
 		config.Rules = mergeRules(config.Rules, builtinRules)
 	}
 	return Scanner{global: &config}, nil
@@ -256,6 +272,11 @@ func (s Scanner) Scan(args ScanArgs) types.Secret {
 
 		// Check if the file path should be allowed
 		if rule.AllowPath(args.FilePath) {
+			continue
+		}
+
+		// Check if the file content contains keywords and should be scanned
+		if !rule.MatchKeywords(args.Content) {
 			continue
 		}
 

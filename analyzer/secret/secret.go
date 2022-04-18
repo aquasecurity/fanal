@@ -3,6 +3,7 @@ package secret
 import (
 	"context"
 	"io"
+	"math"
 	"os"
 	"path/filepath"
 	"strings"
@@ -23,12 +24,13 @@ var (
 		"go.mod",
 		"go.sum",
 		"package-lock.json",
+		"yarn.lock",
 		"Pipfile.lock",
 		"Gemfile.lock",
 	}
-	skipDirs = []string{".git", "vendor", "node_modules"}
+	skipDirs = []string{".git", "vendor", "node_modules", "locale"}
 	skipExts = []string{".jpg", ".png", ".gif", ".doc", ".pdf", ".bin", ".svg", ".socket", ".deb", ".rpm",
-		".zip", ".gz", ".gzip", ".tar", ".pyc"}
+		".zip", ".gz", ".gzip", ".tar", ".pyc", ".md"}
 )
 
 type ScannerOption struct {
@@ -59,7 +61,7 @@ func newSecretAnalyzer(configPath string) (SecretAnalyzer, error) {
 
 func (a SecretAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisInput) (*analyzer.AnalysisResult, error) {
 	// Do not scan binaries
-	binary, err := isBinary(input.Content)
+	binary, err := isBinary(input.Content, input.Info.Size())
 	if binary || err != nil {
 		return nil, nil
 	}
@@ -83,8 +85,9 @@ func (a SecretAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisInput)
 	}, nil
 }
 
-func isBinary(content dio.ReadSeekerAt) (bool, error) {
-	head := make([]byte, 300)
+func isBinary(content dio.ReadSeekerAt, fileSize int64) (bool, error) {
+	headSize := int(math.Min(float64(fileSize), 300))
+	head := make([]byte, headSize)
 	if _, err := content.Read(head); err != nil {
 		return false, err
 	}
