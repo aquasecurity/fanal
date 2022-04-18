@@ -664,7 +664,50 @@ var builtinRules = []Rule{
 		Keywords:        []string{"typeform"},
 	},
 }
-
-var builtinGlobalAllowRule = AllowRule{
-	Paths: []*Regexp{MustCompile(`^usr\/share`), MustCompile(`^usr\/include`)},
+var builtinAllowRules = []AllowRule{
+	{
+		ID:          "vendor",
+		Description: "Vendor dirs",
+		Path:        MustCompile(`\/vendor\/`),
+	},
+	{
+		ID:          "usr-dirs",
+		Description: "System dirs",
+		Path:        MustCompile(`^usr\/(?:share|include|lib)\/`),
+	},
+	{
+		ID:          "locale-dir",
+		Description: "Locales directory contains locales file",
+		Path:        MustCompile(`\/locale\/`),
+	},
+	{
+		ID:          "markdown",
+		Description: "Markdown files",
+		Path:        MustCompile(`\.md$`),
+	},
+	{
+		ID:          "node.js",
+		Description: "Node container images",
+		Path:        MustCompile(`^tmp\/node`),
+	},
+	{
+		ID:          "golang",
+		Description: "Go container images",
+		Path:        nil, // TODO
+	},
+	{
+		ID:          "python",
+		Description: "Python container images",
+		Path:        nil, // TODO
+	},
+	{
+		ID:          "java",
+		Description: "Java container images",
+		Path:        nil, // TODO
+	},
+	{
+		ID:          "ruby",
+		Description: "Ruby container images",
+		Path:        nil, // TODO
+	},
 }

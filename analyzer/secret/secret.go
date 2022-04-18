@@ -28,9 +28,9 @@ var (
 		"Pipfile.lock",
 		"Gemfile.lock",
 	}
-	skipDirs = []string{".git", "vendor", "node_modules", "locale"}
+	skipDirs = []string{".git", "node_modules"}
 	skipExts = []string{".jpg", ".png", ".gif", ".doc", ".pdf", ".bin", ".svg", ".socket", ".deb", ".rpm",
-		".zip", ".gz", ".gzip", ".tar", ".pyc", ".md"}
+		".zip", ".gz", ".gzip", ".tar", ".pyc"}
 )
 
 type ScannerOption struct {
@@ -130,6 +130,10 @@ func (a SecretAnalyzer) Required(filePath string, fi os.FileInfo) bool {
 	// Check if the file extension should be skipped
 	ext := filepath.Ext(fileName)
 	if slices.Contains(skipExts, ext) {
+		return false
+	}
+
+	if a.scanner.AllowPath(filePath) {
 		return false
 	}
 
