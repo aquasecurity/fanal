@@ -685,4 +685,24 @@ var builtinAllowRules = []AllowRule{
 		Description: "Markdown files",
 		Path:        MustCompile(`\.md$`),
 	},
+	{
+		ID:          "node.js",
+		Description: "Node container images",
+		Path:        MustCompile(`^opt\/yarn-v[\d.]+\/`),
+	},
+	{
+		ID:          "golang",
+		Description: "Go container images",
+		Path:        MustCompile(`^usr\/local\/go\/`),
+	},
+	{
+		ID:          "python",
+		Description: "Python container images",
+		Path:        MustCompile(`^usr\/local\/lib\/python[\d.]+\/`),
+	},
+	{
+		ID:          "wordpress",
+		Description: "Wordpress container images",
+		Path:        MustCompile(`^usr\/src\/wordpress\/`),
+	},
 }
