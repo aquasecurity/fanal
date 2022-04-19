@@ -118,7 +118,7 @@ func (r *Rule) FindSubmatchIndices(content []byte) [][]int {
 }
 
 func (r *Rule) MatchPath(path string) bool {
-	return r.Path != nil && r.Path.MatchString(path)
+	return r.Path == nil || r.Path.MatchString(path)
 }
 
 func (r *Rule) MatchKeywords(content []byte) bool {
@@ -245,18 +245,18 @@ func NewScanner(configPath string) (Scanner, error) {
 		return Scanner{}, xerrors.Errorf("secrets config decode error: %w", err)
 	}
 
-	global.Rules = config.CustomRules
-	for _, rule := range builtinRules {
-		// Disable built-in rules
+	rules := append(builtinRules, config.CustomRules...)
+	for _, rule := range rules {
+		// Disable rules
 		if slices.Contains(config.DisableRuleIDs, rule.ID) {
 			continue
 		}
 		global.Rules = append(global.Rules, rule)
 	}
 
-	global.AllowRules = config.CustomAllowRules
-	for _, allowRule := range builtinAllowRules {
-		// Disable built-in allow rules
+	allowRules := append(builtinAllowRules, config.CustomAllowRules...)
+	for _, allowRule := range allowRules {
+		// Disable allow rules
 		if slices.Contains(config.DisableAllowRuleIDs, allowRule.ID) {
 			continue
 		}

@@ -48,6 +48,15 @@ func TestSecretScanner(t *testing.T) {
 		EndLine:   6,
 		Match:     "credentials: { user: \"username\" password: \"*****\" }",
 	}
+	wantFinding5 := types.SecretFinding{
+		RuleID:    "github-pat",
+		Category:  "GitHub",
+		Title:     "GitHub Personal Access Token",
+		Severity:  "CRITICAL",
+		StartLine: 1,
+		EndLine:   2,
+		Match:     "*****",
+	}
 	tests := []struct {
 		name          string
 		configPath    string
@@ -75,6 +84,44 @@ func TestSecretScanner(t *testing.T) {
 		{
 			name:          "exclude when no keyword found",
 			configPath:    "testdata/config-sad-keywords.yaml",
+			inputFilePath: "testdata/secret.txt",
+			want:          types.Secret{},
+		},
+		{
+			name:          "should ignore .md files by default",
+			configPath:    "testdata/config.yaml",
+			inputFilePath: "testdata/secret.md",
+			want: types.Secret{
+				FilePath: "testdata/secret.md",
+			},
+		},
+		{
+			name:          "should disable .md allow rule",
+			configPath:    "testdata/config-disable-allow-rule-md.yaml",
+			inputFilePath: "testdata/secret.md",
+			want: types.Secret{
+				FilePath: "testdata/secret.md",
+				Findings: []types.SecretFinding{wantFinding1, wantFinding2},
+			},
+		},
+		{
+			name:          "should find ghp builtin secret",
+			configPath:    "",
+			inputFilePath: "testdata/builtin-rule-secret.txt",
+			want: types.Secret{
+				FilePath: "testdata/builtin-rule-secret.txt",
+				Findings: []types.SecretFinding{wantFinding5},
+			},
+		},
+		{
+			name:          "should disable ghp builtin rule",
+			configPath:    "testdata/config-disable-ghp.yaml",
+			inputFilePath: "testdata/builtin-rule-secret.txt",
+			want:          types.Secret{},
+		},
+		{
+			name:          "should disable custom rule",
+			configPath:    "testdata/config-disable-rule1.yaml",
 			inputFilePath: "testdata/secret.txt",
 			want:          types.Secret{},
 		},
