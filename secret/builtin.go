@@ -705,4 +705,9 @@ var builtinAllowRules = []AllowRule{
 		Description: "Wordpress container images",
 		Path:        MustCompile(`^usr\/src\/wordpress\/`),
 	},
+	{
+		ID:          "centos",
+		Description: "CentOS container images",
+		Path:        MustCompile(`^var\/log\/anaconda\/`),
+	},
 }
