@@ -71,7 +71,7 @@ type Application struct {
 
 	// Libraries is a list of lang-specific packages
 	Libraries    []Package
-	Dependencies []godeptypes.Dependency
+	Dependencies []godeptypes.Dependency `json:",omitempty"`
 }
 
 type Config struct {
