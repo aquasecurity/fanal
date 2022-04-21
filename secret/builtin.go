@@ -743,6 +743,11 @@ var builtinRules = []Rule{
 }
 var builtinAllowRules = []AllowRule{
 	{
+		ID:          "tests",
+		Description: "Avoid paths containing test",
+		Path:        MustCompile(`\/test`),
+	},
+	{
 		ID:          "vendor",
 		Description: "Vendor dirs",
 		Path:        MustCompile(`\/vendor\/`),
