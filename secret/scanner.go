@@ -17,23 +17,31 @@ import (
 var lineSep = []byte{'\n'}
 
 type Scanner struct {
-	*global
+	*Global
 }
 
-type global struct {
-	Rules        []Rule       `yaml:"rules"`
-	AllowRule    AllowRule    `yaml:"allow-rule"`
-	ExcludeBlock ExcludeBlock `yaml:"exclude-block"`
+type Config struct {
+	DisableRuleIDs      []string     `yaml:"disable-rules"`       // Disable built-in rules
+	DisableAllowRuleIDs []string     `yaml:"disable-allow-rules"` // Disable built-in allow rules
+	CustomRules         []Rule       `yaml:"rules"`
+	CustomAllowRules    AllowRules   `yaml:"allow-rules"`
+	ExcludeBlock        ExcludeBlock `yaml:"exclude-block"`
+}
+
+type Global struct {
+	Rules        []Rule
+	AllowRules   AllowRules
+	ExcludeBlock ExcludeBlock
 }
 
 // Allow checks if the match is allowed
-func (g global) Allow(match string) bool {
-	return g.AllowRule.Allow(match)
+func (g Global) Allow(match string) bool {
+	return g.AllowRules.Allow(match)
 }
 
 // AllowPath checks if the path is allowed
-func (g global) AllowPath(path string) bool {
-	return g.AllowRule.AllowPath(path)
+func (g Global) AllowPath(path string) bool {
+	return g.AllowRules.AllowPath(path)
 }
 
 // Regexp adds unmarshalling from YAML for regexp.Regexp
@@ -66,8 +74,9 @@ type Rule struct {
 	Title           string                   `yaml:"title"`
 	Severity        string                   `yaml:"severity"`
 	Regex           *Regexp                  `yaml:"regex"`
+	Keywords        []string                 `yaml:"keywords"`
 	Path            *Regexp                  `yaml:"path"`
-	AllowRule       AllowRule                `yaml:"allow-rule"`
+	AllowRules      AllowRules               `yaml:"allow-rules"`
 	ExcludeBlock    ExcludeBlock             `yaml:"exclude-block"`
 	SecretGroupName string                   `yaml:"secret-group-name"`
 }
@@ -109,37 +118,52 @@ func (r *Rule) FindSubmatchIndices(content []byte) [][]int {
 }
 
 func (r *Rule) MatchPath(path string) bool {
-	if r.Path == nil {
+	return r.Path == nil || r.Path.MatchString(path)
+}
+
+func (r *Rule) MatchKeywords(content []byte) bool {
+	if len(r.Keywords) == 0 {
 		return true
 	}
-	return matchString(path, r.Path)
+
+	for _, kw := range r.Keywords {
+		if bytes.Contains(bytes.ToLower(content), []byte(strings.ToLower(kw))) {
+			return true
+		}
+	}
+
+	return false
 }
 
 func (r *Rule) AllowPath(path string) bool {
-	return r.AllowRule.AllowPath(path)
+	return r.AllowRules.AllowPath(path)
 }
 
 func (r *Rule) Allow(match string) bool {
-	return r.AllowRule.Allow(match)
+	return r.AllowRules.Allow(match)
 }
 
 type AllowRule struct {
-	Description string    `yaml:"description"`
-	Regexes     []*Regexp `yaml:"regexes"`
-	Paths       []*Regexp `yaml:"paths"`
+	ID          string  `yaml:"id"`
+	Description string  `yaml:"description"`
+	Regex       *Regexp `yaml:"regex"`
+	Path        *Regexp `yaml:"path"`
 }
 
-func (a AllowRule) AllowPath(path string) bool {
-	return matchString(path, a.Paths...)
+type AllowRules []AllowRule
+
+func (rules AllowRules) AllowPath(path string) bool {
+	for _, rule := range rules {
+		if rule.Path != nil && rule.Path.MatchString(path) {
+			return true
+		}
+	}
+	return false
 }
 
-func (a AllowRule) Allow(match string) bool {
-	return matchString(match, a.Regexes...)
-}
-
-func matchString(s string, regexps ...*Regexp) bool {
-	for _, r := range regexps {
-		if r != nil && r.MatchString(s) {
+func (rules AllowRules) Allow(match string) bool {
+	for _, rule := range rules {
+		if rule.Regex != nil && rule.Regex.MatchString(match) {
 			return true
 		}
 	}
@@ -201,36 +225,46 @@ func (b *Blocks) find() {
 }
 
 func NewScanner(configPath string) (Scanner, error) {
-	var config global
+	var global Global
+
+	// If no config is passed, use built-in rules and allow rules.
 	if configPath == "" {
-		config.Rules = builtinRules
-	} else {
-		f, err := os.Open(configPath)
-		if err != nil {
-			return Scanner{}, xerrors.Errorf("file open error %s: %w", configPath, err)
-		}
-		defer f.Close()
-
-		if err = yaml.NewDecoder(f).Decode(&config); err != nil {
-			return Scanner{}, xerrors.Errorf("secrets config decode error: %w", err)
-		}
-
-		config.Rules = mergeRules(config.Rules, builtinRules)
+		global.Rules = builtinRules
+		global.AllowRules = builtinAllowRules
+		return Scanner{&global}, nil
 	}
-	return Scanner{global: &config}, nil
-}
 
-func mergeRules(custom, builtin []Rule) []Rule {
-	custom = append(custom, builtin...)
-	slices.SortStableFunc(custom, func(a, b Rule) bool {
-		return a.ID < b.ID
-	})
+	f, err := os.Open(configPath)
+	if err != nil {
+		return Scanner{}, xerrors.Errorf("file open error %s: %w", configPath, err)
+	}
+	defer f.Close()
 
-	// Unique rules by ID and prefer custom rules.
-	slices.CompactFunc(custom, func(a, b Rule) bool {
-		return a.ID == b.ID
-	})
-	return custom
+	var config Config
+	if err = yaml.NewDecoder(f).Decode(&config); err != nil {
+		return Scanner{}, xerrors.Errorf("secrets config decode error: %w", err)
+	}
+
+	rules := append(builtinRules, config.CustomRules...)
+	for _, rule := range rules {
+		// Disable rules
+		if slices.Contains(config.DisableRuleIDs, rule.ID) {
+			continue
+		}
+		global.Rules = append(global.Rules, rule)
+	}
+
+	allowRules := append(builtinAllowRules, config.CustomAllowRules...)
+	for _, allowRule := range allowRules {
+		// Disable allow rules
+		if slices.Contains(config.DisableAllowRuleIDs, allowRule.ID) {
+			continue
+		}
+		global.AllowRules = append(global.AllowRules, allowRule)
+	}
+	global.ExcludeBlock = config.ExcludeBlock
+
+	return Scanner{Global: &global}, nil
 }
 
 type ScanArgs struct {
@@ -256,6 +290,11 @@ func (s Scanner) Scan(args ScanArgs) types.Secret {
 
 		// Check if the file path should be allowed
 		if rule.AllowPath(args.FilePath) {
+			continue
+		}
+
+		// Check if the file content contains keywords and should be scanned
+		if !rule.MatchKeywords(args.Content) {
 			continue
 		}
 
