@@ -25,6 +25,7 @@ import (
 	_ "github.com/aquasecurity/fanal/analyzer/os/mariner"
 	_ "github.com/aquasecurity/fanal/analyzer/os/photon"
 	_ "github.com/aquasecurity/fanal/analyzer/os/redhatbase"
+	_ "github.com/aquasecurity/fanal/analyzer/os/release"
 	_ "github.com/aquasecurity/fanal/analyzer/os/suse"
 	_ "github.com/aquasecurity/fanal/analyzer/os/ubuntu"
 	_ "github.com/aquasecurity/fanal/analyzer/pkg/apk"
