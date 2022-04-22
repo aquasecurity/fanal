@@ -1,15 +1,24 @@
 package secret_test
 
 import (
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/aquasecurity/fanal/log"
 	"github.com/aquasecurity/fanal/secret"
 	"github.com/aquasecurity/fanal/types"
 )
+
+func TestMain(m *testing.M) {
+	logger, _ := zap.NewDevelopment(zap.IncreaseLevel(zapcore.FatalLevel))
+	log.SetLogger(logger.Sugar())
+	os.Exit(m.Run())
+}
 
 func TestSecretScanner(t *testing.T) {
 	wantFinding1 := types.SecretFinding{
