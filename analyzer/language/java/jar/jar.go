@@ -32,7 +32,7 @@ func (a javaLibraryAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisI
 		return nil, xerrors.Errorf("jar/war/ear/par parse error: %w", err)
 	}
 
-	return language.ToAnalysisResult(types.Jar, input.FilePath, input.FilePath, libs, deps), nil
+	return language.ToAnalysisResult(types.Jar, input.FilePath, input.FilePath, libs, deps, nil), nil
 }
 
 func (a javaLibraryAnalyzer) Required(filePath string, _ os.FileInfo) bool {

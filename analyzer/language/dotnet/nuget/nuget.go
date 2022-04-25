@@ -38,7 +38,7 @@ func (a nugetLibraryAnalyzer) Analyze(_ context.Context, input analyzer.Analysis
 		parser = config.Parse
 	}
 
-	res, err := language.Analyze(types.NuGet, input.FilePath, input.Content, parser)
+	res, err := language.Analyze(types.NuGet, input.FilePath, input.Content, parser, nil)
 	if err != nil {
 		return nil, xerrors.Errorf("NuGet analysis error: %w", err)
 	}

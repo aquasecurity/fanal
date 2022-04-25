@@ -84,7 +84,7 @@ func TestAnalyze(t *testing.T) {
 				return nil, nil, nil
 			}
 
-			got, err := language.Analyze(tt.args.analyzerType, tt.args.filePath, tt.args.content, parse)
+			got, err := language.Analyze(tt.args.analyzerType, tt.args.filePath, tt.args.content, parse, nil)
 			if tt.wantErr != "" {
 				require.NotNil(t, err)
 				assert.Contains(t, err.Error(), tt.wantErr)

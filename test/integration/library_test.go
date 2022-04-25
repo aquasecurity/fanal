@@ -1,5 +1,5 @@
-//go:build integration
-// +build integration
+//go:buil d integration
+// +buil d integration
 
 package integration
 
