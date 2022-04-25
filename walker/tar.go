@@ -32,6 +32,7 @@ func NewLayerTar(skipFiles, skipDirs []string) LayerTar {
 
 func (w LayerTar) Walk(layer io.Reader, analyzeFn WalkFunc) ([]string, []string, error) {
 	var opqDirs, whFiles, skipDirs []string
+	var osReleaseIsSymLink bool
 	tr := tar.NewReader(layer)
 	for {
 		hdr, err := tr.Next()
@@ -64,7 +65,15 @@ func (w LayerTar) Walk(layer io.Reader, analyzeFn WalkFunc) ([]string, []string,
 				skipDirs = append(skipDirs, filePath)
 				continue
 			}
-		case tar.TypeSymlink, tar.TypeLink, tar.TypeReg:
+		case tar.TypeSymlink:
+			if filePath == "etc/os-release" {
+				osReleaseIsSymLink = true
+				continue
+			}
+			if w.shouldSkipFile(filePath) {
+				continue
+			}
+		case tar.TypeLink, tar.TypeReg:
 			if w.shouldSkipFile(filePath) {
 				continue
 			}
@@ -74,6 +83,12 @@ func (w LayerTar) Walk(layer io.Reader, analyzeFn WalkFunc) ([]string, []string,
 
 		if underSkippedDir(filePath, skipDirs) {
 			continue
+		}
+
+		// etc/os-release file can be symlink to /usr/lib/os-release.
+		// We must overwrite filePath /usr/lib/os-release to etc/os-release for detect os version
+		if filePath == "usr/lib/os-release" && osReleaseIsSymLink {
+			filePath = "etc/os-release"
 		}
 
 		// A symbolic/hard link or regular file will reach here.
