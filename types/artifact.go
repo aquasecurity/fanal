@@ -134,6 +134,7 @@ type BlobInfo struct {
 	PackageInfos      []PackageInfo      `json:",omitempty"`
 	Applications      []Application      `json:",omitempty"`
 	Misconfigurations []Misconfiguration `json:",omitempty"`
+	Secrets           []Secret           `json:",omitempty"`
 	OpaqueDirs        []string           `json:",omitempty"`
 	WhiteoutFiles     []string           `json:",omitempty"`
 
@@ -158,6 +159,7 @@ type ArtifactDetail struct {
 	Packages          []Package          `json:",omitempty"`
 	Applications      []Application      `json:",omitempty"`
 	Misconfigurations []Misconfiguration `json:",omitempty"`
+	Secrets           []Secret           `json:",omitempty"`
 
 	// HistoryPackages are packages extracted from RUN instructions
 	HistoryPackages []Package `json:",omitempty"`
