@@ -37,7 +37,7 @@ func ToAnalysisResult(fileType, filePath, libFilePath string, libs []godeptypes.
 	var pkgs []types.Package
 	for _, lib := range libs {
 		pkgs = append(pkgs, types.Package{
-			Id:       id(lib.Name, lib.Version),
+			ID:       id(lib.Name, lib.Version),
 			Name:     lib.Name,
 			Version:  lib.Version,
 			FilePath: libFilePath,

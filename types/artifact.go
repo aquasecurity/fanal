@@ -24,7 +24,7 @@ type Layer struct {
 }
 
 type Package struct {
-	Id         string `json:",omitempty"`
+	ID         string `json:",omitempty"`
 	Name       string `json:",omitempty"`
 	Version    string `json:",omitempty"`
 	Release    string `json:",omitempty"`
