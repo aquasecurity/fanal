@@ -2,6 +2,8 @@ package analyzer
 
 import (
 	"context"
+	"errors"
+	"io/fs"
 	"os"
 	"sort"
 	"strings"
@@ -84,8 +86,10 @@ type AnalyzerGroup struct {
 type AnalysisResult struct {
 	m                    sync.Mutex
 	OS                   *types.OS
+	Repository           *types.Repository
 	PackageInfos         []types.PackageInfo
 	Applications         []types.Application
+	Secrets              []types.Secret
 	SystemInstalledFiles []string // A list of files installed by OS package manager
 
 	Files map[types.HandlerType][]types.File
@@ -105,8 +109,8 @@ func NewAnalysisResult() *AnalysisResult {
 }
 
 func (r *AnalysisResult) isEmpty() bool {
-	return r.OS == nil && len(r.PackageInfos) == 0 && len(r.Applications) == 0 &&
-		len(r.Files) == 0 && len(r.SystemInstalledFiles) == 0 && r.BuildInfo == nil && len(r.CustomResources) == 0
+	return r.OS == nil && r.Repository == nil && len(r.PackageInfos) == 0 && len(r.Applications) == 0 &&
+		len(r.Secrets) == 0 && len(r.SystemInstalledFiles) == 0 && r.BuildInfo == nil && len(r.CustomResources) == 0
 }
 
 func (r *AnalysisResult) Sort() {
@@ -138,6 +142,19 @@ func (r *AnalysisResult) Sort() {
 			return files[i].Path < files[j].Path
 		})
 	}
+
+	// Secrets
+	sort.Slice(r.Secrets, func(i, j int) bool {
+		return r.Secrets[i].FilePath < r.Secrets[j].FilePath
+	})
+	for _, sec := range r.Secrets {
+		sort.Slice(sec.Findings, func(i, j int) bool {
+			if sec.Findings[i].RuleID != sec.Findings[j].RuleID {
+				return sec.Findings[i].RuleID < sec.Findings[j].RuleID
+			}
+			return sec.Findings[i].StartLine < sec.Findings[j].StartLine
+		})
+	}
 }
 
 func (r *AnalysisResult) Merge(new *AnalysisResult) {
@@ -158,6 +175,10 @@ func (r *AnalysisResult) Merge(new *AnalysisResult) {
 		}
 	}
 
+	if new.Repository != nil {
+		r.Repository = new.Repository
+	}
+
 	if len(new.PackageInfos) > 0 {
 		r.PackageInfos = append(r.PackageInfos, new.PackageInfos...)
 	}
@@ -174,6 +195,7 @@ func (r *AnalysisResult) Merge(new *AnalysisResult) {
 		}
 	}
 
+	r.Secrets = append(r.Secrets, new.Secrets...)
 	r.SystemInstalledFiles = append(r.SystemInstalledFiles, new.SystemInstalledFiles...)
 
 	if new.BuildInfo != nil {
@@ -253,18 +275,26 @@ func (ag AnalyzerGroup) ImageConfigAnalyzerVersions() map[string]int {
 }
 
 func (ag AnalyzerGroup) AnalyzeFile(ctx context.Context, wg *sync.WaitGroup, limit *semaphore.Weighted, result *AnalysisResult,
-	dir, filePath string, info os.FileInfo, opener Opener, opts AnalysisOptions) error {
+	dir, filePath string, info os.FileInfo, opener Opener, disabled []Type, opts AnalysisOptions) error {
 	if info.IsDir() {
 		return nil
 	}
 
 	for _, a := range ag.analyzers {
+		// Skip disabled analyzers
+		if slices.Contains(disabled, a.Type()) {
+			continue
+		}
+
 		// filepath extracted from tar file doesn't have the prefix "/"
 		if !a.Required(strings.TrimLeft(filePath, "/"), info) {
 			continue
 		}
 		rc, err := opener()
-		if err != nil {
+		if errors.Is(err, fs.ErrPermission) {
+			log.Logger.Debugf("Permission error: %s", filePath)
+			break
+		} else if err != nil {
 			return xerrors.Errorf("unable to open %s: %w", filePath, err)
 		}
 

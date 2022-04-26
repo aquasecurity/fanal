@@ -16,7 +16,7 @@ import (
 
 const version = 1
 
-var requiredFile = "Dockerfile"
+var requiredFiles = []string{"Dockerfile", "Containerfile"}
 
 type ConfigAnalyzer struct {
 	filePattern *regexp.Regexp
@@ -49,7 +49,7 @@ func (s ConfigAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisInput)
 }
 
 // Required does a case-insensitive check for filePath and returns true if
-// filePath equals/startsWith/hasExtension requiredFile
+// filePath equals/startsWith/hasExtension requiredFiles
 func (s ConfigAnalyzer) Required(filePath string, _ os.FileInfo) bool {
 	if s.filePattern != nil && s.filePattern.MatchString(filePath) {
 		return true
@@ -57,11 +57,13 @@ func (s ConfigAnalyzer) Required(filePath string, _ os.FileInfo) bool {
 
 	base := filepath.Base(filePath)
 	ext := filepath.Ext(base)
-	if strings.EqualFold(base, requiredFile+ext) {
-		return true
-	}
-	if strings.EqualFold(ext, "."+requiredFile) {
-		return true
+	for _, file := range requiredFiles {
+		if strings.EqualFold(base, file+ext) {
+			return true
+		}
+		if strings.EqualFold(ext, "."+file) {
+			return true
+		}
 	}
 
 	return false

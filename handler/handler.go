@@ -8,7 +8,6 @@ import (
 	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/fanal/analyzer"
-	"github.com/aquasecurity/fanal/analyzer/config"
 	"github.com/aquasecurity/fanal/artifact"
 	"github.com/aquasecurity/fanal/types"
 )
@@ -17,7 +16,7 @@ var (
 	postHandlerInits = map[types.HandlerType]postHandlerInit{}
 )
 
-type postHandlerInit func(artifact.Option, config.ScannerOption) (PostHandler, error)
+type postHandlerInit func(artifact.Option) (PostHandler, error)
 
 type PostHandler interface {
 	Type() types.HandlerType
@@ -39,14 +38,14 @@ type Manager struct {
 	postHandlers []PostHandler
 }
 
-func NewManager(artifactOpt artifact.Option, scannerOpt config.ScannerOption) (Manager, error) {
+func NewManager(artifactOpt artifact.Option) (Manager, error) {
 	var m Manager
 	for t, handlerInit := range postHandlerInits {
 		// Skip the handler if it is disabled
 		if slices.Contains(artifactOpt.DisabledHandlers, t) {
 			continue
 		}
-		handler, err := handlerInit(artifactOpt, scannerOpt)
+		handler, err := handlerInit(artifactOpt)
 		if err != nil {
 			return Manager{}, xerrors.Errorf("post handler %s initialize error: %w", t, err)
 		}

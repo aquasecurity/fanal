@@ -4,7 +4,6 @@ import (
 	"context"
 	"strings"
 
-	"github.com/aquasecurity/fanal/analyzer/config"
 	"github.com/aquasecurity/fanal/artifact"
 
 	"golang.org/x/exp/slices"
@@ -39,12 +38,15 @@ var (
 
 		// node.js
 		types.NodePkg,
+
+		// Go binaries
+		types.GoBinary,
 	}
 )
 
 type systemFileFilteringPostHandler struct{}
 
-func newSystemFileFilteringPostHandler(artifact.Option, config.ScannerOption) (handler.PostHandler, error) {
+func newSystemFileFilteringPostHandler(artifact.Option) (handler.PostHandler, error) {
 	return systemFileFilteringPostHandler{}, nil
 }
 
