@@ -1,7 +1,12 @@
 package handler_test
 
 import (
+	"context"
 	"testing"
+
+	"github.com/aquasecurity/fanal/analyzer"
+
+	"github.com/aquasecurity/fanal/artifact"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -12,19 +17,27 @@ import (
 
 type fakeHook struct{}
 
-func (h fakeHook) Version() int { return 1 }
-
-func (h fakeHook) Type() handler.Type { return "fake" }
-
-func (h fakeHook) Handle(info *types.BlobInfo) error {
+func (h fakeHook) Handle(ctx context.Context, result *analyzer.AnalysisResult, info *types.BlobInfo) error {
 	info.DiffID = "fake"
 	return nil
+}
+
+func (h fakeHook) Priority() int {
+	return 1
+}
+
+func (h fakeHook) Version() int { return 1 }
+
+func (h fakeHook) Type() types.HandlerType { return "fake" }
+
+func fakehookInit(_ artifact.Option) (handler.PostHandler, error) {
+	return fakeHook{}, nil
 }
 
 func TestManager_Versions(t *testing.T) {
 	tests := []struct {
 		name    string
-		disable []handler.Type
+		disable []types.HandlerType
 		want    map[string]int
 	}{
 		{
@@ -35,19 +48,19 @@ func TestManager_Versions(t *testing.T) {
 		},
 		{
 			name:    "disable hooks",
-			disable: []handler.Type{"fake"},
-			want: map[string]int{
-				"fake": 0,
-			},
+			disable: []types.HandlerType{"fake"},
+			want:    map[string]int{},
 		},
 	}
 
-	handler.RegisterPostHandler(fakeHook{})
-	defer handler.DeregisterPostHandler("fake")
-
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			m := handler.NewManager(tt.disable)
+			handler.RegisterPostHandlerInit("fake", fakehookInit)
+			defer handler.DeregisterPostHandler("fake")
+			m, err := handler.NewManager(artifact.Option{
+				DisabledHandlers: tt.disable,
+			})
+			require.NoError(t, err)
 			got := m.Versions()
 			assert.Equal(t, tt.want, got)
 		})
@@ -57,7 +70,7 @@ func TestManager_Versions(t *testing.T) {
 func TestManager_CallHooks(t *testing.T) {
 	tests := []struct {
 		name    string
-		disable []handler.Type
+		disable []types.HandlerType
 		want    types.BlobInfo
 	}{
 		{
@@ -69,24 +82,26 @@ func TestManager_CallHooks(t *testing.T) {
 		},
 		{
 			name:    "disable hooks",
-			disable: []handler.Type{"fake"},
+			disable: []types.HandlerType{"fake"},
 			want: types.BlobInfo{
 				Digest: "digest",
 			},
 		},
 	}
 
-	handler.RegisterPostHandler(fakeHook{})
-	defer handler.DeregisterPostHandler("fake")
-
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			handler.RegisterPostHandlerInit("fake", fakehookInit)
+			defer handler.DeregisterPostHandler("fake")
 			blob := types.BlobInfo{
 				Digest: "digest",
 			}
-			m := handler.NewManager(tt.disable)
+			m, err := handler.NewManager(artifact.Option{
+				DisabledHandlers: tt.disable,
+			})
+			require.NoError(t, err)
 
-			err := m.CallHooks(&blob)
+			err = m.PostHandle(context.TODO(), nil, &blob)
 			require.NoError(t, err)
 			assert.Equal(t, tt.want, blob)
 		})
