@@ -19,7 +19,10 @@ func init() {
 
 const version = 1
 
-var requiredFiles = []string{"etc/os-release"}
+var requiredFiles = []string{
+	"etc/os-release",
+	"usr/lib/os-release",
+}
 
 type osReleaseAnalyzer struct{}
 

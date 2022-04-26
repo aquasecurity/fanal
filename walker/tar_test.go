@@ -68,16 +68,6 @@ func TestLayerTar_Walk(t *testing.T) {
 			wantWhFiles: []string{"foo/foo"},
 		},
 		{
-			name:      "os-release is symlink",
-			inputFile: "testdata/osreleaselink.tar",
-			analyzeFn: func(filePath string, info os.FileInfo, opener analyzer.Opener) error {
-				if filePath == "usr/lib/os-release" {
-					assert.Fail(t, "skip usr/lib/os-release error", "%s should be skipped", filePath)
-				}
-				return nil
-			},
-		},
-		{
 			name:      "sad path",
 			inputFile: "testdata/test.tar",
 			analyzeFn: func(filePath string, info os.FileInfo, opener analyzer.Opener) error {
@@ -88,7 +78,7 @@ func TestLayerTar_Walk(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			f, err := os.Open(tt.inputFile)
+			f, err := os.Open("testdata/test.tar")
 			require.NoError(t, err)
 
 			w := walker.NewLayerTar(tt.fields.skipFiles, tt.fields.skipDirs)
