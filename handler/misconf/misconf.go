@@ -174,7 +174,6 @@ func resultsToMisconf(configType string, scannerName string, results scan.Result
 		//	}
 		//}
 
-		// TODO(liam): Need file names even when the check is passed
 		filePath := flattened.Location.Filename
 		misconf, ok := misconfs[filePath]
 		if !ok {
@@ -184,14 +183,17 @@ func resultsToMisconf(configType string, scannerName string, results scan.Result
 			}
 		}
 
-		// TODO(liam): support warnings
-		switch flattened.Status {
-		case scan.StatusPassed:
-			misconf.Successes = append(misconf.Successes, misconfResult)
-		case scan.StatusIgnored:
-			misconf.Exceptions = append(misconf.Exceptions, misconfResult)
-		case scan.StatusFailed:
-			misconf.Failures = append(misconf.Failures, misconfResult)
+		if flattened.Warning {
+			misconf.Warnings = append(misconf.Warnings, misconfResult)
+		} else {
+			switch flattened.Status {
+			case scan.StatusPassed:
+				misconf.Successes = append(misconf.Successes, misconfResult)
+			case scan.StatusIgnored:
+				misconf.Exceptions = append(misconf.Exceptions, misconfResult)
+			case scan.StatusFailed:
+				misconf.Failures = append(misconf.Failures, misconfResult)
+			}
 		}
 		misconfs[filePath] = misconf
 	}
