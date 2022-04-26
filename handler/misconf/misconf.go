@@ -1,16 +1,16 @@
 package misconf
 
 import (
+	"bytes"
 	"context"
 	_ "embed"
-	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
 
-	yaml "github.com/goccy/go-yaml"
+	"github.com/aquasecurity/defsec/pkg/detection"
+
 	"github.com/liamg/memoryfs"
-	"github.com/open-policy-agent/opa/rego"
 	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/defsec/pkg/scan"
@@ -23,18 +23,12 @@ import (
 	"github.com/aquasecurity/fanal/analyzer"
 	"github.com/aquasecurity/fanal/artifact"
 	"github.com/aquasecurity/fanal/handler"
-	"github.com/aquasecurity/fanal/log"
 	"github.com/aquasecurity/fanal/types"
 )
 
 func init() {
 	handler.RegisterPostHandlerInit(types.MisconfPostHandler, newMisconfPostHandler)
 }
-
-var (
-	//go:embed detection.rego
-	defaultDetectionModule string
-)
 
 const version = 1
 
@@ -75,6 +69,13 @@ func newMisconfPostHandler(artifactOpt artifact.Option) (handler.PostHandler, er
 	}, nil
 }
 
+var enabledDefsecTypes = map[detection.FileType]string{
+	detection.FileTypeCloudFormation: types.CloudFormation,
+	detection.FileTypeTerraform:      types.Terraform,
+	detection.FileTypeDockerfile:     types.Dockerfile,
+	detection.FileTypeKubernetes:     types.Kubernetes,
+}
+
 // Handle detects misconfigurations.
 func (h misconfPostHandler) Handle(ctx context.Context, result *analyzer.AnalysisResult, blob *types.BlobInfo) error {
 	files, ok := result.Files[h.Type()]
@@ -90,39 +91,23 @@ func (h misconfPostHandler) Handle(ctx context.Context, result *analyzer.Analysi
 	}
 
 	for _, file := range files {
-		var unmarshalFunc func([]byte, any) error
-		switch file.Type {
-		case types.JSON:
-			unmarshalFunc = json.Unmarshal
-		case types.YAML:
-			unmarshalFunc = yaml.Unmarshal
-		}
 
-		if file.Type == types.JSON || file.Type == types.YAML {
-			var parsed any
-			if err := unmarshalFunc(file.Content, &parsed); err != nil {
-				log.Logger.Debugf("Parse error %s: %s", file.Path, err)
-			}
+		for defsecType, localType := range enabledDefsecTypes {
 
-			// Detect config types such as CloudFormation and Kubernetes.
-			configType, err := detectConfigType(ctx, parsed)
-			if err != nil {
-				return xerrors.Errorf("unable to detect config type %s: %w", file.Path, err)
-			} else if configType == "" {
-				// Skip unknown config types
+			buffer := bytes.NewReader(file.Content)
+			if !detection.IsType(file.Path, buffer, defsecType) {
 				continue
 			}
-
 			// Replace with more detailed config type
-			file.Type = configType
-		}
+			file.Type = localType
 
-		if memfs, ok := mapMemoryFS[file.Type]; ok {
-			if err := memfs.MkdirAll(filepath.Dir(file.Path), os.ModePerm); err != nil {
-				return xerrors.Errorf("memoryfs mkdir error: %w", err)
-			}
-			if err := memfs.WriteFile(file.Path, file.Content, os.ModePerm); err != nil {
-				return xerrors.Errorf("memoryfs write error: %w", err)
+			if memfs, ok := mapMemoryFS[file.Type]; ok {
+				if err := memfs.MkdirAll(filepath.Dir(file.Path), os.ModePerm); err != nil {
+					return xerrors.Errorf("memoryfs mkdir error: %w", err)
+				}
+				if err := memfs.WriteFile(file.Path, file.Content, os.ModePerm); err != nil {
+					return xerrors.Errorf("memoryfs write error: %w", err)
+				}
 			}
 		}
 	}
@@ -153,30 +138,6 @@ func (h misconfPostHandler) Type() types.HandlerType {
 
 func (h misconfPostHandler) Priority() int {
 	return types.MisconfPostHandlerPriority
-}
-
-// TODO(liam): move to DefSec; no need to use Rego.
-func detectConfigType(ctx context.Context, input interface{}) (string, error) {
-	results, err := rego.New(
-		rego.Input(input),
-		rego.Query("x = data.config.type.detect"),
-		rego.Module("detection.rego", defaultDetectionModule),
-	).Eval(ctx)
-	if err != nil {
-		return "", xerrors.Errorf("rego eval error: %w", err)
-	}
-
-	for _, result := range results {
-		for _, configType := range result.Bindings["x"].([]interface{}) {
-			v, ok := configType.(string)
-			if !ok {
-				return "", xerrors.Errorf("'detect' must return string")
-			}
-			// Return the first element
-			return v, nil
-		}
-	}
-	return "", nil
 }
 
 func resultsToMisconf(configType string, scannerName string, results scan.Results) []types.Misconfiguration {
