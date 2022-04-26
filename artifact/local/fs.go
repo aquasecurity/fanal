@@ -15,6 +15,7 @@ import (
 
 	"github.com/aquasecurity/fanal/analyzer"
 	"github.com/aquasecurity/fanal/analyzer/config"
+	"github.com/aquasecurity/fanal/analyzer/secret"
 	"github.com/aquasecurity/fanal/artifact"
 	"github.com/aquasecurity/fanal/cache"
 	"github.com/aquasecurity/fanal/handler"
@@ -33,30 +34,33 @@ type Artifact struct {
 	analyzer       analyzer.AnalyzerGroup
 	handlerManager handler.Manager
 
-	artifactOption      artifact.Option
-	configScannerOption config.ScannerOption
+	artifactOption artifact.Option
 }
 
-func NewArtifact(rootPath string, c cache.ArtifactCache, artifactOpt artifact.Option, scannerOpt config.ScannerOption) (artifact.Artifact, error) {
+func NewArtifact(rootPath string, c cache.ArtifactCache, opt artifact.Option) (artifact.Artifact, error) {
 	// Register config analyzers
-	if err := config.RegisterConfigAnalyzers(scannerOpt.FilePatterns); err != nil {
+	if err := config.RegisterConfigAnalyzers(opt.MisconfScannerOption.FilePatterns); err != nil {
 		return nil, xerrors.Errorf("config analyzer error: %w", err)
 	}
 
-	handlerManager, err := handler.NewManager(artifactOpt, scannerOpt)
+	handlerManager, err := handler.NewManager(opt)
 	if err != nil {
 		return nil, xerrors.Errorf("handler initialize error: %w", err)
+	}
+
+	// Register secret analyzer
+	if err = secret.RegisterSecretAnalyzer(opt.SecretScannerOption); err != nil {
+		return nil, xerrors.Errorf("secret scanner error: %w", err)
 	}
 
 	return Artifact{
 		rootPath:       filepath.Clean(rootPath),
 		cache:          c,
-		walker:         walker.NewFS(buildAbsPaths(rootPath, artifactOpt.SkipFiles), buildAbsPaths(rootPath, artifactOpt.SkipDirs)),
-		analyzer:       analyzer.NewAnalyzerGroup(artifactOpt.AnalyzerGroup, artifactOpt.DisabledAnalyzers),
+		walker:         walker.NewFS(buildAbsPaths(rootPath, opt.SkipFiles), buildAbsPaths(rootPath, opt.SkipDirs)),
+		analyzer:       analyzer.NewAnalyzerGroup(opt.AnalyzerGroup, opt.DisabledAnalyzers),
 		handlerManager: handlerManager,
 
-		artifactOption:      artifactOpt,
-		configScannerOption: scannerOpt,
+		artifactOption: opt,
 	}, nil
 }
 
@@ -93,7 +97,7 @@ func (a Artifact) Inspect(ctx context.Context) (types.ArtifactReference, error) 
 		}
 
 		opts := analyzer.AnalysisOptions{Offline: a.artifactOption.Offline}
-		if err = a.analyzer.AnalyzeFile(ctx, &wg, limit, result, directory, filePath, info, opener, opts); err != nil {
+		if err = a.analyzer.AnalyzeFile(ctx, &wg, limit, result, directory, filePath, info, opener, nil, opts); err != nil {
 			return xerrors.Errorf("analyze file (%s): %w", filePath, err)
 		}
 		return nil
@@ -111,8 +115,10 @@ func (a Artifact) Inspect(ctx context.Context) (types.ArtifactReference, error) 
 	blobInfo := types.BlobInfo{
 		SchemaVersion: types.BlobJSONSchemaVersion,
 		OS:            result.OS,
+		Repository:    result.Repository,
 		PackageInfos:  result.PackageInfos,
 		Applications:  result.Applications,
+		Secrets:       result.Secrets,
 	}
 
 	if err = a.handlerManager.PostHandle(ctx, result, &blobInfo); err != nil {
@@ -157,8 +163,7 @@ func (a Artifact) calcCacheKey(blobInfo types.BlobInfo) (string, error) {
 	}
 
 	d := digest.NewDigest(digest.SHA256, h)
-	cacheKey, err := cache.CalcKey(d.String(), a.analyzer.AnalyzerVersions(), a.handlerManager.Versions(),
-		a.artifactOption, a.configScannerOption)
+	cacheKey, err := cache.CalcKey(d.String(), a.analyzer.AnalyzerVersions(), a.handlerManager.Versions(), a.artifactOption)
 	if err != nil {
 		return "", xerrors.Errorf("cache key: %w", err)
 	}

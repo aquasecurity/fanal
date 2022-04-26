@@ -5,6 +5,8 @@ import (
 	"sort"
 
 	"github.com/aquasecurity/fanal/analyzer"
+	misconf "github.com/aquasecurity/fanal/analyzer/config"
+	"github.com/aquasecurity/fanal/analyzer/secret"
 	"github.com/aquasecurity/fanal/types"
 )
 
@@ -17,6 +19,9 @@ type Option struct {
 	NoProgress        bool
 	Offline           bool
 	InsecureSkipTLS   bool
+
+	MisconfScannerOption misconf.ScannerOption
+	SecretScannerOption  secret.ScannerOption
 }
 
 func (o *Option) Sort() {

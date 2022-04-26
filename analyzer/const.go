@@ -25,6 +25,9 @@ const (
 	TypeDpkg Type = "dpkg"
 	TypeRpm  Type = "rpm"
 
+	// OS Package Repository
+	TypeApkRepo Type = "apk-repo"
+
 	// ============================
 	// Programming Language Package
 	// ============================
@@ -75,6 +78,11 @@ const (
 	TypeHCL            Type = "hcl"
 	TypeTerraform      Type = "terraform"
 	TypeCloudFormation Type = "cloudFormation"
+
+	// ========
+	// Secrets
+	// ========
+	TypeSecret Type = "secret"
 
 	// =======
 	// Red Hat
