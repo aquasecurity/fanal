@@ -4,6 +4,7 @@ import (
 	"context"
 	_ "embed"
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 
@@ -33,14 +34,6 @@ func init() {
 var (
 	//go:embed detection.rego
 	defaultDetectionModule string
-
-	// TODO(liam): Want DefSec to return these values.
-	typeMap = map[string]string{
-		types.Terraform:      "Terraform Security Check",
-		types.CloudFormation: "CloudFormation Security Check",
-		types.Dockerfile:     "Dockerfile Security Check",
-		types.Kubernetes:     "Kubernetes Security Check",
-	}
 )
 
 const version = 1
@@ -143,7 +136,7 @@ func (h misconfPostHandler) Handle(ctx context.Context, result *analyzer.Analysi
 			return xerrors.Errorf("scan config error: %w", err)
 		}
 
-		misconfs = append(misconfs, resultsToMisconf(t, results)...)
+		misconfs = append(misconfs, resultsToMisconf(t, scanner.Name(), results)...)
 	}
 
 	// Add misconfigurations
@@ -188,7 +181,7 @@ func detectConfigType(ctx context.Context, input interface{}) (string, error) {
 	return "", nil
 }
 
-func resultsToMisconf(configType string, results scan.Results) []types.Misconfiguration {
+func resultsToMisconf(configType string, scannerName string, results scan.Results) []types.Misconfiguration {
 	misconfs := map[string]types.Misconfiguration{}
 
 	for _, result := range results {
@@ -197,7 +190,7 @@ func resultsToMisconf(configType string, results scan.Results) []types.Misconfig
 			Message: flattened.Description,
 			PolicyMetadata: types.PolicyMetadata{
 				ID:                 flattened.RuleID,
-				Type:               typeMap[configType],
+				Type:               fmt.Sprintf("%s Security Check", scannerName),
 				Title:              flattened.RuleSummary,
 				Description:        flattened.Impact,
 				Severity:           string(flattened.Severity),
