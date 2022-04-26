@@ -50,9 +50,7 @@ func newMisconfPostHandler(artifactOpt artifact.Option) (handler.PostHandler, er
 	}
 
 	if opt.Trace {
-		// TODO(liam): trace outputs should be passed to MisconfResult.Traces
-		// cf. https://github.com/aquasecurity/fanal/blob/034fb19b8e06afd680d1e6c835fec7e8e9367bfc/types/misconf.go#L26
-		opts = append(opts, options.ScannerWithTrace(os.Stderr))
+		opts = append(opts, options.ScannerWithPerResultTracing(true))
 	}
 
 	if len(opt.PolicyPaths) > 0 {
@@ -204,6 +202,7 @@ func resultsToMisconf(configType string, scannerName string, results scan.Result
 				StartLine: flattened.Location.StartLine,
 				EndLine:   flattened.Location.EndLine,
 			},
+			Traces: result.Traces(),
 		}
 
 		//var filePath = "unknown"
