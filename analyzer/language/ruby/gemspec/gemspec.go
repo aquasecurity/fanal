@@ -6,11 +6,11 @@ import (
 	"path/filepath"
 	"regexp"
 
-	"golang.org/x/xerrors"
-
 	"github.com/aquasecurity/fanal/analyzer"
+	"github.com/aquasecurity/fanal/analyzer/language"
 	"github.com/aquasecurity/fanal/types"
 	"github.com/aquasecurity/go-dep-parser/pkg/ruby/gemspec"
+	"golang.org/x/xerrors"
 )
 
 func init() {
@@ -24,27 +24,20 @@ var fileRegex = regexp.MustCompile(`.*/specifications/.+\.gemspec`)
 type gemspecLibraryAnalyzer struct{}
 
 func (a gemspecLibraryAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisInput) (*analyzer.AnalysisResult, error) {
-	parsedLib, err := gemspec.Parse(input.Content)
+	res, err := language.Analyze(types.GemSpec, input.FilePath, input.Content, gemspec.NewParser())
+
 	if err != nil {
 		return nil, xerrors.Errorf("failed to parse %s: %w", input.FilePath, err)
 	}
 
-	return &analyzer.AnalysisResult{
-		Applications: []types.Application{
-			{
-				Type:     types.GemSpec,
-				FilePath: input.FilePath,
-				Libraries: []types.Package{
-					{
-						Name:     parsedLib.Name,
-						Version:  parsedLib.Version,
-						License:  parsedLib.License,
-						FilePath: input.FilePath,
-					},
-				},
-			},
-		},
-	}, nil
+	//Library path should be taken from input for this particular parser
+	for _, app := range res.Applications {
+		for i := range app.Libraries {
+			app.Libraries[i].FilePath = input.FilePath
+		}
+	}
+
+	return res, nil
 
 }
 

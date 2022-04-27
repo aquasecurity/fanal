@@ -1,9 +1,7 @@
 package packaging
 
 import (
-	"archive/zip"
 	"context"
-	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -11,6 +9,7 @@ import (
 	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/fanal/analyzer"
+	"github.com/aquasecurity/fanal/analyzer/language"
 	"github.com/aquasecurity/fanal/types"
 	"github.com/aquasecurity/go-dep-parser/pkg/python/packaging"
 )
@@ -42,67 +41,26 @@ type packagingAnalyzer struct{}
 
 // Analyze analyzes egg and wheel files.
 func (a packagingAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisInput) (*analyzer.AnalysisResult, error) {
-	var r io.Reader = input.Content
 
-	// .egg file is zip format and PKG-INFO needs to be extracted from the zip file.
-	if strings.HasSuffix(input.FilePath, ".egg") {
-		pkginfoInZip, err := a.analyzeEggZip(input.Content, input.Info.Size())
-		if err != nil {
-			return nil, xerrors.Errorf("egg analysis error: %w", err)
-		}
-		if pkginfoInZip == nil { // Egg archive may not contain required files, then we will get nil. Skip this archives
-			return nil, nil
-		}
+	p := packaging.NewParser(input.FilePath, input.Info.Size(), a.Required)
 
-		defer pkginfoInZip.Close()
+	res, err := language.Analyze(types.PythonPkg, input.FilePath, input.Content, p)
 
-		r = pkginfoInZip
-	}
-
-	lib, err := packaging.Parse(r)
 	if err != nil {
 		return nil, xerrors.Errorf("unable to parse %s: %w", input.FilePath, err)
 	}
 
-	return &analyzer.AnalysisResult{Applications: []types.Application{
-		{
-			Type:     types.PythonPkg,
-			FilePath: input.FilePath,
-			Libraries: []types.Package{
-				{
-					Name:     lib.Name,
-					Version:  lib.Version,
-					License:  lib.License,
-					FilePath: input.FilePath,
-				},
-			},
-		},
-	}}, nil
-}
-
-func (a packagingAnalyzer) analyzeEggZip(r io.ReaderAt, size int64) (io.ReadCloser, error) {
-	zr, err := zip.NewReader(r, size)
-	if err != nil {
-		return nil, xerrors.Errorf("zip reader error: %w", err)
-	}
-
-	for _, file := range zr.File {
-		if !a.Required(file.Name, nil) {
-			continue
+	//Library path should be taken from input for this particular parser
+	if res != nil {
+		for _, app := range res.Applications {
+			for i := range app.Libraries {
+				app.Libraries[i].FilePath = input.FilePath
+			}
 		}
-
-		return a.open(file)
 	}
 
-	return nil, nil
-}
+	return res, nil
 
-func (a packagingAnalyzer) open(file *zip.File) (io.ReadCloser, error) {
-	f, err := file.Open()
-	if err != nil {
-		return nil, err
-	}
-	return f, nil
 }
 
 func (a packagingAnalyzer) Required(filePath string, _ os.FileInfo) bool {

@@ -29,14 +29,14 @@ func (a gomodAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisInput) 
 	var parser language.Parser
 	switch filepath.Base(input.FilePath) {
 	case types.GoMod:
-		parser = mod.Parse
+		parser = mod.NewParser()
 	case types.GoSum:
-		parser = sum.Parse
+		parser = sum.NewParser()
 	default:
 		return nil, nil
 	}
 
-	res, err := language.Analyze(types.GoModule, input.FilePath, input.Content, parser, nil)
+	res, err := language.Analyze(types.GoModule, input.FilePath, input.Content, parser)
 	if err != nil {
 		return nil, xerrors.Errorf("failed to analyze %s: %w", input.FilePath, err)
 	}

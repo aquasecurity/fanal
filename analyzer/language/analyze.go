@@ -10,11 +10,13 @@ import (
 	godeptypes "github.com/aquasecurity/go-dep-parser/pkg/types"
 )
 
-type Parser func(r io.Reader) ([]godeptypes.Library, []godeptypes.Dependency, error)
-type Identifier func(pkgName, version string) string
+type Parser interface {
+	Parse(r io.Reader) ([]godeptypes.Library, []godeptypes.Dependency, error)
+	ID(pkgName, version string) string
+}
 
-func Analyze(fileType, filePath string, r io.Reader, parse Parser, id Identifier) (*analyzer.AnalysisResult, error) {
-	parsedLibs, parsedDependencies, err := parse(r)
+func Analyze(fileType, filePath string, r io.Reader, parser Parser) (*analyzer.AnalysisResult, error) {
+	parsedLibs, parsedDependencies, err := parser.Parse(r)
 	if err != nil {
 		return nil, xerrors.Errorf("failed to parse %s: %w", filePath, err)
 	}
@@ -24,20 +26,15 @@ func Analyze(fileType, filePath string, r io.Reader, parse Parser, id Identifier
 	}
 
 	// The file path of each library should be empty in case of lock files since they all will the same path.
-	return ToAnalysisResult(fileType, filePath, "", parsedLibs, parsedDependencies, id), nil
+	return ToAnalysisResult(fileType, filePath, "", parsedLibs, parsedDependencies, parser), nil
 }
 
-func ToAnalysisResult(fileType, filePath, libFilePath string, libs []godeptypes.Library, deps []godeptypes.Dependency, id Identifier) *analyzer.AnalysisResult {
-	if id == nil {
-		id = func(pkgName, version string) string {
-			return ""
-		}
-	}
+func ToAnalysisResult(fileType, filePath, libFilePath string, libs []godeptypes.Library, deps []godeptypes.Dependency, parser Parser) *analyzer.AnalysisResult {
 
 	var pkgs []types.Package
 	for _, lib := range libs {
 		pkgs = append(pkgs, types.Package{
-			ID:       id(lib.Name, lib.Version),
+			ID:       parser.ID(lib.Name, lib.Version),
 			Name:     lib.Name,
 			Version:  lib.Version,
 			FilePath: libFilePath,

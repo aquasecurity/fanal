@@ -15,7 +15,27 @@ import (
 	godeptypes "github.com/aquasecurity/go-dep-parser/pkg/types"
 )
 
+type mockParser struct {
+	godeptypes.DefaultParser
+	t *testing.T
+}
+
+func (p *mockParser) Parse(r io.Reader) ([]godeptypes.Library, []godeptypes.Dependency, error) {
+	b, err := io.ReadAll(r)
+	require.NoError(p.t, err)
+
+	switch string(b) {
+	case "happy":
+		return []godeptypes.Library{{Name: "test", Version: "1.2.3"}}, nil, nil
+	case "sad":
+		return nil, nil, xerrors.New("unexpected error")
+	}
+
+	return nil, nil, nil
+}
+
 func TestAnalyze(t *testing.T) {
+
 	type args struct {
 		analyzerType string
 		filePath     string
@@ -70,21 +90,9 @@ func TestAnalyze(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			parse := func(r io.Reader) ([]godeptypes.Library, []godeptypes.Dependency, error) {
-				b, err := io.ReadAll(r)
-				require.NoError(t, err)
+			mp := &mockParser{t: t}
 
-				switch string(b) {
-				case "happy":
-					return []godeptypes.Library{{Name: "test", Version: "1.2.3"}}, nil, nil
-				case "sad":
-					return nil, nil, xerrors.New("unexpected error")
-				}
-
-				return nil, nil, nil
-			}
-
-			got, err := language.Analyze(tt.args.analyzerType, tt.args.filePath, tt.args.content, parse, nil)
+			got, err := language.Analyze(tt.args.analyzerType, tt.args.filePath, tt.args.content, mp)
 			if tt.wantErr != "" {
 				require.NotNil(t, err)
 				assert.Contains(t, err.Error(), tt.wantErr)
