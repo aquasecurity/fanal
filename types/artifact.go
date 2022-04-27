@@ -9,7 +9,7 @@ import (
 type OS struct {
 	Family   string
 	Name     string
-	Extended string `json:"-"` // This field is used for enhanced security maintenance programs such as Ubuntu ESM, Debian Extended LTS.
+	Extended string `json:"extended,omitempty"` // This field is used for enhanced security maintenance programs such as Ubuntu ESM, Debian Extended LTS.
 	Eosl     bool   `json:"EOSL,omitempty"`
 }
 
