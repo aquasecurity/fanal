@@ -206,8 +206,8 @@ func TestApplyLayers(t *testing.T) {
 					Digest:        "sha256:932da51564135c98a49a34a193d6cd363d8fa4184d957fde16c9d8527b3f3b02",
 					DiffID:        "sha256:a187dde48cd289ac374ad8539930628314bc581a481cdb41409c9289419ddb72",
 					OS: &types.OS{
-						Family: "ubuntu",
-						Name:   "ESM",
+						Family:   "ubuntu",
+						Extended: "ESM",
 					},
 				},
 				{

@@ -7,12 +7,12 @@ import (
 	"os"
 	"strings"
 
+	"github.com/aquasecurity/fanal/utils"
 	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/fanal/analyzer"
 	aos "github.com/aquasecurity/fanal/analyzer/os"
 	"github.com/aquasecurity/fanal/types"
-	"github.com/aquasecurity/fanal/utils"
 )
 
 func init() {
@@ -58,8 +58,8 @@ func (a ubuntuOSAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisInpu
 			if esmEnabled(line) {
 				return &analyzer.AnalysisResult{
 					OS: &types.OS{
-						Family: aos.Ubuntu,
-						Name:   esmVersionSuffix,
+						Family:   aos.Ubuntu,
+						Extended: esmVersionSuffix,
 					},
 				}, nil
 			} else {

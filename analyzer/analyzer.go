@@ -288,7 +288,6 @@ func isDisabled(t Type, disabled []Type) bool {
 }
 
 func MergeOsVersion(old, new *types.OS) *types.OS {
-	esmVersionSuffix := "ESM"
 	switch {
 	case old == nil:
 		return new
@@ -301,16 +300,16 @@ func MergeOsVersion(old, new *types.OS) *types.OS {
 	// OS version and esm status are stored in different files.
 	// We have to merge OS version after parsing these files.
 	case old.Family == aos.Ubuntu && new.Family == aos.Ubuntu:
-		if strings.HasSuffix(old.Name, "-"+esmVersionSuffix) { // version number with ESM suffix already stored
+		if strings.HasSuffix(old.Name, "-ESM") { // version number with ESM suffix already stored
 			return old
 		}
-		if old.Name == esmVersionSuffix {
-			new.Name = new.Name + "-" + old.Name
+		if old.Extended != "" {
+			new.Name = new.Name + "-" + old.Extended
 			return new
 		}
-		if new.Name == esmVersionSuffix {
-			new.Name = old.Name + "-" + new.Name
-			return new
+		if new.Extended != "" {
+			old.Name = old.Name + "-" + new.Extended
+			return old
 		}
 	}
 	return old

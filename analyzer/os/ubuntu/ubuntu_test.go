@@ -31,7 +31,7 @@ func Test_ubuntuOSAnalyzer_Analyze(t *testing.T) {
 			name:      "happy path. Parse status.json file(ESM enabled)",
 			inputFile: "testdata/esm_enabled_status.json",
 			want: &analyzer.AnalysisResult{
-				OS: &types.OS{Family: "ubuntu", Name: "ESM"},
+				OS: &types.OS{Family: "ubuntu", Extended: "ESM"},
 			},
 		},
 		{

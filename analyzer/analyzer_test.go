@@ -222,8 +222,8 @@ func TestAnalysisResult_Merge(t *testing.T) {
 			args: args{
 				new: &analyzer.AnalysisResult{
 					OS: &types.OS{
-						Family: aos.Ubuntu,
-						Name:   "ESM",
+						Family:   aos.Ubuntu,
+						Extended: "ESM",
 					},
 				},
 			},
@@ -571,10 +571,10 @@ func TestAnalyzer_MergeOsVersion(t *testing.T) {
 			},
 		},
 		{
-			name: "Old OS is Ubuntu with ESM suffix. New OS is Ubuntu with version number",
+			name: "Ubuntu ESM. Old OS has Extended field",
 			old: &types.OS{
-				Family: aos.Ubuntu,
-				Name:   "ESM",
+				Family:   aos.Ubuntu,
+				Extended: "ESM",
 			},
 			new: &types.OS{
 				Family: aos.Ubuntu,
@@ -586,14 +586,14 @@ func TestAnalyzer_MergeOsVersion(t *testing.T) {
 			},
 		},
 		{
-			name: "Old OS is Ubuntu with version number. New OS is Ubuntu with ESM suffix",
+			name: "Ubuntu ESM. New OS has Extended field",
 			old: &types.OS{
 				Family: aos.Ubuntu,
 				Name:   "16.04",
 			},
 			new: &types.OS{
-				Family: aos.Ubuntu,
-				Name:   "ESM",
+				Family:   aos.Ubuntu,
+				Extended: "ESM",
 			},
 			want: &types.OS{
 				Family: aos.Ubuntu,
@@ -601,14 +601,14 @@ func TestAnalyzer_MergeOsVersion(t *testing.T) {
 			},
 		},
 		{
-			name: "Old OS is Ubuntu with version number and ESM suffix. New OS is Ubuntu with ESM suffix",
+			name: "Ubuntu ESM. Old OS has full ESM name",
 			old: &types.OS{
 				Family: aos.Ubuntu,
 				Name:   "16.04-ESM",
 			},
 			new: &types.OS{
-				Family: aos.Ubuntu,
-				Name:   "ESM",
+				Family:   aos.Ubuntu,
+				Extended: "ESM",
 			},
 			want: &types.OS{
 				Family: aos.Ubuntu,
