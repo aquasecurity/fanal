@@ -23,6 +23,7 @@ import (
 	_ "github.com/aquasecurity/fanal/analyzer/os/alpine"
 	_ "github.com/aquasecurity/fanal/analyzer/os/ubuntu"
 	_ "github.com/aquasecurity/fanal/analyzer/pkg/apk"
+	_ "github.com/aquasecurity/fanal/analyzer/repo/apk"
 	_ "github.com/aquasecurity/fanal/hook/all"
 )
 
@@ -212,25 +213,29 @@ func TestAnalysisResult_Merge(t *testing.T) {
 			},
 		},
 		{
-			name: "ubuntu must be replaced with ubuntu esm",
+			name: "alpine OS needs to be extended with apk repositories",
 			fields: fields{
 				OS: &types.OS{
-					Family: aos.Ubuntu, // this must be overwritten
-					Name:   "16.04",
+					Family: aos.Alpine,
+					Name:   "3.15.3",
 				},
 			},
 			args: args{
 				new: &analyzer.AnalysisResult{
-					OS: &types.OS{
-						Family:   aos.Ubuntu,
-						Extended: "ESM",
+					Repository: &types.Repository{
+						Family:  aos.Alpine,
+						Release: "edge",
 					},
 				},
 			},
 			want: analyzer.AnalysisResult{
 				OS: &types.OS{
-					Family: aos.Ubuntu,
-					Name:   "16.04-ESM",
+					Family: aos.Alpine,
+					Name:   "3.15.3",
+				},
+				Repository: &types.Repository{
+					Family:  aos.Alpine,
+					Release: "edge",
 				},
 			},
 		},
@@ -254,6 +259,29 @@ func TestAnalysisResult_Merge(t *testing.T) {
 				OS: &types.OS{
 					Family: aos.Alpine, // this must not be overwritten
 					Name:   "3.11",
+				},
+			},
+		},
+		{
+			name: "ubuntu must be replaced with ubuntu esm",
+			fields: fields{
+				OS: &types.OS{
+					Family: aos.Ubuntu, // this must be overwritten
+					Name:   "16.04",
+				},
+			},
+			args: args{
+				new: &analyzer.AnalysisResult{
+					OS: &types.OS{
+						Family:   aos.Ubuntu,
+						Extended: "ESM",
+					},
+				},
+			},
+			want: analyzer.AnalysisResult{
+				OS: &types.OS{
+					Family: aos.Ubuntu,
+					Name:   "16.04-ESM",
 				},
 			},
 		},
@@ -373,6 +401,14 @@ func TestAnalyzeFile(t *testing.T) {
 			want: &analyzer.AnalysisResult{},
 		},
 		{
+			name: "ignore permission error",
+			args: args{
+				filePath:     "/etc/alpine-release",
+				testFilePath: "testdata/no-permission",
+			},
+			want: &analyzer.AnalysisResult{},
+		},
+		{
 			name: "sad path with opener error",
 			args: args{
 				filePath:     "/lib/apk/db/installed",
@@ -397,10 +433,15 @@ func TestAnalyzeFile(t *testing.T) {
 				func() (dio.ReadSeekCloserAt, error) {
 					if tt.args.testFilePath == "testdata/error" {
 						return nil, xerrors.New("error")
+					} else if tt.args.testFilePath == "testdata/no-permission" {
+						os.Chmod(tt.args.testFilePath, 0000)
+						t.Cleanup(func() {
+							os.Chmod(tt.args.testFilePath, 0644)
+						})
 					}
 					return os.Open(tt.args.testFilePath)
 				},
-				analyzer.AnalysisOptions{},
+				nil, analyzer.AnalysisOptions{},
 			)
 
 			wg.Wait()
@@ -481,15 +522,16 @@ func TestAnalyzer_AnalyzerVersions(t *testing.T) {
 			name:     "happy path",
 			disabled: []analyzer.Type{},
 			want: map[string]int{
-				"alpine":  1,
-				"apk":     1,
-				"bundler": 1,
-				"ubuntu":  1,
+				"alpine":   1,
+				"apk-repo": 1,
+				"apk":      1,
+				"bundler":  1,
+				"ubuntu":   1,
 			},
 		},
 		{
 			name:     "disable analyzers",
-			disabled: []analyzer.Type{analyzer.TypeAlpine, analyzer.TypeUbuntu},
+			disabled: []analyzer.Type{analyzer.TypeAlpine, analyzer.TypeApkRepo, analyzer.TypeUbuntu},
 			want: map[string]int{
 				"apk":     1,
 				"bundler": 1,
