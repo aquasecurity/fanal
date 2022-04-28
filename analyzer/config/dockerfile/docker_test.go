@@ -30,47 +30,10 @@ func Test_dockerConfigAnalyzer_Analyze(t *testing.T) {
 						{
 							Type: types.Dockerfile,
 							Path: "testdata/Dockerfile.deployment",
-							Content: map[string]interface{}{
-								"stages": map[string]interface{}{
-									"foo": []interface{}{
-										map[string]interface{}{
-											"Cmd":       "from",
-											"Flags":     []interface{}{},
-											"JSON":      false,
-											"Original":  "FROM foo",
-											"Stage":     float64(0),
-											"StartLine": float64(1),
-											"EndLine":   float64(1),
-											"SubCmd":    "",
-											"Value":     []interface{}{"foo"},
-										},
-										map[string]interface{}{
-											"Cmd":       "copy",
-											"Flags":     []interface{}{},
-											"JSON":      false,
-											"Original":  "COPY . /",
-											"Stage":     float64(0),
-											"StartLine": float64(2),
-											"EndLine":   float64(2),
-											"SubCmd":    "",
-											"Value":     []interface{}{".", "/"},
-										},
-										map[string]interface{}{
-											"Cmd":       "run",
-											"Flags":     []interface{}{},
-											"JSON":      false,
-											"Original":  "RUN echo hello",
-											"Stage":     float64(0),
-											"StartLine": float64(3),
-											"EndLine":   float64(3),
-											"SubCmd":    "",
-											"Value": []interface{}{
-												"echo hello",
-											},
-										},
-									},
-								},
-							},
+							Content: []byte(`FROM foo
+COPY . /
+RUN echo hello
+`),
 						},
 					},
 				},
@@ -85,78 +48,17 @@ func Test_dockerConfigAnalyzer_Analyze(t *testing.T) {
 						{
 							Type: types.Dockerfile,
 							Path: "testdata/Dockerfile.multistage",
-							Content: map[string]interface{}{
-								"stages": map[string]interface{}{
-									"foo AS build": []interface{}{
-										map[string]interface{}{
-											"Cmd":       "from",
-											"Flags":     []interface{}{},
-											"JSON":      false,
-											"Original":  "FROM foo AS build",
-											"Stage":     float64(0),
-											"StartLine": float64(1),
-											"EndLine":   float64(1),
-											"SubCmd":    "",
-											"Value":     []interface{}{"foo", "AS", "build"},
-										},
-										map[string]interface{}{
-											"Cmd":       "copy",
-											"Flags":     []interface{}{},
-											"JSON":      false,
-											"Original":  "COPY . /",
-											"Stage":     float64(0),
-											"StartLine": float64(2),
-											"EndLine":   float64(2),
-											"SubCmd":    "",
-											"Value":     []interface{}{".", "/"},
-										},
-										map[string]interface{}{
-											"Cmd":       "run",
-											"Flags":     []interface{}{},
-											"JSON":      false,
-											"Original":  "RUN echo hello",
-											"Stage":     float64(0),
-											"StartLine": float64(3),
-											"EndLine":   float64(3),
-											"SubCmd":    "",
-											"Value":     []interface{}{"echo hello"},
-										},
-									},
-									"scratch ": []interface{}{
-										map[string]interface{}{
-											"Cmd":       "from",
-											"Flags":     []interface{}{},
-											"JSON":      false,
-											"Original":  "FROM scratch ",
-											"Stage":     float64(1),
-											"StartLine": float64(5),
-											"EndLine":   float64(5),
-											"SubCmd":    "",
-											"Value":     []interface{}{"scratch"},
-										},
-										map[string]interface{}{
-											"Cmd":       "copy",
-											"Flags":     []interface{}{"--from=build"},
-											"JSON":      false,
-											"Original":  "COPY --from=build /bar /bar",
-											"Stage":     float64(1),
-											"StartLine": float64(6),
-											"EndLine":   float64(6),
-											"SubCmd":    "",
-											"Value":     []interface{}{"/bar", "/bar"},
-										},
-									},
-								},
-							},
+							Content: []byte(`FROM foo AS build
+COPY . /
+RUN echo hello
+
+FROM scratch 
+COPY --from=build /bar /bar
+`),
 						},
 					},
 				},
 			},
-		},
-		{
-			name:      "broken Docker: env no value",
-			inputFile: "testdata/Dockerfile.broken",
-			wantErr:   "ENV must have two arguments",
 		},
 	}
 
