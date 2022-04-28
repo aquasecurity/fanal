@@ -36,7 +36,7 @@ func (a gomodAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisInput) 
 		return nil, nil
 	}
 
-	res, err := language.Analyze(types.GoModule, input.FilePath, input.Content, parser)
+	res, err := language.Analyze(types.GoModule, input.FilePath, false, input.Content, parser)
 	if err != nil {
 		return nil, xerrors.Errorf("failed to analyze %s: %w", input.FilePath, err)
 	}

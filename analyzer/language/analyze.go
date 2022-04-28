@@ -14,7 +14,13 @@ type Parser interface {
 	ID(pkgName, version string) string
 }
 
-func Analyze(fileType, filePath string, r dio.ReadSeekerAt, parser Parser) (*analyzer.AnalysisResult, error) {
+func Analyze(fileType, filePath string, useFilePathForLib bool, r dio.ReadSeekerAt, parser Parser) (*analyzer.AnalysisResult, error) {
+	var libFilePath string
+
+	if useFilePathForLib {
+		libFilePath = filePath
+	}
+
 	parsedLibs, parsedDependencies, err := parser.Parse(r)
 	if err != nil {
 		return nil, xerrors.Errorf("failed to parse %s: %w", filePath, err)
@@ -25,7 +31,7 @@ func Analyze(fileType, filePath string, r dio.ReadSeekerAt, parser Parser) (*ana
 	}
 
 	// The file path of each library should be empty in case of lock files since they all will the same path.
-	return ToAnalysisResult(fileType, filePath, "", parsedLibs, parsedDependencies, parser), nil
+	return ToAnalysisResult(fileType, filePath, libFilePath, parsedLibs, parsedDependencies, parser), nil
 }
 
 func ToAnalysisResult(fileType, filePath, libFilePath string, libs []godeptypes.Library, deps []godeptypes.Dependency, parser Parser) *analyzer.AnalysisResult {
