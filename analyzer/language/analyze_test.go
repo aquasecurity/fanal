@@ -12,6 +12,7 @@ import (
 	"github.com/aquasecurity/fanal/analyzer"
 	"github.com/aquasecurity/fanal/analyzer/language"
 	"github.com/aquasecurity/fanal/types"
+	dio "github.com/aquasecurity/go-dep-parser/pkg/io"
 	godeptypes "github.com/aquasecurity/go-dep-parser/pkg/types"
 )
 
@@ -20,7 +21,7 @@ type mockParser struct {
 	t *testing.T
 }
 
-func (p *mockParser) Parse(r io.Reader) ([]godeptypes.Library, []godeptypes.Dependency, error) {
+func (p *mockParser) Parse(r dio.ReadSeekerAt) ([]godeptypes.Library, []godeptypes.Dependency, error) {
 	b, err := io.ReadAll(r)
 	require.NoError(p.t, err)
 
@@ -39,7 +40,7 @@ func TestAnalyze(t *testing.T) {
 	type args struct {
 		analyzerType string
 		filePath     string
-		content      io.Reader
+		content      dio.ReadSeekerAt
 	}
 	tests := []struct {
 		name    string

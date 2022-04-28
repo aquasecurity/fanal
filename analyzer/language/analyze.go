@@ -1,21 +1,20 @@
 package language
 
 import (
-	"io"
-
 	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/fanal/analyzer"
 	"github.com/aquasecurity/fanal/types"
+	dio "github.com/aquasecurity/go-dep-parser/pkg/io"
 	godeptypes "github.com/aquasecurity/go-dep-parser/pkg/types"
 )
 
 type Parser interface {
-	Parse(r io.Reader) ([]godeptypes.Library, []godeptypes.Dependency, error)
+	Parse(r dio.ReadSeekerAt) ([]godeptypes.Library, []godeptypes.Dependency, error)
 	ID(pkgName, version string) string
 }
 
-func Analyze(fileType, filePath string, r io.Reader, parser Parser) (*analyzer.AnalysisResult, error) {
+func Analyze(fileType, filePath string, r dio.ReadSeekerAt, parser Parser) (*analyzer.AnalysisResult, error) {
 	parsedLibs, parsedDependencies, err := parser.Parse(r)
 	if err != nil {
 		return nil, xerrors.Errorf("failed to parse %s: %w", filePath, err)
