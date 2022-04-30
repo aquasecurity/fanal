@@ -75,7 +75,6 @@ const (
 	TypeYaml           Type = "yaml"
 	TypeJSON           Type = "json"
 	TypeDockerfile     Type = "dockerfile"
-	TypeHCL            Type = "hcl"
 	TypeTerraform      Type = "terraform"
 	TypeCloudFormation Type = "cloudFormation"
 
@@ -113,5 +112,5 @@ var (
 	TypeIndividualPkgs = []Type{TypeGemSpec, TypeNodePkg, TypePythonPkg, TypeGoBinary, TypeJar}
 
 	// TypeConfigFiles has all config file analyzers
-	TypeConfigFiles = []Type{TypeYaml, TypeTOML, TypeJSON, TypeDockerfile, TypeHCL, TypeTerraform, TypeCloudFormation}
+	TypeConfigFiles = []Type{TypeYaml, TypeJSON, TypeDockerfile, TypeTerraform, TypeCloudFormation}
 )
