@@ -19,7 +19,7 @@ var builtinAllowRules = []AllowRule{
 	{
 		ID:          "locale-dir",
 		Description: "Locales directory contains locales file",
-		Path:        MustCompile(`\/locale\/`),
+		Path:        MustCompile(`\/locales?\/`),
 	},
 	{
 		ID:          "markdown",
