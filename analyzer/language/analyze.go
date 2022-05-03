@@ -9,18 +9,6 @@ import (
 	godeptypes "github.com/aquasecurity/go-dep-parser/pkg/types"
 )
 
-type Parser interface {
-	Parse(r dio.ReadSeekerAt) ([]godeptypes.Library, []godeptypes.Dependency, error)
-	ID(pkgName, version string) string
-}
-
-func Analyze(fileType, filePath string, useFilePathForLib bool, r dio.ReadSeekerAt, parser Parser) (*analyzer.AnalysisResult, error) {
-	var libFilePath string
-
-	if useFilePathForLib {
-		libFilePath = filePath
-	}
-
 	parsedLibs, parsedDependencies, err := parser.Parse(r)
 	if err != nil {
 		return nil, xerrors.Errorf("failed to parse %s: %w", filePath, err)
@@ -39,7 +27,7 @@ func ToAnalysisResult(fileType, filePath, libFilePath string, libs []godeptypes.
 	var pkgs []types.Package
 	for _, lib := range libs {
 		pkgs = append(pkgs, types.Package{
-			ID:       parser.ID(lib.Name, lib.Version),
+			ID:       lib.ID,
 			Name:     lib.Name,
 			Version:  lib.Version,
 			FilePath: libFilePath,
