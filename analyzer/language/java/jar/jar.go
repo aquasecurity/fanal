@@ -2,6 +2,7 @@ package jar
 
 import (
 	"context"
+	"github.com/aquasecurity/fanal/types"
 	"os"
 	"path/filepath"
 	"strings"
@@ -10,7 +11,6 @@ import (
 
 	"github.com/aquasecurity/fanal/analyzer"
 	"github.com/aquasecurity/fanal/analyzer/language"
-	"github.com/aquasecurity/fanal/types"
 	"github.com/aquasecurity/go-dep-parser/pkg/java/jar"
 )
 
@@ -27,13 +27,12 @@ type javaLibraryAnalyzer struct{}
 
 func (a javaLibraryAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisInput) (*analyzer.AnalysisResult, error) {
 	p := jar.NewParser(jar.WithSize(input.Info.Size()), jar.WithFilePath(input.FilePath), jar.WithOffline(input.Options.Offline))
-
-	res, err := language.Analyze(types.Jar, input.FilePath, true, input.Content, p)
+	libs, deps, err := p.Parse(input.Content)
 	if err != nil {
 		return nil, xerrors.Errorf("jar/war/ear/par parse error: %w", err)
 	}
 
-	return res, nil
+	return language.ToAnalysisResult(types.Jar, input.FilePath, input.FilePath, libs, deps), nil
 }
 
 func (a javaLibraryAnalyzer) Required(filePath string, _ os.FileInfo) bool {

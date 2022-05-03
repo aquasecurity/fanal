@@ -24,14 +24,13 @@ var fileRegex = regexp.MustCompile(`.*/specifications/.+\.gemspec`)
 type gemspecLibraryAnalyzer struct{}
 
 func (a gemspecLibraryAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisInput) (*analyzer.AnalysisResult, error) {
-	res, err := language.Analyze(types.GemSpec, input.FilePath, true, input.Content, gemspec.NewParser())
-
+	p := gemspec.NewParser()
+	libs, deps, err := p.Parse(input.Content)
 	if err != nil {
-		return nil, xerrors.Errorf("failed to parse %s: %w", input.FilePath, err)
+		return nil, xerrors.Errorf("%s parse error: %w", input.FilePath, err)
 	}
 
-	return res, nil
-
+	return language.ToAnalysisResult(types.GemSpec, input.FilePath, input.FilePath, libs, deps), nil
 }
 
 func (a gemspecLibraryAnalyzer) Required(filePath string, _ os.FileInfo) bool {

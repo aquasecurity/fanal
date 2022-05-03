@@ -9,20 +9,21 @@ import (
 	godeptypes "github.com/aquasecurity/go-dep-parser/pkg/types"
 )
 
+func Analyze(fileType, filePath string, r dio.ReadSeekerAt, parser godeptypes.Parser) (*analyzer.AnalysisResult, error) {
 	parsedLibs, parsedDependencies, err := parser.Parse(r)
 	if err != nil {
 		return nil, xerrors.Errorf("failed to parse %s: %w", filePath, err)
 	}
 
-	if len(parsedLibs) == 0 {
-		return nil, nil
-	}
-
-	// The file path of each library should be empty in case of lock files since they all will the same path.
-	return ToAnalysisResult(fileType, filePath, libFilePath, parsedLibs, parsedDependencies, parser), nil
+	// The file path of each library should be empty in case of dependency list such as lock file
+	// since they all will be the same path.
+	return ToAnalysisResult(fileType, filePath, "", parsedLibs, parsedDependencies), nil
 }
 
-func ToAnalysisResult(fileType, filePath, libFilePath string, libs []godeptypes.Library, deps []godeptypes.Dependency, parser Parser) *analyzer.AnalysisResult {
+func ToAnalysisResult(fileType, filePath, libFilePath string, libs []godeptypes.Library, deps []godeptypes.Dependency) *analyzer.AnalysisResult {
+	if len(libs) == 0 {
+		return nil
+	}
 
 	var pkgs []types.Package
 	for _, lib := range libs {

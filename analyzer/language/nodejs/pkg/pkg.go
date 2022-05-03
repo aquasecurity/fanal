@@ -26,13 +26,13 @@ type nodePkgLibraryAnalyzer struct{}
 
 // Analyze analyzes package.json for node packages
 func (a nodePkgLibraryAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisInput) (*analyzer.AnalysisResult, error) {
-	res, err := language.Analyze(types.NodePkg, input.FilePath, true, input.Content, packagejson.NewParser())
-
+	p := packagejson.NewParser()
+	libs, deps, err := p.Parse(input.Content)
 	if err != nil {
 		return nil, xerrors.Errorf("unable to parse %s: %w", input.FilePath, err)
 	}
 
-	return res, nil
+	return language.ToAnalysisResult(types.NodePkg, input.FilePath, input.FilePath, libs, deps), nil
 
 }
 

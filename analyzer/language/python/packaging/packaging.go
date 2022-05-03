@@ -2,6 +2,7 @@ package packaging
 
 import (
 	"context"
+	"github.com/aquasecurity/fanal/types"
 	"os"
 	"path/filepath"
 	"strings"
@@ -10,7 +11,6 @@ import (
 
 	"github.com/aquasecurity/fanal/analyzer"
 	"github.com/aquasecurity/fanal/analyzer/language"
-	"github.com/aquasecurity/fanal/types"
 	"github.com/aquasecurity/go-dep-parser/pkg/python/packaging"
 )
 
@@ -41,17 +41,13 @@ type packagingAnalyzer struct{}
 
 // Analyze analyzes egg and wheel files.
 func (a packagingAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisInput) (*analyzer.AnalysisResult, error) {
-
 	p := packaging.NewParser(input.FilePath, input.Info.Size(), a.Required)
-
-	res, err := language.Analyze(types.PythonPkg, input.FilePath, true, input.Content, p)
-
+	libs, deps, err := p.Parse(input.Content)
 	if err != nil {
-		return nil, xerrors.Errorf("unable to parse %s: %w", input.FilePath, err)
+		return nil, xerrors.Errorf("%s parse error: %w", input.FilePath, err)
 	}
 
-	return res, nil
-
+	return language.ToAnalysisResult(types.PythonPkg, input.FilePath, input.FilePath, libs, deps), nil
 }
 
 func (a packagingAnalyzer) Required(filePath string, _ os.FileInfo) bool {
