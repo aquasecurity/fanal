@@ -21,6 +21,7 @@ import (
 	dfscanner "github.com/aquasecurity/defsec/pkg/scanners/dockerfile"
 	k8sscanner "github.com/aquasecurity/defsec/pkg/scanners/kubernetes"
 	"github.com/aquasecurity/defsec/pkg/scanners/options"
+	"github.com/aquasecurity/defsec/pkg/scanners/terraform"
 	tfscanner "github.com/aquasecurity/defsec/pkg/scanners/terraform"
 	"github.com/aquasecurity/fanal/analyzer"
 	"github.com/aquasecurity/fanal/artifact"
@@ -118,7 +119,13 @@ func createPolicyFS(policyPaths []string) (fs.FS, []string, error) {
 		if err != nil {
 			return nil, nil, err
 		}
-		return os.DirFS(cwd), policyPaths, nil
+		var cleanPaths []string
+		for _, path := range policyPaths {
+			path = strings.TrimPrefix(path, ".")
+			path = strings.TrimPrefix(path, "/")
+			cleanPaths = append(cleanPaths, path)
+		}
+		return os.DirFS(cwd), cleanPaths, nil
 	}
 
 	target, cleanPaths, err := findFSTarget(policyPaths)
@@ -146,6 +153,10 @@ func newMisconfPostHandler(artifactOpt artifact.Option) (handler.PostHandler, er
 
 	if opt.Trace {
 		opts = append(opts, options.ScannerWithPerResultTracing(true))
+	}
+
+	if opt.RegoOnly {
+		opts = append(opts, terraform.ScannerWithRegoOnly(true))
 	}
 
 	if len(policyPaths) > 0 {
@@ -271,14 +282,6 @@ func resultsToMisconf(configType string, scannerName string, results scan.Result
 			},
 			Traces: result.Traces(),
 		}
-
-		//var filePath = "unknown"
-		//if flattened.Location.Filename != "" {
-		//	filePath, err = filepath.Rel(rootDir, flattened.Location.Filename)
-		//	if err != nil {
-		//		return nil, xerrors.Errorf("filepath rel, root: [%s], result: [%s] %w", rootDir, flattened.Location.Filename, err)
-		//	}
-		//}
 
 		filePath := flattened.Location.Filename
 		misconf, ok := misconfs[filePath]

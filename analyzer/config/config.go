@@ -19,6 +19,7 @@ const separator = ":"
 
 type ScannerOption struct {
 	Trace        bool
+	RegoOnly     bool
 	Namespaces   []string
 	FilePatterns []string
 	PolicyPaths  []string

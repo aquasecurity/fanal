@@ -45,7 +45,7 @@ func TestConfigScanner_Scan(t *testing.T) {
 								Severity: "LOW",
 							},
 							IacMetadata: types.IacMetadata{
-								Resource:  "Dockerfile:1-2",
+								Resource:  "",
 								Provider:  "Dockerfile",
 								Service:   "general",
 								StartLine: 1,
@@ -78,7 +78,7 @@ func TestConfigScanner_Scan(t *testing.T) {
 								Severity: "LOW",
 							},
 							IacMetadata: types.IacMetadata{
-								Resource:  "Dockerfile:0",
+								Resource:  "",
 								Provider:  "Dockerfile",
 								Service:   "general",
 								StartLine: 0,
