@@ -4,7 +4,7 @@ var builtinAllowRules = []AllowRule{
 	{
 		ID:          "tests",
 		Description: "Avoid paths containing test",
-		Path:        MustCompile(`\/test`),
+		Path:        MustCompile(`(\/test|-test|_test|\.test)`),
 	},
 	{
 		ID:          "vendor",
