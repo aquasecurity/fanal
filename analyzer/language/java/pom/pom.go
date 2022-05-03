@@ -22,7 +22,7 @@ const version = 1
 type pomAnalyzer struct{}
 
 func (a pomAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisInput) (*analyzer.AnalysisResult, error) {
-	p := pom.NewParser(input.FilePath, pom.WithOffline(input.Options.Offline))
+	p := pom.NewParser(input.Dir+"/"+input.FilePath, pom.WithOffline(input.Options.Offline))
 
 	return language.Analyze(types.Pom, input.FilePath, input.Content, p.Parse)
 }
