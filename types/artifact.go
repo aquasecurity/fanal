@@ -76,7 +76,9 @@ type Application struct {
 	FilePath string `json:",omitempty"`
 
 	// Libraries is a list of lang-specific packages
-	Libraries    []Package
+	Libraries []Package
+
+	// Dependencies represents dependency graph
 	Dependencies []godeptypes.Dependency `json:",omitempty"`
 }
 
