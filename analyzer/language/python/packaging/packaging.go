@@ -1,8 +1,10 @@
 package packaging
 
 import (
+	"archive/zip"
+	"bytes"
 	"context"
-	"github.com/aquasecurity/fanal/types"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -11,6 +13,8 @@ import (
 
 	"github.com/aquasecurity/fanal/analyzer"
 	"github.com/aquasecurity/fanal/analyzer/language"
+	"github.com/aquasecurity/fanal/types"
+	dio "github.com/aquasecurity/go-dep-parser/pkg/io"
 	"github.com/aquasecurity/go-dep-parser/pkg/python/packaging"
 )
 
@@ -41,13 +45,62 @@ type packagingAnalyzer struct{}
 
 // Analyze analyzes egg and wheel files.
 func (a packagingAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisInput) (*analyzer.AnalysisResult, error) {
-	p := packaging.NewParser(input.FilePath, input.Info.Size(), a.Required)
-	libs, deps, err := p.Parse(input.Content)
+	r := input.Content
+
+	// .egg file is zip format and PKG-INFO needs to be extracted from the zip file.
+	if strings.HasSuffix(input.FilePath, ".egg") {
+		pkginfoInZip, err := a.analyzeEggZip(input.Content, input.Info.Size())
+		if err != nil {
+			return nil, xerrors.Errorf("egg analysis error: %w", err)
+		}
+
+		// Egg archive may not contain required files, then we will get nil. Skip this archives
+		if pkginfoInZip == nil {
+			return nil, nil
+		}
+
+		r = pkginfoInZip
+	}
+
+	p := packaging.NewParser()
+	libs, deps, err := p.Parse(r)
 	if err != nil {
-		return nil, xerrors.Errorf("%s parse error: %w", input.FilePath, err)
+		return nil, xerrors.Errorf("unable to parse %s: %w", input.FilePath, err)
 	}
 
 	return language.ToAnalysisResult(types.PythonPkg, input.FilePath, input.FilePath, libs, deps), nil
+}
+
+func (a packagingAnalyzer) analyzeEggZip(r io.ReaderAt, size int64) (dio.ReadSeekerAt, error) {
+	zr, err := zip.NewReader(r, size)
+	if err != nil {
+		return nil, xerrors.Errorf("zip reader error: %w", err)
+	}
+
+	for _, file := range zr.File {
+		if !a.Required(file.Name, nil) {
+			continue
+		}
+
+		return a.open(file)
+	}
+
+	return nil, nil
+}
+
+func (a packagingAnalyzer) open(file *zip.File) (dio.ReadSeekerAt, error) {
+	f, err := file.Open()
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+
+	b, err := io.ReadAll(f)
+	if err != nil {
+		return nil, xerrors.Errorf("file %s open error: %w", file.Name, err)
+	}
+
+	return bytes.NewReader(b), nil
 }
 
 func (a packagingAnalyzer) Required(filePath string, _ os.FileInfo) bool {
