@@ -174,5 +174,3 @@ require (
 	modernc.org/strutil v1.1.1 // indirect
 	modernc.org/token v1.0.0 // indirect
 )
-
-replace github.com/aquasecurity/go-dep-parser v0.0.0-20220422134844-880747206031 => /Users/shira.cohen/Aqua/go-dep-parser
