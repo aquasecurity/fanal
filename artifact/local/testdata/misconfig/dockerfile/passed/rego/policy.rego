@@ -27,6 +27,6 @@ result(msg, cause) = result {
 }
 
 deny[res] {
-    cmd := input.stages[_][_]
-    res := result("No commands allowed!", cmd)
+    true == false
+    res := result("No nothing allowed!", {})
 }
