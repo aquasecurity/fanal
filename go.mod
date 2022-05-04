@@ -26,8 +26,7 @@ require (
 	github.com/kylelemons/godebug v1.1.0
 	github.com/liamg/memoryfs v1.2.0
 	github.com/moby/buildkit v0.9.3
-	github.com/open-policy-agent/opa v0.39.0 // indirect
-	github.com/open-policy-agent/opa v0.40.0
+	github.com/open-policy-agent/opa v0.40.0 // indirect
 	github.com/opencontainers/go-digest v1.0.0
 	github.com/opencontainers/image-spec v1.0.2
 	github.com/samber/lo v1.19.0
@@ -46,6 +45,12 @@ require (
 	golang.org/x/sys v0.0.0-20220412211240-33da011f77ad // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
+)
+
+require (
+	github.com/aquasecurity/go-dep-parser v0.0.0-20220503151658-d316f5cc2cff
+	github.com/aquasecurity/go-version v0.0.0-20210121072130-637058cfe492
+	github.com/aquasecurity/testdocker v0.0.0-20210911155206-e1e85f5a1516
 )
 
 require (
