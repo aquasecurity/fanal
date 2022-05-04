@@ -36,7 +36,7 @@ func Test_jsonConfigAnalyzer_Analyze(t *testing.T) {
 			want: &analyzer.AnalysisResult{
 				Configs: []types.Config{
 					{
-						Type:     "json",
+						Type:     types.Kubernetes,
 						FilePath: "testdata/deployment.json",
 						Content: map[string]interface{}{
 							"apiVersion": "apps/v1",
@@ -62,7 +62,7 @@ func Test_jsonConfigAnalyzer_Analyze(t *testing.T) {
 			want: &analyzer.AnalysisResult{
 				Configs: []types.Config{
 					{
-						Type:     "json",
+						Type:     types.Kubernetes,
 						FilePath: "testdata/deployment_deny.json",
 						Content: map[string]interface{}{
 							"apiVersion": "apps/v1",
@@ -88,7 +88,7 @@ func Test_jsonConfigAnalyzer_Analyze(t *testing.T) {
 			want: &analyzer.AnalysisResult{
 				Configs: []types.Config{
 					{
-						Type:     "json",
+						Type:     types.Kubernetes,
 						FilePath: "testdata/array.json",
 						Content: []interface{}{map[string]interface{}{
 							"apiVersion": "apps/v1",

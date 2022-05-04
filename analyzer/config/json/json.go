@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"regexp"
 
+	"github.com/aquasecurity/fanal/config/scanner"
 	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/fanal/analyzer"
@@ -30,21 +31,43 @@ func NewConfigAnalyzer(filePattern *regexp.Regexp) ConfigAnalyzer {
 	}
 }
 
-func (a ConfigAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisInput) (*analyzer.AnalysisResult, error) {
+func (a ConfigAnalyzer) Analyze(ctx context.Context, input analyzer.AnalysisInput) (*analyzer.AnalysisResult, error) {
 	var parsed interface{}
-	if err := json.NewDecoder(input.Content).Decode(&parsed); err != nil {
+	var confType string
+	err := json.NewDecoder(input.Content).Decode(&parsed)
+	if err != nil {
 		return nil, xerrors.Errorf("unable to decode JSON (%s): %w", input.FilePath, err)
 	}
 
-	return &analyzer.AnalysisResult{
-		Configs: []types.Config{
-			{
-				Type:     types.JSON,
-				FilePath: input.FilePath,
-				Content:  parsed,
+	if configs, ok := parsed.([]interface{}); ok { // json input is array
+		for _, c := range configs {
+			confType, err = scanner.DetectType(ctx, c)
+			if err != nil {
+				return nil, xerrors.Errorf("unable to detect config type from JSON (%s): %w", input.FilePath, err)
+			}
+			if confType != "" {
+				break
+			}
+		}
+	} else {
+		confType, err = scanner.DetectType(ctx, parsed)
+		if err != nil {
+			return nil, xerrors.Errorf("unable to detect config type from JSON (%s): %w", input.FilePath, err)
+		}
+	}
+
+	if confType != "" { // skip file if can't determine config type
+		return &analyzer.AnalysisResult{
+			Configs: []types.Config{
+				{
+					Type:     confType,
+					FilePath: input.FilePath,
+					Content:  parsed,
+				},
 			},
-		},
-	}, nil
+		}, nil
+	}
+	return &analyzer.AnalysisResult{}, err
 }
 
 func (a ConfigAnalyzer) Required(filePath string, _ os.FileInfo) bool {

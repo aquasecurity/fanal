@@ -111,7 +111,7 @@ func (s Scanner) scanConfigsByRego(ctx context.Context, files []types.Config) ([
 	var configs []types.Config
 	for _, file := range files {
 		// Detect config types such as CloudFormation and Kubernetes.
-		configType, err := detectType(ctx, file.Content)
+		configType, err := DetectType(ctx, file.Content)
 		if err != nil {
 			return nil, xerrors.Errorf("unable to detect config type: %w", err)
 		}
@@ -274,7 +274,7 @@ func (s Scanner) scanTerraform(files []types.Config) ([]types.Misconfiguration, 
 	return types.ToMisconfigurations(misconfs), nil
 }
 
-func detectType(ctx context.Context, input interface{}) (string, error) {
+func DetectType(ctx context.Context, input interface{}) (string, error) {
 	results, err := rego.New(
 		rego.Input(input),
 		rego.Query("x = data.config.type.detect"),
