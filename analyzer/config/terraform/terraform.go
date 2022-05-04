@@ -36,7 +36,7 @@ func (a ConfigAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisInput)
 			types.MisconfPostHandler: {
 				{
 					Type:    types.Terraform,
-					Path:    filepath.Join(input.Dir, input.FilePath), // tfsec requires a path from working dir
+					Path:    input.FilePath,
 					Content: b,
 				},
 			},

@@ -214,8 +214,10 @@ func (h misconfPostHandler) Handle(ctx context.Context, result *analyzer.Analysi
 			file.Type = localType
 
 			if memfs, ok := mapMemoryFS[file.Type]; ok {
-				if err := memfs.MkdirAll(filepath.Dir(file.Path), os.ModePerm); err != nil {
-					return xerrors.Errorf("memoryfs mkdir error: %w", err)
+				if filepath.Dir(file.Path) != "." {
+					if err := memfs.MkdirAll(filepath.Dir(file.Path), os.ModePerm); err != nil {
+						return xerrors.Errorf("memoryfs mkdir error: %w", err)
+					}
 				}
 				if err := memfs.WriteFile(file.Path, file.Content, os.ModePerm); err != nil {
 					return xerrors.Errorf("memoryfs write error: %w", err)
