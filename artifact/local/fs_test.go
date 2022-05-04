@@ -294,7 +294,7 @@ func TestTerraformMisconfigurationScan(t *testing.T) {
 						Misconfigurations: []types.Misconfiguration{
 							{
 								FileType:  "terraform",
-								FilePath:  "testdata/misconfig/terraform/single-failure/src/main.tf",
+								FilePath:  "main.tf",
 								Successes: nil,
 								Warnings:  nil,
 								Failures: []types.MisconfResult{
@@ -334,9 +334,9 @@ func TestTerraformMisconfigurationScan(t *testing.T) {
 			want: types.ArtifactReference{
 				Name: "testdata/misconfig/terraform/single-failure/src",
 				Type: types.ArtifactFilesystem,
-				ID:   "sha256:d0d8a0cf78ff2366e8313fdc63f5f8f3fdf4363b523222962fb10fedbdc67632",
+				ID:   "sha256:55af4a38e26e6d0c012a5eec3ba5ee76c84563835304e03dc6ea5e518579dd7a",
 				BlobIDs: []string{
-					"sha256:d0d8a0cf78ff2366e8313fdc63f5f8f3fdf4363b523222962fb10fedbdc67632",
+					"sha256:55af4a38e26e6d0c012a5eec3ba5ee76c84563835304e03dc6ea5e518579dd7a",
 				},
 			},
 		},
@@ -368,7 +368,7 @@ func TestTerraformMisconfigurationScan(t *testing.T) {
 						Misconfigurations: []types.Misconfiguration{
 							{
 								FileType:  "terraform",
-								FilePath:  "testdata/misconfig/terraform/multiple-failures/src/main.tf",
+								FilePath:  "main.tf",
 								Successes: nil,
 								Warnings:  nil,
 								Failures: []types.MisconfResult{
@@ -426,7 +426,7 @@ func TestTerraformMisconfigurationScan(t *testing.T) {
 							},
 							{
 								FileType:  "terraform",
-								FilePath:  "testdata/misconfig/terraform/multiple-failures/src/more.tf",
+								FilePath:  "more.tf",
 								Successes: nil,
 								Warnings:  nil,
 								Failures: []types.MisconfResult{
@@ -466,9 +466,9 @@ func TestTerraformMisconfigurationScan(t *testing.T) {
 			want: types.ArtifactReference{
 				Name: "testdata/misconfig/terraform/multiple-failures/src",
 				Type: types.ArtifactFilesystem,
-				ID:   "sha256:7a92b0a41ec7a87a373106709aa765d65df87abcb1a149d44425706381b35dab",
+				ID:   "sha256:9759a629c8a440804a4512f2d49d3c982ff0aa7dfbed83ecae591d9667b56b21",
 				BlobIDs: []string{
-					"sha256:7a92b0a41ec7a87a373106709aa765d65df87abcb1a149d44425706381b35dab",
+					"sha256:9759a629c8a440804a4512f2d49d3c982ff0aa7dfbed83ecae591d9667b56b21",
 				},
 			},
 		},
@@ -538,7 +538,7 @@ func TestTerraformMisconfigurationScan(t *testing.T) {
 						Misconfigurations: []types.Misconfiguration{
 							{
 								FileType: "terraform",
-								FilePath: "testdata/misconfig/terraform/passed/src",
+								FilePath: ".",
 								Successes: []types.MisconfResult{
 									{
 										Namespace: "user.something",
@@ -556,7 +556,6 @@ func TestTerraformMisconfigurationScan(t *testing.T) {
 											},
 										},
 										IacMetadata: types.IacMetadata{
-											Resource:  "",
 											Provider:  "Generic",
 											Service:   "general",
 											StartLine: 0,
@@ -575,9 +574,9 @@ func TestTerraformMisconfigurationScan(t *testing.T) {
 			want: types.ArtifactReference{
 				Name: "testdata/misconfig/terraform/passed/src",
 				Type: types.ArtifactFilesystem,
-				ID:   "sha256:c0b8f9e1d50ff44ff6a9111baebff2cdab5a6f7fc9fffaed5040e5142c676bda",
+				ID:   "sha256:425142f27471ad4458c24d4a0e7bbc4763b1433f41a3948a8b1529c7a848c518",
 				BlobIDs: []string{
-					"sha256:c0b8f9e1d50ff44ff6a9111baebff2cdab5a6f7fc9fffaed5040e5142c676bda",
+					"sha256:425142f27471ad4458c24d4a0e7bbc4763b1433f41a3948a8b1529c7a848c518",
 				},
 			},
 		},

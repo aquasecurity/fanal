@@ -262,12 +262,17 @@ func resultsToMisconf(configType string, scannerName string, results scan.Result
 
 		query := fmt.Sprintf("data.%s.%s", result.RegoNamespace(), result.RegoRule())
 
+		ruleID := result.Rule().LegacyID
+		if ruleID == "" {
+			ruleID = result.Rule().AVDID
+		}
+
 		misconfResult := types.MisconfResult{
 			Namespace: result.RegoNamespace(),
 			Query:     query,
 			Message:   flattened.Description,
 			PolicyMetadata: types.PolicyMetadata{
-				ID:                 result.Rule().LegacyID,
+				ID:                 ruleID,
 				Type:               fmt.Sprintf("%s Security Check", scannerName),
 				Title:              flattened.RuleSummary,
 				Description:        flattened.Impact,
