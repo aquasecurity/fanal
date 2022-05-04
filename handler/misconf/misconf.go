@@ -107,7 +107,7 @@ func createPolicyFS(policyPaths []string) (fs.FS, []string, error) {
 	}
 	var outsideCWD bool
 	for _, path := range policyPaths {
-		if strings.Contains(path, "..") {
+		if strings.Contains(path, "..") || strings.HasPrefix(path, "/") || (len(path) > 1 && path[1] == ':') {
 			outsideCWD = true
 			break
 		}
