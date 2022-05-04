@@ -21,7 +21,6 @@ import (
 	dfscanner "github.com/aquasecurity/defsec/pkg/scanners/dockerfile"
 	k8sscanner "github.com/aquasecurity/defsec/pkg/scanners/kubernetes"
 	"github.com/aquasecurity/defsec/pkg/scanners/options"
-	"github.com/aquasecurity/defsec/pkg/scanners/terraform"
 	tfscanner "github.com/aquasecurity/defsec/pkg/scanners/terraform"
 	"github.com/aquasecurity/fanal/analyzer"
 	"github.com/aquasecurity/fanal/artifact"
@@ -156,7 +155,8 @@ func newMisconfPostHandler(artifactOpt artifact.Option) (handler.PostHandler, er
 	}
 
 	if opt.RegoOnly {
-		opts = append(opts, terraform.ScannerWithRegoOnly(true))
+		opts = append(opts, tfscanner.ScannerWithRegoOnly(true))
+		opts = append(opts, cfscanner.ScannerWithRegoOnly(true))
 	}
 
 	if len(policyPaths) > 0 {

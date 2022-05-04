@@ -599,3 +599,314 @@ func TestTerraformMisconfigurationScan(t *testing.T) {
 		})
 	}
 }
+
+func TestCloudFormationMisconfigurationScan(t *testing.T) {
+	type fields struct {
+		dir string
+	}
+	tests := []struct {
+		name               string
+		fields             fields
+		putBlobExpectation cache.ArtifactCachePutBlobExpectation
+		artifactOpt        artifact.Option
+		want               types.ArtifactReference
+	}{
+		{
+			name: "single failure",
+			fields: fields{
+				dir: "./testdata/misconfig/cloudformation/single-failure/src",
+			},
+			artifactOpt: artifact.Option{
+				AnalyzerGroup:     "",
+				DisabledAnalyzers: nil,
+				DisabledHandlers:  nil,
+				SkipFiles:         nil,
+				SkipDirs:          nil,
+				NoProgress:        false,
+				Offline:           false,
+				InsecureSkipTLS:   false,
+				MisconfScannerOption: config.ScannerOption{
+					RegoOnly:    true,
+					Namespaces:  []string{"user"},
+					PolicyPaths: []string{"./testdata/misconfig/cloudformation/single-failure/rego"},
+				},
+			},
+			putBlobExpectation: cache.ArtifactCachePutBlobExpectation{
+				Args: cache.ArtifactCachePutBlobArgs{
+					BlobIDAnything: true,
+					BlobInfo: types.BlobInfo{
+						SchemaVersion: types.BlobJSONSchemaVersion,
+						Misconfigurations: []types.Misconfiguration{
+							{
+								FileType:  "cloudformation",
+								FilePath:  "main.yaml",
+								Successes: nil,
+								Warnings:  nil,
+								Failures: []types.MisconfResult{
+									{
+										Namespace: "user.something",
+										Query:     "data.user.something.deny",
+										Message:   "No buckets allowed!",
+										PolicyMetadata: types.PolicyMetadata{
+											ID:                 "TEST001",
+											Type:               "CloudFormation Security Check",
+											Title:              "Test policy",
+											Description:        "",
+											Severity:           "LOW",
+											RecommendedActions: "Have a cup of tea.",
+											References: []string{
+												"https://trivy.dev/",
+											},
+										},
+										IacMetadata: types.IacMetadata{
+											Resource:  "main.yaml:3-6",
+											Provider:  "Generic",
+											Service:   "general",
+											StartLine: 3,
+											EndLine:   6,
+										},
+										Traces: nil,
+									},
+								},
+								Exceptions: nil,
+								Layer:      types.Layer{},
+							},
+						},
+					},
+				},
+				Returns: cache.ArtifactCachePutBlobReturns{},
+			},
+			want: types.ArtifactReference{
+				Name: "testdata/misconfig/cloudformation/single-failure/src",
+				Type: types.ArtifactFilesystem,
+				ID:   "sha256:8ddc04bc713dba90d9f3ba16a68347d01133d4a8977affe899b7b0ec224eb98e",
+				BlobIDs: []string{
+					"sha256:8ddc04bc713dba90d9f3ba16a68347d01133d4a8977affe899b7b0ec224eb98e",
+				},
+			},
+		},
+		{
+			name: "multiple failures",
+			fields: fields{
+				dir: "./testdata/misconfig/cloudformation/multiple-failures/src",
+			},
+			artifactOpt: artifact.Option{
+				AnalyzerGroup:     "",
+				DisabledAnalyzers: nil,
+				DisabledHandlers:  nil,
+				SkipFiles:         nil,
+				SkipDirs:          nil,
+				NoProgress:        false,
+				Offline:           false,
+				InsecureSkipTLS:   false,
+				MisconfScannerOption: config.ScannerOption{
+					RegoOnly:    true,
+					Namespaces:  []string{"user"},
+					PolicyPaths: []string{"./testdata/misconfig/cloudformation/multiple-failures/rego"},
+				},
+			},
+			putBlobExpectation: cache.ArtifactCachePutBlobExpectation{
+				Args: cache.ArtifactCachePutBlobArgs{
+					BlobIDAnything: true,
+					BlobInfo: types.BlobInfo{
+						SchemaVersion: types.BlobJSONSchemaVersion,
+						Misconfigurations: []types.Misconfiguration{
+							{
+								FileType:  "cloudformation",
+								FilePath:  "main.yaml",
+								Successes: nil,
+								Warnings:  nil,
+								Failures: []types.MisconfResult{
+									{
+										Namespace: "user.something",
+										Query:     "data.user.something.deny",
+										Message:   "No buckets allowed!",
+										PolicyMetadata: types.PolicyMetadata{
+											ID:                 "TEST001",
+											Type:               "CloudFormation Security Check",
+											Title:              "Test policy",
+											Description:        "",
+											Severity:           "LOW",
+											RecommendedActions: "Have a cup of tea.",
+											References: []string{
+												"https://trivy.dev/",
+											},
+										},
+										IacMetadata: types.IacMetadata{
+											Resource:  "main.yaml:2-5",
+											Provider:  "Generic",
+											Service:   "general",
+											StartLine: 2,
+											EndLine:   5,
+										},
+										Traces: nil,
+									},
+									{
+										Namespace: "user.something",
+										Query:     "data.user.something.deny",
+										Message:   "No buckets allowed!",
+										PolicyMetadata: types.PolicyMetadata{
+											ID:                 "TEST001",
+											Type:               "CloudFormation Security Check",
+											Title:              "Test policy",
+											Description:        "",
+											Severity:           "LOW",
+											RecommendedActions: "Have a cup of tea.",
+											References: []string{
+												"https://trivy.dev/",
+											},
+										},
+										IacMetadata: types.IacMetadata{
+											Resource:  "main.yaml:6-9",
+											Provider:  "Generic",
+											Service:   "general",
+											StartLine: 6,
+											EndLine:   9,
+										},
+										Traces: nil,
+									},
+								},
+								Exceptions: nil,
+								Layer:      types.Layer{},
+							},
+						},
+					},
+				},
+				Returns: cache.ArtifactCachePutBlobReturns{},
+			},
+			want: types.ArtifactReference{
+				Name: "testdata/misconfig/cloudformation/multiple-failures/src",
+				Type: types.ArtifactFilesystem,
+				ID:   "sha256:7787cfde4fdb035b13283a55d36c4cd94f25679d4da525423462d23ea2f247c1",
+				BlobIDs: []string{
+					"sha256:7787cfde4fdb035b13283a55d36c4cd94f25679d4da525423462d23ea2f247c1",
+				},
+			},
+		},
+		{
+			name: "no results",
+			fields: fields{
+				dir: "./testdata/misconfig/cloudformation/no-results/src",
+			},
+			artifactOpt: artifact.Option{
+				AnalyzerGroup:     "",
+				DisabledAnalyzers: nil,
+				DisabledHandlers:  nil,
+				SkipFiles:         nil,
+				SkipDirs:          nil,
+				NoProgress:        false,
+				Offline:           false,
+				InsecureSkipTLS:   false,
+				MisconfScannerOption: config.ScannerOption{
+					RegoOnly:    true,
+					Namespaces:  []string{"user"},
+					PolicyPaths: []string{"./testdata/misconfig/cloudformation/no-results/rego"},
+				},
+			},
+			putBlobExpectation: cache.ArtifactCachePutBlobExpectation{
+				Args: cache.ArtifactCachePutBlobArgs{
+					BlobIDAnything: true,
+					BlobInfo: types.BlobInfo{
+						SchemaVersion: types.BlobJSONSchemaVersion,
+					},
+				},
+				Returns: cache.ArtifactCachePutBlobReturns{},
+			},
+			want: types.ArtifactReference{
+				Name: "testdata/misconfig/cloudformation/no-results/src",
+				Type: types.ArtifactFilesystem,
+				ID:   "sha256:9080fe76e2caee45bb22dec349afa0d631efc8e82f49561e25ee48c0f0c2d0b5",
+				BlobIDs: []string{
+					"sha256:9080fe76e2caee45bb22dec349afa0d631efc8e82f49561e25ee48c0f0c2d0b5",
+				},
+			},
+		},
+		{
+			name: "passed",
+			fields: fields{
+				dir: "./testdata/misconfig/cloudformation/passed/src",
+			},
+			artifactOpt: artifact.Option{
+				AnalyzerGroup:     "",
+				DisabledAnalyzers: nil,
+				DisabledHandlers:  nil,
+				SkipFiles:         nil,
+				SkipDirs:          nil,
+				NoProgress:        false,
+				Offline:           false,
+				InsecureSkipTLS:   false,
+				MisconfScannerOption: config.ScannerOption{
+					RegoOnly:    true,
+					Namespaces:  []string{"user"},
+					PolicyPaths: []string{"./testdata/misconfig/cloudformation/passed/rego"},
+				},
+			},
+			putBlobExpectation: cache.ArtifactCachePutBlobExpectation{
+				Args: cache.ArtifactCachePutBlobArgs{
+					BlobIDAnything: true,
+					BlobInfo: types.BlobInfo{
+						SchemaVersion: types.BlobJSONSchemaVersion,
+						Misconfigurations: []types.Misconfiguration{
+							{
+								FileType: "cloudformation",
+								FilePath: "main.yaml",
+								Successes: []types.MisconfResult{
+									{
+										Namespace: "user.something",
+										Query:     "data.user.something.deny",
+										Message:   "",
+										PolicyMetadata: types.PolicyMetadata{
+											ID:                 "TEST001",
+											Type:               "CloudFormation Security Check",
+											Title:              "Test policy",
+											Description:        "",
+											Severity:           "LOW",
+											RecommendedActions: "Have a cup of tea.",
+											References: []string{
+												"https://trivy.dev/",
+											},
+										},
+										IacMetadata: types.IacMetadata{
+											Resource:  "",
+											Provider:  "Generic",
+											Service:   "general",
+											StartLine: 0,
+											EndLine:   0,
+										},
+										Traces: nil,
+									},
+								},
+								Layer: types.Layer{},
+							},
+						},
+					},
+				},
+				Returns: cache.ArtifactCachePutBlobReturns{},
+			},
+			want: types.ArtifactReference{
+				Name: "testdata/misconfig/cloudformation/passed/src",
+				Type: types.ArtifactFilesystem,
+				ID:   "sha256:20c53d5247b774b79fb96a5f119ef62efb71637cffe4c7a21f99ca14aee2faee",
+				BlobIDs: []string{
+					"sha256:20c53d5247b774b79fb96a5f119ef62efb71637cffe4c7a21f99ca14aee2faee",
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := new(cache.MockArtifactCache)
+			c.ApplyPutBlobExpectation(tt.putBlobExpectation)
+			tt.artifactOpt.DisabledHandlers = []types.HandlerType{
+				types.SystemFileFilteringPostHandler,
+				types.GoModMergePostHandler,
+			}
+			a, err := NewArtifact(tt.fields.dir, c, tt.artifactOpt)
+			require.NoError(t, err)
+
+			got, err := a.Inspect(context.Background())
+			require.NoError(t, err)
+			assert.Equal(t, tt.want, got)
+		})
+	}
+}
