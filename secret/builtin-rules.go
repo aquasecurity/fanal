@@ -78,7 +78,7 @@ var builtinRules = []Rule{
 		Category:        CategoryAWS,
 		Severity:        "CRITICAL",
 		Title:           "AWS Secret Access Key",
-		Regex:           MustCompile(`(?i)["']?(aws)?_?(secret)?_?(access)?_?key["']?\s*(:|=>|=)\s*(?P<secret>["']?[A-Za-z0-9\/\+=]{40})["']?`),
+		Regex:           MustCompile(`(?i)(^|\s+)["']?(aws)?_?(secret)?_?(access)?_?key["']?\s*(:|=>|=)\s*(?P<secret>["']?[A-Za-z0-9\/\+=]{40})["']?(\s+|$)`),
 		SecretGroupName: "secret",
 		Keywords:        []string{"key"},
 	},
