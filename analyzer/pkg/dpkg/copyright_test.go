@@ -1,12 +1,14 @@
 package dpkg
 
 import (
-	"github.com/aquasecurity/fanal/analyzer"
-	"github.com/aquasecurity/fanal/types"
-	"github.com/stretchr/testify/assert"
+	"bufio"
 	"os"
 	"strings"
 	"testing"
+
+	"github.com/aquasecurity/fanal/analyzer"
+	"github.com/aquasecurity/fanal/types"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestDpkgAnalyzer_parseCopyrightFile(t *testing.T) {
@@ -77,7 +79,13 @@ func TestDpkgAnalyzer_parseCopyrightFile(t *testing.T) {
 				t.Error("unable to read test file")
 			}
 
-			license, _ := parseCopyrightFile(f, strings.TrimPrefix(test.copyrightFilePath, "testdata/copyrightFiles/"))
+			input := analyzer.AnalysisInput{
+				Content:  f,
+				FilePath: strings.TrimPrefix(test.copyrightFilePath, "testdata/copyrightFiles/"),
+			}
+			scanner := bufio.NewScanner(f)
+
+			license, _ := parseCopyrightFile(input, scanner)
 			assert.Equal(t, test.wantLicense, license)
 		})
 	}

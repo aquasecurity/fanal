@@ -14,7 +14,7 @@ const version = 1
 
 type dpkgLicenseHook struct{}
 
-// Hook add licenses to dpkg files
+// Hook adds licenses to dpkg files
 func (h dpkgLicenseHook) Hook(blob *types.BlobInfo) error {
 	licenses := map[string]string{}
 	for _, resource := range blob.CustomResources {
@@ -27,16 +27,12 @@ func (h dpkgLicenseHook) Hook(blob *types.BlobInfo) error {
 	var infos []types.PackageInfo
 	for _, pkgInfo := range blob.PackageInfos {
 
-		var packages []types.Package
-		for _, pkg := range pkgInfo.Packages {
+		for i, pkg := range pkgInfo.Packages {
 			license, ok := licenses[pkg.Name]
 			if ok {
-				pkg.License = license
+				pkgInfo.Packages[i].License = license
 			}
-			packages = append(packages, pkg)
 		}
-
-		pkgInfo.Packages = packages
 		infos = append(infos, pkgInfo)
 	}
 

@@ -2,23 +2,24 @@ package dpkg
 
 import (
 	"bufio"
-	"bytes"
-	"github.com/aquasecurity/fanal/analyzer"
-	"github.com/aquasecurity/fanal/types"
-	"github.com/aquasecurity/fanal/utils"
-	dio "github.com/aquasecurity/go-dep-parser/pkg/io"
-	classifier "github.com/google/licenseclassifier/v2/assets"
 	"io"
+	"io/ioutil"
 	"regexp"
 	"strings"
+
+	"github.com/aquasecurity/fanal/analyzer"
+	"github.com/aquasecurity/fanal/types"
+	classifier "github.com/google/licenseclassifier/v2/assets"
+	"golang.org/x/exp/slices"
+	"golang.org/x/xerrors"
 )
 
 const LicenseAdder = "dpkg-license-adder"
 
 var (
-	cl, _                = classifier.DefaultClassifier()
-	copyrightFileRegexp  = regexp.MustCompile(`^usr/share/doc/([0-9A-Za-z_.-]+)/copyright$`)
-	commonLicensesRegexp = regexp.MustCompile(`/?usr/share/common-licenses/([0-9A-Za-z_.+-]+[0-9A-Za-z+])`)
+	cl, _                        = classifier.DefaultClassifier()
+	copyrightFileRegexp          = regexp.MustCompile(`^usr/share/doc/([0-9A-Za-z_.-]+)/copyright$`)
+	commonLicenseReferenceRegexp = regexp.MustCompile(`/?usr/share/common-licenses/([0-9A-Za-z_.+-]+[0-9A-Za-z+])`)
 )
 
 type License struct {
@@ -27,12 +28,15 @@ type License struct {
 }
 
 // parseCopyrightFile parses /usr/share/doc/*/copyright files
-func parseCopyrightFile(content dio.ReadSeekerAt, filePath string) (*analyzer.AnalysisResult, error) {
+func parseCopyrightFile(input analyzer.AnalysisInput, scanner *bufio.Scanner) (*analyzer.AnalysisResult, error) {
 	var licenses []string
-	var buf bytes.Buffer
-
-	tee := io.TeeReader(content, &buf) // Save stream in buffer for re-read with 'licenseclassifier'
-	scanner := bufio.NewScanner(tee)
+	buf, err := ioutil.ReadAll(input.Content) // save stream to buffer for use at github.com/google/licenseclassifier
+	if err != nil {
+		return nil, xerrors.Errorf("unable to read content from %q: %w", input.FilePath, err)
+	}
+	if _, err := input.Content.Seek(0, io.SeekStart); err != nil { // rewind the reader to the beginning of the stream after saving
+		return nil, xerrors.Errorf("unable to rewind reader for %q file: %w", input.FilePath, err)
+	}
 
 	for scanner.Scan() {
 		line := scanner.Text()
@@ -40,23 +44,22 @@ func parseCopyrightFile(content dio.ReadSeekerAt, filePath string) (*analyzer.An
 		// "License: *" pattern is used
 		if strings.HasPrefix(line, "License:") {
 			l := strings.TrimSpace(line[8:])
-			if !utils.StringInSlice(l, licenses) {
+			if !slices.Contains(licenses, l) {
 				licenses = append(licenses, l)
 			}
-			continue
-		}
-
-		// Common license pattern is used
-		license := commonLicensesRegexp.FindStringSubmatch(line)
-		if len(license) == 2 && !utils.StringInSlice(license[1], licenses) {
-			licenses = append(licenses, license[1])
+		} else {
+			// Common license pattern is used
+			license := commonLicenseReferenceRegexp.FindStringSubmatch(line)
+			if len(license) == 2 && !slices.Contains(licenses, license[1]) {
+				licenses = append(licenses, license[1])
+			}
 		}
 	}
 
 	// Use 'github.com/google/licenseclassifier' for find licenses
-	result := cl.Match(buf.Bytes())
+	result := cl.Match(buf)
 	for _, match := range result.Matches {
-		if !utils.StringInSlice(match.Name, licenses) {
+		if !slices.Contains(licenses, match.Name) {
 			licenses = append(licenses, match.Name)
 		}
 	}
@@ -70,7 +73,7 @@ func parseCopyrightFile(content dio.ReadSeekerAt, filePath string) (*analyzer.An
 		CustomResources: []types.CustomResource{
 			{
 				Type:     LicenseAdder,
-				FilePath: getPkgNameFromLicenseFilePath(filePath),
+				FilePath: getPkgNameFromLicenseFilePath(input.FilePath),
 				Data:     licensesStr,
 			},
 		},

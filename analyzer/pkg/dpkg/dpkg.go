@@ -42,7 +42,7 @@ func (a dpkgAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisInput) (
 	}
 
 	if isLicenseFile(input.FilePath) {
-		return parseCopyrightFile(input.Content, input.FilePath)
+		return parseCopyrightFile(input, scanner)
 	}
 
 	return a.parseDpkgStatus(input.FilePath, scanner)
