@@ -2,6 +2,7 @@ package pom
 
 import (
 	"context"
+	"golang.org/x/xerrors"
 	"os"
 	"path/filepath"
 
@@ -23,12 +24,15 @@ type pomAnalyzer struct{}
 
 func (a pomAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisInput) (*analyzer.AnalysisResult, error) {
 	p := pom.NewParser(input.FilePath, pom.WithOffline(input.Options.Offline))
-
-	return language.Analyze(types.Pom, input.FilePath, input.Content, p.Parse)
+	res, err := language.Analyze(types.Pom, input.FilePath, input.Content, p)
+	if err != nil {
+		return nil, xerrors.Errorf("%s parse error: %w", input.FilePath, err)
+	}
+	return res, nil
 }
 
 func (a pomAnalyzer) Required(filePath string, _ os.FileInfo) bool {
-	return filepath.Base(filePath) == "pom.xml"
+	return filepath.Base(filePath) == types.MavenPom
 }
 
 func (a pomAnalyzer) Type() analyzer.Type {
