@@ -140,6 +140,7 @@ func newMisconfPostHandler(artifactOpt artifact.Option) (handler.PostHandler, er
 
 	opts := []options.ScannerOption{
 		options.ScannerWithSkipRequiredCheck(true),
+		options.ScannerWithEmbeddedPolicies(!artifactOpt.MisconfScannerOption.DisableEmbeddedPolicies),
 	}
 
 	policyFS, policyPaths, err := createPolicyFS(opt.PolicyPaths)

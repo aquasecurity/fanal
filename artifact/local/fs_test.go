@@ -936,9 +936,10 @@ func TestDockerfileMisconfigurationScan(t *testing.T) {
 				Offline:           false,
 				InsecureSkipTLS:   false,
 				MisconfScannerOption: config.ScannerOption{
-					RegoOnly:    true,
-					Namespaces:  []string{"user"},
-					PolicyPaths: []string{"./testdata/misconfig/dockerfile/single-failure/rego"},
+					RegoOnly:                true,
+					Namespaces:              []string{"user"},
+					PolicyPaths:             []string{"./testdata/misconfig/dockerfile/single-failure/rego"},
+					DisableEmbeddedPolicies: true,
 				},
 			},
 			putBlobExpectation: cache.ArtifactCachePutBlobExpectation{
@@ -1009,9 +1010,10 @@ func TestDockerfileMisconfigurationScan(t *testing.T) {
 				Offline:           false,
 				InsecureSkipTLS:   false,
 				MisconfScannerOption: config.ScannerOption{
-					RegoOnly:    true,
-					Namespaces:  []string{"user"},
-					PolicyPaths: []string{"./testdata/misconfig/dockerfile/multiple-failures/rego"},
+					RegoOnly:                true,
+					Namespaces:              []string{"user"},
+					PolicyPaths:             []string{"./testdata/misconfig/dockerfile/multiple-failures/rego"},
+					DisableEmbeddedPolicies: true,
 				},
 			},
 			putBlobExpectation: cache.ArtifactCachePutBlobExpectation{
@@ -1143,9 +1145,10 @@ func TestDockerfileMisconfigurationScan(t *testing.T) {
 				Offline:           false,
 				InsecureSkipTLS:   false,
 				MisconfScannerOption: config.ScannerOption{
-					RegoOnly:    true,
-					Namespaces:  []string{"user"},
-					PolicyPaths: []string{"./testdata/misconfig/cloudformation/passed/rego"},
+					RegoOnly:                true,
+					Namespaces:              []string{"user"},
+					PolicyPaths:             []string{"./testdata/misconfig/cloudformation/passed/rego"},
+					DisableEmbeddedPolicies: true,
 				},
 			},
 			putBlobExpectation: cache.ArtifactCachePutBlobExpectation{

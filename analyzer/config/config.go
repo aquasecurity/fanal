@@ -18,12 +18,13 @@ import (
 const separator = ":"
 
 type ScannerOption struct {
-	Trace        bool
-	RegoOnly     bool
-	Namespaces   []string
-	FilePatterns []string
-	PolicyPaths  []string
-	DataPaths    []string
+	Trace                   bool
+	RegoOnly                bool
+	Namespaces              []string
+	FilePatterns            []string
+	PolicyPaths             []string
+	DataPaths               []string
+	DisableEmbeddedPolicies bool
 }
 
 func (o *ScannerOption) Sort() {

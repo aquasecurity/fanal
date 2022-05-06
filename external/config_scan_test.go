@@ -93,7 +93,7 @@ func TestConfigScanner_Scan(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			s, err := external.NewConfigScanner(t.TempDir(),
-				tt.fields.policyPaths, tt.fields.dataPaths, tt.fields.namespaces)
+				tt.fields.policyPaths, tt.fields.dataPaths, tt.fields.namespaces, false)
 			require.NoError(t, err)
 
 			got, err := s.Scan(tt.inputDir)
