@@ -35,6 +35,7 @@ var (
 
 type ScannerOption struct {
 	ConfigPath string
+	Disabled   bool
 }
 
 // SecretAnalyzer is an analyzer for secrets
@@ -44,6 +45,9 @@ type SecretAnalyzer struct {
 }
 
 func RegisterSecretAnalyzer(opt ScannerOption) error {
+	if opt.Disabled {
+		return nil
+	}
 	a, err := newSecretAnalyzer(opt.ConfigPath)
 	if err != nil {
 		return xerrors.Errorf("secret scanner init error: %w", err)
