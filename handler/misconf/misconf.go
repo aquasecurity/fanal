@@ -275,8 +275,8 @@ func resultsToMisconf(configType string, scannerName string, results scan.Result
 			PolicyMetadata: types.PolicyMetadata{
 				ID:                 ruleID,
 				Type:               fmt.Sprintf("%s Security Check", scannerName),
-				Title:              flattened.RuleSummary,
-				Description:        flattened.Impact,
+				Title:              result.Rule().Summary,
+				Description:        result.Rule().Explanation,
 				Severity:           string(flattened.Severity),
 				RecommendedActions: flattened.Resolution,
 				References:         flattened.Links,
