@@ -39,10 +39,11 @@ func TestConfigScanner_Scan(t *testing.T) {
 							Query:     "data.testdata.xyz_200.deny",
 							Message:   "Old image",
 							PolicyMetadata: types.PolicyMetadata{
-								ID:       "XYZ-200",
-								Type:     "Dockerfile Security Check",
-								Title:    "Old FROM",
-								Severity: "LOW",
+								ID:          "XYZ-200",
+								Type:        "Dockerfile Security Check",
+								Title:       "Old FROM",
+								Description: "Rego module: data.testdata.xyz_200",
+								Severity:    "LOW",
 							},
 							IacMetadata: types.IacMetadata{
 								Resource:  "",
@@ -72,10 +73,11 @@ func TestConfigScanner_Scan(t *testing.T) {
 							Namespace: "testdata.xyz_200",
 							Query:     "data.testdata.xyz_200.deny",
 							PolicyMetadata: types.PolicyMetadata{
-								ID:       "XYZ-200",
-								Type:     "Dockerfile Security Check",
-								Title:    "Old FROM",
-								Severity: "LOW",
+								ID:          "XYZ-200",
+								Type:        "Dockerfile Security Check",
+								Title:       "Old FROM",
+								Description: "Rego module: data.testdata.xyz_200",
+								Severity:    "LOW",
 							},
 							IacMetadata: types.IacMetadata{
 								Resource:  "",
