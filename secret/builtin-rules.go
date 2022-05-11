@@ -64,6 +64,16 @@ var (
 	CategoryTypeform             = types.SecretRuleCategory("Typeform")
 )
 
+// Reusable regex patterns
+const (
+	quote       = `["']?`
+	connect     = `\s*(:|=>|=)\s*`
+	startSecret = `(^|\s+)`
+	endSecret   = `(\s+|$)`
+
+	aws = `(aws)?_?`
+)
+
 var builtinRules = []Rule{
 	{
 		ID:       "aws-access-key-id",
@@ -78,7 +88,7 @@ var builtinRules = []Rule{
 		Category:        CategoryAWS,
 		Severity:        "CRITICAL",
 		Title:           "AWS Secret Access Key",
-		Regex:           MustCompile(`(?i)(^|\s+)["']?(aws)?_?(secret)?_?(access)?_?key["']?\s*(:|=>|=)\s*(?P<secret>["']?[A-Za-z0-9\/\+=]{40})["']?(\s+|$)`),
+		Regex:           MustCompile(`(?i)` + startSecret + quote + aws + `(secret)?_?(access)?_?key` + quote + connect + quote + `(?P<secret>[A-Za-z0-9\/\+=]{40})` + quote + endSecret),
 		SecretGroupName: "secret",
 		Keywords:        []string{"key"},
 	},
@@ -87,7 +97,7 @@ var builtinRules = []Rule{
 		Category:        CategoryAWS,
 		Severity:        "HIGH",
 		Title:           "AWS Account ID",
-		Regex:           MustCompile(`(?i)["']?(aws)?_?account_?(id)?["']?\s*(:|=>|=)\s*['"]?(?P<secret>[0-9]{4}\-?[0-9]{4}\-?[0-9]{4})['"]?`),
+		Regex:           MustCompile(`(?i)` + startSecret + quote + aws + `account_?(id)?` + quote + connect + quote + `(?P<secret>[0-9]{4}\-?[0-9]{4}\-?[0-9]{4})` + quote + endSecret),
 		SecretGroupName: "secret",
 		Keywords:        []string{"account"},
 	},
