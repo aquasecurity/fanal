@@ -1,24 +1,25 @@
 package json
 
 import (
+	"bytes"
 	"context"
-	"encoding/json"
+	"io"
 	"os"
 	"path/filepath"
 	"regexp"
 
-	"github.com/aquasecurity/fanal/config/scanner"
-	"golang.org/x/xerrors"
-
+	"github.com/aquasecurity/defsec/pkg/detection"
 	"github.com/aquasecurity/fanal/analyzer"
 	"github.com/aquasecurity/fanal/types"
+	"golang.org/x/xerrors"
 )
 
 const version = 1
 
 var (
-	requiredExt   = ".json"
-	excludedFiles = []string{types.NpmPkgLock, types.NuGetPkgsLock, types.NuGetPkgsConfig}
+	requiredExt    = ".json"
+	excludedFiles  = []string{types.NpmPkgLock, types.NuGetPkgsLock, types.NuGetPkgsConfig}
+	supportedTypes = []detection.FileType{detection.FileTypeCloudFormation, detection.FileTypeKubernetes}
 )
 
 type ConfigAnalyzer struct {
@@ -31,43 +32,29 @@ func NewConfigAnalyzer(filePattern *regexp.Regexp) ConfigAnalyzer {
 	}
 }
 
-func (a ConfigAnalyzer) Analyze(ctx context.Context, input analyzer.AnalysisInput) (*analyzer.AnalysisResult, error) {
-	var parsed interface{}
-	var confType string
-	err := json.NewDecoder(input.Content).Decode(&parsed)
+func (a ConfigAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisInput) (*analyzer.AnalysisResult, error) {
+	b, err := io.ReadAll(input.Content)
 	if err != nil {
-		return nil, xerrors.Errorf("unable to decode JSON (%s): %w", input.FilePath, err)
+		return nil, xerrors.Errorf("failed to read %s: %w", input.FilePath, err)
 	}
 
-	if configs, ok := parsed.([]interface{}); ok { // json input is array
-		for _, c := range configs {
-			confType, err = scanner.DetectType(ctx, c)
-			if err != nil {
-				return nil, xerrors.Errorf("unable to detect config type from JSON (%s): %w", input.FilePath, err)
-			}
-			if confType != "" {
-				break
-			}
-		}
-	} else {
-		confType, err = scanner.DetectType(ctx, parsed)
-		if err != nil {
-			return nil, xerrors.Errorf("unable to detect config type from JSON (%s): %w", input.FilePath, err)
-		}
-	}
-
-	if confType != "" { // skip file if can't determine config type
-		return &analyzer.AnalysisResult{
-			Configs: []types.Config{
-				{
-					Type:     confType,
-					FilePath: input.FilePath,
-					Content:  parsed,
+	for _, supportedType := range supportedTypes { // system can contain many json files. Ignore unsupported types.
+		if detection.IsType(input.FilePath, bytes.NewReader(b), supportedType) {
+			return &analyzer.AnalysisResult{
+				Files: map[types.HandlerType][]types.File{
+					// It will be passed to misconfig post handler
+					types.MisconfPostHandler: {
+						{
+							Type:    types.JSON,
+							Path:    input.FilePath,
+							Content: b,
+						},
+					},
 				},
-			},
-		}, nil
+			}, nil
+		}
 	}
-	return &analyzer.AnalysisResult{}, err
+	return &analyzer.AnalysisResult{}, nil
 }
 
 func (a ConfigAnalyzer) Required(filePath string, _ os.FileInfo) bool {

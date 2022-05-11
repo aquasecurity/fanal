@@ -34,19 +34,22 @@ func Test_jsonConfigAnalyzer_Analyze(t *testing.T) {
 			},
 			inputFile: "testdata/deployment.json",
 			want: &analyzer.AnalysisResult{
-				Configs: []types.Config{
-					{
-						Type:     types.Kubernetes,
-						FilePath: "testdata/deployment.json",
-						Content: map[string]interface{}{
-							"apiVersion": "apps/v1",
-							"kind":       "Deployment",
-							"metadata": map[string]interface{}{
-								"name": "hello-kubernetes",
-							},
-							"spec": map[string]interface{}{
-								"replicas": float64(3),
-							},
+				Files: map[types.HandlerType][]types.File{
+					types.MisconfPostHandler: {
+						{
+							Type: "json",
+							Path: "testdata/deployment.json",
+							Content: []byte(`{
+	"apiVersion": "apps/v1",
+	"kind": "Deployment",
+	"metadata": {
+		"name": "hello-kubernetes"
+	},
+	"spec": {
+		"replicas": 3
+	}
+}
+`),
 						},
 					},
 				},
@@ -60,69 +63,61 @@ func Test_jsonConfigAnalyzer_Analyze(t *testing.T) {
 			},
 			inputFile: "testdata/deployment_deny.json",
 			want: &analyzer.AnalysisResult{
-				Configs: []types.Config{
-					{
-						Type:     types.Kubernetes,
-						FilePath: "testdata/deployment_deny.json",
-						Content: map[string]interface{}{
-							"apiVersion": "apps/v1",
-							"kind":       "Deployment",
-							"metadata": map[string]interface{}{
-								"name": "hello-kubernetes",
-							},
-							"spec": map[string]interface{}{
-								"replicas": float64(4),
-							},
+				Files: map[types.HandlerType][]types.File{
+					types.MisconfPostHandler: {
+						{
+							Type: "json",
+							Path: "testdata/deployment_deny.json",
+							Content: []byte(`{
+	"apiVersion": "apps/v1",
+	"kind": "Deployment",
+	"metadata": {
+		"name": "hello-kubernetes"
+	},
+	"spec": {
+		"replicas": 4
+	}
+}
+`),
 						},
 					},
 				},
 			},
 		},
 		{
-			name: "json array",
+			name: "happy path CloudFormation",
 			args: args{
 				namespaces:  []string{"main"},
 				policyPaths: []string{"../testdata/kubernetes.rego"},
 			},
-			inputFile: "testdata/array.json",
+			inputFile: "testdata/deployment_cf.json",
 			want: &analyzer.AnalysisResult{
-				Configs: []types.Config{
-					{
-						Type:     types.Kubernetes,
-						FilePath: "testdata/array.json",
-						Content: []interface{}{map[string]interface{}{
-							"apiVersion": "apps/v1",
-							"kind":       "Deployment",
-							"metadata": map[string]interface{}{
-								"name": "hello-kubernetes",
-							},
-							"spec": map[string]interface{}{
-								"replicas": float64(4),
-							},
-						},
-							map[string]interface{}{
-								"apiVersion": "apps/v2",
-								"kind":       "Deployment",
-								"metadata": map[string]interface{}{
-									"name": "hello-kubernetes",
-								},
-								"spec": map[string]interface{}{
-									"replicas": float64(5),
-								},
-							},
+				Files: map[types.HandlerType][]types.File{
+					types.MisconfPostHandler: {
+						{
+							Type: "json",
+							Path: "testdata/deployment_cf.json",
+							Content: []byte(`{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "CloutFormation test file",
+  "Resources": {
+    "VPC": {
+    }
+  }
+}`),
 						},
 					},
 				},
 			},
 		},
 		{
-			name: "broken JSON",
+			name: "unsupported type",
 			args: args{
 				namespaces:  []string{"main"},
 				policyPaths: []string{"../testdata/kubernetes.rego"},
 			},
-			inputFile: "testdata/broken.json",
-			wantErr:   "unable to decode JSON",
+			inputFile: "testdata/unsupportedtype.json",
+			want:      &analyzer.AnalysisResult{},
 		},
 	}
 
