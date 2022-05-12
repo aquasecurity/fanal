@@ -1,6 +1,8 @@
 package secret
 
 import (
+	"fmt"
+
 	"github.com/aquasecurity/fanal/types"
 )
 
@@ -80,7 +82,7 @@ var builtinRules = []Rule{
 		Category: CategoryAWS,
 		Severity: "CRITICAL",
 		Title:    "AWS Access Key ID",
-		Regex:    MustCompile(`(A3T[A-Z0-9]|AKIA|AGPA|AIDA|AROA|AIPA|ANPA|ANVA|ASIA)[A-Z0-9]{16}`),
+		Regex:    MustCompile(fmt.Sprintf(`(%sA3T[A-Z0-9]|AKIA|AGPA|AIDA|AROA|AIPA|ANPA|ANVA|ASIA)[A-Z0-9]{16}%s`, startSecret, endSecret)),
 		Keywords: []string{"AKIA", "AGPA", "AIDA", "AROA", "AIPA", "ANPA", "ANVA", "ASIA"},
 	},
 	{
@@ -88,7 +90,7 @@ var builtinRules = []Rule{
 		Category:        CategoryAWS,
 		Severity:        "CRITICAL",
 		Title:           "AWS Secret Access Key",
-		Regex:           MustCompile(`(?i)` + startSecret + quote + aws + `(secret)?_?(access)?_?key` + quote + connect + quote + `(?P<secret>[A-Za-z0-9\/\+=]{40})` + quote + endSecret),
+		Regex:           MustCompile(fmt.Sprintf(`(?i)%s%s%s(secret)?_?(access)?_?key%s%s%s(?P<secret>[A-Za-z0-9\/\+=]{40})%s%s`, startSecret, quote, aws, quote, connect, quote, quote, endSecret)),
 		SecretGroupName: "secret",
 		Keywords:        []string{"key"},
 	},
@@ -97,7 +99,7 @@ var builtinRules = []Rule{
 		Category:        CategoryAWS,
 		Severity:        "HIGH",
 		Title:           "AWS Account ID",
-		Regex:           MustCompile(`(?i)` + startSecret + quote + aws + `account_?(id)?` + quote + connect + quote + `(?P<secret>[0-9]{4}\-?[0-9]{4}\-?[0-9]{4})` + quote + endSecret),
+		Regex:           MustCompile(fmt.Sprintf(`(?i)%s%s%saccount_?(id)?%s%s%s(?P<secret>[0-9]{4}\-?[0-9]{4}\-?[0-9]{4})%s%s`, startSecret, quote, aws, quote, connect, quote, quote, endSecret)),
 		SecretGroupName: "secret",
 		Keywords:        []string{"account"},
 	},

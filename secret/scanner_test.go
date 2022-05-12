@@ -258,6 +258,11 @@ func TestSecretScanner(t *testing.T) {
 				Findings: []types.SecretFinding{wantFinding8},
 			},
 		},
+		{
+			name:          "invalid aws secrets",
+			inputFilePath: "testdata/invalid-aws-secrets.txt",
+			want:          types.Secret{},
+		},
 	}
 
 	for _, tt := range tests {
