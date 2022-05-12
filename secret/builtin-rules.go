@@ -78,12 +78,13 @@ const (
 
 var builtinRules = []Rule{
 	{
-		ID:       "aws-access-key-id",
-		Category: CategoryAWS,
-		Severity: "CRITICAL",
-		Title:    "AWS Access Key ID",
-		Regex:    MustCompile(fmt.Sprintf(`(%sA3T[A-Z0-9]|AKIA|AGPA|AIDA|AROA|AIPA|ANPA|ANVA|ASIA)[A-Z0-9]{16}%s`, startSecret, endSecret)),
-		Keywords: []string{"AKIA", "AGPA", "AIDA", "AROA", "AIPA", "ANPA", "ANVA", "ASIA"},
+		ID:              "aws-access-key-id",
+		Category:        CategoryAWS,
+		Severity:        "CRITICAL",
+		Title:           "AWS Access Key ID",
+		Regex:           MustCompile(fmt.Sprintf(`(?P<secret>(A3T[A-Z0-9]|AKIA|AGPA|AIDA|AROA|AIPA|ANPA|ANVA|ASIA)[A-Z0-9]{16})%s`, endSecret)),
+		SecretGroupName: "secret",
+		Keywords:        []string{"AKIA", "AGPA", "AIDA", "AROA", "AIPA", "ANPA", "ANVA", "ASIA"},
 	},
 	{
 		ID:              "aws-secret-access-key",
