@@ -32,10 +32,11 @@ func TestSecretAnalyzer(t *testing.T) {
 		Match:     "secret=\"*****\"",
 	}
 	tests := []struct {
-		name       string
-		configPath string
-		filePath   string
-		want       *analyzer.AnalysisResult
+		name          string
+		configPath    string
+		filePath      string
+		scanningImage bool
+		want          *analyzer.AnalysisResult
 	}{
 		{
 			name:       "return results",
@@ -44,6 +45,19 @@ func TestSecretAnalyzer(t *testing.T) {
 			want: &analyzer.AnalysisResult{
 				Secrets: []types.Secret{{
 					FilePath: "testdata/secret.txt",
+					Findings: []types.SecretFinding{wantFinding1, wantFinding2},
+				},
+				},
+			},
+		},
+		{
+			name:          "filepath with leading /",
+			configPath:    "testdata/image-config.yaml",
+			filePath:      "testdata/secret.txt",
+			scanningImage: true,
+			want: &analyzer.AnalysisResult{
+				Secrets: []types.Secret{{
+					FilePath: "/testdata/secret.txt",
 					Findings: []types.SecretFinding{wantFinding1, wantFinding2},
 				},
 				},
@@ -65,7 +79,7 @@ func TestSecretAnalyzer(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			a, err := newSecretAnalyzer(tt.configPath)
+			a, err := newSecretAnalyzer(tt.configPath, tt.scanningImage)
 			require.NoError(t, err)
 			content, err := os.Open(tt.filePath)
 			require.NoError(t, err)
@@ -119,7 +133,7 @@ func TestSecretRequire(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			a, err := newSecretAnalyzer("")
+			a, err := newSecretAnalyzer("", false)
 			require.NoError(t, err)
 
 			fi, err := os.Stat(tt.filePath)

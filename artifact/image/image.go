@@ -53,7 +53,7 @@ func NewArtifact(img types.Image, c cache.ArtifactCache, opt artifact.Option) (a
 	}
 
 	// Register secret analyzer
-	if err = secret.RegisterSecretAnalyzer(opt.SecretScannerOption); err != nil {
+	if err = secret.RegisterSecretAnalyzer(opt.SecretScannerOption, true); err != nil {
 		return nil, xerrors.Errorf("secret scanner error: %w", err)
 	}
 

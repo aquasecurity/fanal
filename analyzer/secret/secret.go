@@ -2,6 +2,7 @@ package secret
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"math"
 	"os"
@@ -39,12 +40,13 @@ type ScannerOption struct {
 
 // SecretAnalyzer is an analyzer for secrets
 type SecretAnalyzer struct {
-	scanner    secret.Scanner
-	configPath string
+	scanner       secret.Scanner
+	configPath    string
+	imageScanning bool // filepath extracted from image doesn't have the prefix "/". We need to add a "/" prefix to properly filter paths from the config file.
 }
 
-func RegisterSecretAnalyzer(opt ScannerOption) error {
-	a, err := newSecretAnalyzer(opt.ConfigPath)
+func RegisterSecretAnalyzer(opt ScannerOption, imageScanning bool) error {
+	a, err := newSecretAnalyzer(opt.ConfigPath, imageScanning)
 	if err != nil {
 		return xerrors.Errorf("secret scanner init error: %w", err)
 	}
@@ -52,14 +54,15 @@ func RegisterSecretAnalyzer(opt ScannerOption) error {
 	return nil
 }
 
-func newSecretAnalyzer(configPath string) (SecretAnalyzer, error) {
+func newSecretAnalyzer(configPath string, imageScanning bool) (SecretAnalyzer, error) {
 	s, err := secret.NewScanner(configPath)
 	if err != nil {
 		return SecretAnalyzer{}, xerrors.Errorf("secret scanner error: %w", err)
 	}
 	return SecretAnalyzer{
-		scanner:    s,
-		configPath: configPath,
+		scanner:       s,
+		configPath:    configPath,
+		imageScanning: imageScanning,
 	}, nil
 }
 
@@ -75,8 +78,13 @@ func (a SecretAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisInput)
 		return nil, xerrors.Errorf("read error %s: %w", input.FilePath, err)
 	}
 
+	filePath := input.FilePath
+	if a.imageScanning { // add leading `/` for files extracted from image
+		filePath = fmt.Sprintf("/%s", filePath)
+	}
+
 	result := a.scanner.Scan(secret.ScanArgs{
-		FilePath: input.FilePath,
+		FilePath: filePath,
 		Content:  content,
 	})
 
