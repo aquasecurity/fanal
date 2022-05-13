@@ -40,13 +40,12 @@ type ScannerOption struct {
 
 // SecretAnalyzer is an analyzer for secrets
 type SecretAnalyzer struct {
-	scanner       secret.Scanner
-	configPath    string
-	imageScanning bool // filepath extracted from image doesn't have the prefix "/". We need to add a "/" prefix to properly filter paths from the config file.
+	scanner    secret.Scanner
+	configPath string
 }
 
-func RegisterSecretAnalyzer(opt ScannerOption, imageScanning bool) error {
-	a, err := newSecretAnalyzer(opt.ConfigPath, imageScanning)
+func RegisterSecretAnalyzer(opt ScannerOption) error {
+	a, err := newSecretAnalyzer(opt.ConfigPath)
 	if err != nil {
 		return xerrors.Errorf("secret scanner init error: %w", err)
 	}
@@ -54,15 +53,14 @@ func RegisterSecretAnalyzer(opt ScannerOption, imageScanning bool) error {
 	return nil
 }
 
-func newSecretAnalyzer(configPath string, imageScanning bool) (SecretAnalyzer, error) {
+func newSecretAnalyzer(configPath string) (SecretAnalyzer, error) {
 	s, err := secret.NewScanner(configPath)
 	if err != nil {
 		return SecretAnalyzer{}, xerrors.Errorf("secret scanner error: %w", err)
 	}
 	return SecretAnalyzer{
-		scanner:       s,
-		configPath:    configPath,
-		imageScanning: imageScanning,
+		scanner:    s,
+		configPath: configPath,
 	}, nil
 }
 
@@ -79,7 +77,10 @@ func (a SecretAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisInput)
 	}
 
 	filePath := input.FilePath
-	if a.imageScanning { // add leading `/` for files extracted from image
+	// Files extracted from the image have an empty input.Dir.
+	// Also, paths to these files do not have "/" prefix.
+	// We need to add a "/" prefix to properly filter paths from the config file.
+	if input.Dir == "" { // add leading `/` for files extracted from image
 		filePath = fmt.Sprintf("/%s", filePath)
 	}
 

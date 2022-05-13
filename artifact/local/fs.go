@@ -49,7 +49,7 @@ func NewArtifact(rootPath string, c cache.ArtifactCache, opt artifact.Option) (a
 	}
 
 	// Register secret analyzer
-	if err = secret.RegisterSecretAnalyzer(opt.SecretScannerOption, false); err != nil {
+	if err = secret.RegisterSecretAnalyzer(opt.SecretScannerOption); err != nil {
 		return nil, xerrors.Errorf("secret scanner error: %w", err)
 	}
 
