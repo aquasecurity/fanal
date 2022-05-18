@@ -22,6 +22,7 @@ import (
 	k8sscanner "github.com/aquasecurity/defsec/pkg/scanners/kubernetes"
 	"github.com/aquasecurity/defsec/pkg/scanners/options"
 	tfscanner "github.com/aquasecurity/defsec/pkg/scanners/terraform"
+
 	"github.com/aquasecurity/fanal/analyzer"
 	"github.com/aquasecurity/fanal/artifact"
 	"github.com/aquasecurity/fanal/handler"
@@ -187,6 +188,7 @@ var enabledDefsecTypes = map[detection.FileType]string{
 	detection.FileTypeTerraform:      types.Terraform,
 	detection.FileTypeDockerfile:     types.Dockerfile,
 	detection.FileTypeKubernetes:     types.Kubernetes,
+	detection.FileTypeHelm:           types.HelmChart,
 }
 
 // Handle detects misconfigurations.
@@ -196,11 +198,9 @@ func (h misconfPostHandler) Handle(ctx context.Context, result *analyzer.Analysi
 		return nil
 	}
 
-	mapMemoryFS := map[string]*memoryfs.FS{
-		types.Terraform:      memoryfs.New(),
-		types.CloudFormation: memoryfs.New(),
-		types.Dockerfile:     memoryfs.New(),
-		types.Kubernetes:     memoryfs.New(),
+	mapMemoryFS := make(map[string]*memoryfs.FS)
+	for t := range h.scanners {
+		mapMemoryFS[t] = memoryfs.New()
 	}
 
 	for _, file := range files {
