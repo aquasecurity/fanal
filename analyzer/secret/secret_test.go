@@ -52,7 +52,7 @@ func TestSecretAnalyzer(t *testing.T) {
 			},
 		},
 		{
-			name:       "filepath with leading /",
+			name:       "image scan return result",
 			configPath: "testdata/image-config.yaml",
 			filePath:   "testdata/secret.txt",
 			want: &analyzer.AnalysisResult{
@@ -62,6 +62,12 @@ func TestSecretAnalyzer(t *testing.T) {
 				},
 				},
 			},
+		},
+		{
+			name:       "image scan return nil",
+			configPath: "testdata/image-config.yaml",
+			filePath:   "testdata/secret.doc",
+			want:       nil,
 		},
 		{
 			name:       "return nil when no results",
