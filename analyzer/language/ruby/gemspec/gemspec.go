@@ -33,7 +33,7 @@ func (a gemspecLibraryAnalyzer) Analyze(_ context.Context, input analyzer.Analys
 	return language.ToAnalysisResult(types.GemSpec, input.FilePath, input.FilePath, libs, deps), nil
 }
 
-func (a gemspecLibraryAnalyzer) Required(filePath string, _ os.FileInfo) bool {
+func (a gemspecLibraryAnalyzer) Required(filePath string, _ os.FileInfo, _ analyzer.Opener) bool {
 	return fileRegex.MatchString(filepath.ToSlash(filePath))
 }
 

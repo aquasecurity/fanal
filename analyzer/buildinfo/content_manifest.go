@@ -38,7 +38,7 @@ func (a contentManifestAnalyzer) Analyze(_ context.Context, target analyzer.Anal
 	}, nil
 }
 
-func (a contentManifestAnalyzer) Required(filePath string, _ os.FileInfo) bool {
+func (a contentManifestAnalyzer) Required(filePath string, _ os.FileInfo, _ analyzer.Opener) bool {
 	dir, file := filepath.Split(filepath.ToSlash(filePath))
 	if dir != "root/buildinfo/content_manifests/" {
 		return false

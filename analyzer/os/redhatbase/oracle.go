@@ -39,7 +39,7 @@ func (a oracleOSAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisInpu
 	return nil, xerrors.Errorf("oracle: %w", aos.AnalyzeOSError)
 }
 
-func (a oracleOSAnalyzer) Required(filePath string, _ os.FileInfo) bool {
+func (a oracleOSAnalyzer) Required(filePath string, _ os.FileInfo, _ analyzer.Opener) bool {
 	return utils.StringInSlice(filePath, a.requiredFiles())
 }
 

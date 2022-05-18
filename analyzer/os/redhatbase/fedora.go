@@ -41,7 +41,7 @@ func (a fedoraOSAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisInpu
 	return nil, xerrors.Errorf("fedora: %w", aos.AnalyzeOSError)
 }
 
-func (a fedoraOSAnalyzer) Required(filePath string, _ os.FileInfo) bool {
+func (a fedoraOSAnalyzer) Required(filePath string, _ os.FileInfo, _ analyzer.Opener) bool {
 	return utils.StringInSlice(filePath, a.requiredFiles())
 }
 

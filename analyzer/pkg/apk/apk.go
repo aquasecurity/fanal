@@ -101,7 +101,7 @@ func (a alpinePkgAnalyzer) uniquePkgs(pkgs []types.Package) (uniqPkgs []types.Pa
 	return uniqPkgs
 }
 
-func (a alpinePkgAnalyzer) Required(filePath string, _ os.FileInfo) bool {
+func (a alpinePkgAnalyzer) Required(filePath string, _ os.FileInfo, _ analyzer.Opener) bool {
 	return utils.StringInSlice(filePath, requiredFiles)
 }
 

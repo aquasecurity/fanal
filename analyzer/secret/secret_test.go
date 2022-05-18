@@ -146,7 +146,7 @@ func TestSecretRequire(t *testing.T) {
 			fi, err := os.Stat(tt.filePath)
 			require.NoError(t, err)
 
-			got := a.Required(tt.filePath, fi)
+			got := a.Required(tt.filePath, fi, nil)
 			assert.Equal(t, tt.want, got)
 		})
 	}

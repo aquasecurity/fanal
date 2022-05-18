@@ -32,7 +32,7 @@ func (a pipenvLibraryAnalyzer) Analyze(_ context.Context, input analyzer.Analysi
 	return res, nil
 }
 
-func (a pipenvLibraryAnalyzer) Required(filePath string, _ os.FileInfo) bool {
+func (a pipenvLibraryAnalyzer) Required(filePath string, _ os.FileInfo, _ analyzer.Opener) bool {
 	fileName := filepath.Base(filePath)
 	return utils.StringInSlice(fileName, requiredFiles)
 }

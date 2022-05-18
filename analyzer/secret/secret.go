@@ -118,7 +118,7 @@ func isBinary(content dio.ReadSeekerAt, fileSize int64) (bool, error) {
 	return false, nil
 }
 
-func (a SecretAnalyzer) Required(filePath string, fi os.FileInfo) bool {
+func (a SecretAnalyzer) Required(filePath string, fi os.FileInfo, _ analyzer.Opener) bool {
 	// Skip small files
 	if fi.Size() < 10 {
 		return false

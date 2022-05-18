@@ -44,7 +44,7 @@ func (a ConfigAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisInput)
 	}, nil
 }
 
-func (a ConfigAnalyzer) Required(filePath string, _ os.FileInfo) bool {
+func (a ConfigAnalyzer) Required(filePath string, _ os.FileInfo, _ analyzer.Opener) bool {
 	return slices.Contains(requiredExts, filepath.Ext(filePath))
 }
 

@@ -78,7 +78,7 @@ func (a packagingAnalyzer) analyzeEggZip(r io.ReaderAt, size int64) (dio.ReadSee
 	}
 
 	for _, file := range zr.File {
-		if !a.Required(file.Name, nil) {
+		if !a.Required(file.Name, nil, nil) {
 			continue
 		}
 
@@ -103,7 +103,7 @@ func (a packagingAnalyzer) open(file *zip.File) (dio.ReadSeekerAt, error) {
 	return bytes.NewReader(b), nil
 }
 
-func (a packagingAnalyzer) Required(filePath string, _ os.FileInfo) bool {
+func (a packagingAnalyzer) Required(filePath string, _ os.FileInfo, _ analyzer.Opener) bool {
 	// For Windows
 	filePath = filepath.ToSlash(filePath)
 

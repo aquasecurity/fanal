@@ -2,10 +2,11 @@ package jar
 
 import (
 	"context"
-	"github.com/aquasecurity/fanal/types"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/aquasecurity/fanal/types"
 
 	"golang.org/x/xerrors"
 
@@ -35,7 +36,7 @@ func (a javaLibraryAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisI
 	return language.ToAnalysisResult(types.Jar, input.FilePath, input.FilePath, libs, deps), nil
 }
 
-func (a javaLibraryAnalyzer) Required(filePath string, _ os.FileInfo) bool {
+func (a javaLibraryAnalyzer) Required(filePath string, _ os.FileInfo, _ analyzer.Opener) bool {
 	ext := filepath.Ext(filePath)
 	for _, required := range requiredExtensions {
 		if strings.EqualFold(ext, required) {

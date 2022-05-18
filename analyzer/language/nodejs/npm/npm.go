@@ -33,7 +33,7 @@ func (a npmLibraryAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisIn
 	return res, nil
 }
 
-func (a npmLibraryAnalyzer) Required(filePath string, _ os.FileInfo) bool {
+func (a npmLibraryAnalyzer) Required(filePath string, _ os.FileInfo, _ analyzer.Opener) bool {
 	fileName := filepath.Base(filePath)
 	return utils.StringInSlice(fileName, requiredFiles)
 }

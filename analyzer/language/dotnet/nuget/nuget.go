@@ -2,9 +2,10 @@ package nuget
 
 import (
 	"context"
-	"golang.org/x/exp/slices"
 	"os"
 	"path/filepath"
+
+	"golang.org/x/exp/slices"
 
 	"golang.org/x/xerrors"
 
@@ -45,7 +46,7 @@ func (a nugetLibraryAnalyzer) Analyze(_ context.Context, input analyzer.Analysis
 	return res, nil
 }
 
-func (a nugetLibraryAnalyzer) Required(filePath string, _ os.FileInfo) bool {
+func (a nugetLibraryAnalyzer) Required(filePath string, _ os.FileInfo, _ analyzer.Opener) bool {
 	fileName := filepath.Base(filePath)
 	return slices.Contains(requiredFiles, fileName)
 }

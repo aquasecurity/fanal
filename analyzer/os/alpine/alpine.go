@@ -3,8 +3,9 @@ package alpine
 import (
 	"bufio"
 	"context"
-	"golang.org/x/exp/slices"
 	"os"
+
+	"golang.org/x/exp/slices"
 
 	"golang.org/x/xerrors"
 
@@ -34,7 +35,7 @@ func (a alpineOSAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisInpu
 	return nil, xerrors.Errorf("alpine: %w", aos.AnalyzeOSError)
 }
 
-func (a alpineOSAnalyzer) Required(filePath string, _ os.FileInfo) bool {
+func (a alpineOSAnalyzer) Required(filePath string, _ os.FileInfo, _ analyzer.Opener) bool {
 	return slices.Contains(requiredFiles, filePath)
 }
 

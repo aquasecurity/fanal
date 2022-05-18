@@ -188,7 +188,7 @@ var enabledDefsecTypes = map[detection.FileType]string{
 	detection.FileTypeTerraform:      types.Terraform,
 	detection.FileTypeDockerfile:     types.Dockerfile,
 	detection.FileTypeKubernetes:     types.Kubernetes,
-	detection.FileTypeHelm:           types.HelmChart,
+	detection.FileTypeHelm:           types.Helm,
 }
 
 // Handle detects misconfigurations.

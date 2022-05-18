@@ -90,7 +90,7 @@ func (a dockerfileAnalyzer) Analyze(_ context.Context, target analyzer.AnalysisI
 	}, nil
 }
 
-func (a dockerfileAnalyzer) Required(filePath string, _ os.FileInfo) bool {
+func (a dockerfileAnalyzer) Required(filePath string, _ os.FileInfo, _ analyzer.Opener) bool {
 	dir, file := filepath.Split(filepath.ToSlash(filePath))
 	if dir != "root/buildinfo/" {
 		return false
