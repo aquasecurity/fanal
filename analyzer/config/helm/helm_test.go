@@ -3,11 +3,13 @@ package helm
 import (
 	"context"
 	"os"
+	"path/filepath"
 	"regexp"
 	"testing"
 
 	"github.com/aquasecurity/fanal/analyzer"
 	"github.com/aquasecurity/fanal/types"
+	dio "github.com/aquasecurity/go-dep-parser/pkg/io"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -318,12 +320,42 @@ affinity: {}
 				},
 			},
 		},
+		{
+			name: "nope.tgz",
+			args: args{
+				namespaces:  []string{"main"},
+				policyPaths: []string{"../testdata/kubernetes.rego"},
+			},
+			inputFile: "testdata/nope.tgz",
+			want: &analyzer.AnalysisResult{
+				Files: map[types.HandlerType][]types.File{
+					types.MisconfPostHandler: {
+						{
+							Type: "helm",
+							Path: "testdata/nope.tgz",
+							Content: []uint8{
+								0x1f, 0x8b, 0x8, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x3, 0xed, 0xce, 0x31, 0x12, 0x82, 0x30,
+								0x0, 0x4, 0xc0, 0x3c, 0x25, 0x2f, 0x70, 0x12, 0x20, 0xe1, 0x3d, 0x14, 0xb4, 0xc0, 0x68,
+								0x1c, 0x7d, 0xbe, 0x5a, 0x30, 0x43, 0xa5, 0x15, 0x56, 0xbb, 0xcd, 0x15, 0x77, 0xc5,
+								0x2d, 0xeb, 0x36, 0x5f, 0xda, 0xb3, 0x85, 0x13, 0xa5, 0xb7, 0x5a, 0x87, 0x4f, 0xe6,
+								0xb1, 0xa4, 0x63, 0xee, 0x42, 0x1e, 0xba, 0xbe, 0x96, 0x54, 0xc7, 0x5c, 0x42, 0xca,
+								0xb9, 0xab, 0x7d, 0x88, 0xe9, 0xcc, 0x53, 0xbb, 0xfb, 0xad, 0x4d, 0xd7, 0x18, 0xc3,
+								0xfa, 0x98, 0x97, 0x6f, 0xbb, 0x5f, 0x3d, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
+								0xfc, 0xd1, 0xb, 0x41, 0xcd, 0xa9, 0xaf, 0x0, 0x28, 0x0, 0x0,
+							},
+						},
+					},
+				},
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			f, err := os.Open(tt.inputFile)
 			require.NoError(t, err)
-			defer func() { _ = f.Close() }()
+			defer func() {
+				_ = f.Close()
+			}()
 
 			a := NewConfigAnalyzer(nil)
 			ctx := context.Background()
@@ -385,6 +417,16 @@ func Test_helmConfigAnalyzer_Required(t *testing.T) {
 			filePath: "chart.yml",
 			want:     false,
 		},
+		{
+			name:     "testchart.tgz",
+			filePath: "testdata/testchart.tgz",
+			want:     true,
+		},
+		{
+			name:     "nope.tgz",
+			filePath: "testdata/nope.tgz",
+			want:     false,
+		},
 
 		{
 			name:        "file pattern",
@@ -397,7 +439,15 @@ func Test_helmConfigAnalyzer_Required(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			s := NewConfigAnalyzer(tt.filePattern)
 
-			got := s.Required(tt.filePath, nil, nil)
+			var opener analyzer.Opener
+
+			if filepath.Ext(tt.filePath) == ".tgz" {
+				opener = func() (dio.ReadSeekCloserAt, error) {
+					return os.Open(tt.filePath)
+				}
+			}
+
+			got := s.Required(tt.filePath, nil, opener)
 			assert.Equal(t, tt.want, got)
 		})
 	}
