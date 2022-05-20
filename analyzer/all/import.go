@@ -3,6 +3,7 @@ package all
 import (
 	_ "github.com/aquasecurity/fanal/analyzer/buildinfo"
 	_ "github.com/aquasecurity/fanal/analyzer/command/apk"
+	_ "github.com/aquasecurity/fanal/analyzer/language/dotnet/deps"
 	_ "github.com/aquasecurity/fanal/analyzer/language/dotnet/nuget"
 	_ "github.com/aquasecurity/fanal/analyzer/language/golang/binary"
 	_ "github.com/aquasecurity/fanal/analyzer/language/golang/mod"

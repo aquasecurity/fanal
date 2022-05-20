@@ -48,7 +48,7 @@ require (
 )
 
 require (
-	github.com/aquasecurity/go-dep-parser v0.0.0-20220503151658-d316f5cc2cff
+	github.com/aquasecurity/go-dep-parser v0.0.0-20220601061814-530f33ca32a9
 	github.com/aquasecurity/go-version v0.0.0-20210121072130-637058cfe492
 	github.com/aquasecurity/testdocker v0.0.0-20210911155206-e1e85f5a1516
 )

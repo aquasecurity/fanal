@@ -53,7 +53,8 @@ const (
 	TypeYarn       Type = "yarn"
 
 	// .NET
-	TypeNuget Type = "nuget"
+	TypeNuget      Type = "nuget"
+	TypeDotNetDeps Type = "dotnet_deps"
 
 	// Python
 	TypePythonPkg Type = "python-pkg"
