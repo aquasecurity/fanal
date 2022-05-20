@@ -560,7 +560,7 @@ func TestArtifact_Inspect(t *testing.T) {
 				},
 				{
 					Args: cache.ArtifactCachePutBlobArgs{
-						BlobID: "sha256:b527fc199c43c16b9b44e137870b6cac60fce55ceb61daeb20324f212577f726",
+						BlobID: "sha256:996fcbfcc2964d20456afd0de16747533693b1cbebb72a6d28823a134abf0f5f",
 						BlobInfo: types.BlobInfo{
 							SchemaVersion: types.BlobJSONSchemaVersion,
 							Digest:        "",
@@ -578,7 +578,7 @@ func TestArtifact_Inspect(t *testing.T) {
 					"sha256:6a176f2216e38ff58acfe86d97871d3938e3f1cfcaa226efdbddd9baf7e7eb7f",
 					"sha256:23db4eb6994b4319e3014742c659f76cd0d889895db8a23d3b3c18673a2c42ac",
 					"sha256:58b7150e9ed808a16c7c5d39f703a164bcaec1e4840262c34e0409fb4ae0f7b0",
-					"sha256:b527fc199c43c16b9b44e137870b6cac60fce55ceb61daeb20324f212577f726",
+					"sha256:996fcbfcc2964d20456afd0de16747533693b1cbebb72a6d28823a134abf0f5f",
 				},
 				ImageMetadata: types.ImageMetadata{
 					ID: "sha256:58701fd185bda36cab0557bb6438661831267aa4a9e0b54211c4d5317a48aff4",
