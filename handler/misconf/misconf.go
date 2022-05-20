@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/aquasecurity/defsec/pkg/detection"
+	"github.com/aquasecurity/defsec/pkg/scanners/helm"
 
 	"github.com/liamg/memoryfs"
 	"golang.org/x/xerrors"
@@ -179,6 +180,7 @@ func newMisconfPostHandler(artifactOpt artifact.Option) (handler.PostHandler, er
 			types.CloudFormation: cfscanner.New(opts...),
 			types.Dockerfile:     dfscanner.NewScanner(opts...),
 			types.Kubernetes:     k8sscanner.NewScanner(opts...),
+			types.Helm:           helm.New(opts...),
 		},
 	}, nil
 }
