@@ -18,12 +18,10 @@ func init() {
 
 const version = 1
 
-var requiredFile = "requirements.txt"
-
 type pipLibraryAnalyzer struct{}
 
 func (a pipLibraryAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisInput) (*analyzer.AnalysisResult, error) {
-	res, err := language.Analyze(types.Pip, input.FilePath, input.Content, pip.Parse)
+	res, err := language.Analyze(types.Pip, input.FilePath, input.Content, pip.NewParser())
 	if err != nil {
 		return nil, xerrors.Errorf("unable to parse requirements.txt: %w", err)
 	}
@@ -32,7 +30,7 @@ func (a pipLibraryAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisIn
 
 func (a pipLibraryAnalyzer) Required(filePath string, _ os.FileInfo) bool {
 	fileName := filepath.Base(filePath)
-	return fileName == requiredFile
+	return fileName == types.PipRequirements
 }
 
 func (a pipLibraryAnalyzer) Type() analyzer.Type {

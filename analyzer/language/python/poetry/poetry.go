@@ -10,7 +10,6 @@ import (
 	"github.com/aquasecurity/fanal/analyzer"
 	"github.com/aquasecurity/fanal/analyzer/language"
 	"github.com/aquasecurity/fanal/types"
-	"github.com/aquasecurity/fanal/utils"
 	"github.com/aquasecurity/go-dep-parser/pkg/python/poetry"
 )
 
@@ -20,12 +19,10 @@ func init() {
 
 const version = 1
 
-var requiredFiles = []string{"poetry.lock"}
-
 type poetryLibraryAnalyzer struct{}
 
 func (a poetryLibraryAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisInput) (*analyzer.AnalysisResult, error) {
-	res, err := language.Analyze(types.Poetry, input.FilePath, input.Content, poetry.Parse)
+	res, err := language.Analyze(types.Poetry, input.FilePath, input.Content, poetry.NewParser())
 	if err != nil {
 		return nil, xerrors.Errorf("unable to parse poetry.lock: %w", err)
 	}
@@ -34,7 +31,7 @@ func (a poetryLibraryAnalyzer) Analyze(_ context.Context, input analyzer.Analysi
 
 func (a poetryLibraryAnalyzer) Required(filePath string, _ os.FileInfo) bool {
 	fileName := filepath.Base(filePath)
-	return utils.StringInSlice(fileName, requiredFiles)
+	return fileName == types.PoetryLock
 }
 
 func (a poetryLibraryAnalyzer) Type() analyzer.Type {

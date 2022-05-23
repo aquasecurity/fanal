@@ -10,7 +10,6 @@ import (
 	"github.com/aquasecurity/fanal/analyzer"
 	"github.com/aquasecurity/fanal/analyzer/language"
 	"github.com/aquasecurity/fanal/types"
-	"github.com/aquasecurity/fanal/utils"
 	"github.com/aquasecurity/go-dep-parser/pkg/rust/cargo"
 )
 
@@ -20,12 +19,10 @@ func init() {
 
 const version = 1
 
-var requiredFiles = []string{"Cargo.lock"}
-
 type cargoLibraryAnalyzer struct{}
 
 func (a cargoLibraryAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisInput) (*analyzer.AnalysisResult, error) {
-	res, err := language.Analyze(types.Cargo, input.FilePath, input.Content, cargo.Parse)
+	res, err := language.Analyze(types.Cargo, input.FilePath, input.Content, cargo.NewParser())
 	if err != nil {
 		return nil, xerrors.Errorf("error with Cargo.lock: %w", err)
 	}
@@ -34,7 +31,7 @@ func (a cargoLibraryAnalyzer) Analyze(_ context.Context, input analyzer.Analysis
 
 func (a cargoLibraryAnalyzer) Required(filePath string, _ os.FileInfo) bool {
 	fileName := filepath.Base(filePath)
-	return utils.StringInSlice(fileName, requiredFiles)
+	return fileName == types.CargoLock
 }
 
 func (a cargoLibraryAnalyzer) Type() analyzer.Type {

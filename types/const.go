@@ -22,17 +22,37 @@ const (
 	Jar        = "jar"
 	Pom        = "pom"
 	GoBinary   = "gobinary"
-	GoMod      = "gomod"
+	GoModule   = "gomod"
 	JavaScript = "javascript"
 
 	// Config files
 	YAML           = "yaml"
 	JSON           = "json"
-	TOML           = "toml"
 	Dockerfile     = "dockerfile"
-	HCL            = "hcl"
 	Terraform      = "terraform"
-	Kubernetes     = "kubernetes"
 	CloudFormation = "cloudformation"
+	Kubernetes     = "kubernetes"
 	Ansible        = "ansible"
+
+	// Language-specific file names
+	NuGetPkgsLock   = "packages.lock.json"
+	NuGetPkgsConfig = "packages.config"
+
+	GoMod = "go.mod"
+	GoSum = "go.sum"
+
+	MavenPom = "pom.xml"
+
+	NpmPkgLock = "package-lock.json"
+	YarnLock   = "yarn.lock"
+
+	ComposerLock = "composer.lock"
+
+	PipRequirements = "requirements.txt"
+	PipfileLock     = "Pipfile.lock"
+	PoetryLock      = "poetry.lock"
+
+	GemfileLock = "Gemfile.lock"
+
+	CargoLock = "Cargo.lock"
 )

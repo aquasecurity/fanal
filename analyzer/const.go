@@ -6,6 +6,7 @@ const (
 	// ======
 	//   OS
 	// ======
+	TypeOSRelease  Type = "os-release"
 	TypeAlpine     Type = "alpine"
 	TypeAmazon     Type = "amazon"
 	TypeCBLMariner Type = "cbl-mariner"
@@ -24,6 +25,9 @@ const (
 	TypeApk  Type = "apk"
 	TypeDpkg Type = "dpkg"
 	TypeRpm  Type = "rpm"
+
+	// OS Package Repository
+	TypeApkRepo Type = "apk-repo"
 
 	// ============================
 	// Programming Language Package
@@ -70,12 +74,15 @@ const (
 	// Structured Config
 	// =================
 	TypeYaml           Type = "yaml"
-	TypeTOML           Type = "toml"
 	TypeJSON           Type = "json"
 	TypeDockerfile     Type = "dockerfile"
-	TypeHCL            Type = "hcl"
 	TypeTerraform      Type = "terraform"
 	TypeCloudFormation Type = "cloudFormation"
+
+	// ========
+	// Secrets
+	// ========
+	TypeSecret Type = "secret"
 
 	// =======
 	// Red Hat
@@ -104,4 +111,7 @@ var (
 
 	// TypeIndividualPkgs has all analyzers for individual packages
 	TypeIndividualPkgs = []Type{TypeGemSpec, TypeNodePkg, TypePythonPkg, TypeGoBinary, TypeJar}
+
+	// TypeConfigFiles has all config file analyzers
+	TypeConfigFiles = []Type{TypeYaml, TypeJSON, TypeDockerfile, TypeTerraform, TypeCloudFormation}
 )

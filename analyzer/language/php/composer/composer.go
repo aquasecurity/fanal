@@ -20,12 +20,13 @@ func init() {
 
 const version = 1
 
-var requiredFiles = []string{"composer.lock"}
+var requiredFiles = []string{types.ComposerLock}
 
 type composerLibraryAnalyzer struct{}
 
 func (a composerLibraryAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisInput) (*analyzer.AnalysisResult, error) {
-	res, err := language.Analyze(types.Composer, input.FilePath, input.Content, composer.Parse)
+	res, err := language.Analyze(types.Composer, input.FilePath, input.Content, composer.NewParser())
+
 	if err != nil {
 		return nil, xerrors.Errorf("error with composer.lock: %w", err)
 	}
