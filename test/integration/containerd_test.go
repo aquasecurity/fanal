@@ -13,7 +13,6 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/aquasecurity/fanal/analyzer/config"
 	"github.com/aquasecurity/fanal/artifact"
 	aimage "github.com/aquasecurity/fanal/artifact/image"
 	"github.com/aquasecurity/fanal/cache"
@@ -173,7 +172,7 @@ func TestGetLocalContainerdImage(t *testing.T) {
 				name:  test.imageName,
 			}
 
-			art, err := aimage.NewArtifact(dImg, c, artifact.Option{}, config.ScannerOption{})
+			art, err := aimage.NewArtifact(dImg, c, artifact.Option{})
 			require.NoError(t, err)
 			require.NotNil(t, art)
 
@@ -241,7 +240,7 @@ func TestPullLocalContainerdImage(t *testing.T) {
 			name:  test.imageRef,
 		}
 
-		art, err := aimage.NewArtifact(dImg, c, artifact.Option{}, config.ScannerOption{})
+		art, err := aimage.NewArtifact(dImg, c, artifact.Option{})
 		require.NoError(t, err)
 		require.NotNil(t, art)
 
