@@ -43,7 +43,8 @@ type Package struct {
 	Layer    Layer  `json:",omitempty"`
 
 	// Each package metadata have the file path, while the package from lock files does not have.
-	FilePath string `json:",omitempty"`
+	FilePath     string                  `json:",omitempty"`
+	Dependencies []godeptypes.Dependency `json:"Dependencies,omitempty"`
 }
 
 // BuildInfo represents information under /root/buildinfo in RHEL
