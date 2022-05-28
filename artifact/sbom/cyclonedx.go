@@ -208,13 +208,32 @@ func (a Artifact) calcCacheKey(blobInfo types.BlobInfo) (string, error) {
 	return cacheKey, nil
 }
 
-func purlToPackage(purl packageurl.PackageURL) types.Package {
-	pkg := types.Package{
-		Name:    purl.Name,
-		Version: purl.Version,
+func purlToPackage(purl packageurl.PackageURL) (*types.Package, error) {
+	pkg := &types.Package{
+		Name: purl.Name,
+	}
+
+	v := purl.Version
+	if purl.Type == packageurl.TypeRPM {
+		epochIndex := strings.Index(v, ":")
+		if epochIndex > 0 {
+			e, err := strconv.Atoi(v[:epochIndex])
+			if err != nil {
+				return nil, xerrors.Errorf("failed to parse epoch: %w", err)
+			}
+			pkg.Epoch = e
+			v = v[epochIndex+1:]
+		}
+
+		relIndex := strings.LastIndex(v, "-")
+		if relIndex == -1 {
+			return nil, xerrors.Errorf("failed to parse release: %s", v)
+		}
+		pkg.Release = v[relIndex+1:]
+		pkg.Version = v[:relIndex]
 	}
 	if purl.Namespace == "" {
-		return pkg
+		return pkg, nil
 	}
 
 	if purl.Type == packageurl.TypeMaven {
@@ -222,7 +241,7 @@ func purlToPackage(purl packageurl.PackageURL) types.Package {
 	}
 	pkg.Name = strings.Join([]string{purl.Namespace, purl.Name}, "/")
 
-	return pkg
+	return pkg, nil
 }
 
 func getProperty(properties *[]cyclonedx.Property, key string) string {
@@ -257,7 +276,11 @@ func parseLibraryComponent(component cyclonedx.Component) (*types.Package, error
 	if err != nil {
 		return nil, xerrors.Errorf("failed to parse purl: %w", err)
 	}
-	pkg := purlToPackage(purl)
+	pkg, err := purlToPackage(purl)
+	if err != nil {
+		return nil, xerrors.Errorf("failed to convert package: %w", err)
+	}
+
 	for _, q := range purl.Qualifiers {
 		switch q.Key {
 		case "arch":
@@ -284,5 +307,5 @@ func parseLibraryComponent(component cyclonedx.Component) (*types.Package, error
 		}
 	}
 
-	return &pkg, nil
+	return pkg, nil
 }
