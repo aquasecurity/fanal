@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/aquasecurity/fanal/artifact/sbom"
 	"log"
 	"os"
 	"strings"
@@ -94,6 +95,12 @@ func run() (err error) {
 				Usage:   "inspect a remote repository",
 				Action:  globalOption(repoAction),
 			},
+			{
+				Name:    "sbom",
+				Aliases: []string{"sbom"},
+				Usage:   "inspect a sbom",
+				Action:  globalOption(sbomAction),
+			},
 		},
 		Flags: []cli.Flag{
 			&cli.BoolFlag{Name: "clear", Aliases: []string{"s"}},
@@ -161,6 +168,14 @@ func imageAction(c *cli.Context, fsCache cache.Cache) error {
 
 func archiveAction(c *cli.Context, fsCache cache.Cache) error {
 	art, err := archiveImageArtifact(c.Args().First(), fsCache)
+	if err != nil {
+		return err
+	}
+	return inspect(c.Context, art, fsCache)
+}
+
+func sbomAction(c *cli.Context, fsCache cache.Cache) error {
+	art, err := sbomArtifact(c.Args().First(), fsCache)
 	if err != nil {
 		return err
 	}
@@ -255,6 +270,14 @@ func archiveImageArtifact(imagePath string, c cache.ArtifactCache) (artifact.Art
 	art, err := aimage.NewArtifact(img, c, artifact.Option{})
 	if err != nil {
 		return nil, err
+	}
+	return art, nil
+}
+
+func sbomArtifact(filePath string, c cache.ArtifactCache) (artifact.Artifact, error) {
+	art, err := sbom.NewArtifact(filePath, c, artifact.Option{})
+	if err != nil {
+		return nil, nil
 	}
 	return art, nil
 }
