@@ -29,6 +29,7 @@ const (
 	PropertySrcEpoch        = "aquasecurity:trivy:SrcEpoch"
 	PropertyModularitylabel = "aquasecurity:trivy:Modularitylabel"
 	PropertyFilePath        = "aquasecurity:trivy:FilePath"
+	PropertyLayerDiffID     = "aquasecurity:trivy:LayerDiffID"
 )
 
 type Artifact struct {
@@ -278,7 +279,10 @@ func parseLibraryComponent(component cyclonedx.Component) (*types.Package, error
 			}
 		case PropertyModularitylabel:
 			pkg.Modularitylabel = p.Value
+		case PropertyLayerDiffID:
+			pkg.Layer.DiffID = p.Value
 		}
 	}
+
 	return &pkg, nil
 }
