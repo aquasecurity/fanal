@@ -210,7 +210,6 @@ func (a Artifact) calcCacheKey(blobInfo types.BlobInfo) (string, error) {
 
 func purlToPackage(purl packageurl.PackageURL) (*types.Package, error) {
 	pkg := &types.Package{
-		Name:    purl.Name,
 		Version: purl.Version,
 	}
 
@@ -281,6 +280,7 @@ func parseLibraryComponent(component cyclonedx.Component) (*types.Package, error
 	if err != nil {
 		return nil, xerrors.Errorf("failed to convert package: %w", err)
 	}
+	pkg.Name = component.Name
 
 	if component.Licenses != nil {
 		for _, license := range *component.Licenses {
