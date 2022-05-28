@@ -5,7 +5,6 @@ import (
 	"crypto/sha256"
 	"encoding/json"
 	"github.com/CycloneDX/cyclonedx-go"
-	"github.com/aquasecurity/fanal/analyzer/secret"
 	"github.com/aquasecurity/fanal/handler"
 	digest "github.com/opencontainers/go-digest"
 	"github.com/package-url/packageurl-go"
@@ -23,8 +22,7 @@ import (
 )
 
 const (
-	PropertyType = "aquasecurity:trivy:Type"
-
+	PropertyType            = "aquasecurity:trivy:Type"
 	PropertySrcName         = "aquasecurity:trivy:SrcName"
 	PropertySrcVersion      = "aquasecurity:trivy:SrcVersion"
 	PropertySrcRelease      = "aquasecurity:trivy:SrcRelease"
@@ -47,110 +45,47 @@ type TrivyBOM struct {
 	cyclonedx.BOM
 }
 
-func purlToPackage(purl packageurl.PackageURL) types.Package {
-	pkg := types.Package{
-		Name:    purl.Name,
-		Version: purl.Version,
-	}
-	if purl.Namespace == "" {
-		return pkg
-	}
-
-	if purl.Type == packageurl.TypeMaven {
-		purl.Namespace = strings.ReplaceAll(purl.Namespace, "/", ":")
-	}
-	pkg.Name = strings.Join([]string{purl.Namespace, purl.Name}, "/")
-
-	return pkg
-}
-
-func getProperty(properties *[]cyclonedx.Property, key string) string {
-	if properties == nil {
-		return ""
-	}
-
-	for _, p := range *properties {
-		if p.Name == key {
-			return p.Value
-		}
-	}
-	return ""
-}
-
 func (b TrivyBOM) BlobInfo() (types.BlobInfo, error) {
 	blobInfo := types.BlobInfo{
 		SchemaVersion: types.BlobJSONSchemaVersion, // TODO: use aquasecurity:trivy:SchemaVersion ??
 	}
-
-	var osBomRef string
-	rootBomRef := b.Metadata.Component.BOMRef
-	apps := make(map[string]*types.Application)
-	libs := make(map[string]*types.Package)
-
 	if b.Components == nil {
 		return blobInfo, nil
 	}
 
+	var osBOMRef string
+	rootBOMRef := b.Metadata.Component.BOMRef
+	apps := make(map[string]*types.Application)
+	libs := make(map[string]*types.Package)
+
 	for _, component := range *b.Components {
 		switch component.Type {
 		case cyclonedx.ComponentTypeOS:
-			blobInfo.OS = &types.OS{
-				Family: component.Name,
-				Name:   component.Version,
-			}
-			osBomRef = component.BOMRef
+			osBOMRef = component.BOMRef
+			blobInfo.OS = parseOSComponent(component)
 		case cyclonedx.ComponentTypeApplication:
-			apps[component.BOMRef] = &types.Application{
-				Type:     getProperty(component.Properties, PropertyType),
-				FilePath: component.Name,
-			}
+			apps[component.BOMRef] = parseApplicationComponent(component)
 		case cyclonedx.ComponentTypeLibrary:
-			purl, err := packageurl.FromString(component.PackageURL)
+			pkg, err := parseLibraryComponent(component)
 			if err != nil {
-				return types.BlobInfo{}, xerrors.Errorf("failed to parse purl: %w", err)
-			}
-			pkg := purlToPackage(purl)
-			for _, q := range purl.Qualifiers {
-				switch q.Key {
-				case "arch":
-					pkg.Arch = q.Value
-				}
+				return types.BlobInfo{}, xerrors.Errorf("failed to parse package: %w", err)
 			}
 			if component.Properties == nil {
-				libs[component.BOMRef] = &pkg
+				libs[component.BOMRef] = pkg
 				continue
 			}
-
-			// When has type property will be application
-			app := types.Application{
-				FilePath: getProperty(component.Properties, PropertyFilePath),
-				Type:     getProperty(component.Properties, PropertyType),
-			}
-			if app.Type != "" {
-				app.Libraries = []types.Package{pkg}
-				apps[component.BOMRef] = &app
-				continue
-			}
-
-			// If it isn't application component, it as a library component.
-			for _, p := range *component.Properties {
-				switch p.Name {
-				case PropertySrcName:
-					pkg.SrcName = p.Value
-				case PropertySrcVersion:
-					pkg.SrcVersion = p.Value
-				case PropertySrcRelease:
-					pkg.SrcRelease = p.Value
-				case PropertySrcEpoch:
-					pkg.SrcEpoch, err = strconv.Atoi(p.Value)
-					if err != nil {
-						return types.BlobInfo{}, xerrors.Errorf("failed to parse source epoch: %w", err)
-					}
-				case PropertyModularitylabel:
-					pkg.Modularitylabel = p.Value
+			if t := getProperty(component.Properties, PropertyType); t != "" {
+				// If type property exists, it is Application.
+				app := types.Application{
+					Type:     t,
+					FilePath: getProperty(component.Properties, PropertyFilePath),
 				}
+				app.Libraries = []types.Package{*pkg}
+				apps[component.BOMRef] = &app
+			} else {
+				// If it isn't application component, it is library.
+				libs[component.BOMRef] = pkg
 			}
-			libs[component.BOMRef] = &pkg
 		}
 	}
 
@@ -166,19 +101,22 @@ func (b TrivyBOM) BlobInfo() (types.BlobInfo, error) {
 		app, appOk := apps[dep.Ref]
 		for _, d := range *dep.Dependencies {
 			switch dep.Ref {
-			case rootBomRef: // Aggregate libraries component, Applications component, OS Component
+			case rootBOMRef:
+				// root Ref depends on Aggregate libraries, Applications and Operating system.
 				app, ok := apps[d.Ref]
 				if !ok {
 					continue
 				}
 				blobInfo.Applications = append(blobInfo.Applications, *app)
-			case osBomRef: // os libraries
+			case osBOMRef:
+				// OperationsSystem Ref depends on os libraries.
 				pkg, ok := libs[d.Ref]
 				if !ok {
 					continue
 				}
 				pkgInfo.Packages = append(pkgInfo.Packages, *pkg)
 			default:
+				// Other Ref dependencies application libraries.
 				if !appOk {
 					continue
 				}
@@ -199,19 +137,9 @@ func (b TrivyBOM) BlobInfo() (types.BlobInfo, error) {
 }
 
 func NewArtifact(filePath string, c cache.ArtifactCache, opt artifact.Option) (artifact.Artifact, error) {
-	// Register config analyzers
-	if err := config.RegisterConfigAnalyzers(opt.MisconfScannerOption.FilePatterns); err != nil {
-		return nil, xerrors.Errorf("config analyzer error: %w", err)
-	}
-
 	handlerManager, err := handler.NewManager(opt)
 	if err != nil {
 		return nil, xerrors.Errorf("handler initialize error: %w", err)
-	}
-
-	// Register secret analyzer
-	if err = secret.RegisterSecretAnalyzer(opt.SecretScannerOption); err != nil {
-		return nil, xerrors.Errorf("secret scanner error: %w", err)
 	}
 
 	return Artifact{
@@ -223,7 +151,7 @@ func NewArtifact(filePath string, c cache.ArtifactCache, opt artifact.Option) (a
 	}, nil
 }
 
-func (a Artifact) Inspect(ctx context.Context) (types.ArtifactReference, error) {
+func (a Artifact) Inspect(_ context.Context) (types.ArtifactReference, error) {
 	var err error
 	bom := TrivyBOM{}
 
@@ -258,12 +186,8 @@ func (a Artifact) Inspect(ctx context.Context) (types.ArtifactReference, error) 
 		return types.ArtifactReference{}, xerrors.Errorf("failed to store blob (%s) in cache: %w", cacheKey, err)
 	}
 
-	// get hostname
-	var hostName string
-	// TODO: get Name for artifact
-
 	return types.ArtifactReference{
-		Name:    hostName,
+		Name:    bom.SerialNumber,
 		Type:    types.ArtifactCycloneDX,
 		ID:      cacheKey, // use a cache key as pseudo artifact ID
 		BlobIDs: []string{cacheKey},
@@ -288,4 +212,80 @@ func (a Artifact) calcCacheKey(blobInfo types.BlobInfo) (string, error) {
 	}
 
 	return cacheKey, nil
+}
+
+func purlToPackage(purl packageurl.PackageURL) types.Package {
+	pkg := types.Package{
+		Name:    purl.Name,
+		Version: purl.Version,
+	}
+	if purl.Namespace == "" {
+		return pkg
+	}
+
+	if purl.Type == packageurl.TypeMaven {
+		purl.Namespace = strings.ReplaceAll(purl.Namespace, "/", ":")
+	}
+	pkg.Name = strings.Join([]string{purl.Namespace, purl.Name}, "/")
+
+	return pkg
+}
+
+func getProperty(properties *[]cyclonedx.Property, key string) string {
+	if properties == nil {
+		return ""
+	}
+
+	for _, p := range *properties {
+		if p.Name == key {
+			return p.Value
+		}
+	}
+	return ""
+}
+
+func parseOSComponent(component cyclonedx.Component) *types.OS {
+	return &types.OS{
+		Family: component.Name,
+		Name:   component.Version,
+	}
+}
+
+func parseApplicationComponent(component cyclonedx.Component) *types.Application {
+	return &types.Application{
+		Type:     getProperty(component.Properties, PropertyType),
+		FilePath: component.Name,
+	}
+}
+
+func parseLibraryComponent(component cyclonedx.Component) (*types.Package, error) {
+	purl, err := packageurl.FromString(component.PackageURL)
+	if err != nil {
+		return nil, xerrors.Errorf("failed to parse purl: %w", err)
+	}
+	pkg := purlToPackage(purl)
+	for _, q := range purl.Qualifiers {
+		switch q.Key {
+		case "arch":
+			pkg.Arch = q.Value
+		}
+	}
+	for _, p := range *component.Properties {
+		switch p.Name {
+		case PropertySrcName:
+			pkg.SrcName = p.Value
+		case PropertySrcVersion:
+			pkg.SrcVersion = p.Value
+		case PropertySrcRelease:
+			pkg.SrcRelease = p.Value
+		case PropertySrcEpoch:
+			pkg.SrcEpoch, err = strconv.Atoi(p.Value)
+			if err != nil {
+				return nil, xerrors.Errorf("failed to parse source epoch: %w", err)
+			}
+		case PropertyModularitylabel:
+			pkg.Modularitylabel = p.Value
+		}
+	}
+	return &pkg, nil
 }
