@@ -281,6 +281,12 @@ func parseLibraryComponent(component cyclonedx.Component) (*types.Package, error
 		return nil, xerrors.Errorf("failed to convert package: %w", err)
 	}
 
+	if component.Licenses != nil {
+		for _, license := range *component.Licenses {
+			pkg.License = license.Expression
+		}
+	}
+
 	for _, q := range purl.Qualifiers {
 		switch q.Key {
 		case "arch":
