@@ -210,7 +210,8 @@ func (a Artifact) calcCacheKey(blobInfo types.BlobInfo) (string, error) {
 
 func purlToPackage(purl packageurl.PackageURL) (*types.Package, error) {
 	pkg := &types.Package{
-		Name: purl.Name,
+		Name:    purl.Name,
+		Version: purl.Version,
 	}
 
 	v := purl.Version
