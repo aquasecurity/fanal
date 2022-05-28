@@ -23,8 +23,7 @@ import (
 )
 
 const (
-	PropertyType  = "aquasecurity:trivy:Type"
-	PropertyClass = "aquasecurity:trivy:Class"
+	PropertyType = "aquasecurity:trivy:Type"
 
 	PropertySrcName         = "aquasecurity:trivy:SrcName"
 	PropertySrcVersion      = "aquasecurity:trivy:SrcVersion"
@@ -57,16 +56,25 @@ func purlToPackage(purl packageurl.PackageURL) types.Package {
 		return pkg
 	}
 
-	switch purl.Type {
-	case packageurl.TypePyPi:
-		// TODO:
-		pkg.Name = strings.Join([]string{purl.Namespace, purl.Name}, "/")
-	case packageurl.TypeMaven:
-		pkg.Name = strings.Join([]string{strings.ReplaceAll(purl.Namespace, "/", ":"), purl.Name}, "/")
-	default:
-		pkg.Name = strings.Join([]string{purl.Namespace, purl.Name}, "/")
+	if purl.Type == packageurl.TypeMaven {
+		purl.Namespace = strings.ReplaceAll(purl.Namespace, "/", ":")
 	}
+	pkg.Name = strings.Join([]string{purl.Namespace, purl.Name}, "/")
+
 	return pkg
+}
+
+func getProperty(properties *[]cyclonedx.Property, key string) string {
+	if properties == nil {
+		return ""
+	}
+
+	for _, p := range *properties {
+		if p.Name == key {
+			return p.Value
+		}
+	}
+	return ""
 }
 
 func (b TrivyBOM) BlobInfo() (types.BlobInfo, error) {
@@ -74,12 +82,13 @@ func (b TrivyBOM) BlobInfo() (types.BlobInfo, error) {
 		SchemaVersion: types.BlobJSONSchemaVersion, // TODO: use aquasecurity:trivy:SchemaVersion ??
 	}
 
+	var osBomRef string
+	rootBomRef := b.Metadata.Component.BOMRef
 	apps := make(map[string]*types.Application)
 	libs := make(map[string]*types.Package)
-	rootBomRef := b.Metadata.Component.BOMRef
-	var osBomRef string
+
 	if b.Components == nil {
-		return types.BlobInfo{}, nil
+		return blobInfo, nil
 	}
 
 	for _, component := range *b.Components {
@@ -91,16 +100,10 @@ func (b TrivyBOM) BlobInfo() (types.BlobInfo, error) {
 			}
 			osBomRef = component.BOMRef
 		case cyclonedx.ComponentTypeApplication:
-			app := types.Application{}
-			if component.Properties != nil {
-				for _, p := range *component.Properties {
-					if p.Name == PropertyType {
-						app.Type = p.Value
-					}
-				}
+			apps[component.BOMRef] = &types.Application{
+				Type:     getProperty(component.Properties, PropertyType),
+				FilePath: component.Name,
 			}
-			app.FilePath = component.Name
-			apps[component.BOMRef] = &app
 		case cyclonedx.ComponentTypeLibrary:
 			purl, err := packageurl.FromString(component.PackageURL)
 			if err != nil {
@@ -113,39 +116,38 @@ func (b TrivyBOM) BlobInfo() (types.BlobInfo, error) {
 					pkg.Arch = q.Value
 				}
 			}
+			if component.Properties == nil {
+				libs[component.BOMRef] = &pkg
+				continue
+			}
 
-			if component.Properties != nil {
-				app := types.Application{}
-				for _, p := range *component.Properties {
-					if p.Name == PropertyFilePath {
-						// Library containing FilePath is treated as an Application.
-						app.FilePath = p.Value
+			// When has type property will be application
+			app := types.Application{
+				FilePath: getProperty(component.Properties, PropertyFilePath),
+				Type:     getProperty(component.Properties, PropertyType),
+			}
+			if app.Type != "" {
+				app.Libraries = []types.Package{pkg}
+				apps[component.BOMRef] = &app
+				continue
+			}
+
+			// If it isn't application component, it as a library component.
+			for _, p := range *component.Properties {
+				switch p.Name {
+				case PropertySrcName:
+					pkg.SrcName = p.Value
+				case PropertySrcVersion:
+					pkg.SrcVersion = p.Value
+				case PropertySrcRelease:
+					pkg.SrcRelease = p.Value
+				case PropertySrcEpoch:
+					pkg.SrcEpoch, err = strconv.Atoi(p.Value)
+					if err != nil {
+						return types.BlobInfo{}, xerrors.Errorf("failed to parse source epoch: %w", err)
 					}
-					if p.Name == PropertyType {
-						app.Type = p.Value
-					}
-				}
-				if app.Type != "" {
-					app.Libraries = []types.Package{pkg}
-					apps[component.BOMRef] = &app
-					// probably return
-				}
-				for _, p := range *component.Properties {
-					switch p.Name {
-					case PropertySrcName:
-						pkg.SrcName = p.Value
-					case PropertySrcVersion:
-						pkg.SrcVersion = p.Value
-					case PropertySrcRelease:
-						pkg.SrcRelease = p.Value
-					case PropertySrcEpoch:
-						pkg.SrcEpoch, err = strconv.Atoi(p.Value)
-						if err != nil {
-							return types.BlobInfo{}, xerrors.Errorf("failed to parse source epoch: %w", err)
-						}
-					case PropertyModularitylabel:
-						pkg.Modularitylabel = p.Value
-					}
+				case PropertyModularitylabel:
+					pkg.Modularitylabel = p.Value
 				}
 			}
 			libs[component.BOMRef] = &pkg
