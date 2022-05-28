@@ -137,15 +137,9 @@ func (b TrivyBOM) BlobInfo() (types.BlobInfo, error) {
 }
 
 func NewArtifact(filePath string, c cache.ArtifactCache, opt artifact.Option) (artifact.Artifact, error) {
-	handlerManager, err := handler.NewManager(opt)
-	if err != nil {
-		return nil, xerrors.Errorf("handler initialize error: %w", err)
-	}
-
 	return Artifact{
 		filePath:       filepath.Clean(filePath),
 		cache:          c,
-		handlerManager: handlerManager,
 		artifactOption: opt,
 	}, nil
 }
