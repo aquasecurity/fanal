@@ -145,7 +145,6 @@ func NewArtifact(filePath string, c cache.ArtifactCache, opt artifact.Option) (a
 	return Artifact{
 		filePath:       filepath.Clean(filePath),
 		cache:          c,
-		analyzer:       analyzer.NewAnalyzerGroup(opt.AnalyzerGroup, opt.DisabledAnalyzers),
 		handlerManager: handlerManager,
 		artifactOption: opt,
 	}, nil
