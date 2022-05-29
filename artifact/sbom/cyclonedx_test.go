@@ -2,6 +2,7 @@ package sbom_test
 
 import (
 	"context"
+	"errors"
 	"github.com/aquasecurity/fanal/artifact"
 	"github.com/aquasecurity/fanal/artifact/sbom"
 	"github.com/aquasecurity/fanal/cache"
@@ -118,6 +119,77 @@ func TestArtifact_Inspect(t *testing.T) {
 					"sha256:97707b9207dddb2aef23c137cccdba7a7a8af5d0db775bd16017709b72fcc723",
 				},
 			},
+		},
+		{
+			name:     "happy path only os component",
+			filePath: "testdata/os-only-bom.json",
+			putBlobExpectation: cache.ArtifactCachePutBlobExpectation{
+				Args: cache.ArtifactCachePutBlobArgs{
+					BlobID: "sha256:39b0aab5944e80a029561d275ed0e23fade3513b0a5ae5ed3cc8343d60a1be1d",
+					BlobInfo: types.BlobInfo{
+						SchemaVersion: types.BlobJSONSchemaVersion,
+						OS: &types.OS{
+							Family: "alpine",
+							Name:   "3.16.0",
+						},
+					},
+				},
+				Returns: cache.ArtifactCachePutBlobReturns{},
+			},
+			want: types.ArtifactReference{
+				Name: "urn:uuid:c986ba94-e37d-49c8-9e30-96daccd0415b",
+				Type: types.ArtifactCycloneDX,
+				ID:   "sha256:39b0aab5944e80a029561d275ed0e23fade3513b0a5ae5ed3cc8343d60a1be1d",
+				BlobIDs: []string{
+					"sha256:39b0aab5944e80a029561d275ed0e23fade3513b0a5ae5ed3cc8343d60a1be1d",
+				},
+			},
+		},
+		{
+			name:     "happy path empty component",
+			filePath: "testdata/empty-bom.json",
+			putBlobExpectation: cache.ArtifactCachePutBlobExpectation{
+				Args: cache.ArtifactCachePutBlobArgs{
+					BlobID: "sha256:c3f109c4b5b9000e41c436262d19d2bd48be6b14681e441a3d2bf4e6e21e41fc",
+					BlobInfo: types.BlobInfo{
+						SchemaVersion: types.BlobJSONSchemaVersion,
+					},
+				},
+				Returns: cache.ArtifactCachePutBlobReturns{},
+			},
+			want: types.ArtifactReference{
+				Name: "urn:uuid:c986ba94-e37d-49c8-9e30-96daccd0415b",
+				Type: types.ArtifactCycloneDX,
+				ID:   "sha256:c3f109c4b5b9000e41c436262d19d2bd48be6b14681e441a3d2bf4e6e21e41fc",
+				BlobIDs: []string{
+					"sha256:c3f109c4b5b9000e41c436262d19d2bd48be6b14681e441a3d2bf4e6e21e41fc",
+				},
+			},
+		},
+		{
+			name:     "sad path with no such directory",
+			filePath: "./testdata/unknown.json",
+			wantErr:  "no such file or directory",
+		},
+		{
+			name:     "sad path PutBlob returns an error",
+			filePath: "testdata/os-only-bom.json",
+			putBlobExpectation: cache.ArtifactCachePutBlobExpectation{
+				Args: cache.ArtifactCachePutBlobArgs{
+					BlobID: "sha256:39b0aab5944e80a029561d275ed0e23fade3513b0a5ae5ed3cc8343d60a1be1d",
+					BlobInfo: types.BlobInfo{
+						SchemaVersion: types.BlobJSONSchemaVersion,
+						OS: &types.OS{
+							Family: "alpine",
+							Name:   "3.16.0",
+						},
+					},
+				},
+				Returns: cache.ArtifactCachePutBlobReturns{
+					Err: errors.New("error"),
+				},
+			},
+			wantErr: "failed to store blob",
 		},
 	}
 	for _, tt := range tests {

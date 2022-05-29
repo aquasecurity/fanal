@@ -46,9 +46,60 @@ type TrivyBOM struct {
 	cyclonedx.BOM
 }
 
+func NewArtifact(filePath string, c cache.ArtifactCache, opt artifact.Option) (artifact.Artifact, error) {
+	return Artifact{
+		filePath:       filepath.Clean(filePath),
+		cache:          c,
+		artifactOption: opt,
+	}, nil
+}
+
+func (a Artifact) Inspect(_ context.Context) (types.ArtifactReference, error) {
+	var err error
+	bom := TrivyBOM{}
+
+	extension := filepath.Ext(a.filePath)
+	switch extension {
+	case ".json":
+		f, err := os.Open(a.filePath)
+		if err != nil {
+			return types.ArtifactReference{}, xerrors.Errorf("failed to open cycloneDX file error: %w", err)
+		}
+		defer f.Close()
+		if err := json.NewDecoder(f).Decode(&bom); err != nil {
+			return types.ArtifactReference{}, xerrors.Errorf("failed to json decode: %w", err)
+		}
+	case ".xml":
+		// TODO: not supported yet
+	default:
+		return types.ArtifactReference{}, xerrors.Errorf("invalid cycloneDX format: %s", extension)
+	}
+
+	blobInfo, err := bom.BlobInfo()
+	if err != nil {
+		return types.ArtifactReference{}, xerrors.Errorf("failed to get blob info: %w", err)
+	}
+
+	cacheKey, err := a.calcCacheKey(blobInfo)
+	if err != nil {
+		return types.ArtifactReference{}, xerrors.Errorf("failed to calculate a cache key: %w", err)
+	}
+
+	if err = a.cache.PutBlob(cacheKey, blobInfo); err != nil {
+		return types.ArtifactReference{}, xerrors.Errorf("failed to store blob (%s) in cache: %w", cacheKey, err)
+	}
+
+	return types.ArtifactReference{
+		Name:    bom.SerialNumber,
+		Type:    types.ArtifactCycloneDX,
+		ID:      cacheKey, // use a cache key as pseudo artifact ID
+		BlobIDs: []string{cacheKey},
+	}, nil
+}
+
 func (b TrivyBOM) BlobInfo() (types.BlobInfo, error) {
 	blobInfo := types.BlobInfo{
-		SchemaVersion: types.BlobJSONSchemaVersion, // TODO: use aquasecurity:trivy:SchemaVersion ??
+		SchemaVersion: types.BlobJSONSchemaVersion,
 	}
 	if b.Components == nil {
 		return blobInfo, nil
@@ -135,57 +186,6 @@ func (b TrivyBOM) BlobInfo() (types.BlobInfo, error) {
 	}
 
 	return blobInfo, nil
-}
-
-func NewArtifact(filePath string, c cache.ArtifactCache, opt artifact.Option) (artifact.Artifact, error) {
-	return Artifact{
-		filePath:       filepath.Clean(filePath),
-		cache:          c,
-		artifactOption: opt,
-	}, nil
-}
-
-func (a Artifact) Inspect(_ context.Context) (types.ArtifactReference, error) {
-	var err error
-	bom := TrivyBOM{}
-
-	extension := filepath.Ext(a.filePath)
-	switch extension {
-	case ".json":
-		f, err := os.Open(a.filePath)
-		if err != nil {
-			return types.ArtifactReference{}, xerrors.Errorf("failed to open cycloneDX file error: %w", err)
-		}
-		defer f.Close()
-		if err := json.NewDecoder(f).Decode(&bom); err != nil {
-			return types.ArtifactReference{}, xerrors.Errorf("failed to json decode: %w", err)
-		}
-	case ".xml":
-		// TODO: not supported yet
-	default:
-		return types.ArtifactReference{}, xerrors.Errorf("invalid cycloneDX format: %s", extension)
-	}
-
-	blobInfo, err := bom.BlobInfo()
-	if err != nil {
-		return types.ArtifactReference{}, xerrors.Errorf("failed to get blob info: %w", err)
-	}
-
-	cacheKey, err := a.calcCacheKey(blobInfo)
-	if err != nil {
-		return types.ArtifactReference{}, xerrors.Errorf("failed to calculate a cache key: %w", err)
-	}
-
-	if err = a.cache.PutBlob(cacheKey, blobInfo); err != nil {
-		return types.ArtifactReference{}, xerrors.Errorf("failed to store blob (%s) in cache: %w", cacheKey, err)
-	}
-
-	return types.ArtifactReference{
-		Name:    bom.SerialNumber,
-		Type:    types.ArtifactCycloneDX,
-		ID:      cacheKey, // use a cache key as pseudo artifact ID
-		BlobIDs: []string{cacheKey},
-	}, nil
 }
 
 func (a Artifact) Clean(reference types.ArtifactReference) error {
