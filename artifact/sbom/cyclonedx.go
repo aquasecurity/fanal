@@ -294,6 +294,11 @@ func parseLibraryComponent(component cyclonedx.Component) (*types.Package, error
 			pkg.Arch = q.Value
 		}
 	}
+
+	if component.Properties == nil {
+		return pkg, nil
+	}
+
 	for _, p := range *component.Properties {
 		switch p.Name {
 		case PropertySrcName:
