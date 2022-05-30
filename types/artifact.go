@@ -3,6 +3,7 @@ package types
 import (
 	"time"
 
+	godeptypes "github.com/aquasecurity/go-dep-parser/pkg/types"
 	v1 "github.com/google/go-containerregistry/pkg/v1"
 )
 
