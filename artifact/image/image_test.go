@@ -529,7 +529,7 @@ func TestArtifact_Inspect(t *testing.T) {
 			putBlobExpectations: []cache.ArtifactCachePutBlobExpectation{
 				{
 					Args: cache.ArtifactCachePutBlobArgs{
-						BlobID: "sha256:6a176f2216e38ff58acfe86d97871d3938e3f1cfcaa226efdbddd9baf7e7eb7f",
+						BlobID: "sha256:57ada28264043324e1f99eb3db63de1a7e3f27f1fa4dcbb1df2f76875b98b9c4",
 						BlobInfo: types.BlobInfo{
 							SchemaVersion: types.BlobJSONSchemaVersion,
 							Digest:        "",
@@ -539,7 +539,7 @@ func TestArtifact_Inspect(t *testing.T) {
 				},
 				{
 					Args: cache.ArtifactCachePutBlobArgs{
-						BlobID: "sha256:23db4eb6994b4319e3014742c659f76cd0d889895db8a23d3b3c18673a2c42ac",
+						BlobID: "sha256:64f08ed6c84283289beb64335f76a4c60a89f62c7937b8ea50fd8bfda304f0e2",
 						BlobInfo: types.BlobInfo{
 							SchemaVersion: types.BlobJSONSchemaVersion,
 							Digest:        "",
@@ -549,7 +549,7 @@ func TestArtifact_Inspect(t *testing.T) {
 				},
 				{
 					Args: cache.ArtifactCachePutBlobArgs{
-						BlobID: "sha256:58b7150e9ed808a16c7c5d39f703a164bcaec1e4840262c34e0409fb4ae0f7b0",
+						BlobID: "sha256:da802174ac83921ac629ec623f5f5ad530291fb2420102f6a213322cb257655c",
 						BlobInfo: types.BlobInfo{
 							SchemaVersion: types.BlobJSONSchemaVersion,
 							Digest:        "",
@@ -575,9 +575,9 @@ func TestArtifact_Inspect(t *testing.T) {
 				Type: types.ArtifactContainerImage,
 				ID:   "sha256:a646bb11d39c149d4aaf9b888233048e0848304e5abd75667ea6f21d540d800c",
 				BlobIDs: []string{
-					"sha256:6a176f2216e38ff58acfe86d97871d3938e3f1cfcaa226efdbddd9baf7e7eb7f",
-					"sha256:23db4eb6994b4319e3014742c659f76cd0d889895db8a23d3b3c18673a2c42ac",
-					"sha256:58b7150e9ed808a16c7c5d39f703a164bcaec1e4840262c34e0409fb4ae0f7b0",
+					"sha256:57ada28264043324e1f99eb3db63de1a7e3f27f1fa4dcbb1df2f76875b98b9c4",
+					"sha256:64f08ed6c84283289beb64335f76a4c60a89f62c7937b8ea50fd8bfda304f0e2",
+					"sha256:da802174ac83921ac629ec623f5f5ad530291fb2420102f6a213322cb257655c",
 					"sha256:996fcbfcc2964d20456afd0de16747533693b1cbebb72a6d28823a134abf0f5f",
 				},
 				ImageMetadata: types.ImageMetadata{
