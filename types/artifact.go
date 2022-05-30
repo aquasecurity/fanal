@@ -3,7 +3,6 @@ package types
 import (
 	"time"
 
-	godeptypes "github.com/aquasecurity/go-dep-parser/pkg/types"
 	v1 "github.com/google/go-containerregistry/pkg/v1"
 )
 
@@ -43,8 +42,8 @@ type Package struct {
 	Layer    Layer  `json:",omitempty"`
 
 	// Each package metadata have the file path, while the package from lock files does not have.
-	FilePath     string                  `json:",omitempty"`
-	Dependencies []godeptypes.Dependency `json:"Dependencies,omitempty"`
+	FilePath  string   `json:",omitempty"`
+	DependsOn []string `json:",omitempty"`
 }
 
 // BuildInfo represents information under /root/buildinfo in RHEL
