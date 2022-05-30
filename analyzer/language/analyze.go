@@ -25,22 +25,28 @@ func ToAnalysisResult(fileType, filePath, libFilePath string, libs []godeptypes.
 		return nil
 	}
 
+	idx := make(map[string][]string)
+
+	for _, dep := range deps {
+		idx[dep.ID] = dep.DependsOn
+	}
+
 	var pkgs []types.Package
 	for _, lib := range libs {
 		pkgs = append(pkgs, types.Package{
-			ID:       lib.ID,
-			Name:     lib.Name,
-			Version:  lib.Version,
-			FilePath: libFilePath,
-			Indirect: lib.Indirect,
-			License:  lib.License,
+			ID:        lib.ID,
+			Name:      lib.Name,
+			Version:   lib.Version,
+			FilePath:  libFilePath,
+			Indirect:  lib.Indirect,
+			License:   lib.License,
+			DependsOn: idx[lib.ID],
 		})
 	}
 	apps := []types.Application{{
-		Type:         fileType,
-		FilePath:     filePath,
-		Libraries:    pkgs,
-		Dependencies: deps,
+		Type:      fileType,
+		FilePath:  filePath,
+		Libraries: pkgs,
 	}}
 
 	return &analyzer.AnalysisResult{Applications: apps}

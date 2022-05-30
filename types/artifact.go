@@ -3,7 +3,6 @@ package types
 import (
 	"time"
 
-	godeptypes "github.com/aquasecurity/go-dep-parser/pkg/types"
 	v1 "github.com/google/go-containerregistry/pkg/v1"
 )
 
@@ -78,9 +77,6 @@ type Application struct {
 
 	// Libraries is a list of lang-specific packages
 	Libraries []Package
-
-	// Dependencies represents dependency graph
-	Dependencies []godeptypes.Dependency `json:",omitempty"`
 }
 
 type File struct {
