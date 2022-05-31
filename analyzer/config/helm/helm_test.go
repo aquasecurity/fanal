@@ -405,7 +405,7 @@ func Test_helmConfigAnalyzer_Required(t *testing.T) {
 		{
 			name:     "NOTES.txt",
 			filePath: "NOTES.txt",
-			want:     true,
+			want:     false,
 		},
 		{
 			name:     ".helmignore",

@@ -55,6 +55,7 @@ func (a ConfigAnalyzer) Required(filePath string, _ os.FileInfo, readerOpener an
 
 	if isArchive(filePath) {
 		reader, err := readerOpener()
+		defer func() { _ = reader.Close() }()
 		if err != nil {
 			return false
 		}
@@ -69,7 +70,7 @@ func (a ConfigAnalyzer) Required(filePath string, _ os.FileInfo, readerOpener an
 	}
 
 	name := filepath.Base(filePath)
-	for _, acceptable := range []string{"NOTES.txt", "Chart.yaml", ".helmignore"} {
+	for _, acceptable := range []string{"Chart.yaml", ".helmignore"} {
 		if strings.EqualFold(name, acceptable) {
 			return true
 		}
