@@ -125,8 +125,7 @@ func isHelmChart(path string, file dio.ReadSeekerAt) bool {
 
 func isArchive(path string) bool {
 	if strings.HasSuffix(path, ".tar") ||
-		strings.HasSuffix(path, ".tgz") ||
-		strings.HasSuffix(path, ".tar.gz") {
+		isGzip(path)
 		return true
 	}
 	return false
