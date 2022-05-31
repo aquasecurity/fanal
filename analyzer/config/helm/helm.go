@@ -131,7 +131,7 @@ func isArchive(path string) bool {
 	return false
 }
 
-func isZip(path string) bool {
+func isGzip(path string) bool {
 	if strings.HasSuffix(path, ".tgz") ||
 		strings.HasSuffix(path, ".tar.gz") {
 		return true
