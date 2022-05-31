@@ -103,7 +103,7 @@ func (a packagingAnalyzer) open(file *zip.File) (dio.ReadSeekerAt, error) {
 	return bytes.NewReader(b), nil
 }
 
-func (a packagingAnalyzer) Required(filePath string, info os.FileInfo) bool {
+func (a packagingAnalyzer) Required(filePath string, _ os.FileInfo) bool {
 	// For Windows
 	filePath = filepath.ToSlash(filePath)
 

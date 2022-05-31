@@ -29,7 +29,7 @@ func (a bundlerLibraryAnalyzer) Analyze(_ context.Context, input analyzer.Analys
 	return res, nil
 }
 
-func (a bundlerLibraryAnalyzer) Required(filePath string, info os.FileInfo) bool {
+func (a bundlerLibraryAnalyzer) Required(filePath string, _ os.FileInfo) bool {
 	fileName := filepath.Base(filePath)
 	return fileName == types.GemfileLock
 }

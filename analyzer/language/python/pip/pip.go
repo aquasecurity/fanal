@@ -28,7 +28,7 @@ func (a pipLibraryAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisIn
 	return res, nil
 }
 
-func (a pipLibraryAnalyzer) Required(filePath string, info os.FileInfo) bool {
+func (a pipLibraryAnalyzer) Required(filePath string, _ os.FileInfo) bool {
 	fileName := filepath.Base(filePath)
 	return fileName == types.PipRequirements
 }

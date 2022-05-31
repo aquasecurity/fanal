@@ -36,7 +36,7 @@ func (a javaLibraryAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisI
 	return language.ToAnalysisResult(types.Jar, input.FilePath, input.FilePath, libs, deps), nil
 }
 
-func (a javaLibraryAnalyzer) Required(filePath string, info os.FileInfo) bool {
+func (a javaLibraryAnalyzer) Required(filePath string, _ os.FileInfo) bool {
 	ext := filepath.Ext(filePath)
 	for _, required := range requiredExtensions {
 		if strings.EqualFold(ext, required) {

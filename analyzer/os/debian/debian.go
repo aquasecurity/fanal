@@ -34,7 +34,7 @@ func (a debianOSAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisInpu
 	return nil, xerrors.Errorf("debian: %w", aos.AnalyzeOSError)
 }
 
-func (a debianOSAnalyzer) Required(filePath string, info os.FileInfo) bool {
+func (a debianOSAnalyzer) Required(filePath string, _ os.FileInfo) bool {
 	return utils.StringInSlice(filePath, requiredFiles)
 }
 

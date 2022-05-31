@@ -42,7 +42,7 @@ func (a rockyOSAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisInput
 	return nil, xerrors.Errorf("rocky: %w", aos.AnalyzeOSError)
 }
 
-func (a rockyOSAnalyzer) Required(filePath string, info os.FileInfo) bool {
+func (a rockyOSAnalyzer) Required(filePath string, _ os.FileInfo) bool {
 	return utils.StringInSlice(filePath, a.requiredFiles())
 }
 

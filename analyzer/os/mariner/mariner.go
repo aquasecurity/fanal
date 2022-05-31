@@ -54,7 +54,7 @@ func (a marinerOSAnalyzer) parseRelease(r io.Reader) (types.OS, error) {
 	return types.OS{}, xerrors.Errorf("cbl-mariner: %w", aos.AnalyzeOSError)
 }
 
-func (a marinerOSAnalyzer) Required(filePath string, info os.FileInfo) bool {
+func (a marinerOSAnalyzer) Required(filePath string, _ os.FileInfo) bool {
 	return filepath.ToSlash(filePath) == requiredFile
 }
 

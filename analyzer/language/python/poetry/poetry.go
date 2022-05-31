@@ -29,7 +29,7 @@ func (a poetryLibraryAnalyzer) Analyze(_ context.Context, input analyzer.Analysi
 	return res, nil
 }
 
-func (a poetryLibraryAnalyzer) Required(filePath string, info os.FileInfo) bool {
+func (a poetryLibraryAnalyzer) Required(filePath string, _ os.FileInfo) bool {
 	fileName := filepath.Base(filePath)
 	return fileName == types.PoetryLock
 }

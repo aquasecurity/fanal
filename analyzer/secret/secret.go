@@ -120,9 +120,9 @@ func isBinary(content dio.ReadSeekerAt, fileSize int64) (bool, error) {
 	return false, nil
 }
 
-func (a SecretAnalyzer) Required(filePath string, info os.FileInfo) bool {
+func (a SecretAnalyzer) Required(filePath string, fi os.FileInfo) bool {
 	// Skip small files
-	if info.Size() < 10 {
+	if fi.Size() < 10 {
 		return false
 	}
 

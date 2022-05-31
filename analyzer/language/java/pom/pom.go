@@ -32,7 +32,7 @@ func (a pomAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisInput) (*
 	return res, nil
 }
 
-func (a pomAnalyzer) Required(filePath string, info os.FileInfo) bool {
+func (a pomAnalyzer) Required(filePath string, _ os.FileInfo) bool {
 	return filepath.Base(filePath) == types.MavenPom
 }
 

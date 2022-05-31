@@ -33,8 +33,8 @@ func (a gobinaryLibraryAnalyzer) Analyze(_ context.Context, input analyzer.Analy
 	return language.ToAnalysisResult(types.GoBinary, input.FilePath, "", libs, deps), nil
 }
 
-func (a gobinaryLibraryAnalyzer) Required(filePath string, info os.FileInfo) bool {
-	mode := info.Mode()
+func (a gobinaryLibraryAnalyzer) Required(_ string, fileInfo os.FileInfo) bool {
+	mode := fileInfo.Mode()
 	if !mode.IsRegular() {
 		return false
 	}
