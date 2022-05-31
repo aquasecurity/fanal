@@ -32,10 +32,6 @@ func NewConfigAnalyzer(filePattern *regexp.Regexp) ConfigAnalyzer {
 }
 
 func (a ConfigAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisInput) (*analyzer.AnalysisResult, error) {
-	if input.Info.Size() > maxTarSize {
-		// tarball is too big to be Helm chart - move on
-		return nil, nil
-	}
 	if isArchive(input.FilePath) {
 		if !isHelmChart(input.FilePath, input.Content) {
 			return nil, nil
@@ -65,9 +61,14 @@ func (a ConfigAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisInput)
 	}, nil
 }
 
-func (a ConfigAnalyzer) Required(filePath string, _ os.FileInfo) bool {
+func (a ConfigAnalyzer) Required(filePath string, info os.FileInfo) bool {
 	if a.filePattern != nil && a.filePattern.MatchString(filePath) {
 		return true
+	}
+
+	if info.Size() > maxTarSize {
+		// tarball is too big to be Helm chart - move on
+		return false
 	}
 
 	ext := filepath.Ext(filePath)
@@ -100,7 +101,7 @@ func isHelmChart(path string, file dio.ReadSeekerAt) bool {
 	var err error
 	var fr io.Reader = file
 
-	if isZip(path) {
+	if isGzip(path) {
 		if fr, err = gzip.NewReader(file); err != nil {
 			return false
 		}
@@ -124,8 +125,7 @@ func isHelmChart(path string, file dio.ReadSeekerAt) bool {
 }
 
 func isArchive(path string) bool {
-	if strings.HasSuffix(path, ".tar") ||
-		isGzip(path)
+	if strings.HasSuffix(path, ".tar") || isGzip(path) {
 		return true
 	}
 	return false

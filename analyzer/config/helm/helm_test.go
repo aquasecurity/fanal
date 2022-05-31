@@ -367,38 +367,28 @@ func Test_helmConfigAnalyzer_Required(t *testing.T) {
 	}{
 		{
 			name:     "yaml",
-			filePath: "Chart.yaml",
+			filePath: "testdata/testchart/Chart.yaml",
 			want:     true,
 		},
 		{
 			name:     "tpl",
-			filePath: "statefulset.tpl",
-			want:     true,
-		},
-		{
-			name:     "capital_tpl",
-			filePath: "STATEFULSET.TPL",
+			filePath: "testdata/testchart/templates/_helpers.tpl",
 			want:     true,
 		},
 		{
 			name:     "json",
-			filePath: "values.json",
+			filePath: "testdata/testchart/values.yaml",
 			want:     true,
 		},
 		{
 			name:     "NOTES.txt",
-			filePath: "NOTES.txt",
+			filePath: "testdata/testchart/templates/NOTES.txt",
 			want:     false,
 		},
 		{
 			name:     ".helmignore",
-			filePath: ".helmignore",
+			filePath: "testdata/testchart/.helmignore",
 			want:     true,
-		},
-		{
-			name:     "yml",
-			filePath: "chart.yml",
-			want:     false,
 		},
 		{
 			name:     "testchart.tgz",
@@ -422,7 +412,9 @@ func Test_helmConfigAnalyzer_Required(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			s := NewConfigAnalyzer(tt.filePattern)
 
-			got := s.Required(tt.filePath, nil)
+			info, _ := os.Stat(tt.filePath)
+
+			got := s.Required(tt.filePath, info)
 			assert.Equal(t, tt.want, got)
 		})
 	}
