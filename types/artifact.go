@@ -41,6 +41,7 @@ type Package struct {
 	Indirect bool   `json:",omitempty"`
 	License  string `json:",omitempty"`
 	Layer    Layer  `json:",omitempty"`
+	Ref      string `json:",omitempty"`
 
 	// Each package metadata have the file path, while the package from lock files does not have.
 	FilePath string `json:",omitempty"`
