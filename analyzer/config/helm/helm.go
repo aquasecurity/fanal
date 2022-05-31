@@ -13,10 +13,13 @@ import (
 
 	"github.com/aquasecurity/fanal/analyzer"
 	"github.com/aquasecurity/fanal/types"
+	dio "github.com/aquasecurity/go-dep-parser/pkg/io"
 	"golang.org/x/xerrors"
 )
 
 const version = 1
+
+const maxTarSize = 209_715_200 // 200MB
 
 type ConfigAnalyzer struct {
 	filePattern *regexp.Regexp
@@ -29,6 +32,20 @@ func NewConfigAnalyzer(filePattern *regexp.Regexp) ConfigAnalyzer {
 }
 
 func (a ConfigAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisInput) (*analyzer.AnalysisResult, error) {
+	if input.Info.Size() > maxTarSize {
+		// tarball is too big to be Helm chart - move on
+		return nil, nil
+	}
+	if isArchive(input.FilePath) {
+		if !isHelmChart(input.FilePath, input.Content) {
+			return nil, nil
+		}
+		// reset the content
+		_, err := input.Content.Seek(0, 0)
+		if err != nil {
+			return nil, err
+		}
+	}
 	b, err := io.ReadAll(input.Content)
 	if err != nil {
 		return nil, xerrors.Errorf("failed to read %s: %w", input.FilePath, err)
@@ -48,22 +65,13 @@ func (a ConfigAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisInput)
 	}, nil
 }
 
-func (a ConfigAnalyzer) Required(filePath string, _ os.FileInfo, readerOpener analyzer.Opener) bool {
+func (a ConfigAnalyzer) Required(filePath string, info os.FileInfo) bool {
 	if a.filePattern != nil && a.filePattern.MatchString(filePath) {
 		return true
 	}
 
-	if isArchive(filePath) {
-		reader, err := readerOpener()
-		defer func() { _ = reader.Close() }()
-		if err != nil {
-			return false
-		}
-		return isHelmChart(filePath, reader)
-	}
-
 	ext := filepath.Ext(filePath)
-	for _, acceptable := range []string{".tpl", ".json", ".yaml"} {
+	for _, acceptable := range []string{".tpl", ".json", ".yaml", ".tar", ".tgz", ".tar.gz"} {
 		if strings.EqualFold(ext, acceptable) {
 			return true
 		}
@@ -87,10 +95,10 @@ func (ConfigAnalyzer) Version() int {
 	return version
 }
 
-func isHelmChart(path string, file io.ReadCloser) bool {
+func isHelmChart(path string, file dio.ReadSeekerAt) bool {
 
 	var err error
-	var fr = file
+	var fr io.Reader = file
 
 	if isZip(path) {
 		if fr, err = gzip.NewReader(file); err != nil {

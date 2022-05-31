@@ -185,7 +185,7 @@ func Test_jsonConfigAnalyzer_Required(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			s := json.NewConfigAnalyzer(tt.filePattern)
 
-			got := s.Required(tt.filePath, nil, nil)
+			got := s.Required(tt.filePath, nil)
 			assert.Equal(t, tt.want, got)
 		})
 	}

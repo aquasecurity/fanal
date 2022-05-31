@@ -71,7 +71,7 @@ func (a osReleaseAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisInp
 	return nil, nil
 }
 
-func (a osReleaseAnalyzer) Required(filePath string, _ os.FileInfo, _ analyzer.Opener) bool {
+func (a osReleaseAnalyzer) Required(filePath string, info os.FileInfo) bool {
 	return slices.Contains(requiredFiles, filePath)
 }
 

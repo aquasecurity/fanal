@@ -44,7 +44,7 @@ func (a gomodAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisInput) 
 	return res, nil
 }
 
-func (a gomodAnalyzer) Required(filePath string, _ os.FileInfo, _ analyzer.Opener) bool {
+func (a gomodAnalyzer) Required(filePath string, info os.FileInfo) bool {
 	fileName := filepath.Base(filePath)
 	return slices.Contains(requiredFiles, fileName)
 }

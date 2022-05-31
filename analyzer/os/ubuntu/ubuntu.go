@@ -46,7 +46,7 @@ func (a ubuntuOSAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisInpu
 	return nil, xerrors.Errorf("ubuntu: %w", aos.AnalyzeOSError)
 }
 
-func (a ubuntuOSAnalyzer) Required(filePath string, _ os.FileInfo, _ analyzer.Opener) bool {
+func (a ubuntuOSAnalyzer) Required(filePath string, info os.FileInfo) bool {
 	return utils.StringInSlice(filePath, requiredFiles)
 }
 

@@ -63,7 +63,7 @@ func (a amazonlinuxOSAnalyzer) parseRelease(r io.Reader) (types.OS, error) {
 	return types.OS{}, xerrors.Errorf("amazon: %w", aos.AnalyzeOSError)
 }
 
-func (a amazonlinuxOSAnalyzer) Required(filePath string, _ os.FileInfo, _ analyzer.Opener) bool {
+func (a amazonlinuxOSAnalyzer) Required(filePath string, info os.FileInfo) bool {
 	return utils.StringInSlice(filePath, requiredFiles)
 }
 

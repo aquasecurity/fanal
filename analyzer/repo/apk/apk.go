@@ -84,7 +84,7 @@ func (a apkRepoAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisInput
 	}, nil
 }
 
-func (a apkRepoAnalyzer) Required(filePath string, _ os.FileInfo, _ analyzer.Opener) bool {
+func (a apkRepoAnalyzer) Required(filePath string, info os.FileInfo) bool {
 	return slices.Contains(requiredFiles, filePath)
 }
 

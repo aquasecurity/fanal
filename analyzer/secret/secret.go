@@ -30,8 +30,10 @@ var (
 		"Gemfile.lock",
 	}
 	skipDirs = []string{".git", "node_modules"}
-	skipExts = []string{".jpg", ".png", ".gif", ".doc", ".pdf", ".bin", ".svg", ".socket", ".deb", ".rpm",
-		".zip", ".gz", ".gzip", ".tar", ".pyc"}
+	skipExts = []string{
+		".jpg", ".png", ".gif", ".doc", ".pdf", ".bin", ".svg", ".socket", ".deb", ".rpm",
+		".zip", ".gz", ".gzip", ".tar", ".pyc",
+	}
 )
 
 type ScannerOption struct {
@@ -118,9 +120,9 @@ func isBinary(content dio.ReadSeekerAt, fileSize int64) (bool, error) {
 	return false, nil
 }
 
-func (a SecretAnalyzer) Required(filePath string, fi os.FileInfo, _ analyzer.Opener) bool {
+func (a SecretAnalyzer) Required(filePath string, info os.FileInfo) bool {
 	// Skip small files
-	if fi.Size() < 10 {
+	if info.Size() < 10 {
 		return false
 	}
 

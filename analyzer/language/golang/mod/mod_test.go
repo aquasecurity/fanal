@@ -31,8 +31,14 @@ func Test_gomodAnalyzer_Analyze(t *testing.T) {
 						Type:     types.GoModule,
 						FilePath: "testdata/go.mod",
 						Libraries: []types.Package{
-							{Name: "github.com/aquasecurity/go-dep-parser", Version: "0.0.0-20220406074731-71021a481237"},
-							{Name: "golang.org/x/xerrors", Version: "0.0.0-20200804184101-5ec99f83aff1", Indirect: true},
+							{
+								Name:    "github.com/aquasecurity/go-dep-parser",
+								Version: "0.0.0-20220406074731-71021a481237",
+							},
+							{
+								Name: "golang.org/x/xerrors", Version: "0.0.0-20200804184101-5ec99f83aff1",
+								Indirect: true,
+							},
 						},
 					},
 				},
@@ -136,7 +142,7 @@ func Test_gomodAnalyzer_Required(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			a := gomodAnalyzer{}
-			got := a.Required(tt.filePath, nil, nil)
+			got := a.Required(tt.filePath, nil)
 			assert.Equal(t, tt.want, got)
 		})
 	}
