@@ -37,13 +37,14 @@ type Package struct {
 	Modularitylabel string     `json:",omitempty"` // only for Red Hat based distributions
 	BuildInfo       *BuildInfo `json:",omitempty"` // only for Red Hat
 
-	Indirect bool   `json:",omitempty"`
-	License  string `json:",omitempty"`
-	Layer    Layer  `json:",omitempty"`
+	Indirect  bool     `json:",omitempty"` // this package is direct dependency of the project or not
+	DependsOn []string `json:",omitempty"` // dependencies of this package
+
+	License string `json:",omitempty"`
+	Layer   Layer  `json:",omitempty"`
 
 	// Each package metadata have the file path, while the package from lock files does not have.
-	FilePath  string   `json:",omitempty"`
-	DependsOn []string `json:",omitempty"`
+	FilePath string `json:",omitempty"`
 }
 
 // BuildInfo represents information under /root/buildinfo in RHEL

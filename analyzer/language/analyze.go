@@ -20,15 +20,14 @@ func Analyze(fileType, filePath string, r dio.ReadSeekerAt, parser godeptypes.Pa
 	return ToAnalysisResult(fileType, filePath, "", parsedLibs, parsedDependencies), nil
 }
 
-func ToAnalysisResult(fileType, filePath, libFilePath string, libs []godeptypes.Library, deps []godeptypes.Dependency) *analyzer.AnalysisResult {
+func ToAnalysisResult(fileType, filePath, libFilePath string, libs []godeptypes.Library, depGraph []godeptypes.Dependency) *analyzer.AnalysisResult {
 	if len(libs) == 0 {
 		return nil
 	}
 
-	idx := make(map[string][]string)
-
-	for _, dep := range deps {
-		idx[dep.ID] = dep.DependsOn
+	deps := make(map[string][]string)
+	for _, dep := range depGraph {
+		deps[dep.ID] = dep.DependsOn
 	}
 
 	var pkgs []types.Package
@@ -40,7 +39,7 @@ func ToAnalysisResult(fileType, filePath, libFilePath string, libs []godeptypes.
 			FilePath:  libFilePath,
 			Indirect:  lib.Indirect,
 			License:   lib.License,
-			DependsOn: idx[lib.ID],
+			DependsOn: deps[lib.ID],
 		})
 	}
 	apps := []types.Application{{
