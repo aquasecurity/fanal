@@ -19,6 +19,7 @@ import (
 	"github.com/aquasecurity/defsec/pkg/scanners"
 	cfscanner "github.com/aquasecurity/defsec/pkg/scanners/cloudformation"
 	dfscanner "github.com/aquasecurity/defsec/pkg/scanners/dockerfile"
+	"github.com/aquasecurity/defsec/pkg/scanners/helm"
 	k8sscanner "github.com/aquasecurity/defsec/pkg/scanners/kubernetes"
 	"github.com/aquasecurity/defsec/pkg/scanners/options"
 	tfscanner "github.com/aquasecurity/defsec/pkg/scanners/terraform"
@@ -178,6 +179,7 @@ func newMisconfPostHandler(artifactOpt artifact.Option) (handler.PostHandler, er
 			types.CloudFormation: cfscanner.New(opts...),
 			types.Dockerfile:     dfscanner.NewScanner(opts...),
 			types.Kubernetes:     k8sscanner.NewScanner(opts...),
+			types.Helm:           helm.New(opts...),
 		},
 	}, nil
 }
@@ -187,6 +189,7 @@ var enabledDefsecTypes = map[detection.FileType]string{
 	detection.FileTypeTerraform:      types.Terraform,
 	detection.FileTypeDockerfile:     types.Dockerfile,
 	detection.FileTypeKubernetes:     types.Kubernetes,
+	detection.FileTypeHelm:           types.Helm,
 }
 
 // Handle detects misconfigurations.
@@ -196,11 +199,9 @@ func (h misconfPostHandler) Handle(ctx context.Context, result *analyzer.Analysi
 		return nil
 	}
 
-	mapMemoryFS := map[string]*memoryfs.FS{
-		types.Terraform:      memoryfs.New(),
-		types.CloudFormation: memoryfs.New(),
-		types.Dockerfile:     memoryfs.New(),
-		types.Kubernetes:     memoryfs.New(),
+	mapMemoryFS := make(map[string]*memoryfs.FS)
+	for t := range h.scanners {
+		mapMemoryFS[t] = memoryfs.New()
 	}
 
 	for _, file := range files {
