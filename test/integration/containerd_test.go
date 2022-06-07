@@ -82,9 +82,9 @@ func startContainerd(ctx context.Context, hostPath string) (testcontainers.Conta
 		Name:       "containerd",
 		Image:      "ghcr.io/aquasecurity/trivy-test-images/containerd:latest",
 		Entrypoint: []string{"/bin/sh", "-c", "mkdir -p /etc/containerd/ && /usr/local/bin/containerd config default > /etc/containerd/config.toml && /usr/local/bin/containerd -c /etc/containerd/config.toml"},
-		BindMounts: map[string]string{
-			"/run": hostPath,
-		},
+		Mounts: testcontainers.Mounts(
+			testcontainers.BindMount(hostPath, "/run"),
+		),
 		SkipReaper: true,
 		AutoRemove: true,
 		WaitingFor: wait.ForLog("Start streaming server"),

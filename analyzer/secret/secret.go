@@ -2,6 +2,7 @@ package secret
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"math"
 	"os"
@@ -29,8 +30,10 @@ var (
 		"Gemfile.lock",
 	}
 	skipDirs = []string{".git", "node_modules"}
-	skipExts = []string{".jpg", ".png", ".gif", ".doc", ".pdf", ".bin", ".svg", ".socket", ".deb", ".rpm",
-		".zip", ".gz", ".gzip", ".tar", ".pyc"}
+	skipExts = []string{
+		".jpg", ".png", ".gif", ".doc", ".pdf", ".bin", ".svg", ".socket", ".deb", ".rpm",
+		".zip", ".gz", ".gzip", ".tar", ".pyc",
+	}
 )
 
 type ScannerOption struct {
@@ -75,8 +78,16 @@ func (a SecretAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisInput)
 		return nil, xerrors.Errorf("read error %s: %w", input.FilePath, err)
 	}
 
+	filePath := input.FilePath
+	// Files extracted from the image have an empty input.Dir.
+	// Also, paths to these files do not have "/" prefix.
+	// We need to add a "/" prefix to properly filter paths from the config file.
+	if input.Dir == "" { // add leading `/` for files extracted from image
+		filePath = fmt.Sprintf("/%s", filePath)
+	}
+
 	result := a.scanner.Scan(secret.ScanArgs{
-		FilePath: input.FilePath,
+		FilePath: filePath,
 		Content:  content,
 	})
 
