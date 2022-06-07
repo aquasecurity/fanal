@@ -80,7 +80,7 @@ func configureTestDataPaths() (normalPath, targetPath, socketPath string, err er
 func startContainerd(ctx context.Context, hostPath string) (testcontainers.Container, error) {
 	req := testcontainers.ContainerRequest{
 		Name:       "containerd",
-		Image:      "docker.io/geyingqi/dockercontainerd:alpine",
+		Image:      "ghcr.io/aquasecurity/trivy-test-images/containerd:latest",
 		Entrypoint: []string{"/bin/sh", "-c", "mkdir -p /etc/containerd/ && /usr/local/bin/containerd config default > /etc/containerd/config.toml && /usr/local/bin/containerd -c /etc/containerd/config.toml"},
 		BindMounts: map[string]string{
 			"/run": hostPath,
