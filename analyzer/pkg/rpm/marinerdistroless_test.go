@@ -82,17 +82,17 @@ func TestSplitSourceRpm(t *testing.T) {
 		{
 			name:     "sad path. Bad suffix",
 			filepath: "distroless-packages-0.1-2.cm2.src",
-			wantErr:  "sourceRPM doesn't contain '.src.rpm' suffix: \"distroless-packages-0.1-2.cm2.src\"",
+			wantErr:  "sourceRPM (distroless-packages-0.1-2.cm2.src) doesn't contain '.src.rpm' suffix",
 		},
 		{
 			name:     "sad path. No release",
 			filepath: "filesystem 1.1 9.cm2.src.rpm",
-			wantErr:  "sourceRPM doesn't contain release: \"filesystem 1.1 9.cm2\"",
+			wantErr:  "sourceRPM (filesystem 1.1 9.cm2.src.rpm) doesn't contain release",
 		},
 		{
 			name:     "sad path. No version",
 			filepath: "filesystem 1.1-9.cm2.src.rpm",
-			wantErr:  "sourceRPM doesn't contain version: \"filesystem 1.1-9.cm2\"",
+			wantErr:  "sourceRPM (filesystem 1.1-9.cm2.src.rpm) doesn't contain version",
 		},
 	}
 
