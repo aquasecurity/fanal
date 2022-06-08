@@ -23,10 +23,10 @@
         "sha256:6ef42db7800507577383edf1937cb203b9b85f619feed6046594208748ceb52c"
     ],
     "RepoTags": [
-        "knqyf263/vuln-image:1.2.3"
+        "aquasecurity/trivy-test-images:vulnimage"
     ],
     "RepoDigests": [
-        "knqyf263/vuln-image@sha256:c17083664da903e13e9092fa3a3a1aeee2431aa2728298e3dbcec72f26369c41"
+        "aquasecurity/trivy-test-images@sha256:c17083664da903e13e9092fa3a3a1aeee2431aa2728298e3dbcec72f26369c41"
     ],
     "ConfigFile": {
         "architecture": "amd64",
