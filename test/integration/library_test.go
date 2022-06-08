@@ -92,15 +92,13 @@ var testCases = []testCase{
 		imageFile:       "testdata/fixtures/suse-15.3_ndb.tar.gz",
 		wantOS:          types.OS{Name: "15.3", Family: "suse linux enterprise server"},
 	},
-	/*
-		{
-			name:            "happy path, Fedora 35",
-			imageName:       "fedora:35",
-			remoteImageName: "ghcr.io/aquasecurity/trivy-test-images:fedora-35",
-			imageFile:       "testdata/fixtures/fedora-35.tar.gz",
-			wantOS:          types.OS{Name: "35", Family: "fedora"},
-		},
-	*/
+	{
+		name:            "happy path, Fedora 35",
+		imageName:       "fedora:35",
+		remoteImageName: "ghcr.io/aquasecurity/trivy-test-images:fedora-35",
+		imageFile:       "testdata/fixtures/fedora-35.tar.gz",
+		wantOS:          types.OS{Name: "35", Family: "fedora"},
+	},
 	{
 		name:                "happy path, vulnimage with lock files",
 		imageName:           "knqyf263/vuln-image:1.2.3",
