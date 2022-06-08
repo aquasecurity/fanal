@@ -23,6 +23,11 @@ import (
 	ocispec "github.com/opencontainers/image-spec/specs-go/v1"
 )
 
+const (
+	DefaultContainerdSocket    = "/run/containerd/containerd.sock"
+	DefaultContainerdNamespace = "default"
+)
+
 func imageWriter(client *containerd.Client, img containerd.Image) imageSave {
 
 	return func(ctx context.Context, ref []string) (io.ReadCloser, error) {

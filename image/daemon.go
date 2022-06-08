@@ -10,11 +10,6 @@ import (
 	"github.com/containerd/containerd/namespaces"
 )
 
-const (
-	defaultContainerdSocket    = "/run/containerd/containerd.sock"
-	defaultContainerdNamespace = "default"
-)
-
 func tryDockerDaemon(imageName string, ref name.Reference) (types.Image, func(), error) {
 	img, cleanup, err := daemon.DockerImage(ref)
 	if err != nil {
@@ -39,9 +34,9 @@ func tryPodmanDaemon(ref string) (types.Image, func(), error) {
 }
 
 func tryContainerdDaemon(imageName string, ref name.Reference) (types.Image, func(), error) {
-	ctx := namespaces.WithNamespace(context.Background(), defaultContainerdNamespace)
+	ctx := namespaces.WithNamespace(context.Background(), daemon.DefaultContainerdNamespace)
 
-	img, cleanup, err := daemon.ContainerdImage(defaultContainerdSocket, imageName, ref, ctx)
+	img, cleanup, err := daemon.ContainerdImage(daemon.DefaultContainerdSocket, imageName, ref, ctx)
 
 	if err != nil {
 		return nil, cleanup, err
