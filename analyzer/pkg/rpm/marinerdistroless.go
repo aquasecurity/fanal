@@ -45,23 +45,33 @@ func (a marinerDistrolessPkgAnalyzer) parseMarinerDistrolessManifest(r io.ReadSe
 	scanner := bufio.NewScanner(r)
 	for scanner.Scan() {
 		line := scanner.Text()
-		var sourceRpm, arch string
+		var name, ver, rel, sourceRpm, arch string
 		// %{NAME}\t%{VERSION}-%{RELEASE}\t%{INSTALLTIME}\t%{BUILDTIME}\t%{VENDOR}\t(none)\t%{SIZE}\t%{ARCH}\t%{EPOCHNUM}\t%{SOURCERPM}
 		if s := strings.Split(line, "\t"); len(s) == 10 {
+			name = s[0]
 			arch = s[7]
 			sourceRpm = s[9]
+			if verRel := strings.Split(s[1], "-"); len(verRel) == 2 {
+				ver = verRel[0]
+				rel = verRel[1]
+			} else {
+				return nil, xerrors.Errorf("failed to split line (%s) : line doesn't have number of version/release")
+			}
 		} else {
-			return nil, xerrors.Errorf("failed to split source rpm: wrong number of variables")
+			return nil, xerrors.Errorf("failed to split line (%s) : wrong number of variables", line)
 		}
-		name, ver, rel, err := splitSourceRpm(sourceRpm)
+		srcName, srcVer, srcRel, err := splitSourceRpm(sourceRpm)
 		if err != nil {
 			return nil, xerrors.Errorf("failed to split source rpm: %w", err)
 		}
 		pkg := types.Package{
-			Name:    name,
-			Version: ver,
-			Release: rel,
-			Arch:    arch,
+			Name:       name,
+			Version:    ver,
+			Release:    rel,
+			Arch:       arch,
+			SrcName:    srcName,
+			SrcVersion: srcVer,
+			SrcRelease: srcRel,
 		}
 		pkgs = append(pkgs, pkg)
 	}
