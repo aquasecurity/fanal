@@ -118,13 +118,13 @@ func TestGetLocalContainerdImage(t *testing.T) {
 			name:       "alpine 3.1.0",
 			imageName:  "ghcr.io/aquasecurity/trivy-test-images:alpine-310",
 			tarArchive: "alpine-310.tar.gz",
-			golden:     "testdata/goldens/alpine-3.10.json.golden",
+			golden:     "testdata/goldens/packages/alpine-3.10.json.golden",
 		},
 		{
 			name:       "vulnimage",
 			imageName:  "ghcr.io/aquasecurity/trivy-test-images:vulnimage",
 			tarArchive: "vulnimage.tar.gz",
-			golden:     "testdata/goldens/knqyf263-vuln-image-1.2.3.json.golden",
+			golden:     "testdata/goldens/packages/knqyf263-vuln-image-1.2.3.json.golden",
 		},
 	}
 	ctx := namespaces.WithNamespace(context.Background(), "default")
