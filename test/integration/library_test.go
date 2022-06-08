@@ -175,7 +175,7 @@ func TestFanal_Library_DockerMode(t *testing.T) {
 			io.Copy(ioutil.Discard, resp.Body)
 
 			// tag our image to something unique
-			err = cli.ImageTag(ctx, tc.imageName, tc.imageFile)
+			err = cli.ImageTag(ctx, tc.remoteImageName, tc.imageFile)
 			require.NoError(t, err, tc.name)
 
 			img, cleanup, err := image.NewDockerImage(ctx, tc.imageFile, types.DockerOption{})
