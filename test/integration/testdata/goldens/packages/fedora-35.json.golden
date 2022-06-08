@@ -9,20 +9,22 @@
     "SrcRelease": "1.fc35",
     "License": "GPLv2",
     "Layer": {
-      "DiffID": "sha256:389adea752cd55355cae09d2b3038c0b155e992a0d32fcecb3d281abf6a8c5cf"
+      "Digest": "sha256:054e3e802ba7bde57dcc19df7b12ac4fecb92bc0c3e7b591210bcea96f993b5d",
+      "DiffID": "sha256:5b86cbe1caa031a8d90f13401b67620c51b1f2c6d8e9ed17a074cd8bbe50d837"
     }
   },
   {
     "Name": "audit-libs",
-    "Version": "3.0.6",
-    "Release": "1.fc35",
+    "Version": "3.0.7",
+    "Release": "2.fc35",
     "Arch": "x86_64",
     "SrcName": "audit",
-    "SrcVersion": "3.0.6",
-    "SrcRelease": "1.fc35",
+    "SrcVersion": "3.0.7",
+    "SrcRelease": "2.fc35",
     "License": "LGPLv2+",
     "Layer": {
-      "DiffID": "sha256:389adea752cd55355cae09d2b3038c0b155e992a0d32fcecb3d281abf6a8c5cf"
+      "Digest": "sha256:054e3e802ba7bde57dcc19df7b12ac4fecb92bc0c3e7b591210bcea96f993b5d",
+      "DiffID": "sha256:5b86cbe1caa031a8d90f13401b67620c51b1f2c6d8e9ed17a074cd8bbe50d837"
     }
   },
   {
