@@ -201,7 +201,7 @@ func TestFanal_Library_DockerMode(t *testing.T) {
 				PruneChildren: true,
 			})
 			assert.NoError(t, err, tc.name)
-			_, err = cli.ImageRemove(ctx, tc.imageName, dtypes.ImageRemoveOptions{
+			_, err = cli.ImageRemove(ctx, tc.remoteImageName, dtypes.ImageRemoveOptions{
 				Force:         true,
 				PruneChildren: true,
 			})
