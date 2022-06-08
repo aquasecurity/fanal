@@ -7,6 +7,7 @@ import (
 	"context"
 	"encoding/json"
 	"flag"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
@@ -244,7 +245,7 @@ func commonChecks(t *testing.T, detail types.ArtifactDetail, tc testCase) {
 
 func checkOSPackages(t *testing.T, detail types.ArtifactDetail, tc testCase) {
 	splitted := strings.Split(tc.remoteImageName, "")
-	goldenFile := splitted[len(splitted)-1]
+	goldenFile := fmt.Sprintf("testdata/goldens/packages/%s.json.golden", splitted[len(splitted)-1])
 
 	if *update {
 		b, err := json.MarshalIndent(detail.Packages, "", "  ")
