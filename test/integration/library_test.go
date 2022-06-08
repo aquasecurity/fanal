@@ -244,7 +244,7 @@ func commonChecks(t *testing.T, detail types.ArtifactDetail, tc testCase) {
 }
 
 func checkOSPackages(t *testing.T, detail types.ArtifactDetail, tc testCase) {
-	splitted := strings.Split(tc.remoteImageName, "")
+	splitted := strings.Split(tc.remoteImageName, ":")
 	goldenFile := fmt.Sprintf("testdata/goldens/packages/%s.json.golden", splitted[len(splitted)-1])
 
 	if *update {
