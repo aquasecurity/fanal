@@ -31,53 +31,40 @@ func TestConfigScanner_Scan(t *testing.T) {
 			},
 			inputDir: "testdata/deny",
 			want: []types.Misconfiguration{
-				{
+				types.Misconfiguration{
 					FileType: "dockerfile",
 					FilePath: "Dockerfile",
-					Failures: types.MisconfResults{
-						{
+					Successes: types.MisconfResults{
+						types.MisconfResult{
 							Namespace: "testdata.xyz_200",
 							Query:     "data.testdata.xyz_200.deny",
-							Message:   "Old image",
+							Message:   "",
 							PolicyMetadata: types.PolicyMetadata{
-								ID:          "XYZ-200",
-								Type:        "Dockerfile Security Check",
-								Title:       "Old FROM",
-								Description: "Rego module: data.testdata.xyz_200",
-								Severity:    "LOW",
+								ID:                 "XYZ-200",
+								Type:               "Dockerfile Security Check",
+								Title:              "Old FROM",
+								Description:        "Rego module: data.testdata.xyz_200",
+								Severity:           "LOW",
+								RecommendedActions: "",
+								References:         []string(nil),
 							},
 							CauseMetadata: types.CauseMetadata{
 								Resource:  "",
 								Provider:  "Dockerfile",
 								Service:   "general",
-								StartLine: 1,
-								EndLine:   2,
+								StartLine: 0,
+								EndLine:   0,
 								Code: types.Code{
-									Lines: []types.Line{
-										{
-											Number:      1,
-											Content:     "FROM alpine:3.10",
-											Highlighted: "\x1b[38;5;64mFROM\x1b[0m\x1b[38;5;37m alpine:3.10",
-											IsCause:     true,
-											Annotation:  "",
-											Truncated:   false,
-											FirstCause:  true,
-											LastCause:   false,
-										},
-										{
-											Number:      2,
-											Content:     "",
-											Highlighted: "\x1b[0m",
-											IsCause:     true,
-											Annotation:  "",
-											Truncated:   false,
-											FirstCause:  false,
-											LastCause:   true,
-										},
-									},
+									Lines: []types.Line(nil),
 								},
-							},
+							}, Traces: []string(nil),
 						},
+					}, Warnings: types.MisconfResults(nil),
+					Failures:   types.MisconfResults(nil),
+					Exceptions: types.MisconfResults(nil),
+					Layer: types.Layer{
+						Digest: "",
+						DiffID: "",
 					},
 				},
 			},
