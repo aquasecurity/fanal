@@ -11,7 +11,7 @@ import (
 	"github.com/aquasecurity/fanal/types"
 )
 
-func NewDockerImage(ctx context.Context, imageName string, option types.DockerOption) (types.Image, func(), error) {
+func NewContainerImage(ctx context.Context, imageName string, option types.DockerOption) (types.Image, func(), error) {
 	var errs error
 
 	var nameOpts []name.Option
