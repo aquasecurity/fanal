@@ -25,7 +25,7 @@ const (
 	TypeApk               Type = "apk"
 	TypeDpkg              Type = "dpkg"
 	TypeRpm               Type = "rpm"
-	TypeMarinerDistroless Type = "mariner-distroless"
+	TypeRpmqa Type = "rpmqa"
 
 	// OS Package Repository
 	TypeApkRepo Type = "apk-repo"
