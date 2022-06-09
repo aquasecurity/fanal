@@ -2,25 +2,18 @@ package daemon
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
 	"os"
-	"time"
 
 	"github.com/containerd/containerd"
-	"github.com/containerd/containerd/content"
-	"github.com/containerd/containerd/images"
 	"github.com/containerd/containerd/images/archive"
 	"github.com/containerd/containerd/platforms"
-	"github.com/docker/docker/api/types/container"
-	"github.com/google/go-containerregistry/pkg/name"
-	"golang.org/x/xerrors"
-
+	"github.com/containerd/nerdctl/pkg/imageinspector"
+	"github.com/containerd/nerdctl/pkg/inspecttypes/dockercompat"
 	api "github.com/docker/docker/api/types"
-	"github.com/opencontainers/go-digest"
-	ocispec "github.com/opencontainers/image-spec/specs-go/v1"
+	"github.com/docker/docker/api/types/container"
+	"golang.org/x/xerrors"
 )
 
 const (
@@ -29,10 +22,9 @@ const (
 )
 
 func imageWriter(client *containerd.Client, img containerd.Image) imageSave {
-
 	return func(ctx context.Context, ref []string) (io.ReadCloser, error) {
-		if len(ref) == 0 {
-			return nil, xerrors.Errorf("imageWriter: failed to get iamge name: %v", ref)
+		if len(ref) < 1 {
+			return nil, xerrors.New("no image reference")
 		}
 		imgOpts := archive.WithImage(client.ImageService(), ref[0])
 		manifestOpts := archive.WithManifest(img.Target())
@@ -45,131 +37,78 @@ func imageWriter(client *containerd.Client, img containerd.Image) imageSave {
 	}
 }
 
-// ContainerdImage implements v1.Image by extending
-func ContainerdImage(containerdSocket, imageName string, ref name.Reference, ctx context.Context) (Image, func(), error) {
+// ContainerdImage implements v1.Image
+func ContainerdImage(containerdSocket, imageName string, ctx context.Context) (Image, func(), error) {
 	cleanup := func() {}
 
 	if _, err := os.Stat(containerdSocket); errors.Is(err, os.ErrNotExist) {
-		return nil, cleanup, xerrors.Errorf("Socket doesn't exist: %s", containerdSocket)
+		return nil, cleanup, xerrors.Errorf("containerd socket not found: %s", containerdSocket)
 	}
 
-	cli, err := containerd.New(containerdSocket)
-
+	client, err := containerd.New(containerdSocket)
 	if err != nil {
-		return nil, cleanup, xerrors.Errorf("tryContainerdDaemon: failed to initialize a docker client: %w", err)
+		return nil, cleanup, xerrors.Errorf("failed to initialize a containerd client: %w", err)
 	}
 
-	i, err := cli.GetImage(ctx, imageName)
+	img, err := client.GetImage(ctx, imageName)
+	if err != nil {
+		return nil, cleanup, xerrors.Errorf("failed to get %s: %w", imageName, err)
+	}
 
+	n, err := imageinspector.Inspect(ctx, client, img.Metadata())
+	if err != nil {
+		return nil, cleanup, xerrors.Errorf("inspect error: %w", imageName, err)
+	}
+
+	d, err := dockercompat.ImageFromNative(n)
 	if err != nil {
 		return nil, cleanup, err
 	}
 
-	inspect, err := imageInspect(ctx, i, ref)
-
+	f, err := os.CreateTemp("", "fanal-containerd-*")
 	if err != nil {
-		return nil, cleanup, err
+		return nil, cleanup, xerrors.Errorf("failed to create a temporary file: %w", err)
 	}
 
-	var f *os.File
 	cleanup = func() {
-		cli.Close()
-		f.Close()
+		_ = client.Close()
+		_ = f.Close()
 		_ = os.Remove(f.Name())
-	}
-	f, err = os.CreateTemp("", "fanal-*")
-	if err != nil {
-		return nil, cleanup, xerrors.Errorf("ContainerImage: failed to create a temporary file")
 	}
 
 	return &image{
-		opener:  imageOpener(ctx, imageName, f, imageWriter(cli, i)),
-		inspect: inspect,
+		opener:  imageOpener(ctx, imageName, f, imageWriter(client, img)),
+		inspect: toDockerInspect(d),
 	}, cleanup, nil
 }
 
-// imageInspect returns ImageInspect struct
-func imageInspect(ctx context.Context, img containerd.Image, ref name.Reference) (inspect api.ImageInspect, err error) {
-	descriptor, err := img.Config(ctx)
-	if err != nil {
-		return api.ImageInspect{}, err
-	}
-
-	ociImage, err := containerdToOci(ctx, img, descriptor)
-	if err != nil {
-		return api.ImageInspect{}, err
-	}
-	var createAt string
-	if ociImage.Created != nil {
-		createAt = ociImage.Created.Format(time.RFC3339Nano)
-	}
-
-	var architecture string
-	if descriptor.Platform != nil {
-		architecture = descriptor.Platform.Architecture
-	} else {
-		architecture = ociImage.Architecture
-	}
-
+func toDockerInspect(d *dockercompat.Image) api.ImageInspect {
 	return api.ImageInspect{
-		Architecture: architecture,
-		Config:       getImageInfoConfigFromOciImage(ociImage),
-		Created:      createAt,
-		ID:           string(descriptor.Digest),
-		Os:           ociImage.OS,
-		RepoDigests:  []string{fmt.Sprintf("%s@%s", ref.Context().RepositoryStr(), string(descriptor.Digest))},
-		RepoTags:     []string{fmt.Sprintf("%s:%s", ref.Context().RepositoryStr(), ref.Identifier())},
-		RootFS: api.RootFS{
-			Type:   ociImage.RootFS.Type,
-			Layers: digestToString(ociImage.RootFS.DiffIDs),
+		ID:          d.ID,
+		RepoTags:    d.RepoTags,
+		RepoDigests: d.RepoDigests,
+		Comment:     d.Comment,
+		Created:     d.Created,
+		Author:      d.Author,
+		Config: &container.Config{
+			User:         d.Config.User,
+			ExposedPorts: d.Config.ExposedPorts,
+			Env:          d.Config.Env,
+			Cmd:          d.Config.Cmd,
+			Volumes:      d.Config.Volumes,
+			WorkingDir:   d.Config.WorkingDir,
+			Entrypoint:   d.Config.Entrypoint,
+			Labels:       d.Config.Labels,
 		},
-		Size: descriptor.Size,
-	}, nil
-}
-
-// ocispec.Image -> *container.Config
-func getImageInfoConfigFromOciImage(img ocispec.Image) *container.Config {
-	volumes := make(map[string]struct{})
-	for k, obj := range img.Config.Volumes {
-		volumes[k] = obj
+		Architecture: d.Architecture,
+		Os:           d.Os,
+		RootFS: api.RootFS{
+			Type:      d.RootFS.Type,
+			Layers:    d.RootFS.Layers,
+			BaseLayer: d.RootFS.BaseLayer,
+		},
+		Metadata: api.ImageMetadata{
+			LastTagTime: d.Metadata.LastTagTime,
+		},
 	}
-
-	return &container.Config{
-		User:       img.Config.User,
-		Env:        img.Config.Env,
-		Entrypoint: img.Config.Entrypoint,
-		Cmd:        img.Config.Cmd,
-		WorkingDir: img.Config.WorkingDir,
-		Labels:     img.Config.Labels,
-		StopSignal: img.Config.StopSignal,
-		Volumes:    volumes,
-	}
-}
-
-// containerd.Image -> ocispec.Image
-func containerdToOci(ctx context.Context, img containerd.Image, cfg ocispec.Descriptor) (ocispec.Image, error) {
-	var ociImage ocispec.Image
-
-	switch cfg.MediaType {
-	case ocispec.MediaTypeImageConfig, images.MediaTypeDockerSchema2Config, "application/octet-stream":
-		data, err := content.ReadBlob(ctx, img.ContentStore(), cfg)
-		if err != nil {
-			return ocispec.Image{}, xerrors.Errorf("GetOCIImageBytes:: failed to read blob: %v", err)
-		}
-		err = json.Unmarshal(data, &ociImage)
-		if err != nil {
-			return ocispec.Image{}, err
-		}
-	default:
-		return ocispec.Image{}, xerrors.Errorf("containerToOci: invalid image config media type: %v", cfg.MediaType)
-	}
-	return ociImage, nil
-}
-
-func digestToString(digests []digest.Digest) []string {
-	strs := make([]string, 0, len(digests))
-	for _, d := range digests {
-		strs = append(strs, d.String())
-	}
-	return strs
 }
