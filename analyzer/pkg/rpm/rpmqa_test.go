@@ -60,7 +60,7 @@ glibc	2.35-2.cm2	1653816591	1653628955	Microsoft Corporation	(none)	10855265	x86
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			a := rpmqaPkgAnalyzer{}
-			result, err := a.parseMarinerDistrolessManifest(strings.NewReader(test.content))
+			result, err := a.parseRpmqaManifest(strings.NewReader(test.content))
 			if test.wantErr != "" {
 				assert.NotNil(t, err)
 				assert.Equal(t, test.wantErr, err.Error())

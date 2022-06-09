@@ -17,11 +17,11 @@ func init() {
 	analyzer.RegisterAnalyzer(&rpmqaPkgAnalyzer{})
 }
 
-const versionMarinerDistroless = 1
+const versionRpmqa = 1
 
 var (
 	// For CBL-Mariner Distroless
-	requiredMarinerDistrolessFiles = []string{"var/lib/rpmmanifest/container-manifest-2"}
+	requiredRpmqaFiles = []string{"var/lib/rpmmanifest/container-manifest-2"}
 )
 
 // rpmqaPkgAnalyzer parses the output of
@@ -29,9 +29,9 @@ var (
 type rpmqaPkgAnalyzer struct{}
 
 func (a rpmqaPkgAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisInput) (*analyzer.AnalysisResult, error) {
-	pkgs, err := a.parseMarinerDistrolessManifest(input.Content)
+	pkgs, err := a.parseRpmqaManifest(input.Content)
 	if err != nil {
-		return nil, xerrors.Errorf("failed to parse mariner distroless 'container-manifest-2' file: %w", err)
+		return nil, xerrors.Errorf("failed to parse rpmqa manifest: %w", err)
 	}
 	return &analyzer.AnalysisResult{
 		PackageInfos: []types.PackageInfo{
@@ -43,7 +43,7 @@ func (a rpmqaPkgAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisInpu
 	}, nil
 }
 
-func (a rpmqaPkgAnalyzer) parseMarinerDistrolessManifest(r io.ReadSeekerAt) ([]types.Package, error) {
+func (a rpmqaPkgAnalyzer) parseRpmqaManifest(r io.ReadSeekerAt) ([]types.Package, error) {
 	var pkgs []types.Package
 	scanner := bufio.NewScanner(r)
 	for scanner.Scan() {
@@ -82,7 +82,7 @@ func (a rpmqaPkgAnalyzer) parseMarinerDistrolessManifest(r io.ReadSeekerAt) ([]t
 }
 
 func (a rpmqaPkgAnalyzer) Required(filePath string, _ os.FileInfo) bool {
-	return slices.Contains(requiredMarinerDistrolessFiles, filePath)
+	return slices.Contains(requiredRpmqaFiles, filePath)
 }
 
 func (a rpmqaPkgAnalyzer) Type() analyzer.Type {
@@ -90,5 +90,5 @@ func (a rpmqaPkgAnalyzer) Type() analyzer.Type {
 }
 
 func (a rpmqaPkgAnalyzer) Version() int {
-	return versionMarinerDistroless
+	return versionRpmqa
 }
