@@ -103,7 +103,7 @@ func splitSourceRpm(sourseRpm string) (name, ver, rel string, err error) {
 }
 
 func (a marinerDistrolessPkgAnalyzer) Required(filePath string, _ os.FileInfo) bool {
-	return utils.StringInSlice(filePath, requiredMarinerDistrolessFiles)
+	return slices.Contains(requiredMarinerDistrolessFiles, filePath)
 }
 
 func (a marinerDistrolessPkgAnalyzer) Type() analyzer.Type {
