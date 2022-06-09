@@ -47,7 +47,8 @@ func (a marinerDistrolessPkgAnalyzer) parseMarinerDistrolessManifest(r io.ReadSe
 		line := scanner.Text()
 		var name, ver, rel, sourceRpm, arch string
 		// %{NAME}\t%{VERSION}-%{RELEASE}\t%{INSTALLTIME}\t%{BUILDTIME}\t%{VENDOR}\t(none)\t%{SIZE}\t%{ARCH}\t%{EPOCHNUM}\t%{SOURCERPM}
-		if s := strings.Split(line, "\t"); len(s) == 10 {
+		if s := strings.Fields(line); len(s) != 10 {
+			return nil, xerrors.Errorf("failed to parse a line (%s)", line)		
 			name = s[0]
 			arch = s[7]
 			sourceRpm = s[9]
