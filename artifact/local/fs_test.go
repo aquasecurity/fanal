@@ -953,7 +953,7 @@ func TestDockerfileMisconfigurationScan(t *testing.T) {
 				Args: cache.ArtifactCachePutBlobArgs{
 					BlobIDAnything: true,
 					BlobInfo: types.BlobInfo{
-						SchemaVersion: 2,
+						SchemaVersion: types.BlobJSONSchemaVersion,
 						Digest:        "", DiffID: "",
 						OS:           (*types.OS)(nil),
 						Repository:   (*types.Repository)(nil),
@@ -1040,7 +1040,7 @@ func TestDockerfileMisconfigurationScan(t *testing.T) {
 				Args: cache.ArtifactCachePutBlobArgs{
 					BlobIDAnything: true,
 					BlobInfo: types.BlobInfo{
-						SchemaVersion: 2,
+						SchemaVersion: types.BlobJSONSchemaVersion,
 						Digest:        "",
 						DiffID:        "",
 						OS:            (*types.OS)(nil),
@@ -1048,7 +1048,7 @@ func TestDockerfileMisconfigurationScan(t *testing.T) {
 						PackageInfos:  []types.PackageInfo(nil),
 						Applications:  []types.Application(nil),
 						Misconfigurations: []types.Misconfiguration{
-							types.Misconfiguration{
+							{
 								FileType: "dockerfile",
 								FilePath: "Dockerfile",
 								Successes: types.MisconfResults{
