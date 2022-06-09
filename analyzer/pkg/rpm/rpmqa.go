@@ -61,7 +61,7 @@ func (a rpmqaPkgAnalyzer) parseRpmqaManifest(r io.ReadSeekerAt) ([]types.Package
 			ver = verRel[0]
 			rel = verRel[1]
 		} else {
-			return nil, xerrors.Errorf("failed to split line (%s) : line doesn't have number of version/release")
+			return nil, xerrors.Errorf("failed to split a version (%s)", s[1])
 		}
 		srcName, srcVer, srcRel, err := splitFileName(sourceRpm)
 		if err != nil {
