@@ -23,7 +23,9 @@ var (
 	requiredMarinerDistrolessFiles = []string{"var/lib/rpmmanifest/container-manifest-2"}
 )
 
-type marinerDistrolessPkgAnalyzer struct{}
+// rpmqaPkgAnalyzer parses the output of 
+// "rpm -qa --qf %{NAME}\t%{VERSION}-%{RELEASE}\t%{INSTALLTIME}\t%{BUILDTIME}\t%{VENDOR}\t(none)\t%{SIZE}\t%{ARCH}\t%{EPOCHNUM}\t%{SOURCERPM}".
+type rpmqaPkgAnalyzer struct{}
 
 func (a marinerDistrolessPkgAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisInput) (*analyzer.AnalysisResult, error) {
 	pkgs, err := a.parseMarinerDistrolessManifest(input.Content)
