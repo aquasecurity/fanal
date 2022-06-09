@@ -31,14 +31,14 @@ func TestConfigScanner_Scan(t *testing.T) {
 			},
 			inputDir: "testdata/deny",
 			want: []types.Misconfiguration{
-				types.Misconfiguration{
+				{
 					FileType: "dockerfile",
 					FilePath: "Dockerfile",
-					Successes: types.MisconfResults{
+					Failures: types.MisconfResults{
 						types.MisconfResult{
 							Namespace: "testdata.xyz_200",
 							Query:     "data.testdata.xyz_200.deny",
-							Message:   "",
+							Message:   "Old image",
 							PolicyMetadata: types.PolicyMetadata{
 								ID:                 "XYZ-200",
 								Type:               "Dockerfile Security Check",
@@ -52,15 +52,36 @@ func TestConfigScanner_Scan(t *testing.T) {
 								Resource:  "",
 								Provider:  "Dockerfile",
 								Service:   "general",
-								StartLine: 0,
-								EndLine:   0,
+								StartLine: 1,
+								EndLine:   2,
 								Code: types.Code{
-									Lines: []types.Line(nil),
+									Lines: []types.Line{
+										{
+											Number:      1,
+											Content:     "FROM alpine:3.10",
+											Highlighted: "\x1b[38;5;64mFROM\x1b[0m\x1b[38;5;37m alpine:3.10",
+											IsCause:     true,
+											Annotation:  "",
+											Truncated:   false,
+											FirstCause:  true,
+											LastCause:   false,
+										},
+										{
+											Number:      2,
+											Content:     "",
+											Highlighted: "\x1b[0m",
+											IsCause:     true,
+											Annotation:  "",
+											Truncated:   false,
+											FirstCause:  false,
+											LastCause:   true,
+										},
+									},
 								},
 							}, Traces: []string(nil),
 						},
 					}, Warnings: types.MisconfResults(nil),
-					Failures:   types.MisconfResults(nil),
+					Successes:  types.MisconfResults(nil),
 					Exceptions: types.MisconfResults(nil),
 					Layer: types.Layer{
 						Digest: "",
