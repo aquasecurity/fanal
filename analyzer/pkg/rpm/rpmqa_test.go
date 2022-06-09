@@ -65,7 +65,7 @@ glibc	2.35-2.cm2	1653816591	1653628955	Microsoft Corporation	(none)	10855265	x86
 				assert.NotNil(t, err)
 				assert.Equal(t, test.wantErr, err.Error())
 			} else {
-				assert.Nil(t, err)
+				assert.NoError(t, err)
 				assert.Equal(t, test.wantPkgs, result)
 			}
 		})
