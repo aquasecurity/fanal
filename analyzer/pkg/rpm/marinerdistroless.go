@@ -20,6 +20,7 @@ func init() {
 const versionMarinerDistroless = 1
 
 var (
+	// For CBL-Mariner Distroless
 	requiredMarinerDistrolessFiles = []string{"var/lib/rpmmanifest/container-manifest-2"}
 )
 
