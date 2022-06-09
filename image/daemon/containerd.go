@@ -3,6 +3,7 @@ package daemon
 import (
 	"context"
 	"errors"
+	"github.com/containerd/containerd/namespaces"
 	"io"
 	"os"
 
@@ -17,8 +18,8 @@ import (
 )
 
 const (
-	DefaultContainerdSocket    = "/run/containerd/containerd.sock"
-	DefaultContainerdNamespace = "default"
+	defaultContainerdSocket    = "/run/containerd/containerd.sock"
+	defaultContainerdNamespace = "default"
 )
 
 func imageWriter(client *containerd.Client, img containerd.Image) imageSave {
@@ -38,18 +39,24 @@ func imageWriter(client *containerd.Client, img containerd.Image) imageSave {
 }
 
 // ContainerdImage implements v1.Image
-func ContainerdImage(containerdSocket, imageName string, ctx context.Context) (Image, func(), error) {
+func ContainerdImage(ctx context.Context, imageName string) (Image, func(), error) {
 	cleanup := func() {}
 
-	if _, err := os.Stat(containerdSocket); errors.Is(err, os.ErrNotExist) {
-		return nil, cleanup, xerrors.Errorf("containerd socket not found: %s", containerdSocket)
+	addr := os.Getenv("CONTAINERD_ADDRESS")
+	if addr == "" {
+		addr = defaultContainerdSocket
 	}
 
-	client, err := containerd.New(containerdSocket)
+	if _, err := os.Stat(addr); errors.Is(err, os.ErrNotExist) {
+		return nil, cleanup, xerrors.Errorf("containerd socket not found: %s", addr)
+	}
+
+	client, err := containerd.New(addr)
 	if err != nil {
 		return nil, cleanup, xerrors.Errorf("failed to initialize a containerd client: %w", err)
 	}
 
+	ctx = namespaces.WithNamespace(ctx, defaultContainerdNamespace)
 	img, err := client.GetImage(ctx, imageName)
 	if err != nil {
 		return nil, cleanup, xerrors.Errorf("failed to get %s: %w", imageName, err)

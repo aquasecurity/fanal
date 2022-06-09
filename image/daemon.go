@@ -2,12 +2,10 @@ package image
 
 import (
 	"context"
-
 	"github.com/google/go-containerregistry/pkg/name"
 
 	"github.com/aquasecurity/fanal/image/daemon"
 	"github.com/aquasecurity/fanal/types"
-	"github.com/containerd/containerd/namespaces"
 )
 
 func tryDockerDaemon(imageName string, ref name.Reference) (types.Image, func(), error) {
@@ -33,11 +31,8 @@ func tryPodmanDaemon(ref string) (types.Image, func(), error) {
 	}, cleanup, nil
 }
 
-func tryContainerdDaemon(imageName string, ref name.Reference) (types.Image, func(), error) {
-	ctx := namespaces.WithNamespace(context.Background(), daemon.DefaultContainerdNamespace)
-
-	img, cleanup, err := daemon.ContainerdImage(daemon.DefaultContainerdSocket, imageName, ref, ctx)
-
+func tryContainerdDaemon(ctx context.Context, imageName string) (types.Image, func(), error) {
+	img, cleanup, err := daemon.ContainerdImage(ctx, imageName)
 	if err != nil {
 		return nil, cleanup, err
 	}

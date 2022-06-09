@@ -39,7 +39,7 @@ func NewDockerImage(ctx context.Context, imageName string, option types.DockerOp
 	}
 	errs = multierror.Append(errs, err)
 
-	img, cleanup, err = tryContainerdDaemon(imageName, ref)
+	img, cleanup, err = tryContainerdDaemon(ctx, imageName)
 	if err == nil {
 		return img, cleanup, nil
 	}
