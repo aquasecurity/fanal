@@ -18,8 +18,8 @@ func init() {
 }
 
 const (
-	version        = 1
-	deps_extension = ".deps.json"
+	version       = 1
+	depsExtension = ".deps.json"
 )
 
 type depsLibraryAnalyzer struct{}
@@ -37,7 +37,7 @@ func (a depsLibraryAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisI
 }
 
 func (a depsLibraryAnalyzer) Required(filePath string, _ os.FileInfo) bool {
-	return strings.HasSuffix(filePath, deps_extension)
+	return strings.HasSuffix(filePath, depsExtension)
 }
 
 func (a depsLibraryAnalyzer) Type() analyzer.Type {
