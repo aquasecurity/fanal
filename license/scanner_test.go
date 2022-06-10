@@ -78,7 +78,7 @@ func Test_LicenseScanning(t *testing.T) {
 		},
 		{
 			name:          "Creative commons License file",
-			filePath:      "testdata/LICENSE.creativecommons",
+			filePath:      "testdata/LICENSE_creativecommons",
 			expectLicense: true,
 			expectedFindings: []expectedFinding{
 				{
@@ -93,7 +93,7 @@ func Test_LicenseScanning(t *testing.T) {
 		},
 		{
 			name:          "Apache 2 License file",
-			filePath:      "testdata/LICENSE.apache2",
+			filePath:      "testdata/LICENSE_apache2",
 			expectLicense: false,
 		},
 	}

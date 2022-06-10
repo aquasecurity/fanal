@@ -41,11 +41,11 @@ func Test_AnalyzeLicenses(t *testing.T) {
 		},
 		{
 			name:     "Creative Commons License file",
-			filePath: "testdata/LICENSE",
+			filePath: "testdata/LICENSE_cc",
 			want: &analyzer.AnalysisResult{
 				Licenses: []types.License{
 					{
-						FilePath: "testdata/LICENSE",
+						FilePath: "testdata/LICENSE_cc",
 						Findings: []types.LicenseFinding{
 							{
 								Name:       "Commons-Clause",
@@ -123,8 +123,8 @@ func Test_LicenseAnalysisRequired(t *testing.T) {
 			want:     true,
 		},
 		{
-			name:     "MIT License file",
-			filePath: "testdata/LICENSE",
+			name:     "Creative Commons License file",
+			filePath: "testdata/LICENSE_cc",
 			want:     true,
 		},
 		{
