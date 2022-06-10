@@ -197,6 +197,7 @@ func (r *AnalysisResult) Merge(new *AnalysisResult) {
 	}
 
 	r.Secrets = append(r.Secrets, new.Secrets...)
+	r.Licenses = append(r.Licenses, new.Licenses...)
 	r.SystemInstalledFiles = append(r.SystemInstalledFiles, new.SystemInstalledFiles...)
 
 	if new.BuildInfo != nil {
