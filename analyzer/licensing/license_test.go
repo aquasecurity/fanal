@@ -24,7 +24,7 @@ func Test_AnalyzeLicenses(t *testing.T) {
 			want: &analyzer.AnalysisResult{
 				Licenses: []types.License{
 					{
-						FilePath: "testdata/licensed.c",
+						FilePath: "/testdata/licensed.c",
 						Findings: []types.LicenseFinding{
 							{
 								Name:       "AGPL-3.0",
@@ -45,7 +45,7 @@ func Test_AnalyzeLicenses(t *testing.T) {
 			want: &analyzer.AnalysisResult{
 				Licenses: []types.License{
 					{
-						FilePath: "testdata/LICENSE_cc",
+						FilePath: "/testdata/LICENSE_cc",
 						Findings: []types.LicenseFinding{
 							{
 								Name:       "Commons-Clause",

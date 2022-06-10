@@ -56,11 +56,6 @@ func Test_LicenseScanning(t *testing.T) {
 			},
 		},
 		{
-			name:          "Picture with no license",
-			filePath:      "testdata/unlicensed_picture.png",
-			expectLicense: false,
-		},
-		{
 			name:             "C file with ignored AGPL-3.0",
 			filePath:         "testdata/licensed.c",
 			expectLicense:    false,
@@ -112,7 +107,12 @@ func Test_LicenseScanning(t *testing.T) {
 			scanner, err := NewScanner(configPath)
 			require.NoError(t, err)
 
-			license := scanner.Scan(tt.filePath)
+			content, err := os.ReadFile(tt.filePath)
+			require.NoError(t, err)
+			license := scanner.Scan(ScanArgs{
+				FilePath: tt.filePath,
+				Content:  content,
+			})
 
 			assert.NotNil(t, license)
 

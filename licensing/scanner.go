@@ -39,6 +39,11 @@ var defaultConfig = config.Config{
 	},
 }
 
+type ScanArgs struct {
+	FilePath string
+	Content  []byte
+}
+
 func NewScanner(configPath string) (Scanner, error) {
 
 	if configPath == "" {
@@ -77,11 +82,11 @@ func newDefaultScanner() (Scanner, error) {
 	return Scanner{classifier: classifier}, nil
 }
 
-func (s Scanner) Scan(filePath string) types.License {
+func (s Scanner) Scan(scanArgs ScanArgs) types.License {
 
-	license, err := s.classifier.Classify(filePath)
+	license, err := s.classifier.Classify(scanArgs.FilePath, scanArgs.Content)
 	if err != nil {
-		log.Logger.Debugf("Name scan failed while scanning %s: %w", filePath, err)
+		log.Logger.Debugf("Name scan failed while scanning %s: %w", scanArgs.FilePath, err)
 	}
 
 	return license

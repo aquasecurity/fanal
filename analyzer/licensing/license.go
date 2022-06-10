@@ -2,6 +2,7 @@ package licensing
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"math"
 	"os"
@@ -58,7 +59,23 @@ func (a LicenseAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisInput
 		return nil, nil
 	}
 
-	result := a.scanner.Scan(input.FilePath)
+	content, err := io.ReadAll(input.Content)
+	if err != nil {
+		return nil, xerrors.Errorf("read error %s: %w", input.FilePath, err)
+	}
+
+	filePath := input.FilePath
+	// Files extracted from the image have an empty input.Dir.
+	// Also, paths to these files do not have "/" prefix.
+	// We need to add a "/" prefix to properly filter paths from the config file.
+	if input.Dir == "" { // add leading `/` for files extracted from image
+		filePath = fmt.Sprintf("/%s", filePath)
+	}
+
+	result := a.scanner.Scan(licensing.ScanArgs{
+		FilePath: filePath,
+		Content:  content,
+	})
 
 	if len(result.Findings) == 0 {
 		return nil, nil
