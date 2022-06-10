@@ -6,7 +6,6 @@ import (
 	"compress/gzip"
 	"context"
 	"encoding/json"
-	"fmt"
 	"os"
 	"path"
 	"path/filepath"
@@ -40,6 +39,7 @@ func loadImageMetaData(fname string) (*types.ImageMetadata, error) {
 }
 
 func configureTestDataPaths(t *testing.T) (string, string) {
+	t.Helper()
 	tmpDir, err := os.MkdirTemp("/tmp", "fanal")
 	require.NoError(t, err)
 
@@ -54,7 +54,6 @@ func configureTestDataPaths(t *testing.T) (string, string) {
 
 func startContainerd(t *testing.T, ctx context.Context, hostPath string) testcontainers.Container {
 	t.Helper()
-	fmt.Println(hostPath)
 	req := testcontainers.ContainerRequest{
 		Name:       "containerd",
 		Image:      "ghcr.io/aquasecurity/trivy-test-images/containerd:latest",
@@ -87,13 +86,13 @@ func TestGetLocalContainerdImage(t *testing.T) {
 	}{
 		{
 			name:       "alpine 3.10",
-			imageName:  "ghcr.io/aquasecurity/trivy-tt-images:alpine-310",
+			imageName:  "ghcr.io/aquasecurity/trivy-test-images:alpine-310",
 			tarArchive: "alpine-310.tar.gz",
 			golden:     "testdata/goldens/alpine-3.10-image.json.golden",
 		},
 		{
 			name:       "vulnimage",
-			imageName:  "ghcr.io/aquasecurity/trivy-tt-images:vulnimage",
+			imageName:  "ghcr.io/aquasecurity/trivy-test-images:vulnimage",
 			tarArchive: "vulnimage.tar.gz",
 			golden:     "testdata/goldens/vuln-image-1.2.3-image.json.golden",
 		},
@@ -159,7 +158,7 @@ func TestPullLocalContainerdImage(t *testing.T) {
 	}{
 		{
 			name:     "remote alpine 3.10",
-			imageRef: "ghcr.io/aquasecurity/trivy-tt-images:alpine-310",
+			imageRef: "ghcr.io/aquasecurity/trivy-test-images:alpine-310",
 			golden:   "testdata/goldens/alpine-3.10-image.json.golden",
 		},
 	}
