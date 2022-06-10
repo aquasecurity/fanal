@@ -27,12 +27,12 @@ func Test_AnalyzeLicenses(t *testing.T) {
 						FilePath: "testdata/licensed.c",
 						Findings: []types.LicenseFinding{
 							{
-								Name:       "BSD-3-Clause",
-								MatchType:  "License",
-								Variant:    "license.txt",
-								Confidence: 0.9812206572769953,
-								StartLine:  5,
-								EndLine:    27,
+								Name:       "AGPL-3.0",
+								MatchType:  "Header",
+								Variant:    "header.txt",
+								Confidence: 1,
+								StartLine:  2,
+								EndLine:    13,
 							},
 						},
 					},
@@ -40,7 +40,7 @@ func Test_AnalyzeLicenses(t *testing.T) {
 			},
 		},
 		{
-			name:     "MIT License file",
+			name:     "Creative Commons License file",
 			filePath: "testdata/LICENSE",
 			want: &analyzer.AnalysisResult{
 				Licenses: []types.License{
@@ -48,12 +48,12 @@ func Test_AnalyzeLicenses(t *testing.T) {
 						FilePath: "testdata/LICENSE",
 						Findings: []types.LicenseFinding{
 							{
-								Name:       "MIT",
+								Name:       "Commons-Clause",
 								MatchType:  "License",
 								Variant:    "license.txt",
 								Confidence: 1,
-								StartLine:  5,
-								EndLine:    21,
+								StartLine:  1,
+								EndLine:    13,
 							},
 						},
 					},

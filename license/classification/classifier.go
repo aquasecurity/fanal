@@ -5,7 +5,7 @@ import (
 
 	"github.com/aquasecurity/fanal/license/config"
 	"github.com/aquasecurity/fanal/types"
-	"github.com/google/licenseclassifier/v2"
+	classifier "github.com/google/licenseclassifier/v2"
 	"github.com/google/licenseclassifier/v2/assets"
 	"golang.org/x/exp/slices"
 	"golang.org/x/xerrors"

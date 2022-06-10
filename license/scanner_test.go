@@ -32,22 +32,22 @@ func Test_LicenseScanning(t *testing.T) {
 		scanConfig       *config.Config
 	}{
 		{
-			name:          "C file with BSD-3-Clause",
+			name:          "C file with AGPL-3.0",
 			filePath:      "testdata/licensed.c",
 			expectLicense: true,
 			expectedFindings: []expectedFinding{
 				{
-					Name:                "BSD-3-Clause",
-					MatchType:           "License",
-					Variant:             "license.txt",
+					Name:                "AGPL-3.0",
+					MatchType:           "Header",
+					Variant:             "header.txt",
 					ConfidenceThreshold: 0.98,
-					StartLine:           5,
-					EndLine:             27,
+					StartLine:           2,
+					EndLine:             13,
 				},
 			},
 		},
 		{
-			name:             "C file with BSD-3-Clause with 100 confidence",
+			name:             "C file with AGPL-3.0 with 100 confidence",
 			filePath:         "testdata/licensed.c",
 			expectLicense:    false,
 			expectedFindings: []expectedFinding{},
@@ -56,57 +56,45 @@ func Test_LicenseScanning(t *testing.T) {
 			},
 		},
 		{
-			name:             "Picture with no license",
-			filePath:         "testdata/unlicensed_picture.png",
-			expectLicense:    false,
-			expectedFindings: []expectedFinding{},
+			name:          "Picture with no license",
+			filePath:      "testdata/unlicensed_picture.png",
+			expectLicense: false,
 		},
 		{
-			name:             "C file with ignored BSD-3-Clause",
+			name:             "C file with ignored AGPL-3.0",
 			filePath:         "testdata/licensed.c",
 			expectLicense:    false,
 			expectedFindings: []expectedFinding{},
 			scanConfig: &config.Config{
 				IgnoredLicences: []string{
-					"BSD-3-Clause",
+					"AGPL-3.0",
 				},
 			},
 		},
 		{
-			name:             "C file with no license",
-			filePath:         "testdata/unlicensed.c",
-			expectLicense:    false,
-			expectedFindings: []expectedFinding{},
+			name:          "C file with no license",
+			filePath:      "testdata/unlicensed.c",
+			expectLicense: false,
 		},
 		{
-			name:          "MIT License file",
-			filePath:      "testdata/LICENSE.mit",
+			name:          "Creative commons License file",
+			filePath:      "testdata/LICENSE.creativecommons",
 			expectLicense: true,
 			expectedFindings: []expectedFinding{
 				{
-					Name:                "MIT",
+					Name:                "Commons-Clause",
 					MatchType:           "License",
 					Variant:             "license.txt",
 					ConfidenceThreshold: 0.98,
-					StartLine:           5,
-					EndLine:             21,
+					StartLine:           1,
+					EndLine:             13,
 				},
 			},
 		},
 		{
 			name:          "Apache 2 License file",
 			filePath:      "testdata/LICENSE.apache2",
-			expectLicense: true,
-			expectedFindings: []expectedFinding{
-				{
-					Name:                "Apache-2.0",
-					MatchType:           "License",
-					Variant:             "license.txt",
-					ConfidenceThreshold: 0.98,
-					StartLine:           1,
-					EndLine:             201,
-				},
-			},
+			expectLicense: false,
 		},
 	}
 

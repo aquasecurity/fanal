@@ -17,8 +17,26 @@ type Scanner struct {
 }
 
 var defaultConfig = config.Config{
+	// set the confidence threshold to an arbitrary 70% confidence
 	MatchConfidenceThreshold: 0.7,
-	IncludeHeaders:           true,
+
+	// check the headers of human readable source code files for headers by default
+	IncludeHeaders: true,
+
+	// default ignored list - taken from popular license from the open source initiative https://opensource.org/licenses
+	IgnoredLicences: []string{
+		"Apache-2.0",
+		"BSD-3-Clause",
+		"BSD-2-Clause",
+		"GPL-2.0",
+		"GPL-3.0",
+		"LGPL-2.1",
+		"LGPL-3.0",
+		"MIT",
+		"MPL-2.0",
+		"CDDL-1.0",
+		"EPL-2.0",
+	},
 }
 
 func NewScanner(configPath string) (Scanner, error) {
