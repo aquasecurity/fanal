@@ -1,5 +1,4 @@
 //go:build integration
-// +build integration
 
 package integration
 
@@ -7,7 +6,7 @@ import (
 	"compress/gzip"
 	"context"
 	"encoding/json"
-	"io/ioutil"
+	"fmt"
 	"os"
 	"path"
 	"path/filepath"
@@ -17,94 +16,66 @@ import (
 	aimage "github.com/aquasecurity/fanal/artifact/image"
 	"github.com/aquasecurity/fanal/cache"
 	"github.com/aquasecurity/fanal/image"
-	"github.com/aquasecurity/fanal/image/daemon"
 	"github.com/aquasecurity/fanal/types"
 	"github.com/containerd/containerd"
 	"github.com/containerd/containerd/namespaces"
-	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/stretchr/testify/require"
 	testcontainers "github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
 )
 
-type daemonImage struct {
-	daemon.Image
-	name string
-}
-
-func (d daemonImage) Name() string {
-	return d.name
-}
-
-func (d daemonImage) ID() (string, error) {
-	return image.ID(d)
-}
-
-func (d daemonImage) LayerIDs() ([]string, error) {
-	return image.LayerIDs(d)
-}
 func loadImageMetaData(fname string) (*types.ImageMetadata, error) {
-	b, err := ioutil.ReadFile(fname)
-	if err != nil {
-		return nil, err
-	}
-	r := &types.ImageMetadata{}
-
-	err = json.Unmarshal(b, r)
+	b, err := os.ReadFile(fname)
 	if err != nil {
 		return nil, err
 	}
 
-	return r, nil
-}
-
-func configureTestDataPaths() (normalPath, targetPath, socketPath string, err error) {
-	normalPath, err = filepath.Abs(".")
+	var r types.ImageMetadata
+	err = json.Unmarshal(b, &r)
 	if err != nil {
-		return "", "", "", err
-	}
-	normalPath = filepath.Join(normalPath, "data", "test")
-	targetPath = filepath.Join(normalPath, "containerd")
-
-	err = os.MkdirAll(targetPath, os.ModePerm)
-
-	if err != nil {
-		return "", "", "", err
+		return nil, err
 	}
 
-	socketPath = filepath.Join(targetPath, "containerd.sock")
-
-	return normalPath, targetPath, socketPath, nil
+	return &r, nil
 }
 
-func startContainerd(ctx context.Context, hostPath string) (testcontainers.Container, error) {
+func configureTestDataPaths(t *testing.T) (string, string) {
+	tmpDir, err := os.MkdirTemp("/tmp", "fanal")
+	require.NoError(t, err)
+
+	containerdDir := filepath.Join(tmpDir, "containerd")
+	err = os.MkdirAll(containerdDir, os.ModePerm)
+	require.NoError(t, err)
+
+	socketPath := filepath.Join(containerdDir, "containerd.sock")
+
+	return tmpDir, socketPath
+}
+
+func startContainerd(t *testing.T, ctx context.Context, hostPath string) testcontainers.Container {
+	t.Helper()
+	fmt.Println(hostPath)
 	req := testcontainers.ContainerRequest{
 		Name:       "containerd",
 		Image:      "ghcr.io/aquasecurity/trivy-test-images/containerd:latest",
-		Entrypoint: []string{"/bin/sh", "-c", "mkdir -p /etc/containerd/ && /usr/local/bin/containerd config default > /etc/containerd/config.toml && /usr/local/bin/containerd -c /etc/containerd/config.toml"},
+		Entrypoint: []string{"/bin/sh", "-c", "/usr/local/bin/containerd"},
 		Mounts: testcontainers.Mounts(
 			testcontainers.BindMount(hostPath, "/run"),
 		),
 		SkipReaper: true,
-		AutoRemove: true,
-		WaitingFor: wait.ForLog("Start streaming server"),
+		AutoRemove: false,
+		WaitingFor: wait.ForLog("containerd successfully booted"),
 	}
 	containerdC, err := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
 		ContainerRequest: req,
 		Started:          true,
 	})
-
-	if err != nil {
-		return nil, err
-	}
+	require.NoError(t, err)
 
 	_, err = containerdC.Exec(ctx, []string{"chmod", "666", "/run/containerd/containerd.sock"})
+	require.NoError(t, err)
 
-	if err != nil {
-		return nil, err
-	}
-
-	return containerdC, nil
+	return containerdC
 }
 
 func TestGetLocalContainerdImage(t *testing.T) {
@@ -115,36 +86,37 @@ func TestGetLocalContainerdImage(t *testing.T) {
 		golden     string
 	}{
 		{
-			name:       "alpine 3.1.0",
-			imageName:  "ghcr.io/aquasecurity/trivy-test-images:alpine-310",
+			name:       "alpine 3.10",
+			imageName:  "ghcr.io/aquasecurity/trivy-tt-images:alpine-310",
 			tarArchive: "alpine-310.tar.gz",
 			golden:     "testdata/goldens/alpine-3.10-image.json.golden",
 		},
 		{
 			name:       "vulnimage",
-			imageName:  "ghcr.io/aquasecurity/trivy-test-images:vulnimage",
+			imageName:  "ghcr.io/aquasecurity/trivy-tt-images:vulnimage",
 			tarArchive: "vulnimage.tar.gz",
 			golden:     "testdata/goldens/vuln-image-1.2.3-image.json.golden",
 		},
 	}
 	ctx := namespaces.WithNamespace(context.Background(), "default")
 
-	testDataPath, targetPath, socketPath, err := configureTestDataPaths()
-	require.NoError(t, err)
-	defer os.RemoveAll(testDataPath)
+	tmpDir, socketPath := configureTestDataPaths(t)
+	defer os.RemoveAll(tmpDir)
 
-	containerdC, err := startContainerd(ctx, testDataPath)
-	require.NoError(t, err)
+	// Set a containerd socket
+	t.Setenv("CONTAINERD_ADDRESS", socketPath)
 
+	containerdC := startContainerd(t, ctx, tmpDir)
 	defer containerdC.Terminate(ctx)
 
-	cli, err := containerd.New(socketPath)
+	client, err := containerd.New(socketPath)
 	require.NoError(t, err)
-	defer cli.Close()
+	defer client.Close()
 
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			c, err := cache.NewFSCache(targetPath)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cacheDir := t.TempDir()
+			c, err := cache.NewFSCache(cacheDir)
 			require.NoError(t, err)
 
 			defer func() {
@@ -152,38 +124,29 @@ func TestGetLocalContainerdImage(t *testing.T) {
 				c.Close()
 			}()
 
-			archive, err := os.Open(path.Join("testdata/fixtures", test.tarArchive))
+			archive, err := os.Open(path.Join("testdata", "fixtures", tt.tarArchive))
 			require.NoError(t, err)
+
 			uncompressedArchive, err := gzip.NewReader(archive)
 			require.NoError(t, err)
 			defer archive.Close()
-			_, err = cli.Import(ctx, uncompressedArchive)
+
+			_, err = client.Import(ctx, uncompressedArchive)
 			require.NoError(t, err)
 
-			ref, err := name.ParseReference(test.imageName, name.Insecure)
+			img, cleanup, err := image.NewContainerImage(ctx, tt.imageName, types.DockerOption{})
+			require.NoError(t, err)
+			defer cleanup()
+
+			ar, err := aimage.NewArtifact(img, c, artifact.Option{})
 			require.NoError(t, err)
 
-			img, _, err := daemon.ContainerdImage(socketPath, test.imageName, ref, ctx)
+			ref, err := ar.Inspect(ctx)
 			require.NoError(t, err)
-			require.NotNil(t, img)
 
-			dImg := daemonImage{
-				Image: img,
-				name:  test.imageName,
-			}
-
-			art, err := aimage.NewArtifact(dImg, c, artifact.Option{})
+			expected, err := loadImageMetaData(tt.golden)
 			require.NoError(t, err)
-			require.NotNil(t, art)
-
-			artRef, err := art.Inspect(context.Background())
-			require.NoError(t, err)
-			require.NotNil(t, artRef)
-
-			expected, err := loadImageMetaData(test.golden)
-			require.NoError(t, err)
-			require.Equal(t, expected, &artRef.ImageMetadata)
-
+			require.Equal(t, expected, &ref.ImageMetadata)
 		})
 	}
 }
@@ -195,68 +158,51 @@ func TestPullLocalContainerdImage(t *testing.T) {
 		golden   string
 	}{
 		{
-			name:     "alpine-3.10 in aqua registry",
-			imageRef: "ghcr.io/aquasecurity/trivy-test-images:alpine-310",
+			name:     "remote alpine 3.10",
+			imageRef: "ghcr.io/aquasecurity/trivy-tt-images:alpine-310",
 			golden:   "testdata/goldens/alpine-3.10-image.json.golden",
 		},
 	}
+
 	ctx := namespaces.WithNamespace(context.Background(), "default")
 
-	testDataPath, targetPath, socketPath, err := configureTestDataPaths()
-	require.NoError(t, err)
-	defer os.RemoveAll(testDataPath)
+	tmpDir, socketPath := configureTestDataPaths(t)
 
-	containerdC, err := startContainerd(ctx, testDataPath)
-	require.NoError(t, err)
-
+	containerdC := startContainerd(t, ctx, tmpDir)
 	defer containerdC.Terminate(ctx)
 
 	cli, err := containerd.New(socketPath)
 	require.NoError(t, err)
 	defer cli.Close()
 
-	for _, test := range tests {
-		c, err := cache.NewFSCache(targetPath)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cacheDir := t.TempDir()
+			c, err := cache.NewFSCache(cacheDir)
+			require.NoError(t, err)
 
-		require.NoError(t, err)
+			defer func() {
+				c.Clear()
+				c.Close()
+			}()
 
-		defer func() {
-			c.Clear()
-			c.Close()
-		}()
+			_, err = cli.Pull(ctx, tt.imageRef)
+			require.NoError(t, err)
 
-		_, err = cli.Pull(ctx, test.imageRef)
-		require.NoError(t, err)
+			img, cleanup, err := image.NewContainerImage(ctx, tt.imageRef, types.DockerOption{})
+			require.NoError(t, err)
+			defer cleanup()
 
-		ref, err := name.ParseReference(test.imageRef, name.Insecure)
-		require.NoError(t, err)
+			art, err := aimage.NewArtifact(img, c, artifact.Option{})
+			require.NoError(t, err)
+			require.NotNil(t, art)
 
-		img, _, err := daemon.ContainerdImage(socketPath, test.imageRef, ref, ctx)
-		require.NoError(t, err)
-		require.NotNil(t, img)
+			artRef, err := art.Inspect(context.Background())
+			require.NoError(t, err)
 
-		dImg := daemonImage{
-			Image: img,
-			name:  test.imageRef,
-		}
-
-		art, err := aimage.NewArtifact(dImg, c, artifact.Option{})
-		require.NoError(t, err)
-		require.NotNil(t, art)
-
-		artRef, err := art.Inspect(context.Background())
-		require.NoError(t, err)
-		require.NotNil(t, artRef)
-
-		b, err := json.Marshal(artRef)
-		require.NoError(t, err)
-
-		t.Log(string(b))
-
-		expected, err := loadImageMetaData(test.golden)
-		require.NoError(t, err)
-		require.Equal(t, expected, &artRef.ImageMetadata)
-
+			expected, err := loadImageMetaData(tt.golden)
+			require.NoError(t, err)
+			require.Equal(t, expected, &artRef.ImageMetadata)
+		})
 	}
-
 }
