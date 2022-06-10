@@ -89,7 +89,7 @@ func ApplyLayers(layers []types.BlobInfo) types.ArtifactDetail {
 
 	for _, layer := range layers {
 		for _, opqDir := range layer.OpaqueDirs {
-			opqDir = strings.TrimSuffix(opqDir, sep) //this is necessary so that an empty element is not contribute into the array of the DeleteByString function
+			opqDir = strings.TrimSuffix(opqDir, sep) // this is necessary so that an empty element is not contribute into the array of the DeleteByString function
 			_ = nestedMap.DeleteByString(opqDir, sep)
 		}
 		for _, whFile := range layer.WhiteoutFiles {
@@ -148,6 +148,8 @@ func ApplyLayers(layers []types.BlobInfo) types.ArtifactDetail {
 			mergedLayer.Misconfigurations = append(mergedLayer.Misconfigurations, v)
 		case types.Secret:
 			mergedLayer.Secrets = append(mergedLayer.Secrets, v)
+		case types.License:
+			mergedLayer.Licenses = append(mergedLayer.Licenses, v)
 		case types.CustomResource:
 			mergedLayer.CustomResources = append(mergedLayer.CustomResources, v)
 		}
