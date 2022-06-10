@@ -137,11 +137,11 @@ func TestContainerd_LocalImage(t *testing.T) {
 					"sha256:6ef42db7800507577383edf1937cb203b9b85f619feed6046594208748ceb52c",
 				},
 				RepoTags:    []string{"ghcr.io/aquasecurity/trivy-test-images:vulnimage"},
-				RepoDigests: []string{"ghcr.io/aquasecurity/trivy-test-images@sha256:c17083664da903e13e9092fa3a3a1aeee2431aa2728298e3dbcec72f26369c41"},
+				RepoDigests: []string{"ghcr.io/aquasecurity/trivy-test-images@sha256:e74abbfd81e00baaf464cf9e09f8b24926e5255171e3150a60aa341ce064688f"},
 				ConfigFile: v1.ConfigFile{
 					Architecture: "amd64",
 					Created: v1.Time{
-						Time: time.Date(2019, 8, 7, 7, 25, 58, 6516498, time.UTC),
+						Time: time.Date(2019, 8, 7, 7, 25, 58, 651649800, time.UTC),
 					},
 					OS: "linux",
 					RootFS: v1.RootFS{
@@ -189,6 +189,10 @@ func TestContainerd_LocalImage(t *testing.T) {
 							"COMPOSER_VERSION=1.7.2",
 						},
 						WorkingDir: "/app",
+						Entrypoint: []string{
+							"/bin/sh",
+							"/docker-entrypoint.sh",
+						},
 					},
 				},
 			},
@@ -260,9 +264,10 @@ func TestContainerd_PullImage(t *testing.T) {
 					"sha256:03901b4a2ea88eeaad62dbe59b072b28b6efa00491962b8741081c5df50c65e0",
 				},
 				RepoTags:    []string{"ghcr.io/aquasecurity/trivy-test-images:alpine-310"},
-				RepoDigests: []string{"ghcr.io/aquasecurity/trivy-test-images@sha256:f12582b2f2190f350e3904462c1c23aaf366b4f76705e97b199f9bbded1d816a"},
+				RepoDigests: []string{"ghcr.io/aquasecurity/trivy-test-images@sha256:72c42ed48c3a2db31b7dafe17d275b634664a708d901ec9fd57b1529280f01fb"},
 				ConfigFile: v1.ConfigFile{
 					Architecture: "amd64",
+					Container:    "0a80155a31551fcc1a36fccbbda79fcd3f0b1c7d270653d00310e6e2217c57e6",
 					Created: v1.Time{
 						Time: time.Date(2019, 8, 20, 20, 19, 55, 211423266, time.UTC),
 					},
@@ -276,6 +281,22 @@ func TestContainerd_PullImage(t *testing.T) {
 							},
 						},
 					},
+					DockerVersion: "18.06.1-ce",
+					History: []v1.History{
+						{
+							Created: v1.Time{
+								Time: time.Date(2019, 8, 20, 20, 19, 55, 62606894, time.UTC),
+							},
+							CreatedBy: "/bin/sh -c #(nop) ADD file:fe64057fbb83dccb960efabbf1cd8777920ef279a7fa8dbca0a8801c651bdf7c in / ",
+						},
+						{
+							Created: v1.Time{
+								Time: time.Date(2019, 8, 20, 20, 19, 55, 211423266, time.UTC),
+							},
+							CreatedBy:  "/bin/sh -c #(nop)  CMD [\"/bin/sh\"]",
+							EmptyLayer: true,
+						},
+					},
 					Config: v1.Config{
 						Cmd: []string{
 							"/bin/sh",
@@ -283,6 +304,8 @@ func TestContainerd_PullImage(t *testing.T) {
 						Env: []string{
 							"PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
 						},
+						Image:       "sha256:06f4121dff4d0123ce11bd2e44f48da9ba9ddcd23ae376ea1f363f63ea0849b5",
+						ArgsEscaped: true,
 					},
 				},
 			},
