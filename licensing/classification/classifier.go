@@ -62,5 +62,11 @@ func (c *Classifier) classifyLicense(filePath string, contents []byte, headers b
 }
 
 func (c *Classifier) licenseIgnored(licenseName string) bool {
-	return slices.Contains(c.ignoredLicenses, licenseName)
+	if c.ignoredLicenses == nil || len(c.ignoredLicenses) > 0 {
+		return slices.Contains(c.ignoredLicenses, licenseName)
+	}
+
+	// default is to allow everything except the Google Forbidden ones
+	return !slices.Contains(forbiddenLicenses, licenseName)
+
 }
