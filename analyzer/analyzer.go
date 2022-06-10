@@ -90,6 +90,7 @@ type AnalysisResult struct {
 	PackageInfos         []types.PackageInfo
 	Applications         []types.Application
 	Secrets              []types.Secret
+	Licenses             []types.License
 	SystemInstalledFiles []string // A list of files installed by OS package manager
 
 	Files map[types.HandlerType][]types.File
