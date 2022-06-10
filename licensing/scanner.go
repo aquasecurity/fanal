@@ -1,11 +1,11 @@
-package license
+package licensing
 
 import (
 	"errors"
 	"os"
 
-	"github.com/aquasecurity/fanal/license/classification"
-	"github.com/aquasecurity/fanal/license/config"
+	"github.com/aquasecurity/fanal/licensing/classification"
+	"github.com/aquasecurity/fanal/licensing/config"
 	"github.com/aquasecurity/fanal/log"
 	"github.com/aquasecurity/fanal/types"
 	"golang.org/x/xerrors"

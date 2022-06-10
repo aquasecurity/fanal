@@ -3,7 +3,7 @@ package classification
 import (
 	"io/ioutil"
 
-	"github.com/aquasecurity/fanal/license/config"
+	"github.com/aquasecurity/fanal/licensing/config"
 	"github.com/aquasecurity/fanal/types"
 	classifier "github.com/google/licenseclassifier/v2"
 	"github.com/google/licenseclassifier/v2/assets"

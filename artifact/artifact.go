@@ -6,7 +6,7 @@ import (
 
 	"github.com/aquasecurity/fanal/analyzer"
 	misconf "github.com/aquasecurity/fanal/analyzer/config"
-	"github.com/aquasecurity/fanal/analyzer/license"
+	"github.com/aquasecurity/fanal/analyzer/licensing"
 	"github.com/aquasecurity/fanal/analyzer/secret"
 	"github.com/aquasecurity/fanal/types"
 )
@@ -23,7 +23,7 @@ type Option struct {
 
 	MisconfScannerOption misconf.ScannerOption
 	SecretScannerOption  secret.ScannerOption
-	LicenseScannerOption license.ScannerOption
+	LicenseScannerOption licensing.ScannerOption
 }
 
 func (o *Option) Sort() {

@@ -1,4 +1,4 @@
-package license
+package licensing
 
 import (
 	"context"
@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 
 	"github.com/aquasecurity/fanal/analyzer"
-	"github.com/aquasecurity/fanal/license"
+	"github.com/aquasecurity/fanal/licensing"
 	"github.com/aquasecurity/fanal/types"
 	dio "github.com/aquasecurity/go-dep-parser/pkg/io"
 	"golang.org/x/exp/slices"
@@ -28,7 +28,7 @@ type ScannerOption struct {
 
 // LicenseAnalyzer is an analyzer for licenses
 type LicenseAnalyzer struct {
-	scanner license.Scanner
+	scanner licensing.Scanner
 }
 
 func RegisterLicenseScanner(opt ScannerOption) error {
@@ -41,7 +41,7 @@ func RegisterLicenseScanner(opt ScannerOption) error {
 }
 
 func newLicenseScanner(configPath string) (LicenseAnalyzer, error) {
-	s, err := license.NewScanner(configPath)
+	s, err := licensing.NewScanner(configPath)
 	if err != nil {
 		return LicenseAnalyzer{}, xerrors.Errorf("license scanner error: %w", err)
 	}

@@ -1,4 +1,4 @@
-package license
+package licensing
 
 import (
 	"context"

@@ -9,7 +9,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/aquasecurity/fanal/analyzer/license"
+	"github.com/aquasecurity/fanal/analyzer/licensing"
 	"github.com/opencontainers/go-digest"
 	"golang.org/x/sync/semaphore"
 	"golang.org/x/xerrors"
@@ -55,7 +55,7 @@ func NewArtifact(rootPath string, c cache.ArtifactCache, opt artifact.Option) (a
 	}
 
 	// Register license analyzer
-	if err = license.RegisterLicenseScanner(opt.LicenseScannerOption); err != nil {
+	if err = licensing.RegisterLicenseScanner(opt.LicenseScannerOption); err != nil {
 		return nil, xerrors.Errorf("license scanner error: %w", err)
 	}
 

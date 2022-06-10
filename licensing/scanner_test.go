@@ -1,4 +1,4 @@
-package license
+package licensing
 
 import (
 	"fmt"
@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/aquasecurity/fanal/license/config"
+	"github.com/aquasecurity/fanal/licensing/config"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"gopkg.in/yaml.v3"
