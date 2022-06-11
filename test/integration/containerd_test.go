@@ -1,23 +1,28 @@
-//go:build integration
+//go:build integration && linux
 
 package integration
 
 import (
 	"compress/gzip"
 	"context"
+	"encoding/json"
+	"fmt"
 	"os"
 	"path"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
 	"github.com/containerd/containerd"
 	"github.com/containerd/containerd/namespaces"
 	v1 "github.com/google/go-containerregistry/pkg/v1"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	testcontainers "github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
 
+	"github.com/aquasecurity/fanal/applier"
 	"github.com/aquasecurity/fanal/artifact"
 	aimage "github.com/aquasecurity/fanal/artifact/image"
 	"github.com/aquasecurity/fanal/cache"
@@ -243,8 +248,23 @@ func TestContainerd_LocalImage(t *testing.T) {
 
 			ref, err := ar.Inspect(ctx)
 			require.NoError(t, err)
-
 			require.Equal(t, tt.wantMetadata, ref.ImageMetadata)
+
+			a := applier.NewApplier(c)
+			got, err := a.ApplyLayers(ref.ID, ref.BlobIDs)
+			require.NoError(t, err)
+
+			// Parse a golden file
+			tag := strings.Split(tt.imageName, ":")[1]
+			golden, err := os.Open(fmt.Sprintf("testdata/goldens/packages/%s.json.golden", tag))
+			require.NoError(t, err)
+
+			var wantPkgs []types.Package
+			err = json.NewDecoder(golden).Decode(&wantPkgs)
+			require.NoError(t, err)
+
+			// Assert
+			assert.Equal(t, wantPkgs, got.Packages)
 		})
 	}
 }
@@ -252,12 +272,12 @@ func TestContainerd_LocalImage(t *testing.T) {
 func TestContainerd_PullImage(t *testing.T) {
 	tests := []struct {
 		name         string
-		imageRef     string
+		imageName    string
 		wantMetadata types.ImageMetadata
 	}{
 		{
-			name:     "remote alpine 3.10",
-			imageRef: "ghcr.io/aquasecurity/trivy-test-images:alpine-310",
+			name:      "remote alpine 3.10",
+			imageName: "ghcr.io/aquasecurity/trivy-test-images:alpine-310",
 			wantMetadata: types.ImageMetadata{
 				ID: "sha256:961769676411f082461f9ef46626dd7a2d1e2b2a38e6a44364bcbecf51e66dd4",
 				DiffIDs: []string{
@@ -334,10 +354,10 @@ func TestContainerd_PullImage(t *testing.T) {
 				c.Close()
 			}()
 
-			_, err = cli.Pull(ctx, tt.imageRef)
+			_, err = cli.Pull(ctx, tt.imageName)
 			require.NoError(t, err)
 
-			img, cleanup, err := image.NewContainerImage(ctx, tt.imageRef, types.DockerOption{})
+			img, cleanup, err := image.NewContainerImage(ctx, tt.imageName, types.DockerOption{})
 			require.NoError(t, err)
 			defer cleanup()
 
@@ -345,10 +365,25 @@ func TestContainerd_PullImage(t *testing.T) {
 			require.NoError(t, err)
 			require.NotNil(t, art)
 
-			artRef, err := art.Inspect(context.Background())
+			ref, err := art.Inspect(context.Background())
+			require.NoError(t, err)
+			require.Equal(t, tt.wantMetadata, ref.ImageMetadata)
+
+			a := applier.NewApplier(c)
+			got, err := a.ApplyLayers(ref.ID, ref.BlobIDs)
 			require.NoError(t, err)
 
-			require.Equal(t, tt.wantMetadata, artRef.ImageMetadata)
+			// Parse a golden file
+			tag := strings.Split(tt.imageName, ":")[1]
+			golden, err := os.Open(fmt.Sprintf("testdata/goldens/packages/%s.json.golden", tag))
+			require.NoError(t, err)
+
+			var wantPkgs []types.Package
+			err = json.NewDecoder(golden).Decode(&wantPkgs)
+			require.NoError(t, err)
+
+			// Assert
+			assert.Equal(t, wantPkgs, got.Packages)
 		})
 	}
 }
