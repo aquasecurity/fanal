@@ -45,6 +45,7 @@ func ContainerdImage(ctx context.Context, imageName string) (Image, func(), erro
 
 	addr := os.Getenv("CONTAINERD_ADDRESS")
 	if addr == "" {
+		// TODO: support rootless
 		addr = defaultContainerdSocket
 	}
 
@@ -55,7 +56,7 @@ func ContainerdImage(ctx context.Context, imageName string) (Image, func(), erro
 	// Parse the image name
 	ref, err := refdocker.ParseDockerRef(imageName)
 	if err != nil {
-		return nil, cleanup, err
+		return nil, cleanup, xerrors.Errorf("parse error: %w", err)
 	}
 
 	client, err := containerd.New(addr)
