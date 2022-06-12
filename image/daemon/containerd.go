@@ -3,13 +3,14 @@ package daemon
 import (
 	"context"
 	"errors"
-	"github.com/containerd/containerd/namespaces"
 	"io"
 	"os"
 
 	"github.com/containerd/containerd"
 	"github.com/containerd/containerd/images/archive"
+	"github.com/containerd/containerd/namespaces"
 	"github.com/containerd/containerd/platforms"
+	refdocker "github.com/containerd/containerd/reference/docker"
 	"github.com/containerd/nerdctl/pkg/imageinspector"
 	"github.com/containerd/nerdctl/pkg/inspecttypes/dockercompat"
 	api "github.com/docker/docker/api/types"
@@ -51,22 +52,32 @@ func ContainerdImage(ctx context.Context, imageName string) (Image, func(), erro
 		return nil, cleanup, xerrors.Errorf("containerd socket not found: %s", addr)
 	}
 
+	// Parse the image name
+	ref, err := refdocker.ParseDockerRef(imageName)
+	if err != nil {
+		return nil, cleanup, err
+	}
+
 	client, err := containerd.New(addr)
 	if err != nil {
 		return nil, cleanup, xerrors.Errorf("failed to initialize a containerd client: %w", err)
 	}
 
+	// Need to specify a namespace
 	ctx = namespaces.WithNamespace(ctx, defaultContainerdNamespace)
-	img, err := client.GetImage(ctx, imageName)
+
+	img, err := client.GetImage(ctx, ref.String())
 	if err != nil {
 		return nil, cleanup, xerrors.Errorf("failed to get %s: %w", imageName, err)
 	}
 
+	// Inspect the image
 	n, err := imageinspector.Inspect(ctx, client, img.Metadata())
 	if err != nil {
 		return nil, cleanup, xerrors.Errorf("inspect error: %w", imageName, err)
 	}
 
+	// Convert the result to the docker compat format
 	d, err := dockercompat.ImageFromNative(n)
 	if err != nil {
 		return nil, cleanup, err
@@ -84,7 +95,7 @@ func ContainerdImage(ctx context.Context, imageName string) (Image, func(), erro
 	}
 
 	return &image{
-		opener:  imageOpener(ctx, imageName, f, imageWriter(client, img)),
+		opener:  imageOpener(ctx, ref.String(), f, imageWriter(client, img)),
 		inspect: toDockerInspect(d),
 	}, cleanup, nil
 }
