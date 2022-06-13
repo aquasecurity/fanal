@@ -1,4 +1,4 @@
-package linensing
+package licensing
 
 import (
 	"context"
