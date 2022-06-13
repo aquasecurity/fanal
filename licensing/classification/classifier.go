@@ -56,14 +56,14 @@ func (c *Classifier) classifyLicense(filePath string, contents []byte, headers b
 				licenseLink := fmt.Sprintf("https://spdx.org/licenses/%s.html", m.Name)
 
 				license.Findings = append(license.Findings, types.LicenseFinding{
-					MatchType:                   m.MatchType,
-					License:                     m.Name,
-					Variant:                     m.Variant,
-					Confidence:                  m.Confidence,
-					GoogleLicenseClassification: classification,
-					StartLine:                   m.StartLine,
-					EndLine:                     m.EndLine,
-					LicenseLink:                 licenseLink,
+					MatchType:                        m.MatchType,
+					License:                          m.Name,
+					Confidence:                       m.Confidence,
+					GoogleLicenseClassificationIndex: riskLevel,
+					GoogleLicenseClassification:      classification,
+					StartLine:                        m.StartLine,
+					EndLine:                          m.EndLine,
+					LicenseLink:                      licenseLink,
 				})
 			}
 		}

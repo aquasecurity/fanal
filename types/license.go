@@ -7,13 +7,13 @@ type License struct {
 }
 
 type LicenseFinding struct {
-	License                     string  `json:"license"`
-	MatchType                   string  `json:"match_type"`
-	Variant                     string  `json:"variant"`
-	Confidence                  float64 `json:"match_confidence"`
-	StartLine                   int     `json:"start_line"`
-	EndLine                     int     `json:"end_line"`
-	GoogleLicenseClassification string  `json:"google_license_classification"`
-	Package                     string  `json:"package,omitempty"`
-	LicenseLink                 string  `json:"license_link,omitempty"`
+	License                          string  `json:"license"`
+	MatchType                        string  `json:"match_type"`
+	Confidence                       float64 `json:"match_confidence"`
+	StartLine                        int     `json:"start_line"`
+	EndLine                          int     `json:"end_line"`
+	GoogleLicenseClassificationIndex int     `json:"-"`
+	GoogleLicenseClassification      string  `json:"google_license_classification"`
+	Package                          string  `json:"package,omitempty"`
+	LicenseLink                      string  `json:"license_link,omitempty"`
 }

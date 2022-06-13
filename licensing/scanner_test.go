@@ -31,7 +31,6 @@ func Test_LicenseScanning(t *testing.T) {
 				{
 					License:                     "AGPL-3.0",
 					MatchType:                   "Header",
-					Variant:                     "header.txt",
 					GoogleLicenseClassification: "forbidden",
 					Confidence:                  0.98,
 					StartLine:                   2,
@@ -72,7 +71,6 @@ func Test_LicenseScanning(t *testing.T) {
 				{
 					License:                     "Commons-Clause",
 					MatchType:                   "License",
-					Variant:                     "license.txt",
 					GoogleLicenseClassification: "forbidden",
 					Confidence:                  0.98,
 					StartLine:                   1,
@@ -116,7 +114,6 @@ func Test_LicenseScanning(t *testing.T) {
 					lf := license.Findings[i]
 					assert.Equal(t, f.License, lf.License)
 					assert.Equal(t, f.MatchType, lf.MatchType)
-					assert.Equal(t, f.Variant, lf.Variant)
 					assert.Equal(t, f.StartLine, lf.StartLine)
 					assert.Equal(t, f.EndLine, lf.EndLine)
 					assert.Equal(t, f.GoogleLicenseClassification, lf.GoogleLicenseClassification)
