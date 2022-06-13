@@ -1,6 +1,8 @@
 package classification
 
 import (
+	"fmt"
+
 	"github.com/aquasecurity/fanal/licensing/config"
 	"github.com/aquasecurity/fanal/types"
 	"github.com/google/licenseclassifier"
@@ -13,7 +15,7 @@ type Classifier struct {
 	classifier          *classifier.Classifier
 	includeHeaders      bool
 	confidenceThreshold float64
-	severityThreshold   int
+	riskThreshold       int
 	ignoredLicenses     []string
 }
 
@@ -29,7 +31,7 @@ func NewClassifier(config config.Config) (*Classifier, error) {
 	return &Classifier{
 		classifier:          lc,
 		includeHeaders:      config.IncludeHeaders,
-		severityThreshold:   config.SeverityThreshold,
+		riskThreshold:       config.RiskThreshold,
 		confidenceThreshold: config.MatchConfidenceThreshold,
 		ignoredLicenses:     config.IgnoredLicences,
 	}, nil
@@ -50,15 +52,18 @@ func (c *Classifier) classifyLicense(filePath string, contents []byte, headers b
 		}
 
 		if m.Confidence > c.confidenceThreshold && !c.licenseIgnored(m.Name) {
-			if severityLevel, severity := c.licenseSeverity(m.Name); severityLevel >= c.severityThreshold {
+			if riskLevel, classification := c.googleClassification(m.Name); riskLevel >= c.riskThreshold {
+				licenseLink := fmt.Sprintf("https://spdx.org/licenses/%s.html", m.Name)
+
 				license.Findings = append(license.Findings, types.LicenseFinding{
-					MatchType:             m.MatchType,
-					License:               m.Name,
-					Variant:               m.Variant,
-					Confidence:            m.Confidence,
-					LicenseClassification: severity,
-					StartLine:             m.StartLine,
-					EndLine:               m.EndLine,
+					MatchType:                   m.MatchType,
+					License:                     m.Name,
+					Variant:                     m.Variant,
+					Confidence:                  m.Confidence,
+					GoogleLicenseClassification: classification,
+					StartLine:                   m.StartLine,
+					EndLine:                     m.EndLine,
+					LicenseLink:                 licenseLink,
 				})
 			}
 		}
@@ -67,22 +72,22 @@ func (c *Classifier) classifyLicense(filePath string, contents []byte, headers b
 	return license, nil
 }
 
-func (c *Classifier) licenseSeverity(licenseName string) (int, string) {
+func (c *Classifier) googleClassification(licenseName string) (int, string) {
 	switch licenseclassifier.LicenseType(licenseName) {
 	case "unencumbered":
-		return 7, "UNENCUMBERED"
+		return 7, "unencumbered"
 	case "permissive":
-		return 6, "PERMISSIVE"
+		return 6, "permissive"
 	case "notice":
-		return 5, "NOTICE"
+		return 5, "notice"
 	case "reciprocal":
-		return 4, "RECIPROCAL"
+		return 4, "reciprocal"
 	case "restricted":
-		return 3, "RESTRICTED"
+		return 3, "restricted"
 	case "FORBIDDEN":
-		return 2, "CRITICAL"
+		return 2, "forbidden"
 	default:
-		return 1, "UNKNOWN"
+		return 1, "unknown"
 	}
 }
 
