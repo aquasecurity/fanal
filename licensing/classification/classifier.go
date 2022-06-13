@@ -52,13 +52,13 @@ func (c *Classifier) classifyLicense(filePath string, contents []byte, headers b
 		if m.Confidence > c.confidenceThreshold && !c.licenseIgnored(m.Name) {
 			if severityLevel, severity := c.licenseSeverity(m.Name); severityLevel >= c.severityThreshold {
 				license.Findings = append(license.Findings, types.LicenseFinding{
-					MatchType:  m.MatchType,
-					Name:       m.Name,
-					Variant:    m.Variant,
-					Confidence: m.Confidence,
-					Severity:   severity,
-					StartLine:  m.StartLine,
-					EndLine:    m.EndLine,
+					MatchType:             m.MatchType,
+					License:               m.Name,
+					Variant:               m.Variant,
+					Confidence:            m.Confidence,
+					LicenseClassification: severity,
+					StartLine:             m.StartLine,
+					EndLine:               m.EndLine,
 				})
 			}
 		}

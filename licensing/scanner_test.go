@@ -29,13 +29,13 @@ func Test_LicenseScanning(t *testing.T) {
 			expectLicense: true,
 			expectedFindings: []types.LicenseFinding{
 				{
-					Name:       "AGPL-3.0",
-					MatchType:  "Header",
-					Variant:    "header.txt",
-					Severity:   "CRITICAL",
-					Confidence: 0.98,
-					StartLine:  2,
-					EndLine:    13,
+					License:               "AGPL-3.0",
+					MatchType:             "Header",
+					Variant:               "header.txt",
+					LicenseClassification: "CRITICAL",
+					Confidence:            0.98,
+					StartLine:             2,
+					EndLine:               13,
 				},
 			},
 		},
@@ -70,13 +70,13 @@ func Test_LicenseScanning(t *testing.T) {
 			expectLicense: true,
 			expectedFindings: []types.LicenseFinding{
 				{
-					Name:       "Commons-Clause",
-					MatchType:  "License",
-					Variant:    "license.txt",
-					Severity:   "CRITICAL",
-					Confidence: 0.98,
-					StartLine:  1,
-					EndLine:    13,
+					License:               "Commons-Clause",
+					MatchType:             "License",
+					Variant:               "license.txt",
+					LicenseClassification: "CRITICAL",
+					Confidence:            0.98,
+					StartLine:             1,
+					EndLine:               13,
 				},
 			},
 		},
@@ -114,12 +114,12 @@ func Test_LicenseScanning(t *testing.T) {
 				assert.Len(t, license.Findings, len(tt.expectedFindings))
 				for i, f := range tt.expectedFindings {
 					lf := license.Findings[i]
-					assert.Equal(t, f.Name, lf.Name)
+					assert.Equal(t, f.License, lf.License)
 					assert.Equal(t, f.MatchType, lf.MatchType)
 					assert.Equal(t, f.Variant, lf.Variant)
 					assert.Equal(t, f.StartLine, lf.StartLine)
 					assert.Equal(t, f.EndLine, lf.EndLine)
-					assert.Equal(t, f.Severity, lf.Severity)
+					assert.Equal(t, f.LicenseClassification, lf.LicenseClassification)
 					assert.Greater(t, lf.Confidence, 0.8)
 				}
 			} else {
