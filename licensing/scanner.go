@@ -43,7 +43,7 @@ func NewScanner(configPath string) (Scanner, error) {
 
 	f, err := os.Open(configPath)
 	if errors.Is(err, os.ErrNotExist) {
-		log.Logger.Debugf("No secret config detected: %s", configPath)
+		log.Logger.Debugf("No license config detected: %s", configPath)
 		return newDefaultScanner()
 	} else if err != nil {
 
@@ -51,7 +51,7 @@ func NewScanner(configPath string) (Scanner, error) {
 	}
 	defer func() { _ = f.Close() }()
 
-	log.Logger.Infof("Loading %s for secret scanning...", configPath)
+	log.Logger.Infof("Loading %s for license scanning...", configPath)
 
 	var cfg config.Config
 	if err = yaml.NewDecoder(f).Decode(&cfg); err != nil {
