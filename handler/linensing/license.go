@@ -36,7 +36,7 @@ func newLicensePostHandler(artifactOpt artifact.Option) (handler.PostHandler, er
 	}, nil
 }
 
-func (h licensePostHandler) Handle(_ context.Context, result *analyzer.AnalysisResult, _ *types.BlobInfo) error {
+func (h licensePostHandler) Handle(_ context.Context, result *analyzer.AnalysisResult, blob *types.BlobInfo) error {
 	files, ok := result.Files[h.Type()]
 	if !ok {
 		return nil
@@ -53,7 +53,16 @@ func (h licensePostHandler) Handle(_ context.Context, result *analyzer.AnalysisR
 			return xerrors.Errorf("licensingfs write error: %w", err)
 		}
 	}
+
+	licenseFiles, err := h.scanner.ScanFS(licenseFS)
+	if err != nil {
+		return xerrors.Errorf("licensing scanning errors: %w", err)
+	}
+
+	blob.Licenses = licenseFiles
+
 	return nil
+
 }
 
 func (h licensePostHandler) Type() types.HandlerType {
