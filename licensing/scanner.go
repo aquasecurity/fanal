@@ -23,20 +23,11 @@ var defaultConfig = config.Config{
 	// check the headers of human readable source code files for headers by default
 	IncludeHeaders: true,
 
-	// default ignored list - taken from popular license from the open source initiative https://opensource.org/licenses
-	IgnoredLicences: []string{
-		"Apache-2.0",
-		"BSD-3-Clause",
-		"BSD-2-Clause",
-		"GPL-2.0",
-		"GPL-3.0",
-		"LGPL-2.1",
-		"LGPL-3.0",
-		"MIT",
-		"MPL-2.0",
-		"CDDL-1.0",
-		"EPL-2.0",
-	},
+	// license acceptable risk threshold - default to 4 (restricted and above)
+	RiskThreshold: 4,
+
+	// ignore the following licenses
+	IgnoredLicences: []string{},
 }
 
 type ScanArgs struct {

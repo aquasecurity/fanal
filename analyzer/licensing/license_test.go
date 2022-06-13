@@ -42,8 +42,9 @@ func Test_AnalyzeLicenses(t *testing.T) {
 			},
 		},
 		{
-			name:     "Another Licensed C file",
-			filePath: "testdata/another_licensed.c",
+			name:       "Another Licensed C file",
+			filePath:   "testdata/another_licensed.c",
+			configPath: "testdata/configFiles/showEverything.yaml",
 			want: &analyzer.AnalysisResult{
 				Licenses: []types.License{
 					{

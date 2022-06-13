@@ -52,7 +52,7 @@ func (c *Classifier) classifyLicense(filePath string, contents []byte, headers b
 		}
 
 		if m.Confidence > c.confidenceThreshold && !c.licenseIgnored(m.Name) {
-			if riskLevel, classification := c.googleClassification(m.Name); riskLevel >= c.riskThreshold {
+			if riskLevel, classification := c.googleClassification(m.Name); riskLevel <= c.riskThreshold {
 				licenseLink := fmt.Sprintf("https://spdx.org/licenses/%s.html", m.Name)
 
 				license.Findings = append(license.Findings, types.LicenseFinding{
