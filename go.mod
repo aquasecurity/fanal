@@ -53,19 +53,11 @@ require (
 )
 
 require (
-<<<<<<< HEAD
 	github.com/aquasecurity/defsec v0.63.1
-	github.com/google/licenseclassifier/v2 v2.0.0-pre5
-=======
-	github.com/aquasecurity/go-dep-parser v0.0.0-20220531123411-1dabb532605f
-	github.com/aquasecurity/go-version v0.0.0-20210121072130-637058cfe492
-	github.com/aquasecurity/testdocker v0.0.0-20210911155206-e1e85f5a1516
 	// fix this version, attempting to update brings in an embed bug
 	github.com/google/licenseclassifier v0.0.0-20210722185704-9369ededc590
->>>>>>> c1cf9f2 (feat: add "severity" to licenses)
+	github.com/google/licenseclassifier/v2 v2.0.0-pre5
 )
-
-require github.com/google/licenseclassifier/v2 v2.0.0-pre5
 
 require (
 	cloud.google.com/go v0.99.0 // indirect
