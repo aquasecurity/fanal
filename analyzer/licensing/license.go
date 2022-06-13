@@ -53,6 +53,25 @@ func newLicenseScanner(configPath string) (LicenseAnalyzer, error) {
 
 func (a LicenseAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisInput) (*analyzer.AnalysisResult, error) {
 
+	if slices.Contains(licensing.LicensePackageFiles, input.Info.Name()) {
+		content, err := io.ReadAll(input.Content)
+		if err != nil {
+			return nil, xerrors.Errorf("read error %s: %w", input.FilePath, err)
+		}
+		return &analyzer.AnalysisResult{
+			Files: map[types.HandlerType][]types.File{
+				// It will be passed to license post handler
+				types.LicensePostHandler: {
+					{
+						Type:    types.License,
+						Path:    input.FilePath,
+						Content: content,
+					},
+				},
+			},
+		}, nil
+	}
+
 	// need files to be text based, readable files
 	readable, err := isHumanReadable(input.Content, input.Info.Size())
 	if err != nil || !readable {
@@ -72,12 +91,10 @@ func (a LicenseAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisInput
 		filePath = fmt.Sprintf("/%s", filePath)
 	}
 
-	result := a.scanner.Scan(licensing.ScanArgs{
+	if lf := a.scanner.Scan(licensing.ScanArgs{
 		FilePath: filePath,
 		Content:  content,
-	})
-
-	if len(result.Findings) == 0 {
+	}); len(lf.Findings) == 0 {
 		return nil, nil
 	}
 

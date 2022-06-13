@@ -48,6 +48,7 @@ const (
 	MavenPom = "pom.xml"
 
 	NpmPkgLock = "package-lock.json"
+	NpmPkg     = "package.json"
 	YarnLock   = "yarn.lock"
 
 	ComposerLock = "composer.lock"

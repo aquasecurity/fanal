@@ -8,7 +8,7 @@ import (
 	"github.com/aquasecurity/fanal/types"
 )
 
-var lockFiles = []string{
+var LicensePackageFiles = []string{
 	types.NuGetPkgsLock,
 	types.NuGetPkgsConfig,
 	types.GoMod,
@@ -32,7 +32,7 @@ func findPackage(path string, filesystem fs.FS, licenseFile *types.LicenseFile) 
 			return err
 		}
 
-		for _, fileType := range lockFiles {
+		for _, fileType := range LicensePackageFiles {
 			if info.Name() == fileType {
 				licenseFile.Package = filepath.Base(filepath.Dir(path))
 				break
