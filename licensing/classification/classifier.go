@@ -38,13 +38,13 @@ func NewClassifier(config config.Config) (*Classifier, error) {
 }
 
 // Classify detects and classifies the licencedFile found in a file
-func (c *Classifier) Classify(filePath string, contents []byte) (types.License, error) {
+func (c *Classifier) Classify(filePath string, contents []byte) (types.LicenseFile, error) {
 	return c.classifyLicense(filePath, contents, c.includeHeaders)
 }
 
-func (c *Classifier) classifyLicense(filePath string, contents []byte, headers bool) (types.License, error) {
+func (c *Classifier) classifyLicense(filePath string, contents []byte, headers bool) (types.LicenseFile, error) {
 
-	license := types.License{FilePath: filePath}
+	license := types.LicenseFile{FilePath: filePath}
 	for _, m := range c.classifier.Match(contents).Matches {
 		// If not looking for headers, skip them
 		if !headers && m.MatchType == "Header" {

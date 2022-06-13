@@ -82,7 +82,16 @@ func (a LicenseAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisInput
 	}
 
 	return &analyzer.AnalysisResult{
-		Licenses: []types.License{result},
+		Files: map[types.HandlerType][]types.File{
+			// It will be passed to license post handler
+			types.LicensePostHandler: {
+				{
+					Type:    types.License,
+					Path:    input.FilePath,
+					Content: content,
+				},
+			},
+		},
 	}, nil
 }
 

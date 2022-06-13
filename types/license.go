@@ -1,9 +1,11 @@
 package types
 
-type License struct {
-	FilePath string
-	Findings []LicenseFinding
-	Layer    Layer `json:",omitempty"`
+type LicenseFile struct {
+	FilePath   string
+	Findings   []LicenseFinding
+	Layer      Layer  `json:",omitempty"`
+	Package    string `json:"package,omitempty"`
+	PackageDir string `json:"package_dir,omitempty"`
 }
 
 type LicenseFinding struct {
@@ -14,6 +16,5 @@ type LicenseFinding struct {
 	EndLine                          int     `json:"end_line"`
 	GoogleLicenseClassificationIndex int     `json:"classification_index"`
 	GoogleLicenseClassification      string  `json:"google_license_classification"`
-	Package                          string  `json:"package,omitempty"`
 	LicenseLink                      string  `json:"license_link,omitempty"`
 }

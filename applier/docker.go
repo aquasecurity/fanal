@@ -156,7 +156,7 @@ func ApplyLayers(layers []types.BlobInfo) types.ArtifactDetail {
 			mergedLayer.Misconfigurations = append(mergedLayer.Misconfigurations, v)
 		case types.Secret:
 			mergedLayer.Secrets = append(mergedLayer.Secrets, v)
-		case types.License:
+		case types.LicenseFile:
 			mergedLayer.Licenses = append(mergedLayer.Licenses, v)
 		case types.CustomResource:
 			mergedLayer.CustomResources = append(mergedLayer.CustomResources, v)

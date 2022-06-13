@@ -6,109 +6,54 @@ import (
 	"testing"
 
 	"github.com/aquasecurity/fanal/analyzer"
-	"github.com/aquasecurity/fanal/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func Test_AnalyzeLicenses(t *testing.T) {
 	tests := []struct {
-		name       string
-		configPath string
-		filePath   string
-		want       *analyzer.AnalysisResult
+		name                 string
+		configPath           string
+		filePath             string
+		expectedHandlerFiles int
 	}{
 		{
-			name:     "Licensed C file",
-			filePath: "testdata/licensed.c",
-			want: &analyzer.AnalysisResult{
-				Licenses: []types.License{
-					{
-						FilePath: "/testdata/licensed.c",
-						Findings: []types.LicenseFinding{
-							{
-								License:                          "AGPL-3.0",
-								MatchType:                        "Header",
-								GoogleLicenseClassificationIndex: 2,
-								GoogleLicenseClassification:      "forbidden",
-								Confidence:                       1,
-								StartLine:                        2,
-								EndLine:                          13,
-								LicenseLink:                      "https://spdx.org/licenses/AGPL-3.0.html",
-							},
-						},
-					},
-				},
-			},
+			name:                 "Licensed C file",
+			filePath:             "testdata/licensed.c",
+			expectedHandlerFiles: 1,
 		},
 		{
-			name:       "Another Licensed C file",
-			filePath:   "testdata/another_licensed.c",
-			configPath: "testdata/configFiles/showEverything.yaml",
-			want: &analyzer.AnalysisResult{
-				Licenses: []types.License{
-					{
-						FilePath: "/testdata/another_licensed.c",
-						Findings: []types.LicenseFinding{
-							{
-								License:                          "BSL-1.0",
-								MatchType:                        "License",
-								GoogleLicenseClassificationIndex: 5,
-								GoogleLicenseClassification:      "notice",
-								Confidence:                       1,
-								StartLine:                        2,
-								EndLine:                          6,
-								LicenseLink:                      "https://spdx.org/licenses/BSL-1.0.html",
-							},
-						},
-					},
-				},
-			},
+			name:                 "Another Licensed C file",
+			filePath:             "testdata/another_licensed.c",
+			configPath:           "testdata/configFiles/showEverything.yaml",
+			expectedHandlerFiles: 1,
 		},
 		{
-			name:     "Creative Commons License file",
-			filePath: "testdata/LICENSE_cc",
-			want: &analyzer.AnalysisResult{
-				Licenses: []types.License{
-					{
-						FilePath: "/testdata/LICENSE_cc",
-						Findings: []types.LicenseFinding{
-							{
-								License:                          "Commons-Clause",
-								MatchType:                        "License",
-								GoogleLicenseClassificationIndex: 2,
-								GoogleLicenseClassification:      "forbidden",
-								Confidence:                       1,
-								StartLine:                        1,
-								EndLine:                          13,
-								LicenseLink:                      "https://spdx.org/licenses/Commons-Clause.html",
-							},
-						},
-					},
-				},
-			},
+			name:                 "Creative Commons License file",
+			filePath:             "testdata/LICENSE_cc",
+			expectedHandlerFiles: 1,
 		},
 		{
-			name:     "Unlicensed C file",
-			filePath: "testdata/unlicensed.c",
-			want:     nil,
+			name:                 "Unlicensed C file",
+			filePath:             "testdata/unlicensed.c",
+			expectedHandlerFiles: 0,
 		},
 		{
-			name:       "Licensed C with config ignoring license",
-			filePath:   "testdata/licensed.c",
-			configPath: "testdata/configFiles/ignoredLicenses.yaml",
-			want:       nil,
+			name:                 "Licensed C with config ignoring license",
+			filePath:             "testdata/licensed.c",
+			configPath:           "testdata/configFiles/ignoredLicenses.yaml",
+			expectedHandlerFiles: 0,
 		},
 		{
-			name:       "Licensed C with config having high confidence threshold",
-			filePath:   "testdata/licensed.c",
-			configPath: "testdata/configFiles/highConfidenceThreshold.yaml",
-			want:       nil,
+			name:                 "Licensed C with config having high confidence threshold",
+			filePath:             "testdata/licensed.c",
+			configPath:           "testdata/configFiles/highConfidenceThreshold.yaml",
+			expectedHandlerFiles: 0,
 		},
 		{
-			name:     "Non human readable binary file",
-			filePath: "testdata/binaryfile",
-			want:     nil,
+			name:                 "Non human readable binary file",
+			filePath:             "testdata/binaryfile",
+			expectedHandlerFiles: 0,
 		},
 	}
 
@@ -126,9 +71,13 @@ func Test_AnalyzeLicenses(t *testing.T) {
 				Content:  content,
 				Info:     fi,
 			})
-
 			require.NoError(t, err)
-			assert.Equal(t, tt.want, got)
+
+			if tt.expectedHandlerFiles > 0 {
+				assert.Len(t, got.Files, tt.expectedHandlerFiles)
+			} else {
+				assert.Nil(t, got)
+			}
 		})
 	}
 

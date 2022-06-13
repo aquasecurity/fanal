@@ -2,6 +2,7 @@ package licensing
 
 import (
 	"errors"
+	"io/fs"
 	"os"
 
 	"github.com/aquasecurity/fanal/licensing/classification"
@@ -73,7 +74,42 @@ func newDefaultScanner() (Scanner, error) {
 	return Scanner{classifier: classifier}, nil
 }
 
-func (s Scanner) Scan(scanArgs ScanArgs) types.License {
+func (s Scanner) ScanFS(filesystem fs.FS) ([]types.LicenseFile, error) {
+
+	var licenseFiles []types.LicenseFile
+
+	err := fs.WalkDir(filesystem, ".", func(path string, info fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+
+		if info.IsDir() {
+			return nil
+		}
+
+		content, err := fs.ReadFile(filesystem, path)
+		licenseFile, err := s.classifier.Classify(path, content)
+		if err != nil {
+			return err
+		}
+
+		if len(licenseFile.Findings) > 0 {
+			if err := findPackage(path, filesystem, &licenseFile); err != nil {
+				log.Logger.Errorf("an error occurred while finding package for file %s: %w", path, err)
+			}
+			licenseFiles = append(licenseFiles, licenseFile)
+		}
+
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return licenseFiles, nil
+}
+
+func (s Scanner) Scan(scanArgs ScanArgs) types.LicenseFile {
 
 	license, err := s.classifier.Classify(scanArgs.FilePath, scanArgs.Content)
 	if err != nil {

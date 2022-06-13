@@ -35,6 +35,9 @@ const (
 	Ansible        = "ansible"
 	Helm           = "helm"
 
+	// Licensing
+	License = "license"
+
 	// Language-specific file names
 	NuGetPkgsLock   = "packages.lock.json"
 	NuGetPkgsConfig = "packages.config"

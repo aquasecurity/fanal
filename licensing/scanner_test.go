@@ -2,6 +2,7 @@ package licensing
 
 import (
 	"fmt"
+	"io/fs"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -9,6 +10,7 @@ import (
 
 	"github.com/aquasecurity/fanal/licensing/config"
 	"github.com/aquasecurity/fanal/types"
+	"github.com/liamg/memoryfs"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"gopkg.in/yaml.v3"
@@ -20,6 +22,7 @@ func Test_LicenseScanning(t *testing.T) {
 		name             string
 		filePath         string
 		expectLicense    bool
+		packageName      string
 		expectedFindings []types.LicenseFinding
 		scanConfig       *config.Config
 	}{
@@ -45,6 +48,8 @@ func Test_LicenseScanning(t *testing.T) {
 			expectedFindings: []types.LicenseFinding{},
 			scanConfig: &config.Config{
 				MatchConfidenceThreshold: 1.0,
+				IncludeHeaders:           true,
+				RiskThreshold:            10,
 			},
 		},
 		{
@@ -79,6 +84,25 @@ func Test_LicenseScanning(t *testing.T) {
 			},
 		},
 		{
+			name:          "Package folder identifies package",
+			filePath:      "testdata/callsites",
+			expectLicense: true,
+			packageName:   "callsites",
+			expectedFindings: []types.LicenseFinding{
+				{
+					License:                     "MIT",
+					MatchType:                   "License",
+					GoogleLicenseClassification: "notice",
+					Confidence:                  0.98,
+					StartLine:                   5,
+					EndLine:                     9,
+				},
+			},
+			scanConfig: &config.Config{
+				RiskThreshold: 10,
+			},
+		},
+		{
 			name:          "Apache 2 License file",
 			filePath:      "testdata/LICENSE_apache2",
 			expectLicense: false,
@@ -99,16 +123,30 @@ func Test_LicenseScanning(t *testing.T) {
 			scanner, err := NewScanner(configPath)
 			require.NoError(t, err)
 
-			content, err := os.ReadFile(tt.filePath)
+			var testFS fs.FS
+			f, err := os.Stat(tt.filePath)
 			require.NoError(t, err)
-			license := scanner.Scan(ScanArgs{
-				FilePath: tt.filePath,
-				Content:  content,
-			})
+			if f.IsDir() {
+				testFS = os.DirFS(tt.filePath)
+			} else {
+				memfs := memoryfs.New()
+				if filepath.Dir(tt.filePath) != "." {
+					err = memfs.MkdirAll(filepath.Dir(tt.filePath), os.ModePerm)
+					require.NoError(t, err)
+				}
+				content, err := os.ReadFile(tt.filePath)
+				require.NoError(t, err)
+				err = memfs.WriteFile(tt.filePath, content, os.ModePerm)
+				testFS = memfs
+			}
 
-			assert.NotNil(t, license)
+			licenses, err := scanner.ScanFS(testFS)
+			require.NoError(t, err)
 
 			if tt.expectLicense {
+				assert.NotNil(t, licenses)
+				require.Len(t, licenses, 1)
+				license := licenses[0]
 				assert.Len(t, license.Findings, len(tt.expectedFindings))
 				for i, f := range tt.expectedFindings {
 					lf := license.Findings[i]
@@ -119,8 +157,6 @@ func Test_LicenseScanning(t *testing.T) {
 					assert.Equal(t, f.GoogleLicenseClassification, lf.GoogleLicenseClassification)
 					assert.Greater(t, lf.Confidence, 0.8)
 				}
-			} else {
-				assert.Len(t, license.Findings, 0)
 			}
 		})
 
