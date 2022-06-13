@@ -89,7 +89,7 @@ func ApplyLayers(layers []types.BlobInfo) types.ArtifactDetail {
 
 	for _, layer := range layers {
 		for _, opqDir := range layer.OpaqueDirs {
-			opqDir = strings.TrimSuffix(opqDir, sep) //this is necessary so that an empty element is not contribute into the array of the DeleteByString function
+			opqDir = strings.TrimSuffix(opqDir, sep) // this is necessary so that an empty element is not contribute into the array of the DeleteByString function
 			_ = nestedMap.DeleteByString(opqDir, sep)
 		}
 		for _, whFile := range layer.WhiteoutFiles {
@@ -128,6 +128,14 @@ func ApplyLayers(layers []types.BlobInfo) types.ArtifactDetail {
 			key := fmt.Sprintf("%s/type:secret", secret.FilePath)
 			nestedMap.SetByString(key, sep, secret)
 		}
+		for _, license := range layer.Licenses {
+			license.Layer = types.Layer{
+				Digest: layer.Digest,
+				DiffID: layer.DiffID,
+			}
+			key := fmt.Sprintf("%s/type:license", license.FilePath)
+			nestedMap.SetByString(key, sep, license)
+		}
 		for _, customResource := range layer.CustomResources {
 			key := fmt.Sprintf("%s/custom:%s", customResource.FilePath, customResource.Type)
 			customResource.Layer = types.Layer{
@@ -148,6 +156,8 @@ func ApplyLayers(layers []types.BlobInfo) types.ArtifactDetail {
 			mergedLayer.Misconfigurations = append(mergedLayer.Misconfigurations, v)
 		case types.Secret:
 			mergedLayer.Secrets = append(mergedLayer.Secrets, v)
+		case types.LicenseFile:
+			mergedLayer.Licenses = append(mergedLayer.Licenses, v)
 		case types.CustomResource:
 			mergedLayer.CustomResources = append(mergedLayer.CustomResources, v)
 		}

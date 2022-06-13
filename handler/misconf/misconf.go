@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/aquasecurity/fanal/log"
 	"github.com/liamg/memoryfs"
 	"github.com/samber/lo"
 	"golang.org/x/xerrors"
@@ -232,7 +233,9 @@ func (h misconfPostHandler) Handle(ctx context.Context, result *analyzer.Analysi
 	for t, scanner := range h.scanners {
 		results, err := scanner.ScanFS(ctx, mapMemoryFS[t], ".")
 		if err != nil {
-			return xerrors.Errorf("scan config error: %w", err)
+			// don't stop the world, log and continue
+			log.Logger.Debugf("scanner error while running %s %s", scanner.Name(), err)
+			continue
 		}
 
 		misconfs = append(misconfs, resultsToMisconf(t, scanner.Name(), results)...)

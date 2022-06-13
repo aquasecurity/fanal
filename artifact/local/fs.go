@@ -9,7 +9,8 @@ import (
 	"strings"
 	"sync"
 
-	digest "github.com/opencontainers/go-digest"
+	"github.com/aquasecurity/fanal/analyzer/licensing"
+	"github.com/opencontainers/go-digest"
 	"golang.org/x/sync/semaphore"
 	"golang.org/x/xerrors"
 
@@ -51,6 +52,11 @@ func NewArtifact(rootPath string, c cache.ArtifactCache, opt artifact.Option) (a
 	// Register secret analyzer
 	if err = secret.RegisterSecretAnalyzer(opt.SecretScannerOption); err != nil {
 		return nil, xerrors.Errorf("secret scanner error: %w", err)
+	}
+
+	// Register license analyzer
+	if err = licensing.RegisterLicenseScanner(opt.LicenseScannerOption); err != nil {
+		return nil, xerrors.Errorf("license scanner error: %w", err)
 	}
 
 	return Artifact{
@@ -119,6 +125,7 @@ func (a Artifact) Inspect(ctx context.Context) (types.ArtifactReference, error) 
 		PackageInfos:  result.PackageInfos,
 		Applications:  result.Applications,
 		Secrets:       result.Secrets,
+		Licenses:      result.Licenses,
 	}
 
 	if err = a.handlerManager.PostHandle(ctx, result, &blobInfo); err != nil {

@@ -35,6 +35,9 @@ const (
 	Ansible        = "ansible"
 	Helm           = "helm"
 
+	// Licensing
+	License = "license"
+
 	// Language-specific file names
 	NuGetPkgsLock   = "packages.lock.json"
 	NuGetPkgsConfig = "packages.config"
@@ -45,6 +48,7 @@ const (
 	MavenPom = "pom.xml"
 
 	NpmPkgLock = "package-lock.json"
+	NpmPkg     = "package.json"
 	YarnLock   = "yarn.lock"
 
 	ComposerLock = "composer.lock"

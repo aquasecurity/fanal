@@ -52,7 +52,12 @@ require (
 	gopkg.in/yaml.v3 v3.0.1
 )
 
-require github.com/aquasecurity/defsec v0.63.1
+require (
+	github.com/aquasecurity/defsec v0.63.1
+	// fix this version, attempting to update brings in an embed bug
+	github.com/google/licenseclassifier v0.0.0-20210722185704-9369ededc590
+	github.com/google/licenseclassifier/v2 v2.0.0-pre5
+)
 
 require (
 	cloud.google.com/go v0.99.0 // indirect

@@ -86,6 +86,11 @@ const (
 	// ========
 	TypeSecret Type = "secret"
 
+	// ========
+	// Licenses
+	// ========
+	TypeLicense Type = "license"
+
 	// =======
 	// Red Hat
 	// =======
@@ -95,19 +100,22 @@ const (
 
 var (
 	// TypeOSes has all OS-related analyzers
-	TypeOSes = []Type{TypeAlpine, TypeAmazon, TypeDebian, TypePhoton, TypeCentOS,
+	TypeOSes = []Type{
+		TypeAlpine, TypeAmazon, TypeDebian, TypePhoton, TypeCentOS,
 		TypeRocky, TypeAlma, TypeFedora, TypeOracle, TypeRedHatBase, TypeSUSE, TypeUbuntu,
 		TypeApk, TypeDpkg, TypeRpm,
 	}
 
 	// TypeLanguages has all language analyzers
-	TypeLanguages = []Type{TypeBundler, TypeGemSpec, TypeCargo, TypeComposer, TypeJar, TypePom,
+	TypeLanguages = []Type{
+		TypeBundler, TypeGemSpec, TypeCargo, TypeComposer, TypeJar, TypePom,
 		TypeNpmPkgLock, TypeNodePkg, TypeYarn, TypeNuget, TypePythonPkg, TypePip, TypePipenv,
 		TypePoetry, TypeGoBinary, TypeGoMod,
 	}
 
 	// TypeLockfiles has all lock file analyzers
-	TypeLockfiles = []Type{TypeBundler, TypeNpmPkgLock, TypeYarn,
+	TypeLockfiles = []Type{
+		TypeBundler, TypeNpmPkgLock, TypeYarn,
 		TypePip, TypePipenv, TypePoetry, TypeGoMod, TypePom,
 	}
 
