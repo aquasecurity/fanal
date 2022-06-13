@@ -30,9 +30,32 @@ func Test_AnalyzeLicenses(t *testing.T) {
 								Name:       "AGPL-3.0",
 								MatchType:  "Header",
 								Variant:    "header.txt",
+								Severity:   "CRITICAL",
 								Confidence: 1,
 								StartLine:  2,
 								EndLine:    13,
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name:     "Another Licensed C file",
+			filePath: "testdata/another_licensed.c",
+			want: &analyzer.AnalysisResult{
+				Licenses: []types.License{
+					{
+						FilePath: "/testdata/another_licensed.c",
+						Findings: []types.LicenseFinding{
+							{
+								Name:       "BSL-1.0",
+								MatchType:  "License",
+								Variant:    "license.txt",
+								Severity:   "NOTICE",
+								Confidence: 1,
+								StartLine:  2,
+								EndLine:    6,
 							},
 						},
 					},
@@ -51,6 +74,7 @@ func Test_AnalyzeLicenses(t *testing.T) {
 								Name:       "Commons-Clause",
 								MatchType:  "License",
 								Variant:    "license.txt",
+								Severity:   "CRITICAL",
 								Confidence: 1,
 								StartLine:  1,
 								EndLine:    13,
@@ -61,7 +85,7 @@ func Test_AnalyzeLicenses(t *testing.T) {
 			},
 		},
 		{
-			name:     "Unlicensed C ",
+			name:     "Unlicensed C file",
 			filePath: "testdata/unlicensed.c",
 			want:     nil,
 		},

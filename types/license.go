@@ -13,4 +13,5 @@ type LicenseFinding struct {
 	Confidence float64
 	StartLine  int
 	EndLine    int
+	Severity   string
 }

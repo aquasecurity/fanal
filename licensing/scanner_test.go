@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/aquasecurity/fanal/licensing/config"
+	"github.com/aquasecurity/fanal/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"gopkg.in/yaml.v3"
@@ -15,34 +16,26 @@ import (
 
 func Test_LicenseScanning(t *testing.T) {
 
-	type expectedFinding struct {
-		Name                string
-		MatchType           string
-		Variant             string
-		ConfidenceThreshold float32
-		StartLine           int
-		EndLine             int
-	}
-
 	tests := []struct {
 		name             string
 		filePath         string
 		expectLicense    bool
-		expectedFindings []expectedFinding
+		expectedFindings []types.LicenseFinding
 		scanConfig       *config.Config
 	}{
 		{
 			name:          "C file with AGPL-3.0",
 			filePath:      "testdata/licensed.c",
 			expectLicense: true,
-			expectedFindings: []expectedFinding{
+			expectedFindings: []types.LicenseFinding{
 				{
-					Name:                "AGPL-3.0",
-					MatchType:           "Header",
-					Variant:             "header.txt",
-					ConfidenceThreshold: 0.98,
-					StartLine:           2,
-					EndLine:             13,
+					Name:       "AGPL-3.0",
+					MatchType:  "Header",
+					Variant:    "header.txt",
+					Severity:   "CRITICAL",
+					Confidence: 0.98,
+					StartLine:  2,
+					EndLine:    13,
 				},
 			},
 		},
@@ -50,7 +43,7 @@ func Test_LicenseScanning(t *testing.T) {
 			name:             "C file with AGPL-3.0 with 100 confidence",
 			filePath:         "testdata/licensed.c",
 			expectLicense:    false,
-			expectedFindings: []expectedFinding{},
+			expectedFindings: []types.LicenseFinding{},
 			scanConfig: &config.Config{
 				MatchConfidenceThreshold: 1.0,
 			},
@@ -59,7 +52,7 @@ func Test_LicenseScanning(t *testing.T) {
 			name:             "C file with ignored AGPL-3.0",
 			filePath:         "testdata/licensed.c",
 			expectLicense:    false,
-			expectedFindings: []expectedFinding{},
+			expectedFindings: []types.LicenseFinding{},
 			scanConfig: &config.Config{
 				IgnoredLicences: []string{
 					"AGPL-3.0",
@@ -75,14 +68,15 @@ func Test_LicenseScanning(t *testing.T) {
 			name:          "Creative commons License file",
 			filePath:      "testdata/LICENSE_creativecommons",
 			expectLicense: true,
-			expectedFindings: []expectedFinding{
+			expectedFindings: []types.LicenseFinding{
 				{
-					Name:                "Commons-Clause",
-					MatchType:           "License",
-					Variant:             "license.txt",
-					ConfidenceThreshold: 0.98,
-					StartLine:           1,
-					EndLine:             13,
+					Name:       "Commons-Clause",
+					MatchType:  "License",
+					Variant:    "license.txt",
+					Severity:   "CRITICAL",
+					Confidence: 0.98,
+					StartLine:  1,
+					EndLine:    13,
 				},
 			},
 		},
@@ -125,6 +119,7 @@ func Test_LicenseScanning(t *testing.T) {
 					assert.Equal(t, f.Variant, lf.Variant)
 					assert.Equal(t, f.StartLine, lf.StartLine)
 					assert.Equal(t, f.EndLine, lf.EndLine)
+					assert.Equal(t, f.Severity, lf.Severity)
 					assert.Greater(t, lf.Confidence, 0.8)
 				}
 			} else {
