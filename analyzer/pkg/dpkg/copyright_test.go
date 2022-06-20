@@ -1,7 +1,7 @@
 package dpkg
 
 import (
-	"bufio"
+	"context"
 	"os"
 	"strings"
 	"testing"
@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestDpkgAnalyzer_parseCopyrightFile(t *testing.T) {
+func TestDpkgLicencesAnalyzer_Analyze(t *testing.T) {
 	tests := []struct {
 		name              string
 		copyrightFilePath string
@@ -73,7 +73,6 @@ func TestDpkgAnalyzer_parseCopyrightFile(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-
 			f, err := os.Open(test.copyrightFilePath)
 			if err != nil {
 				t.Error("unable to read test file")
@@ -83,15 +82,15 @@ func TestDpkgAnalyzer_parseCopyrightFile(t *testing.T) {
 				Content:  f,
 				FilePath: strings.TrimPrefix(test.copyrightFilePath, "testdata/copyrightFiles/"),
 			}
-			scanner := bufio.NewScanner(f)
+			a := dpkgLicencesAnalyzer{}
 
-			license, _ := parseCopyrightFile(input, scanner)
+			license, _ := a.Analyze(context.Background(), input)
 			assert.Equal(t, test.wantLicense, license)
 		})
 	}
 }
 
-func TestDpkgAnalyzer_isLicenseFile(t *testing.T) {
+func TestDpkgLicencesAnalyzer_isLicenseFile(t *testing.T) {
 	tests := []struct {
 		name     string
 		filePath string
@@ -120,7 +119,8 @@ func TestDpkgAnalyzer_isLicenseFile(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			assert.Equal(t, test.want, isLicenseFile(test.filePath))
+			a := dpkgLicencesAnalyzer{}
+			assert.Equal(t, test.want, a.Required(test.filePath, nil))
 		})
 	}
 }

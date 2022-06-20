@@ -41,10 +41,6 @@ func (a dpkgAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisInput) (
 		return a.parseDpkgInfoList(scanner)
 	}
 
-	if isLicenseFile(input.FilePath) {
-		return parseCopyrightFile(input, scanner)
-	}
-
 	return a.parseDpkgStatus(input.FilePath, scanner)
 }
 
@@ -198,7 +194,7 @@ func (a dpkgAnalyzer) parseDpkgPkg(scanner *bufio.Scanner) (pkg *types.Package) 
 
 func (a dpkgAnalyzer) Required(filePath string, _ os.FileInfo) bool {
 	dir, fileName := filepath.Split(filePath)
-	if a.isListFile(dir, fileName) || filePath == statusFile || isLicenseFile(filePath) {
+	if a.isListFile(dir, fileName) || filePath == statusFile {
 		return true
 	}
 

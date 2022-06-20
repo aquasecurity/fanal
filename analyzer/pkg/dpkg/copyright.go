@@ -2,8 +2,10 @@ package dpkg
 
 import (
 	"bufio"
+	"context"
 	"io"
 	"io/ioutil"
+	"os"
 	"regexp"
 	"strings"
 
@@ -17,6 +19,8 @@ import (
 const LicenseAdder = "dpkg-license-adder"
 
 var (
+	dpkgLicencesAnalyzerVersion = 1
+
 	cl, _                        = classifier.DefaultClassifier()
 	copyrightFileRegexp          = regexp.MustCompile(`^usr/share/doc/([0-9A-Za-z_.-]+)/copyright$`)
 	commonLicenseReferenceRegexp = regexp.MustCompile(`/?usr/share/common-licenses/([0-9A-Za-z_.+-]+[0-9A-Za-z+])`)
@@ -25,6 +29,13 @@ var (
 type License struct {
 	Pkg      string
 	Licenses string
+}
+
+type dpkgLicencesAnalyzer struct{}
+
+func (a dpkgLicencesAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisInput) (*analyzer.AnalysisResult, error) {
+	scanner := bufio.NewScanner(input.Content)
+	return parseCopyrightFile(input, scanner)
 }
 
 // parseCopyrightFile parses /usr/share/doc/*/copyright files
@@ -80,8 +91,16 @@ func parseCopyrightFile(input analyzer.AnalysisInput, scanner *bufio.Scanner) (*
 	}, nil
 }
 
-func isLicenseFile(filePath string) bool {
+func (a dpkgLicencesAnalyzer) Required(filePath string, _ os.FileInfo) bool {
 	return copyrightFileRegexp.MatchString(filePath)
+}
+
+func (a dpkgLicencesAnalyzer) Type() analyzer.Type {
+	return analyzer.TypeDpkgLicence
+}
+
+func (a dpkgLicencesAnalyzer) Version() int {
+	return dpkgLicencesAnalyzerVersion
 }
 
 func getPkgNameFromLicenseFilePath(filePath string) string {
