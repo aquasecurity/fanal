@@ -22,9 +22,10 @@ const (
 	TypeUbuntu     Type = "ubuntu"
 
 	// OS Package
-	TypeApk  Type = "apk"
-	TypeDpkg Type = "dpkg"
-	TypeRpm  Type = "rpm"
+	TypeApk   Type = "apk"
+	TypeDpkg  Type = "dpkg"
+	TypeRpm   Type = "rpm"
+	TypeRpmqa Type = "rpmqa"
 
 	// OS Package Repository
 	TypeApkRepo Type = "apk-repo"
@@ -74,12 +75,11 @@ const (
 	// Structured Config
 	// =================
 	TypeYaml           Type = "yaml"
-	TypeTOML           Type = "toml"
 	TypeJSON           Type = "json"
 	TypeDockerfile     Type = "dockerfile"
-	TypeHCL            Type = "hcl"
 	TypeTerraform      Type = "terraform"
 	TypeCloudFormation Type = "cloudFormation"
+	TypeHelm           Type = "helm"
 
 	// ========
 	// Secrets
@@ -115,5 +115,5 @@ var (
 	TypeIndividualPkgs = []Type{TypeGemSpec, TypeNodePkg, TypePythonPkg, TypeGoBinary, TypeJar}
 
 	// TypeConfigFiles has all config file analyzers
-	TypeConfigFiles = []Type{TypeYaml, TypeTOML, TypeJSON, TypeDockerfile, TypeHCL, TypeTerraform, TypeCloudFormation}
+	TypeConfigFiles = []Type{TypeYaml, TypeJSON, TypeDockerfile, TypeTerraform, TypeCloudFormation}
 )
