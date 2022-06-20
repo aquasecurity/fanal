@@ -215,6 +215,22 @@ func (_m *MockArtifactCache) ApplyPutBlobExpectations(expectations []ArtifactCac
 
 // PutBlob provides a mock function with given fields: blobID, blobInfo
 func (_m *MockArtifactCache) PutBlob(blobID string, blobInfo types.BlobInfo) error {
+
+	for i := range blobInfo.Misconfigurations {
+		for j := range blobInfo.Misconfigurations[i].Failures {
+			blobInfo.Misconfigurations[i].Failures[j].Code = types.Code{}
+		}
+		for j := range blobInfo.Misconfigurations[i].Successes {
+			blobInfo.Misconfigurations[i].Successes[j].Code = types.Code{}
+		}
+		for j := range blobInfo.Misconfigurations[i].Warnings {
+			blobInfo.Misconfigurations[i].Warnings[j].Code = types.Code{}
+		}
+		for j := range blobInfo.Misconfigurations[i].Exceptions {
+			blobInfo.Misconfigurations[i].Exceptions[j].Code = types.Code{}
+		}
+	}
+
 	ret := _m.Called(blobID, blobInfo)
 
 	var r0 error

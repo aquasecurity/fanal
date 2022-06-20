@@ -24,6 +24,7 @@ type Layer struct {
 }
 
 type Package struct {
+	ID         string `json:",omitempty"`
 	Name       string `json:",omitempty"`
 	Version    string `json:",omitempty"`
 	Release    string `json:",omitempty"`
@@ -37,9 +38,12 @@ type Package struct {
 	Modularitylabel string     `json:",omitempty"` // only for Red Hat based distributions
 	BuildInfo       *BuildInfo `json:",omitempty"` // only for Red Hat
 
-	Indirect bool   `json:",omitempty"`
-	License  string `json:",omitempty"`
-	Layer    Layer  `json:",omitempty"`
+	Ref       string   `json:",omitempty"` // identifier which can be used to reference the component elsewhere
+	Indirect  bool     `json:",omitempty"` // this package is direct dependency of the project or not
+	DependsOn []string `json:",omitempty"` // dependencies of this package
+
+	License string `json:",omitempty"`
+	Layer   Layer  `json:",omitempty"`
 
 	// Each package metadata have the file path, while the package from lock files does not have.
 	FilePath string `json:",omitempty"`
@@ -78,10 +82,10 @@ type Application struct {
 	Libraries []Package
 }
 
-type Config struct {
-	Type     string
-	FilePath string
-	Content  interface{}
+type File struct {
+	Type    string
+	Path    string
+	Content []byte
 }
 
 // ArtifactType represents a type of artifact
@@ -140,10 +144,6 @@ type BlobInfo struct {
 	// This information will be embedded into packages when applying layers.
 	// ref. https://redhat-connect.gitbook.io/partner-guide-for-adopting-red-hat-oval-v2/determining-common-platform-enumeration-cpe
 	BuildInfo *BuildInfo `json:",omitempty"`
-
-	// SystemFiles represents installed files by OS package manager
-	// This field is used only in hooks and removed after that.
-	SystemFiles []string `json:",omitempty"`
 
 	// CustomResources hold analysis results from custom analyzers.
 	// It is for extensibility and not used in OSS.

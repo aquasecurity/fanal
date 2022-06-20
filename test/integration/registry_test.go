@@ -54,10 +54,10 @@ func TestTLSRegistry(t *testing.T) {
 			"REGISTRY_AUTH_HTPASSWD_PATH":   "/auth/htpasswd",
 			"REGISTRY_AUTH_HTPASSWD_REALM":  "Registry Realm",
 		},
-		BindMounts: map[string]string{
-			"/certs": filepath.Join(baseDir, "data", "registry", "certs"),
-			"/auth":  filepath.Join(baseDir, "data", "registry", "auth"),
-		},
+		Mounts: testcontainers.Mounts(
+			testcontainers.BindMount(filepath.Join(baseDir, "data", "registry", "certs"), "/certs"),
+			testcontainers.BindMount(filepath.Join(baseDir, "data", "registry", "auth"), "/auth"),
+		),
 		WaitingFor: wait.ForLog("listening on [::]:5443"),
 	}
 
@@ -89,7 +89,7 @@ func TestTLSRegistry(t *testing.T) {
 	}{
 		{
 			name:      "happy path",
-			imageName: "alpine:3.10",
+			imageName: "ghcr.io/aquasecurity/trivy-test-images:alpine-310",
 			imageFile: "testdata/fixtures/alpine-310.tar.gz",
 			option: types.DockerOption{
 				UserName:              registryUsername,
@@ -102,7 +102,7 @@ func TestTLSRegistry(t *testing.T) {
 		},
 		{
 			name:      "happy path with docker login",
-			imageName: "alpine:3.10",
+			imageName: "ghcr.io/aquasecurity/trivy-test-images:alpine-310",
 			imageFile: "testdata/fixtures/alpine-310.tar.gz",
 			option: types.DockerOption{
 				InsecureSkipTLSVerify: true,
@@ -114,7 +114,7 @@ func TestTLSRegistry(t *testing.T) {
 		},
 		{
 			name:      "sad path: tls verify",
-			imageName: "alpine:3.10",
+			imageName: "ghcr.io/aquasecurity/trivy-test-images:alpine-310",
 			imageFile: "testdata/fixtures/alpine-310.tar.gz",
 			option: types.DockerOption{
 				UserName: registryUsername,
@@ -124,7 +124,7 @@ func TestTLSRegistry(t *testing.T) {
 		},
 		{
 			name:      "sad path: no credential",
-			imageName: "alpine:3.10",
+			imageName: "ghcr.io/aquasecurity/trivy-test-images:alpine-310",
 			imageFile: "testdata/fixtures/alpine-310.tar.gz",
 			option: types.DockerOption{
 				InsecureSkipTLSVerify: true,
@@ -196,7 +196,7 @@ func analyze(ctx context.Context, imageRef string, opt types.DockerOption) (*typ
 	}
 	cli.NegotiateAPIVersion(ctx)
 
-	img, cleanup, err := image.NewDockerImage(ctx, imageRef, opt)
+	img, cleanup, err := image.NewContainerImage(ctx, imageRef, opt)
 	if err != nil {
 		return nil, err
 	}
