@@ -5,20 +5,22 @@ import (
 	"context"
 	_ "embed"
 	"fmt"
+	"github.com/aquasecurity/defsec/pkg/scanners/rbac"
 	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
 
-	"github.com/aquasecurity/defsec/pkg/detection"
-
 	"github.com/liamg/memoryfs"
+	"github.com/samber/lo"
 	"golang.org/x/xerrors"
 
+	"github.com/aquasecurity/defsec/pkg/detection"
 	"github.com/aquasecurity/defsec/pkg/scan"
 	"github.com/aquasecurity/defsec/pkg/scanners"
 	cfscanner "github.com/aquasecurity/defsec/pkg/scanners/cloudformation"
 	dfscanner "github.com/aquasecurity/defsec/pkg/scanners/dockerfile"
+	"github.com/aquasecurity/defsec/pkg/scanners/helm"
 	k8sscanner "github.com/aquasecurity/defsec/pkg/scanners/kubernetes"
 	"github.com/aquasecurity/defsec/pkg/scanners/options"
 	tfscanner "github.com/aquasecurity/defsec/pkg/scanners/terraform"
@@ -178,6 +180,8 @@ func newMisconfPostHandler(artifactOpt artifact.Option) (handler.PostHandler, er
 			types.CloudFormation: cfscanner.New(opts...),
 			types.Dockerfile:     dfscanner.NewScanner(opts...),
 			types.Kubernetes:     k8sscanner.NewScanner(opts...),
+			types.Helm:           helm.New(opts...),
+			types.Rbac:           rbac.NewScanner(opts...),
 		},
 	}, nil
 }
@@ -187,6 +191,8 @@ var enabledDefsecTypes = map[detection.FileType]string{
 	detection.FileTypeTerraform:      types.Terraform,
 	detection.FileTypeDockerfile:     types.Dockerfile,
 	detection.FileTypeKubernetes:     types.Kubernetes,
+	detection.FileTypeHelm:           types.Helm,
+	detection.FileTypeRbac:           types.Rbac,
 }
 
 // Handle detects misconfigurations.
@@ -196,11 +202,9 @@ func (h misconfPostHandler) Handle(ctx context.Context, result *analyzer.Analysi
 		return nil
 	}
 
-	mapMemoryFS := map[string]*memoryfs.FS{
-		types.Terraform:      memoryfs.New(),
-		types.CloudFormation: memoryfs.New(),
-		types.Dockerfile:     memoryfs.New(),
-		types.Kubernetes:     memoryfs.New(),
+	mapMemoryFS := make(map[string]*memoryfs.FS)
+	for t := range h.scanners {
+		mapMemoryFS[t] = memoryfs.New()
 	}
 
 	for _, file := range files {
@@ -268,7 +272,7 @@ func resultsToMisconf(configType string, scannerName string, results scan.Result
 			ruleID = result.Rule().AVDID
 		}
 
-		cause := types.NewCauseWithCode(result)
+		cause := NewCauseWithCode(result)
 
 		misconfResult := types.MisconfResult{
 			Namespace: result.RegoNamespace(),
@@ -312,4 +316,32 @@ func resultsToMisconf(configType string, scannerName string, results scan.Result
 	}
 
 	return types.ToMisconfigurations(misconfs)
+}
+
+func NewCauseWithCode(underlying scan.Result) types.CauseMetadata {
+	flat := underlying.Flatten()
+	cause := types.CauseMetadata{
+		Resource:  flat.Resource,
+		Provider:  flat.RuleProvider.DisplayName(),
+		Service:   flat.RuleService,
+		StartLine: flat.Location.StartLine,
+		EndLine:   flat.Location.EndLine,
+	}
+	if code, err := underlying.GetCode(); err == nil {
+		cause.Code = types.Code{
+			Lines: lo.Map(code.Lines, func(l scan.Line, i int) types.Line {
+				return types.Line{
+					Number:      l.Number,
+					Content:     l.Content,
+					IsCause:     l.IsCause,
+					Annotation:  l.Annotation,
+					Truncated:   l.Truncated,
+					Highlighted: l.Highlighted,
+					FirstCause:  l.FirstCause,
+					LastCause:   l.LastCause,
+				}
+			}),
+		}
+	}
+	return cause
 }
