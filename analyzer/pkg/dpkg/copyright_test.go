@@ -90,7 +90,7 @@ func TestDpkgLicencesAnalyzer_Analyze(t *testing.T) {
 	}
 }
 
-func TestDpkgLicencesAnalyzer_isLicenseFile(t *testing.T) {
+func TestDpkgLicencesAnalyzer_Required(t *testing.T) {
 	tests := []struct {
 		name     string
 		filePath string

@@ -30,11 +30,6 @@ var (
 	commonLicenseReferenceRegexp = regexp.MustCompile(`/?usr/share/common-licenses/([0-9A-Za-z_.+-]+[0-9A-Za-z+])`)
 )
 
-type License struct {
-	Pkg      string
-	Licenses string
-}
-
 type dpkgLicencesAnalyzer struct{}
 
 func (a dpkgLicencesAnalyzer) Analyze(_ context.Context, input analyzer.AnalysisInput) (*analyzer.AnalysisResult, error) {
@@ -56,7 +51,7 @@ func parseCopyrightFile(input analyzer.AnalysisInput, scanner *bufio.Scanner) (*
 	for scanner.Scan() {
 		line := scanner.Text()
 
-		// "License: *" pattern is used
+		// 'License: *' pattern is used
 		if strings.HasPrefix(line, "License:") {
 			l := strings.TrimSpace(line[8:])
 			if !slices.Contains(licenses, l) {
