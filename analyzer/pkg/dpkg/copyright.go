@@ -16,6 +16,10 @@ import (
 	"golang.org/x/xerrors"
 )
 
+func init() {
+	analyzer.RegisterAnalyzer(&dpkgLicencesAnalyzer{})
+}
+
 const LicenseAdder = "dpkg-license-adder"
 
 var (
