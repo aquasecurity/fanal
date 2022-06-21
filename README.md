@@ -1,3 +1,5 @@
+> **This project has been moved into [github.com/aquasecurity/trivy](https://github.com/aquasecurity/trivy) - all packages or their equivalents can be found there instead**
+
 # fanal
 Static Analysis Library for Containers
 
