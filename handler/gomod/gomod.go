@@ -2,9 +2,10 @@ package gomod
 
 import (
 	"context"
+	"path/filepath"
+
 	"github.com/aquasecurity/fanal/analyzer"
 	"github.com/aquasecurity/fanal/artifact"
-	"path/filepath"
 
 	"golang.org/x/exp/maps"
 

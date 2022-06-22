@@ -5,11 +5,12 @@ import (
 	"context"
 	_ "embed"
 	"fmt"
-	"github.com/aquasecurity/defsec/pkg/scanners/rbac"
 	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/aquasecurity/defsec/pkg/scanners/rbac"
 
 	"github.com/liamg/memoryfs"
 	"github.com/samber/lo"
