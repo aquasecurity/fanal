@@ -262,6 +262,29 @@ func TestAnalysisResult_Merge(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "ubuntu must be replaced with ubuntu esm",
+			fields: fields{
+				OS: &types.OS{
+					Family: aos.Ubuntu, // this must be overwritten
+					Name:   "16.04",
+				},
+			},
+			args: args{
+				new: &analyzer.AnalysisResult{
+					OS: &types.OS{
+						Family:   aos.Ubuntu,
+						Extended: "ESM",
+					},
+				},
+			},
+			want: analyzer.AnalysisResult{
+				OS: &types.OS{
+					Family: aos.Ubuntu,
+					Name:   "16.04-ESM",
+				},
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -552,6 +575,95 @@ func TestAnalyzer_ImageConfigAnalyzerVersions(t *testing.T) {
 			a := analyzer.NewAnalyzerGroup(analyzer.GroupBuiltin, tt.disabled)
 			got := a.ImageConfigAnalyzerVersions()
 			assert.Equal(t, tt.want, got)
+		})
+	}
+}
+
+func TestAnalyzer_MergeOsVersion(t *testing.T) {
+	tests := []struct {
+		name string
+		old  *types.OS
+		new  *types.OS
+		want *types.OS
+	}{
+		{
+			name: "Old OS is empty. New OS is Alpine",
+			new: &types.OS{
+				Family: aos.Alpine,
+				Name:   "3.11",
+			},
+			want: &types.OS{
+				Family: aos.Alpine,
+				Name:   "3.11",
+			},
+		},
+		{
+			name: "Old OS is Debian. New OS is Ubuntu",
+			old: &types.OS{
+				Family: aos.Debian,
+				Name:   "11.2",
+			},
+			new: &types.OS{
+				Family: aos.Ubuntu,
+				Name:   "16.04",
+			},
+			want: &types.OS{
+				Family: aos.Ubuntu,
+				Name:   "16.04",
+			},
+		},
+		{
+			name: "Ubuntu ESM. Old OS has Extended field",
+			old: &types.OS{
+				Family:   aos.Ubuntu,
+				Extended: "ESM",
+			},
+			new: &types.OS{
+				Family: aos.Ubuntu,
+				Name:   "16.04",
+			},
+			want: &types.OS{
+				Family: aos.Ubuntu,
+				Name:   "16.04-ESM",
+			},
+		},
+		{
+			name: "Ubuntu ESM. New OS has Extended field",
+			old: &types.OS{
+				Family: aos.Ubuntu,
+				Name:   "16.04",
+			},
+			new: &types.OS{
+				Family:   aos.Ubuntu,
+				Extended: "ESM",
+			},
+			want: &types.OS{
+				Family: aos.Ubuntu,
+				Name:   "16.04-ESM",
+			},
+		},
+		{
+			name: "Ubuntu ESM. Old OS has full ESM name",
+			old: &types.OS{
+				Family: aos.Ubuntu,
+				Name:   "16.04-ESM",
+			},
+			new: &types.OS{
+				Family:   aos.Ubuntu,
+				Extended: "ESM",
+			},
+			want: &types.OS{
+				Family: aos.Ubuntu,
+				Name:   "16.04-ESM",
+			},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			result := analyzer.MergeOsVersion(test.old, test.new)
+
+			assert.Equal(t, test.want, result)
 		})
 	}
 }
