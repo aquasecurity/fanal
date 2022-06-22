@@ -15,9 +15,11 @@ import (
 	"github.com/aquasecurity/fanal/cache"
 	"github.com/aquasecurity/fanal/types"
 
+	_ "github.com/aquasecurity/fanal/analyzer/config/all"
 	_ "github.com/aquasecurity/fanal/analyzer/language/python/pip"
 	_ "github.com/aquasecurity/fanal/analyzer/os/alpine"
 	_ "github.com/aquasecurity/fanal/analyzer/pkg/apk"
+
 	_ "github.com/aquasecurity/fanal/handler/misconf"
 	_ "github.com/aquasecurity/fanal/handler/sysfile"
 )
