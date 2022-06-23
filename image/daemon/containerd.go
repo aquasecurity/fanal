@@ -3,8 +3,11 @@ package daemon
 import (
 	"context"
 	"errors"
+	"fmt"
 	"io"
 	"os"
+	"os/user"
+	"path/filepath"
 
 	"github.com/containerd/containerd"
 	"github.com/containerd/containerd/images/archive"
@@ -21,6 +24,15 @@ import (
 const (
 	defaultContainerdSocket    = "/run/containerd/containerd.sock"
 	defaultContainerdNamespace = "default"
+	rootUserUid                = "0"
+)
+
+var (
+	// arg0 is UID of the Linux Namespace in which containerd runs
+	rootlessContainerdDirFormat = "/proc/%s/root"
+
+	// arg0 is UID of execute user
+	rootlessChildPIDPathFormat = "/run/user/%s/containerd-rootless/child_pid"
 )
 
 func imageWriter(client *containerd.Client, img containerd.Image) imageSave {
@@ -39,18 +51,45 @@ func imageWriter(client *containerd.Client, img containerd.Image) imageSave {
 	}
 }
 
+// containerdAddr is get containerd socket address
+func containerdAddr() (string, error) {
+	addr := os.Getenv("CONTAINERD_ADDRESS")
+	if addr == "" {
+		u, err := user.Current()
+		if err != nil {
+			return "", xerrors.Errorf("failed to get current user: %w", err)
+		}
+
+		if u.Uid != rootUserUid {
+			childPIDFilePath := fmt.Sprintf(rootlessChildPIDPathFormat, u.Uid)
+			if _, err := os.Stat(childPIDFilePath); errors.Is(err, os.ErrNotExist) {
+				return "", xerrors.Errorf("child pid file not found: %s", addr)
+			}
+
+			childPID, err := os.ReadFile(childPIDFilePath)
+			if err != nil {
+				return "", xerrors.Errorf("failed to read chile pid file: %w", err)
+			}
+
+			addr = filepath.Join(fmt.Sprintf(rootlessContainerdDirFormat, childPID), addr)
+		} else {
+			addr = defaultContainerdSocket
+		}
+	}
+
+	if _, err := os.Stat(addr); errors.Is(err, os.ErrNotExist) {
+		return "", xerrors.Errorf("containerd socket not found: %s", addr)
+	}
+	return addr, nil
+}
+
 // ContainerdImage implements v1.Image
 func ContainerdImage(ctx context.Context, imageName string) (Image, func(), error) {
 	cleanup := func() {}
 
-	addr := os.Getenv("CONTAINERD_ADDRESS")
-	if addr == "" {
-		// TODO: support rootless
-		addr = defaultContainerdSocket
-	}
-
-	if _, err := os.Stat(addr); errors.Is(err, os.ErrNotExist) {
-		return nil, cleanup, xerrors.Errorf("containerd socket not found: %s", addr)
+	addr, err := containerdAddr()
+	if err != nil {
+		return nil, cleanup, xerrors.Errorf("failed to get containerd address: %w", err)
 	}
 
 	// Parse the image name
